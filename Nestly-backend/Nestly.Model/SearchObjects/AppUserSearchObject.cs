@@ -1,0 +1,10 @@
+﻿namespace Nestly.Model.SearchObjects
+{
+    public class AppUserSearchObject
+    {
+        public string? Username { get; set; }
+        public string? Email { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+    }
+}

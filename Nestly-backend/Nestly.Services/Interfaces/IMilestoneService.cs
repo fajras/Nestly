@@ -1,6 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<Milestone> Get(MilestoneSearchObject? search);
         Milestone? GetById(long id);
-        Milestone Create(Milestone entity);
+        Milestone Create(CreateMilestoneDto entity);
         Milestone? Patch(long id, MilestonePatchDto patch);
         bool Delete(long id);
     }

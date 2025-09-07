@@ -10,7 +10,7 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(BabyProfile))]
         public long BabyId { get; set; }
-        [ForeignKey(nameof(AppUser))]
+        [ForeignKey(nameof(ParentProfile))]
         public long? UserId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
@@ -19,6 +19,6 @@ namespace Nestly.Model.Entity
         public DateTime CreatedAt { get; set; }
 
         public BabyProfile Baby { get; set; }
-        public AppUser User { get; set; }
+        public ParentProfile User { get; set; }
     }
 }

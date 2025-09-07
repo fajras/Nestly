@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -53,22 +52,35 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(p => p.Id == id);
         }
 
-        public Pregnancy Create(Pregnancy entity)
+        public Pregnancy Create(CreatePregnancyDto dto)
         {
-            if (entity.UserId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("UserId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.AppUsers.Any(u => u.Id == entity.UserId))
+            if (dto.UserId <= 0)
             {
-                throw new ArgumentException("User does not exist.");
+                throw new ArgumentException("UserId (ParentProfileId) is required.", nameof(dto.UserId));
             }
 
-            if (entity.CreatedAt == default)
+            bool parentExists = _db.ParentProfiles.Any(p => p.Id == dto.UserId);
+            if (!parentExists)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Parent profile does not exist.", nameof(dto.UserId));
             }
+
+            if (dto.LmpDate.HasValue && dto.DueDate.HasValue && dto.DueDate.Value < dto.LmpDate.Value)
+            {
+                throw new ArgumentException("DueDate cannot be before LmpDate.", nameof(dto.DueDate));
+            }
+
+            var entity = new Pregnancy
+            {
+                UserId = dto.UserId,
+                LmpDate = dto.LmpDate,
+                DueDate = dto.DueDate
+            };
 
             _db.Pregnancies.Add(entity);
             _db.SaveChanges();

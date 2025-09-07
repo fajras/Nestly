@@ -87,7 +87,11 @@ var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
 builder.Services.AddDbContext<NestlyDbContext>(options =>
-    options.UseSqlServer(config.GetConnectionString("db1")));
+    options.UseSqlServer(
+        config.GetConnectionString("db1"),
+        b => b.MigrationsAssembly("Nestly WebAPI")
+    ));
+
 
 builder.Services.AddHttpContextAccessor();
 

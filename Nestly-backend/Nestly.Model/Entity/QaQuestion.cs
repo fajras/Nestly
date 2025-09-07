@@ -10,11 +10,11 @@ namespace Nestly.Model.Entity
         [Key]
         public long Id { get; set; }
         public string QuestionText { get; set; }
-        [ForeignKey(nameof(AppUser))]
-        public long? AskedByUserId { get; set; }
+        [ForeignKey(nameof(ParentProfile))]
+        public long? AskedById { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public AppUser AskedBy { get; set; }
-        public ICollection<QaAnswer> Answers { get; set; }
+        public ParentProfile AskedBy { get; set; }
+        public ICollection<QaAnswer> Answers { get; set; } = new List<QaAnswer>();
     }
 }

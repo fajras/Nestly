@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -19,12 +18,12 @@ namespace Nestly.Services.Repository
         public List<BabyProfile> Get(BabyProfileSearchObject? search)
         {
             IQueryable<BabyProfile> q = _db.BabyProfiles
-                                           .Include(x => x.User)
+                                           .Include(x => x.ParentProfile)
                                            .AsQueryable();
 
             if (search?.UserId is not null)
             {
-                q = q.Where(x => x.UserId == search.UserId);
+                q = q.Where(x => x.ParentProfileId == search.UserId);
             }
 
             if (!string.IsNullOrWhiteSpace(search?.BabyName))
@@ -55,29 +54,60 @@ namespace Nestly.Services.Repository
         public BabyProfile? GetById(long id)
         {
             return _db.BabyProfiles
-                      .Include(x => x.User)
+                      .Include(x => x.ParentProfile)
                       .FirstOrDefault(x => x.Id == id);
         }
 
-        public BabyProfile Create(BabyProfile entity)
+        public BabyProfile Create(CreateBabyProfileDto dto)
         {
-            if (entity.UserId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("UserId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.AppUsers.Any(u => u.Id == entity.UserId))
+            if (dto.ParentProfileId <= 0)
             {
-                throw new ArgumentException("User does not exist.");
+                throw new ArgumentException("ParentProfileId is required.", nameof(dto.ParentProfileId));
             }
 
-            if (entity.CreatedAt == default)
+            if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Parent profile does not exist.", nameof(dto.ParentProfileId));
             }
+
+            if (string.IsNullOrWhiteSpace(dto.BabyName))
+            {
+                throw new ArgumentException("BabyName is required.", nameof(dto.BabyName));
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Gender))
+            {
+                throw new ArgumentException("Gender is required.", nameof(dto.Gender));
+            }
+
+            if (dto.BirthDate == default)
+            {
+                throw new ArgumentException("BirthDate is required.", nameof(dto.BirthDate));
+            }
+
+            if (dto.PregnancyId.HasValue &&
+                !_db.Pregnancies.Any(x => x.Id == dto.PregnancyId.Value))
+            {
+                throw new ArgumentException("Pregnancy does not exist.", nameof(dto.PregnancyId));
+            }
+
+            var entity = new BabyProfile
+            {
+                ParentProfileId = dto.ParentProfileId,
+                BabyName = dto.BabyName,
+                Gender = dto.Gender,
+                BirthDate = dto.BirthDate,
+                PregnancyId = dto.PregnancyId
+            };
 
             _db.BabyProfiles.Add(entity);
             _db.SaveChanges();
+
             return entity;
         }
 

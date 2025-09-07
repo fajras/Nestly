@@ -1,5 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -19,15 +19,35 @@ namespace Nestly.Services.Repository
         public FetalDevelopmentWeek? GetById(int id)
             => _db.FetalDevelopmentWeeks.FirstOrDefault(f => f.Id == id);
 
-        public FetalDevelopmentWeek Create(FetalDevelopmentWeek entity)
+        public FetalDevelopmentWeek Create(CreateFetalDevelopmentWeekDto dto)
         {
-            if (entity.WeekNumber <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("WeekNumber must be > 0.");
+                throw new ArgumentNullException(nameof(dto));
             }
+
+            if (dto.WeekNumber <= 0)
+            {
+                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+            }
+
+            bool exists = _db.FetalDevelopmentWeeks.Any(x => x.WeekNumber == dto.WeekNumber);
+            if (exists)
+            {
+                throw new InvalidOperationException($"Week {dto.WeekNumber} already exists.");
+            }
+
+            var entity = new FetalDevelopmentWeek
+            {
+                WeekNumber = dto.WeekNumber,
+                ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim(),
+                BabyDevelopment = string.IsNullOrWhiteSpace(dto.BabyDevelopment) ? null : dto.BabyDevelopment.Trim(),
+                MotherChanges = string.IsNullOrWhiteSpace(dto.MotherChanges) ? null : dto.MotherChanges.Trim()
+            };
 
             _db.FetalDevelopmentWeeks.Add(entity);
             _db.SaveChanges();
+
             return entity;
         }
 

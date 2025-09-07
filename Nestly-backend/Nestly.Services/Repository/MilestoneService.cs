@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -48,22 +47,47 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(x => x.Id == id);
         }
 
-        public Milestone Create(Milestone entity)
+        public Milestone Create(CreateMilestoneDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            if (entity.CreatedAt == default)
+            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
+            if (!babyExists)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
+
+            if (string.IsNullOrWhiteSpace(dto.Title))
+            {
+                throw new ArgumentException("Title is required.", nameof(dto.Title));
+            }
+
+            var title = dto.Title.Trim();
+            if (title.Length > 200)
+            {
+                throw new ArgumentException("Title must be at most 200 characters.", nameof(dto.Title));
+            }
+
+            if (dto.AchievedDate == default)
+            {
+                throw new ArgumentException("AchievedDate is required.", nameof(dto.AchievedDate));
+            }
+
+            var entity = new Milestone
+            {
+                BabyId = dto.BabyId,
+                Title = title,
+                AchievedDate = dto.AchievedDate,
+                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim()
+            };
 
             _db.Milestones.Add(entity);
             _db.SaveChanges();

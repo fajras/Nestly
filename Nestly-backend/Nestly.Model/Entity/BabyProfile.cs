@@ -9,25 +9,24 @@ namespace Nestly.Model.Entity
     {
         [Key]
         public long Id { get; set; }
-        [ForeignKey(nameof(AppUser))]
-        public long UserId { get; set; }
-
+        [ForeignKey(nameof(ParentProfile))]
+        public long ParentProfileId { get; set; }
         public string BabyName { get; set; }
-
         public string Gender { get; set; }
-
         public DateTime BirthDate { get; set; }
-
         public DateTime CreatedAt { get; set; }
+        [ForeignKey(nameof(Pregnancy))]
+        public long? PregnancyId { get; set; }
+        public ParentProfile ParentProfile { get; set; }
+        public Pregnancy? Pregnancy { get; set; }
 
-        public AppUser User { get; set; }
-        public ICollection<BabyGrowth> Growths { get; set; }
-        public ICollection<FeedingLog> FeedingLogs { get; set; }
-        public ICollection<SleepLog> SleepLogs { get; set; }
-        public ICollection<MealPlan> MealPlans { get; set; }
-        public ICollection<DiaperLog> DiaperLogs { get; set; }
-        public ICollection<Milestone> Milestones { get; set; }
-        public ICollection<HealthEntry> HealthEntries { get; set; }
-        public ICollection<CalendarEvent> CalendarEvents { get; set; }
+        public ICollection<BabyGrowth> Growths { get; set; } = new List<BabyGrowth>();
+        public ICollection<FeedingLog> FeedingLogs { get; set; } = new List<FeedingLog>();
+        public ICollection<SleepLog> SleepLogs { get; set; } = new List<SleepLog>();
+        public ICollection<MealPlan> MealPlans { get; set; } = new List<MealPlan>();
+        public ICollection<DiaperLog> DiaperLogs { get; set; } = new List<DiaperLog>();
+        public ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
+        public ICollection<HealthEntry> HealthEntries { get; set; } = new List<HealthEntry>();
+        public ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
     }
 }

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -47,37 +46,68 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(p => p.Id == id);
         }
 
-        public MedicationPlan Create(MedicationPlan entity)
+        public MedicationPlan Create(CreateMedicationPlanDto dto)
         {
-            if (entity.UserId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("UserId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.AppUsers.Any(u => u.Id == entity.UserId))
+            if (dto.UserId <= 0)
             {
-                throw new ArgumentException("User does not exist.");
+                throw new ArgumentException("UserId (ParentProfileId) is required.", nameof(dto.UserId));
             }
 
-            if (string.IsNullOrWhiteSpace(entity.MedicineName))
+            bool parentExists = _db.ParentProfiles.Any(p => p.Id == dto.UserId);
+            if (!parentExists)
             {
-                throw new ArgumentException("MedicineName is required.");
+                throw new ArgumentException("Parent profile does not exist.", nameof(dto.UserId));
             }
 
-            if (string.IsNullOrWhiteSpace(entity.Dose))
+            if (string.IsNullOrWhiteSpace(dto.MedicineName))
             {
-                throw new ArgumentException("Dose is required.");
+                throw new ArgumentException("MedicineName is required.", nameof(dto.MedicineName));
             }
 
-            if (entity.StartDate >= entity.EndDate)
+            if (string.IsNullOrWhiteSpace(dto.Dose))
             {
-                throw new ArgumentException("StartDate must be before EndDate.");
+                throw new ArgumentException("Dose is required.", nameof(dto.Dose));
             }
 
-            if (entity.CreatedAt == default)
+            if (dto.StartDate == default)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("StartDate is required.", nameof(dto.StartDate));
             }
+
+            if (dto.EndDate == default)
+            {
+                throw new ArgumentException("EndDate is required.", nameof(dto.EndDate));
+            }
+
+            if (dto.StartDate >= dto.EndDate)
+            {
+                throw new ArgumentException("StartDate must be before EndDate.", nameof(dto.EndDate));
+            }
+
+            bool overlaps = _db.MedicationPlans.Any(p =>
+                p.UserId == dto.UserId &&
+                p.MedicineName == dto.MedicineName &&
+                p.EndDate > dto.StartDate &&
+                p.StartDate < dto.EndDate
+            );
+            if (overlaps)
+            {
+                throw new InvalidOperationException("Overlapping plan for the same medicine already exists for this user.");
+            }
+
+            var entity = new MedicationPlan
+            {
+                UserId = dto.UserId,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                MedicineName = dto.MedicineName.Trim(),
+                Dose = dto.Dose.Trim()
+            };
 
             _db.MedicationPlans.Add(entity);
             _db.SaveChanges();

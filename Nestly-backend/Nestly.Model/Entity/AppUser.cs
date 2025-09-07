@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nestly.Model.Entity
 {
@@ -16,9 +17,35 @@ namespace Nestly.Model.Entity
         public string Gender { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public string Role { get; set; }
-        public ICollection<BabyProfile> Babies { get; set; }
-        public ICollection<Pregnancy> Pregnancies { get; set; }
-        public ICollection<MedicationPlan> MedicationPlans { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ParentProfile? ParentProfile { get; set; }
+        public DoctorProfile? DoctorProfile { get; set; }
+
+    }
+
+    public class ParentProfile
+    {
+        [Key]
+        public long Id { get; set; }
+        [ForeignKey(nameof(AppUser))]
+        public long UserId { get; set; }
+        public AppUser User { get; set; } = default!;
+        public ICollection<BabyProfile>? Babies { get; set; } = new List<BabyProfile>();
+        public ICollection<Pregnancy>? Pregnancies { get; set; } = new List<Pregnancy>();
+        public ICollection<MedicationPlan>? MedicationPlans { get; set; } = new List<MedicationPlan>();
+        public ICollection<QaQuestion>? QuestionsAsked { get; set; } = new List<QaQuestion>();
+        public ICollection<CalendarEvent>? CalendarEvents { get; set; } = new List<CalendarEvent>();
+        public ICollection<ChatRoom>? ChatRooms { get; set; } = new List<ChatRoom>();
+    }
+
+    public class DoctorProfile
+    {
+        [Key]
+        public long Id { get; set; }
+        [ForeignKey(nameof(AppUser))]
+        public long UserId { get; set; }
+        public AppUser User { get; set; } = default!;
+        public ICollection<QaAnswer>? QaAnswers { get; set; } = new List<QaAnswer>();
+        public ICollection<BlogPost>? BlogPosts { get; set; } = new List<BlogPost>();
     }
 }

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -44,25 +43,62 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(x => x.Id == id);
         }
 
-        public SleepLog Create(SleepLog entity)
+        public SleepLog Create(CreateSleepLogDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            if (entity.CreatedAt == default)
+            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
+            if (!babyExists)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
+
+            if (dto.SleepDate == default)
+            {
+                throw new ArgumentException("SleepDate is required.", nameof(dto.SleepDate));
+            }
+
+            if (dto.StartTime == default)
+            {
+                throw new ArgumentException("StartTime is required.", nameof(dto.StartTime));
+            }
+
+            if (dto.EndTime == default)
+            {
+                throw new ArgumentException("EndTime is required.", nameof(dto.EndTime));
+            }
+
+            if (dto.EndTime <= dto.StartTime)
+            {
+                throw new ArgumentException("EndTime must be after StartTime.", nameof(dto.EndTime));
+            }
+
+            var notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim();
+            if (notes is not null && notes.Length > 1000)
+            {
+                throw new ArgumentException("Notes must be at most 1000 characters.", nameof(dto.Notes));
+            }
+
+            var entity = new SleepLog
+            {
+                BabyId = dto.BabyId,
+                SleepDate = dto.SleepDate.Date,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Notes = notes
+            };
 
             _db.SleepLogs.Add(entity);
             _db.SaveChanges();
+
             return entity;
         }
 

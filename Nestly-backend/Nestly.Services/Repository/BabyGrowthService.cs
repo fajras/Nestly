@@ -1,7 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -47,26 +46,46 @@ namespace Nestly.Services.Repository
                       .Include(x => x.Baby)
                       .FirstOrDefault(x => x.Id == id);
         }
-
-        public BabyGrowth Create(BabyGrowth entity)
+        public BabyGrowth Create(CreateBabyGrowthDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            if (entity.WeekNumber <= 0)
+            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("WeekNumber must be > 0.");
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
+
+            if (dto.WeekNumber <= 0)
+            {
+                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+            }
+
+            bool exists = _db.BabyGrowths.Any(g => g.BabyId == dto.BabyId && g.WeekNumber == dto.WeekNumber);
+            if (exists)
+            {
+                throw new InvalidOperationException($"Growth entry for baby {dto.BabyId} and week {dto.WeekNumber} already exists.");
+            }
+
+            var entity = new BabyGrowth
+            {
+                BabyId = dto.BabyId,
+                WeekNumber = dto.WeekNumber,
+                WeightKg = dto.WeightKg,
+                HeightCm = dto.HeightCm,
+                HeadCircumferenceCm = dto.HeadCircumferenceCm
+            };
 
             _db.BabyGrowths.Add(entity);
             _db.SaveChanges();
+
             return entity;
         }
 

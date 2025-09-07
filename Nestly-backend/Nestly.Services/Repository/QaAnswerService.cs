@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -26,7 +25,7 @@ namespace Nestly.Services.Repository
 
             if (search?.AnsweredByUserId is not null)
             {
-                q = q.Where(a => a.AnsweredByUserId == search.AnsweredByUserId);
+                q = q.Where(a => a.AnsweredById == search.AnsweredByUserId);
             }
 
             if (search?.From is not null)
@@ -50,28 +49,39 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(a => a.Id == id);
         }
 
-        public QaAnswer Create(QaAnswer entity)
+        public QaAnswer Create(CreateQaAnswerDto dto)
         {
-            if (string.IsNullOrWhiteSpace(entity.AnswerText))
+            if (dto is null)
             {
-                throw new ArgumentException("AnswerText is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.QaQuestions.Any(q => q.Id == entity.QuestionId))
+            if (string.IsNullOrWhiteSpace(dto.AnswerText))
             {
-                throw new ArgumentException("Question does not exist.");
+                throw new ArgumentException("AnswerText is required.", nameof(dto.AnswerText));
             }
 
-            if (entity.AnsweredByUserId is not null &&
-                !_db.AppUsers.Any(u => u.Id == entity.AnsweredByUserId.Value))
+            bool questionExists = _db.QaQuestions.Any(q => q.Id == dto.QuestionId);
+            if (!questionExists)
             {
-                throw new ArgumentException("AnsweredBy user does not exist.");
+                throw new ArgumentException("Question does not exist.", nameof(dto.QuestionId));
             }
 
-            if (entity.CreatedAt == default)
+            if (dto.AnsweredById.HasValue)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                bool doctorExists = _db.DoctorProfiles.Any(d => d.Id == dto.AnsweredById.Value);
+                if (!doctorExists)
+                {
+                    throw new ArgumentException("AnsweredBy (DoctorProfile) does not exist.", nameof(dto.AnsweredById));
+                }
             }
+
+            var entity = new QaAnswer
+            {
+                QuestionId = dto.QuestionId,
+                AnswerText = dto.AnswerText.Trim(),
+                AnsweredById = dto.AnsweredById
+            };
 
             _db.QaAnswers.Add(entity);
             _db.SaveChanges();
@@ -91,14 +101,14 @@ namespace Nestly.Services.Repository
                 a.AnswerText = patch.AnswerText;
             }
 
-            if (patch.AnsweredByUserId is not null && patch.AnsweredByUserId != a.AnsweredByUserId)
+            if (patch.AnsweredByUserId is not null && patch.AnsweredByUserId != a.AnsweredById)
             {
                 if (!_db.AppUsers.Any(u => u.Id == patch.AnsweredByUserId.Value))
                 {
                     throw new ArgumentException("AnsweredBy user does not exist.");
                 }
 
-                a.AnsweredByUserId = patch.AnsweredByUserId.Value;
+                a.AnsweredById = patch.AnsweredByUserId.Value;
             }
 
             _db.SaveChanges();

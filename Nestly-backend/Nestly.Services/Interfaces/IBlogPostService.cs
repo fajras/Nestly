@@ -1,6 +1,5 @@
 using Nestly.Model.Entity;
 using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<BlogPost> Get(BlogPostSearchObject? search);
         BlogPost? GetById(long id);
-        BlogPost Create(BlogPost entity);
+        BlogPost Create(CreateBlogPostDto entity);
         BlogPost? Patch(long id, BlogPostPatchDto patch);
         bool Delete(long id);
     }

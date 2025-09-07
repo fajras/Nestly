@@ -11,11 +11,11 @@ namespace Nestly.Model.Entity
         [ForeignKey(nameof(QaQuestion))]
         public long QuestionId { get; set; }
         public string AnswerText { get; set; }
-        [ForeignKey(nameof(AppUser))]
-        public long? AnsweredByUserId { get; set; }
+        [ForeignKey(nameof(DoctorProfile))]
+        public long? AnsweredById { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public QaQuestion Question { get; set; }
-        public AppUser AnsweredBy { get; set; }
+        public DoctorProfile AnsweredBy { get; set; }
     }
 }

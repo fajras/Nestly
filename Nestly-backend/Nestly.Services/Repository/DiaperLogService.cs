@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -52,22 +51,43 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(x => x.Id == id);
         }
 
-        public DiaperLog Create(DiaperLog entity)
+
+        public DiaperLog Create(CreateDiaperLogDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            if (entity.CreatedAt == default)
+            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
+            if (!babyExists)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
+
+            if (dto.ChangeDate == default)
+            {
+                throw new ArgumentException("ChangeDate is required.", nameof(dto.ChangeDate));
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.DiaperState))
+            {
+                throw new ArgumentException("DiaperState is required.", nameof(dto.DiaperState));
+            }
+
+            var entity = new DiaperLog
+            {
+                BabyId = dto.BabyId,
+                ChangeDate = dto.ChangeDate.Date,
+                ChangeTime = dto.ChangeTime,
+                DiaperState = dto.DiaperState.Trim(),
+                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim()
+            };
 
             _db.DiaperLogs.Add(entity);
             _db.SaveChanges();

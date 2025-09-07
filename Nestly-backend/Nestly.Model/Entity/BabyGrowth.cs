@@ -9,7 +9,6 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(BabyProfile))]
         public long BabyId { get; set; }
-
         public short WeekNumber { get; set; }
         public decimal? WeightKg { get; set; }
         public decimal? HeightCm { get; set; }

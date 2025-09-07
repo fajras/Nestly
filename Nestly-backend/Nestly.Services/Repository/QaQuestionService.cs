@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -20,7 +19,7 @@ namespace Nestly.Services.Repository
 
             if (search?.AskedByUserId is not null)
             {
-                q = q.Where(x => x.AskedByUserId == search.AskedByUserId);
+                q = q.Where(x => x.AskedById == search.AskedByUserId);
             }
 
             if (!string.IsNullOrWhiteSpace(search?.Query))
@@ -47,26 +46,39 @@ namespace Nestly.Services.Repository
                 .Include(x => x.Answers)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
-        public async Task<QaQuestion> Create(QaQuestion entity)
+        public async Task<QaQuestion> CreateAsync(CreateQaQuestionDto dto, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(entity.QuestionText))
+            if (dto is null)
             {
-                throw new ArgumentException("QuestionText is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (entity.AskedByUserId is not null &&
-                !await _db.AppUsers.AnyAsync(u => u.Id == entity.AskedByUserId.Value))
+            if (string.IsNullOrWhiteSpace(dto.QuestionText))
             {
-                throw new ArgumentException("AskedBy user does not exist.");
+                throw new ArgumentException("QuestionText is required.", nameof(dto.QuestionText));
             }
 
-            if (entity.CreatedAt == default)
+            var text = dto.QuestionText.Trim();
+
+            if (dto.AskedById.HasValue)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                var parentExists = await _db.ParentProfiles
+                    .AnyAsync(p => p.Id == dto.AskedById.Value, ct);
+
+                if (!parentExists)
+                {
+                    throw new ArgumentException("AskedBy (ParentProfile) does not exist.", nameof(dto.AskedById));
+                }
             }
 
-            _db.QaQuestions.Add(entity);
-            await _db.SaveChangesAsync();
+            var entity = new QaQuestion
+            {
+                QuestionText = text,
+                AskedById = dto.AskedById
+            };
+
+            await _db.QaQuestions.AddAsync(entity, ct);
+            await _db.SaveChangesAsync(ct);
             return entity;
         }
 
@@ -83,14 +95,14 @@ namespace Nestly.Services.Repository
                 q.QuestionText = patch.QuestionText;
             }
 
-            if (patch.AskedByUserId is not null && patch.AskedByUserId != q.AskedByUserId)
+            if (patch.AskedByUserId is not null && patch.AskedByUserId != q.AskedById)
             {
                 if (!await _db.AppUsers.AnyAsync(u => u.Id == patch.AskedByUserId.Value))
                 {
                     throw new ArgumentException("AskedBy user does not exist.");
                 }
 
-                q.AskedByUserId = patch.AskedByUserId.Value;
+                q.AskedById = patch.AskedByUserId.Value;
             }
 
             await _db.SaveChangesAsync();
@@ -118,8 +130,8 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("Question not found.");
             }
 
-            if (answer.AnsweredByUserId is not null &&
-                !await _db.AppUsers.AnyAsync(u => u.Id == answer.AnsweredByUserId.Value))
+            if (answer.AnsweredById is not null &&
+                !await _db.AppUsers.AnyAsync(u => u.Id == answer.AnsweredById.Value))
             {
                 throw new ArgumentException("AnsweredBy user does not exist.");
             }

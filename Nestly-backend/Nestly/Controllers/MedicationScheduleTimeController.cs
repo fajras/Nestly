@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
@@ -62,7 +63,7 @@ namespace Nestly_WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<MedicationScheduleTime>> Create([FromBody] MedicationScheduleTime medicationScheduleTime)
+        public async Task<ActionResult<MedicationScheduleTime>> Create([FromBody] CreateMedicationScheduleTimeDto medicationScheduleTime)
         {
             try
             {

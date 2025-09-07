@@ -1,5 +1,5 @@
+﻿using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -18,12 +18,34 @@ namespace Nestly.Services.Repository
         public WeeklyAdvice? GetById(int id)
             => _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
 
-        public WeeklyAdvice Create(WeeklyAdvice entity)
+        public WeeklyAdvice Create(CreateWeeklyAdviceDto dto)
         {
-            if (entity.WeekNumber <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("WeekNumber must be > 0.");
+                throw new ArgumentNullException(nameof(dto));
             }
+
+            if (dto.WeekNumber <= 0)
+            {
+                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.AdviceText))
+            {
+                throw new ArgumentException("AdviceText is required.", nameof(dto.AdviceText));
+            }
+
+            bool exists = _db.WeeklyAdvices.Any(x => x.WeekNumber == dto.WeekNumber);
+            if (exists)
+            {
+                throw new InvalidOperationException($"Advice for week {dto.WeekNumber} already exists.");
+            }
+
+            var entity = new WeeklyAdvice
+            {
+                WeekNumber = dto.WeekNumber,
+                AdviceText = dto.AdviceText.Trim()
+            };
 
             _db.WeeklyAdvices.Add(entity);
             _db.SaveChanges();

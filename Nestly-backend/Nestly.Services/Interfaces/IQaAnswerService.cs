@@ -1,6 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<QaAnswer> Get(QaAnswerSearchObject? search);
         QaAnswer? GetById(long id);
-        QaAnswer Create(QaAnswer entity);
+        QaAnswer Create(CreateQaAnswerDto entity);
         QaAnswer? Patch(long id, QaAnswerPatchDto patch);
         bool Delete(long id);
     }

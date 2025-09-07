@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nestly.Model.Entity;
 using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -50,33 +49,70 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(p => p.Id == id);
         }
 
-        public BlogPost Create(BlogPost entity)
+        public BlogPost Create(CreateBlogPostDto dto)
         {
-            if (string.IsNullOrWhiteSpace(entity.Title))
+            if (dto is null)
             {
-                throw new ArgumentException("Title is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (string.IsNullOrWhiteSpace(entity.Content))
+            if (string.IsNullOrWhiteSpace(dto.Title))
             {
-                throw new ArgumentException("Content is required.");
+                throw new ArgumentException("Title is required.", nameof(dto.Title));
             }
 
-            if (entity.AuthorId is not null &&
-                !_db.AppUsers.Any(u => u.Id == entity.AuthorId.Value))
+            if (string.IsNullOrWhiteSpace(dto.Content))
             {
-                throw new ArgumentException("Author does not exist.");
+                throw new ArgumentException("Content is required.", nameof(dto.Content));
             }
 
-            if (entity.CreatedAt == default)
+            if (dto.AuthorId.HasValue &&
+                !_db.DoctorProfiles.Any(d => d.Id == dto.AuthorId.Value))
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Author (DoctorProfile) does not exist.", nameof(dto.AuthorId));
             }
 
-            _db.BlogPosts.Add(entity);
+            var categoryIds = (dto.CategoryIds ?? new List<int>()).Distinct().ToList();
+            if (categoryIds.Count > 0)
+            {
+                var existing = _db.BlogCategories
+                                  .Where(c => categoryIds.Contains(c.Id))
+                                  .Select(c => c.Id)
+                                  .ToList();
+
+                var missing = categoryIds.Except(existing).ToList();
+                if (missing.Count > 0)
+                {
+                    throw new ArgumentException($"Unknown category ids: {string.Join(", ", missing)}", nameof(dto.CategoryIds));
+                }
+            }
+
+            var post = new BlogPost
+            {
+                Title = dto.Title.Trim(),
+                Content = dto.Content,
+                AuthorId = dto.AuthorId
+            };
+
+            using var tx = _db.Database.BeginTransaction();
+
+            _db.BlogPosts.Add(post);
             _db.SaveChanges();
 
-            return entity;
+            if (categoryIds.Count > 0)
+            {
+                var links = categoryIds.Select(cid => new BlogPostCategory
+                {
+                    PostId = post.Id,
+                    CategoryId = cid
+                });
+
+                _db.BlogPostCategories.AddRange(links);
+                _db.SaveChanges();
+            }
+
+            tx.Commit();
+            return post;
         }
 
         public BlogPost? Patch(long id, BlogPostPatchDto patch)

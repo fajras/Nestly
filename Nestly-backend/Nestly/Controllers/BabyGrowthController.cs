@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -25,7 +24,7 @@ namespace Nestly_WebAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult<BabyGrowth> Create([FromBody] BabyGrowth request)
+        public ActionResult<BabyGrowth> Create([FromBody] CreateBabyGrowthDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);

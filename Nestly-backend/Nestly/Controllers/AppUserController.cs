@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -34,7 +34,6 @@ namespace Nestly_WebAPI.Controllers
             return Ok(entity);
         }
 
-        // POST api/AppUser
         [HttpPost]
         public ActionResult<AppUser> Create([FromBody] AppUser request)
         {
@@ -55,7 +54,6 @@ namespace Nestly_WebAPI.Controllers
             return Ok(updated);
         }
 
-        // DELETE api/AppUser/5
         [HttpDelete("{id:long}")]
         public IActionResult Delete([FromRoute] long id)
         {

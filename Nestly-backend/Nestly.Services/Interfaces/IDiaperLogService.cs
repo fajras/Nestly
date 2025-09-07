@@ -1,6 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<DiaperLog> Get(DiaperLogSearchObject? search);
         DiaperLog? GetById(long id);
-        DiaperLog Create(DiaperLog entity);
+        DiaperLog Create(CreateDiaperLogDto entity);
         DiaperLog? Patch(long id, DiaperLogPatchDto patch);
         bool Delete(long id);
     }

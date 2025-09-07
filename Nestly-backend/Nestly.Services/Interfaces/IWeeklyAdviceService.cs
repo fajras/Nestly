@@ -1,5 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -7,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<WeeklyAdvice> Get();
         WeeklyAdvice? GetById(int id);
-        WeeklyAdvice Create(WeeklyAdvice entity);
+        WeeklyAdvice Create(CreateWeeklyAdviceDto entity);
         WeeklyAdvice? Patch(int id, WeeklyAdvicePatchDto patch);
         bool Delete(int id);
     }

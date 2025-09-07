@@ -1,6 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<CalendarEvent> Get(CalendarEventSearchObject? search);
         CalendarEvent? GetById(long id);
-        CalendarEvent Create(CalendarEvent entity);
+        CalendarEvent Create(CreateCalendarEventDto entity);
         CalendarEvent? Patch(long id, CalendarEventPatchDto patch);
         bool Delete(long id);
     }

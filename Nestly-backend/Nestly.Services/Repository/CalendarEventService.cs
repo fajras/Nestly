@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -55,35 +54,70 @@ namespace Nestly.Services.Repository
                      .FirstOrDefault(e => e.Id == id);
         }
 
-        public CalendarEvent Create(CalendarEvent entity)
+        public CalendarEvent Create(CreateCalendarEventDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            if (entity.UserId is not null && !_db.AppUsers.Any(u => u.Id == entity.UserId.Value))
+            var babyParentId = _db.BabyProfiles
+                .Where(b => b.Id == dto.BabyId)
+                .Select(b => (long?)b.ParentProfileId)
+                .FirstOrDefault();
+
+            if (babyParentId is null)
             {
-                throw new ArgumentException("User does not exist.");
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
 
-            if (entity.EndAt is not null && entity.EndAt < entity.StartAt)
+            if (dto.UserId.HasValue)
             {
-                throw new ArgumentException("EndAt must be >= StartAt.");
+                var parentExists = _db.ParentProfiles.Any(p => p.Id == dto.UserId.Value);
+                if (!parentExists)
+                {
+                    throw new ArgumentException("Parent profile (UserId) does not exist.", nameof(dto.UserId));
+                }
+
+                if (babyParentId.Value != dto.UserId.Value)
+                {
+                    throw new InvalidOperationException("The specified parent profile does not own this baby.");
+                }
             }
 
-            if (entity.CreatedAt == default)
+            if (string.IsNullOrWhiteSpace(dto.Title))
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Title is required.", nameof(dto.Title));
             }
+
+            if (dto.StartAt == default)
+            {
+                throw new ArgumentException("StartAt is required.", nameof(dto.StartAt));
+            }
+
+            if (dto.EndAt is not null && dto.EndAt < dto.StartAt)
+            {
+                throw new ArgumentException("EndAt must be >= StartAt.", nameof(dto.EndAt));
+            }
+
+            var entity = new CalendarEvent
+            {
+                BabyId = dto.BabyId,
+                UserId = dto.UserId,
+                Title = dto.Title.Trim(),
+                Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
+                StartAt = dto.StartAt,
+                EndAt = dto.EndAt
+            };
 
             _db.CalendarEvents.Add(entity);
             _db.SaveChanges();
+
             return entity;
         }
 

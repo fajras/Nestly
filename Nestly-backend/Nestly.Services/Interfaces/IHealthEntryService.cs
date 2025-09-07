@@ -1,6 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<HealthEntry> Get(HealthEntrySearchObject? search);
         HealthEntry? GetById(long id);
-        HealthEntry Create(HealthEntry entity);
+        HealthEntry Create(CreateHealthEntryDto entity);
         HealthEntry? Patch(long id, HealthEntryPatchDto patch);
         bool Delete(long id);
     }

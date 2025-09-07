@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -43,22 +42,37 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(x => x.Id == id);
         }
 
-        public HealthEntry Create(HealthEntry entity)
+        public HealthEntry Create(CreateHealthEntryDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            if (entity.CreatedAt == default)
+            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
+            if (!babyExists)
             {
-                entity.CreatedAt = DateTime.UtcNow;
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
+
+            if (dto.EntryDate == default)
+            {
+                throw new ArgumentException("EntryDate is required.", nameof(dto.EntryDate));
+            }
+
+            var entity = new HealthEntry
+            {
+                BabyId = dto.BabyId,
+                EntryDate = dto.EntryDate,
+                TemperatureC = dto.TemperatureC,
+                Medicines = string.IsNullOrWhiteSpace(dto.Medicines) ? null : dto.Medicines.Trim(),
+                DoctorVisit = string.IsNullOrWhiteSpace(dto.DoctorVisit) ? null : dto.DoctorVisit.Trim()
+            };
 
             _db.HealthEntries.Add(entity);
             _db.SaveChanges();

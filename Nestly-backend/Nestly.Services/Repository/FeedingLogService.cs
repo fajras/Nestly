@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -49,22 +48,56 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(x => x.Id == id);
         }
 
-        public FeedingLog Create(FeedingLog entity)
+        public FeedingLog Create(CreateFeedingLogDto dto)
         {
-            if (entity.BabyId <= 0)
+            if (dto is null)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == entity.BabyId))
+            if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            entity.CreatedAt = DateTime.UtcNow;
+            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
+            if (!babyExists)
+            {
+                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+            }
+
+            if (dto.FeedDate == default)
+            {
+                throw new ArgumentException("FeedDate is required.", nameof(dto.FeedDate));
+            }
+
+            if (dto.AmountMl is < 0)
+            {
+                throw new ArgumentException("AmountMl cannot be negative.", nameof(dto.AmountMl));
+            }
+
+            if (dto.FoodTypeId.HasValue)
+            {
+                var foodTypeExists = _db.FoodTypes.Any(f => f.Id == dto.FoodTypeId.Value);
+                if (!foodTypeExists)
+                {
+                    throw new ArgumentException("FoodType does not exist.", nameof(dto.FoodTypeId));
+                }
+            }
+
+            var entity = new FeedingLog
+            {
+                BabyId = dto.BabyId,
+                FeedDate = dto.FeedDate.Date,
+                FeedTime = dto.FeedTime,
+                AmountMl = dto.AmountMl,
+                FoodTypeId = dto.FoodTypeId,
+                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim()
+            };
 
             _db.FeedingLogs.Add(entity);
             _db.SaveChanges();
+
             return entity;
         }
 

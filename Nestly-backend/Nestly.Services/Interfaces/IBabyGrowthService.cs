@@ -1,6 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
-using Nestly.Model.SearchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -8,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<BabyGrowth> Get(BabyGrowthSearchObject? search);
         BabyGrowth? GetById(long id);
-        BabyGrowth Create(BabyGrowth entity);
+        BabyGrowth Create(CreateBabyGrowthDto entity);
         BabyGrowth? Patch(long id, BabyGrowthPatchDto patch);
         bool Delete(long id);
     }

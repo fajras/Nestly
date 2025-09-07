@@ -5,324 +5,486 @@ namespace Nestly.Services.Data
 {
     public class NestlyDbContext : DbContext
     {
-        public NestlyDbContext(DbContextOptions<NestlyDbContext> options) : base(options)
-        {
-        }
+        public NestlyDbContext(DbContextOptions<NestlyDbContext> options) : base(options) { }
 
         public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<ParentProfile> ParentProfiles { get; set; }
+        public DbSet<DoctorProfile> DoctorProfiles { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+
         public DbSet<BabyProfile> BabyProfiles { get; set; }
         public DbSet<BabyGrowth> BabyGrowths { get; set; }
+
         public DbSet<BlogCategory> BlogCategories { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogPostCategory> BlogPostCategories { get; set; }
+
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
+
+        public DbSet<ChatRoom> ChatRooms { get; set; }
         public DbSet<ChatMember> ChatMembers { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
-        public DbSet<ChatRoom> ChatRooms { get; set; }
+
         public DbSet<DiaperLog> DiaperLogs { get; set; }
         public DbSet<FeedingLog> FeedingLogs { get; set; }
-        public DbSet<FetalDevelopmentWeek> FetalDevelopmentWeeks { get; set; }
-        public DbSet<FoodType> FoodTypes { get; set; }
         public DbSet<HealthEntry> HealthEntries { get; set; }
         public DbSet<MealPlan> MealPlans { get; set; }
-        public DbSet<MedicationIntakeLog> MedicationIntakeLogs { get; set; }
+        public DbSet<SleepLog> SleepLogs { get; set; }
+
+        public DbSet<FetalDevelopmentWeek> FetalDevelopmentWeeks { get; set; }
+        public DbSet<FoodType> FoodTypes { get; set; }
+        public DbSet<WeeklyAdvice> WeeklyAdvices { get; set; }
+
         public DbSet<MedicationPlan> MedicationPlans { get; set; }
         public DbSet<MedicationScheduleTime> MedicationScheduleTimes { get; set; }
-        public DbSet<Milestone> Milestones { get; set; }
+        public DbSet<MedicationIntakeLog> MedicationIntakeLogs { get; set; }
+
         public DbSet<Pregnancy> Pregnancies { get; set; }
-        public DbSet<QaAnswer> QaAnswers { get; set; }
+
         public DbSet<QaQuestion> QaQuestions { get; set; }
-        public DbSet<SleepLog> SleepLogs { get; set; }
-        public DbSet<WeeklyAdvice> WeeklyAdvices { get; set; }
+        public DbSet<QaAnswer> QaAnswers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            ConfigureAppUser(modelBuilder);
-            ConfigureBabyProfile(modelBuilder);
-            ConfigureDiaperLog(modelBuilder);
-            ConfigureSleepLog(modelBuilder);
-            ConfigureHealthEntry(modelBuilder);
-            ConfigureMilestone(modelBuilder);
-            ConfigureBabyGrowth(modelBuilder);
-            ConfigureMealPlan(modelBuilder);
-            ConfigureCalendarEvent(modelBuilder);
+            ConfigureUsersAndProfiles(modelBuilder);
+            ConfigureRoles(modelBuilder);
+
+            ConfigureBabyProfileAndChildren(modelBuilder);
             ConfigurePregnancy(modelBuilder);
-            ConfigureFetalDevelopmentWeek(modelBuilder);
-            ConfigureWeeklyAdvice(modelBuilder);
-            ConfigureBlogPost(modelBuilder);
-            ConfigureQa(modelBuilder);
-            ConfigureMedicationPlan(modelBuilder);
+
+            ConfigureBlog(modelBuilder);
+
+            ConfigureCalendar(modelBuilder);
+
+            ConfigureChat(modelBuilder);
+
+            ConfigureHealthAndDailyLogs(modelBuilder);
+
+            ConfigureMedication(modelBuilder);
+
+            ConfigureStaticLookups(modelBuilder);
+
+            ConfigureQA(modelBuilder);
         }
 
-        private void ConfigureAppUser(ModelBuilder modelBuilder)
+
+        private static void ConfigureUsersAndProfiles(ModelBuilder model)
         {
-            modelBuilder.Entity<AppUser>(entity =>
+            model.Entity<AppUser>(e =>
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
-                entity.HasIndex(e => e.Email).IsUnique();
-                entity.HasIndex(e => e.Username).IsUnique();
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.Email).IsRequired().HasMaxLength(255);
+                e.Property(x => x.Username).IsRequired().HasMaxLength(100);
+                e.Property(x => x.FirstName).HasMaxLength(150);
+                e.Property(x => x.LastName).HasMaxLength(150);
+                e.Property(x => x.PhoneNumber).HasMaxLength(50);
+                e.Property(x => x.Gender).HasMaxLength(20);
+                e.Property(x => x.Password).IsRequired();
+
+                e.HasIndex(x => x.Email).IsUnique();
+                e.HasIndex(x => x.Username).IsUnique();
+
+                e.HasOne(x => x.ParentProfile)
+                 .WithOne(p => p.User)
+                 .HasForeignKey<ParentProfile>(p => p.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.DoctorProfile)
+                 .WithOne(d => d.User)
+                 .HasForeignKey<DoctorProfile>(d => d.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            model.Entity<ParentProfile>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.HasIndex(x => x.UserId).IsUnique();
+            });
+
+            model.Entity<DoctorProfile>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.HasIndex(x => x.UserId).IsUnique();
             });
         }
 
-        private void ConfigureBabyProfile(ModelBuilder modelBuilder)
+        private static void ConfigureRoles(ModelBuilder model)
         {
-            modelBuilder.Entity<BabyProfile>(entity =>
+            model.Entity<Role>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Name).IsRequired().HasMaxLength(80);
+                e.HasIndex(x => x.Name).IsUnique();
+            });
 
-                entity.Property(e => e.BabyName).HasMaxLength(150);
-                entity.Property(e => e.Gender).HasMaxLength(20);
+            model.Entity<UserRole>(e =>
+            {
+                e.HasKey(x => new { x.UserId, x.RoleId });
+                e.HasOne(x => x.User)
+                 .WithMany(u => u.UserRoles)
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.User)
-                    .WithMany(u => u.Babies)
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.Role)
+                 .WithMany(r => r.UserRoles)
+                 .HasForeignKey(x => x.RoleId)
+                 .OnDelete(DeleteBehavior.Cascade);
             });
         }
 
-        private void ConfigureDiaperLog(ModelBuilder modelBuilder)
+
+        private static void ConfigureBabyProfileAndChildren(ModelBuilder model)
         {
-            modelBuilder.Entity<DiaperLog>(entity =>
+            model.Entity<BabyProfile>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
 
-                entity.Property(e => e.DiaperState).HasMaxLength(30);
-                entity.Property(e => e.Notes).HasMaxLength(1000);
+                e.Property(x => x.BabyName).HasMaxLength(150);
+                e.Property(x => x.Gender).HasMaxLength(20);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.Property(e => e.ChangeTime).HasConversion<TimeSpan>();
+                e.HasOne(x => x.ParentProfile)
+                 .WithMany(p => p.Babies)
+                 .HasForeignKey(x => x.ParentProfileId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.DiaperLogs)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.Pregnancy)
+                 .WithMany()
+                 .HasForeignKey(x => x.PregnancyId)
+                 .OnDelete(DeleteBehavior.SetNull);
 
-                entity.HasIndex(e => new { e.BabyId, e.ChangeDate });
+                e.HasIndex(x => new { x.ParentProfileId, x.BirthDate });
+            });
+
+            model.Entity<BabyGrowth>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.WeekNumber).IsRequired();
+                e.Property(x => x.WeightKg).HasPrecision(5, 2);
+                e.Property(x => x.HeightCm).HasPrecision(5, 2);
+                e.Property(x => x.HeadCircumferenceCm).HasPrecision(5, 2);
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.Growths)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BabyId, x.WeekNumber }).IsUnique();
+            });
+
+            model.Entity<SleepLog>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Notes).HasMaxLength(1000);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+                e.Ignore(x => x.DurationMinutes);
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.SleepLogs)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BabyId, x.SleepDate });
+            });
+
+            model.Entity<DiaperLog>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.DiaperState).HasMaxLength(30);
+                e.Property(x => x.Notes).HasMaxLength(1000);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.DiaperLogs)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BabyId, x.ChangeDate });
+            });
+
+            model.Entity<HealthEntry>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Medicines).HasMaxLength(1000);
+                e.Property(x => x.DoctorVisit).HasMaxLength(500);
+                e.Property(x => x.TemperatureC).HasPrecision(4, 2);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.HealthEntries)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BabyId, x.EntryDate });
+            });
+
+            model.Entity<MealPlan>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FoodItem).HasMaxLength(200);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+                // Rating ostaje nullable (default null)
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.MealPlans)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BabyId, x.WeekNumber });
+            });
+
+            model.Entity<FeedingLog>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.AmountMl).HasPrecision(10, 2);
+                e.Property(x => x.Notes).HasMaxLength(1000);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.FeedingLogs)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.FoodType)
+                 .WithMany()
+                 .HasForeignKey(x => x.FoodTypeId)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
         }
 
-        private void ConfigureSleepLog(ModelBuilder modelBuilder)
+        private static void ConfigurePregnancy(ModelBuilder model)
         {
-            modelBuilder.Entity<SleepLog>(entity =>
+            model.Entity<Pregnancy>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.Property(e => e.Notes).HasMaxLength(1000);
+                e.HasOne(x => x.User)
+                 .WithMany(p => p.Pregnancies)
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.SleepLogs)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => new { e.BabyId, e.SleepDate });
+                e.HasIndex(x => new { x.UserId, x.CreatedAt });
             });
         }
-        private void ConfigureHealthEntry(ModelBuilder modelBuilder)
+
+
+        private static void ConfigureBlog(ModelBuilder model)
         {
-            modelBuilder.Entity<HealthEntry>(entity =>
+            model.Entity<BlogCategory>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Name).IsRequired().HasMaxLength(150);
+                e.HasIndex(x => x.Name).IsUnique();
+            });
 
-                entity.Property(e => e.Medicines).HasMaxLength(1000);
-                entity.Property(e => e.DoctorVisit).HasMaxLength(500);
+            model.Entity<BlogPost>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Title).IsRequired().HasMaxLength(200);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.Property(e => e.TemperatureC).HasPrecision(4, 2);
+                e.HasOne(x => x.Author)
+                 .WithMany(d => d.BlogPosts)
+                 .HasForeignKey(x => x.AuthorId)
+                 .OnDelete(DeleteBehavior.SetNull);
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.HealthEntries)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(x => x.CreatedAt);
+            });
 
-                entity.HasIndex(e => new { e.BabyId, e.EntryDate });
+            model.Entity<BlogPostCategory>(e =>
+            {
+                e.HasKey(x => new { x.PostId, x.CategoryId });
+
+                e.HasOne(x => x.Post)
+                 .WithMany(p => p.BlogPostCategories)
+                 .HasForeignKey(x => x.PostId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Category)
+                 .WithMany(c => c.BlogPostCategories)
+                 .HasForeignKey(x => x.CategoryId)
+                 .OnDelete(DeleteBehavior.Cascade);
             });
         }
-        private void ConfigureMilestone(ModelBuilder modelBuilder)
+
+
+        private static void ConfigureCalendar(ModelBuilder model)
         {
-            modelBuilder.Entity<Milestone>(entity =>
+            model.Entity<CalendarEvent>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Title).HasMaxLength(200);
+                e.Property(x => x.Description).HasMaxLength(2000);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.Property(e => e.Title).HasMaxLength(200);
-                entity.Property(e => e.Notes).HasMaxLength(1000);
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.CalendarEvents)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.Milestones)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                // UserId -> ParentProfile (nullable)
+                e.HasOne(x => x.User)
+                 .WithMany(p => p.CalendarEvents)
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.SetNull);
 
-                entity.HasIndex(e => new { e.BabyId, e.AchievedDate });
+                e.HasIndex(x => new { x.BabyId, x.StartAt });
             });
         }
-        private void ConfigureBabyGrowth(ModelBuilder modelBuilder)
+
+
+        private static void ConfigureChat(ModelBuilder model)
         {
-            modelBuilder.Entity<BabyGrowth>(entity =>
+            model.Entity<ChatRoom>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Name).HasMaxLength(150);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+                e.Property(x => x.IsPrivate).HasDefaultValue(false);
+            });
 
-                entity.Property(e => e.WeekNumber).IsRequired();
+            model.Entity<ChatMember>(e =>
+            {
+                e.HasKey(x => new { x.RoomId, x.UserId });
+                e.Property(x => x.JoinedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.Property(e => e.WeightKg).HasPrecision(5, 2);
-                entity.Property(e => e.HeightCm).HasPrecision(5, 2);
-                entity.Property(e => e.HeadCircumferenceCm).HasPrecision(5, 2);
+                e.HasOne(x => x.Room)
+                 .WithMany(r => r.Members)
+                 .HasForeignKey(x => x.RoomId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.Growths)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.User)
+                 .WithMany()
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
 
-                entity.HasIndex(e => new { e.BabyId, e.WeekNumber }).IsUnique();
+            model.Entity<ChatMessage>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Content).IsRequired();
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.Room)
+                 .WithMany(r => r.Messages)
+                 .HasForeignKey(x => x.RoomId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.User)
+                 .WithMany()
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.RoomId, x.CreatedAt });
             });
         }
-        private void ConfigureMealPlan(ModelBuilder modelBuilder)
+
+
+        private static void ConfigureMedication(ModelBuilder model)
         {
-            modelBuilder.Entity<MealPlan>(entity =>
+            model.Entity<MedicationPlan>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.MedicineName).IsRequired().HasMaxLength(200);
+                e.Property(x => x.Dose).IsRequired().HasMaxLength(100);
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.Property(e => e.FoodItem).HasMaxLength(200);
-                entity.Property(e => e.FoodRating).HasDefaultValue(null);
+                e.HasOne(x => x.User)
+                 .WithMany(p => p.MedicationPlans)
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.MealPlans)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasMany(x => x.Times)
+                 .WithOne(t => t.Plan)
+                 .HasForeignKey(t => t.PlanId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(e => new { e.BabyId, e.WeekNumber });
+                e.HasMany(x => x.IntakeLogs)
+                 .WithOne(l => l.Plan)
+                 .HasForeignKey(l => l.PlanId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.UserId, x.MedicineName });
+            });
+
+            model.Entity<MedicationScheduleTime>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.IntakeTime).IsRequired();
+            });
+
+            model.Entity<MedicationIntakeLog>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.ScheduledDate).IsRequired();
+                e.Property(x => x.IntakeTime).IsRequired();
             });
         }
-        private void ConfigureCalendarEvent(ModelBuilder modelBuilder)
+
+
+        private static void ConfigureStaticLookups(ModelBuilder model)
         {
-            modelBuilder.Entity<CalendarEvent>(entity =>
+            model.Entity<FetalDevelopmentWeek>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.WeekNumber).IsRequired();
+                e.Property(x => x.ImageUrl).HasMaxLength(500);
+                e.Property(x => x.BabyDevelopment).HasMaxLength(5000);
+                e.Property(x => x.MotherChanges).HasMaxLength(5000);
+                e.HasIndex(x => x.WeekNumber).IsUnique();
+            });
 
-                entity.Property(e => e.Title).HasMaxLength(200);
-                entity.Property(e => e.Description).HasMaxLength(2000);
+            model.Entity<FoodType>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Name).IsRequired().HasMaxLength(120);
+                e.HasIndex(x => x.Name).IsUnique();
+            });
 
-                entity.HasOne(e => e.Baby)
-                    .WithMany(b => b.CalendarEvents)
-                    .HasForeignKey(e => e.BabyId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => new { e.BabyId, e.StartAt });
+            model.Entity<WeeklyAdvice>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.AdviceText).HasMaxLength(4000);
+                e.HasIndex(x => x.WeekNumber).IsUnique();
             });
         }
 
-        private void ConfigurePregnancy(ModelBuilder modelBuilder)
+
+        private static void ConfigureQA(ModelBuilder model)
         {
-            modelBuilder.Entity<Pregnancy>(entity =>
+            model.Entity<QaQuestion>(e =>
             {
-                entity.HasKey(e => e.Id);
+                e.HasKey(x => x.Id);
+                e.Property(x => x.QuestionText).IsRequired();
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.HasOne(e => e.User)
-                    .WithMany(u => u.Pregnancies)
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.AskedBy)
+                 .WithMany(p => p.QuestionsAsked)
+                 .HasForeignKey(x => x.AskedById)
+                 .OnDelete(DeleteBehavior.SetNull);
+            });
 
-                entity.Property(e => e.LmpDate).IsRequired(false);
-                entity.Property(e => e.DueDate).IsRequired(false);
+            model.Entity<QaAnswer>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.AnswerText).IsRequired();
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+                e.HasOne(x => x.Question)
+                 .WithMany(q => q.Answers)
+                 .HasForeignKey(x => x.QuestionId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.AnsweredBy)
+                 .WithMany(d => d.QaAnswers)
+                 .HasForeignKey(x => x.AnsweredById)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
         }
-        private void ConfigureFetalDevelopmentWeek(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<FetalDevelopmentWeek>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.WeekNumber).IsRequired();
-                entity.Property(e => e.ImageUrl).HasMaxLength(500);
-                entity.Property(e => e.BabyDevelopment).HasMaxLength(5000);
-                entity.Property(e => e.MotherChanges).HasMaxLength(5000);
-
-                entity.HasIndex(e => e.WeekNumber).IsUnique();
-            });
-        }
-        private void ConfigureWeeklyAdvice(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<WeeklyAdvice>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.AdviceText).HasMaxLength(4000);
-
-                entity.HasIndex(e => e.WeekNumber).IsUnique();
-            });
-        }
-        private void ConfigureBlogPost(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<BlogPostCategory>(entity =>
-            {
-                entity.HasKey(e => new { e.PostId, e.CategoryId });
-
-                entity.HasOne(e => e.Post)
-                      .WithMany(p => p.BlogPostCategories)
-                      .HasForeignKey(e => e.PostId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Category)
-                      .WithMany(c => c.BlogPostCategories)
-                      .HasForeignKey(e => e.CategoryId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-
-        }
-        private void ConfigureQa(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<QaQuestion>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.QuestionText).IsRequired().HasMaxLength(2000);
-
-                entity.HasIndex(e => new { e.AskedByUserId, e.CreatedAt });
-            });
-
-            modelBuilder.Entity<QaAnswer>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.AnswerText).IsRequired().HasMaxLength(4000);
-
-                entity.HasOne(e => e.Question)
-                      .WithMany(q => q.Answers)
-                      .HasForeignKey(e => e.QuestionId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => new { e.QuestionId, e.CreatedAt });
-            });
-        }
-        private void ConfigureMedicationPlan(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<MedicationPlan>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.MedicineName).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.Dose).IsRequired().HasMaxLength(100);
-
-                entity.HasOne(e => e.User)
-                      .WithMany(u => u.MedicationPlans)
-                      .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasMany(e => e.Times)
-                      .WithOne(t => t.Plan)
-                      .HasForeignKey(t => t.PlanId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasMany(e => e.IntakeLogs)
-                      .WithOne(l => l.Plan)
-                      .HasForeignKey(l => l.PlanId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => new { e.UserId, e.MedicineName });
-            });
-        }
-
-
-
     }
 }

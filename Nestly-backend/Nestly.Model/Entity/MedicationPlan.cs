@@ -9,7 +9,7 @@ namespace Nestly.Model.Entity
     {
         [Key]
         public long Id { get; set; }
-        [ForeignKey(nameof(AppUser))]
+        [ForeignKey(nameof(ParentProfile))]
         public long UserId { get; set; }
 
         public DateTime StartDate { get; set; }
@@ -20,7 +20,7 @@ namespace Nestly.Model.Entity
         public DateTime CreatedAt { get; set; }
 
 
-        public AppUser User { get; set; }
+        public ParentProfile User { get; set; }
         public ICollection<MedicationScheduleTime> Times { get; set; }
         public ICollection<MedicationIntakeLog> IntakeLogs { get; set; }
     }

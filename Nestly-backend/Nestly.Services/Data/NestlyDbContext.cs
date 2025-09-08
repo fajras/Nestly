@@ -31,6 +31,7 @@ namespace Nestly.Services.Data
         public DbSet<HealthEntry> HealthEntries { get; set; }
         public DbSet<MealPlan> MealPlans { get; set; }
         public DbSet<SleepLog> SleepLogs { get; set; }
+        public DbSet<Milestone> Milestones { get; set; }
 
         public DbSet<FetalDevelopmentWeek> FetalDevelopmentWeeks { get; set; }
         public DbSet<FoodType> FoodTypes { get; set; }
@@ -60,8 +61,6 @@ namespace Nestly.Services.Data
             ConfigureCalendar(modelBuilder);
 
             ConfigureChat(modelBuilder);
-
-            ConfigureHealthAndDailyLogs(modelBuilder);
 
             ConfigureMedication(modelBuilder);
 
@@ -227,7 +226,6 @@ namespace Nestly.Services.Data
                 e.HasKey(x => x.Id);
                 e.Property(x => x.FoodItem).HasMaxLength(200);
                 e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
-                // Rating ostaje nullable (default null)
 
                 e.HasOne(x => x.Baby)
                  .WithMany(b => b.MealPlans)

@@ -1,5 +1,6 @@
-﻿using Nestly.Model.Entity;
-using Nestly.Model.SearchObjects;
+﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
+using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -12,40 +13,57 @@ namespace Nestly.Services.Repository
         {
             _db = db;
         }
-        public List<AppUser> Get(AppUserSearchObject? search)
+        public List<AppUserResultDto> Get(AppUserSearchObject? search)
         {
-            IQueryable<AppUser> q = _db.AppUsers.AsQueryable();
+            IQueryable<AppUser> q = _db.AppUsers
+                .Include(u => u.ParentProfile)
+                .Include(u => u.DoctorProfile);
 
             if (!string.IsNullOrWhiteSpace(search?.Email))
             {
-                var email = search.Email.Trim();
-                q = q.Where(x => x.Email.Contains(email));
+                q = q.Where(x => x.Email == search.Email);
             }
 
             if (!string.IsNullOrWhiteSpace(search?.Username))
             {
-                var username = search.Username.Trim();
-                q = q.Where(x => x.Username.Contains(username));
+                q = q.Where(x => x.Username.Contains(search.Username));
             }
 
             if (!string.IsNullOrWhiteSpace(search?.FirstName))
             {
-                var fn = search.FirstName.Trim();
-                q = q.Where(x => x.FirstName != null && x.FirstName.Contains(fn));
+                q = q.Where(x => x.FirstName.Contains(search.FirstName));
             }
 
             if (!string.IsNullOrWhiteSpace(search?.LastName))
             {
-                var ln = search.LastName.Trim();
-                q = q.Where(x => x.LastName != null && x.LastName.Contains(ln));
+                q = q.Where(x => x.LastName.Contains(search.LastName));
             }
 
-            return q.ToList();
+            return q
+                .Select(x => new AppUserResultDto
+                {
+                    Email = x.Email,
+                    Username = x.Username,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                })
+                .ToList();
         }
 
-        public AppUser? GetById(long id)
+        public AppUserResultDto? GetById(long id)
         {
-            return _db.AppUsers.FirstOrDefault(x => x.Id == id);
+            return _db.AppUsers
+                .Include(u => u.ParentProfile)
+                .Include(u => u.DoctorProfile)
+                .Where(u => u.Id == id)
+                .Select(x => new AppUserResultDto
+                {
+                    Email = x.Email,
+                    Username = x.Username,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                })
+                .FirstOrDefault();
         }
 
         public AppUser Create(AppUser entity)
@@ -60,9 +78,14 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("Username is required.");
             }
 
-            if (string.IsNullOrWhiteSpace(entity.Password))
+            if (_db.AppUsers.Any(u => u.Email == entity.Email))
             {
-                throw new ArgumentException("Password is required.");
+                throw new ArgumentException("Email already exists.");
+            }
+
+            if (_db.AppUsers.Any(u => u.Username == entity.Username))
+            {
+                throw new ArgumentException("Username already exists.");
             }
 
             _db.AppUsers.Add(entity);
@@ -70,39 +93,62 @@ namespace Nestly.Services.Repository
             return entity;
         }
 
-        public AppUser? Update(long id, AppUser entity)
+        public AppUser? Patch(long id, AppUserPatchDto patch)
         {
-            var dbEntity = _db.AppUsers.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var u = _db.AppUsers.FirstOrDefault(x => x.Id == id);
+            if (u is null)
             {
                 return null;
             }
 
-            dbEntity.FirstName = entity.FirstName;
-            dbEntity.LastName = entity.LastName;
-            dbEntity.PhoneNumber = entity.PhoneNumber;
-            dbEntity.DateOfBirth = entity.DateOfBirth;
-            dbEntity.Gender = entity.Gender;
-            dbEntity.Role = entity.Role;
+
+            if (patch.FirstName is not null)
+            {
+                u.FirstName = patch.FirstName;
+            }
+
+            if (patch.LastName is not null)
+            {
+                u.LastName = patch.LastName;
+            }
+
+            if (patch.PhoneNumber is not null)
+            {
+                u.PhoneNumber = patch.PhoneNumber;
+            }
+
+            if (patch.DateOfBirth is not null)
+            {
+                u.DateOfBirth = patch.DateOfBirth;
+            }
+
+            if (patch.Gender is not null)
+            {
+                u.Gender = patch.Gender;
+            }
+
+            if (patch.Password is not null)
+            {
+                u.Password = patch.Password;
+            }
 
             _db.SaveChanges();
-            return dbEntity;
+            return u;
         }
 
         public bool Delete(long id)
         {
-            var dbEntity = _db.AppUsers.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var u = _db.AppUsers.FirstOrDefault(x => x.Id == id);
+            if (u is null)
             {
                 return false;
             }
 
-            _db.AppUsers.Remove(dbEntity);
+            _db.AppUsers.Remove(u);
             _db.SaveChanges();
             return true;
         }
-
-
-
     }
+
+
 }

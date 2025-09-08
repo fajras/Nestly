@@ -16,23 +16,12 @@ namespace Nestly_WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<AppUser>> Get([FromQuery] AppUserSearchObject? search)
-        {
-            var result = appUserService.Get(search);
-            return Ok(result);
-        }
+        public ActionResult<IEnumerable<AppUserResultDto>> Get([FromQuery] AppUserSearchObject? search)
+            => Ok(appUserService.Get(search));
 
         [HttpGet("{id:long}")]
-        public ActionResult<AppUser> GetById([FromRoute] long id)
-        {
-            var entity = appUserService.GetById(id);
-            if (entity is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(entity);
-        }
+        public ActionResult<AppUserResultDto> GetById(long id)
+            => appUserService.GetById(id) is { } dto ? Ok(dto) : NotFound();
 
         [HttpPost]
         public ActionResult<AppUser> Create([FromBody] AppUser request)
@@ -41,30 +30,23 @@ namespace Nestly_WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PUT api/AppUser/5
-        [HttpPut("{id:long}")]
-        public ActionResult<AppUser> Update([FromRoute] long id, [FromBody] AppUser request)
+        [HttpPatch("{id:long}")]
+        public ActionResult<AppUser> Patch(long id, [FromBody] AppUserPatchDto patch)
         {
-            var updated = appUserService.Update(id, request);
-            if (updated is null)
+            try
             {
-                return NotFound();
+                var updated = appUserService.Patch(id, patch);
+                return updated is null ? NotFound() : Ok(updated);
             }
-
-            return Ok(updated);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id:long}")]
-        public IActionResult Delete([FromRoute] long id)
-        {
-            var ok = appUserService.Delete(id);
-            if (!ok)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
-        }
+        public IActionResult Delete(long id)
+            => appUserService.Delete(id) ? NoContent() : NotFound();
     }
 }
 

@@ -24,7 +24,7 @@ namespace Nestly_WebAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Milestone> Create([FromBody] CreateMilestopneDto request)
+        public ActionResult<Milestone> Create([FromBody] CreateMilestoneDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);

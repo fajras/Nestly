@@ -11,10 +11,11 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public QaQuestionService(NestlyDbContext db) => _db = db;
 
-        public async Task<List<QaQuestion>> Get(QaQuestionSearchObject? search)
+        public async Task<List<QaQuestion>> Get(QaQuestionSearchObject? search, CancellationToken ct = default)
         {
             IQueryable<QaQuestion> q = _db.QaQuestions
-                .Include(x => x.AskedBy)
+                .AsNoTracking()
+                .Include(x => x.AskedBy)     // AppUser
                 .Include(x => x.Answers);
 
             if (search?.AskedByUserId is not null)
@@ -37,16 +38,17 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.CreatedAt <= search.To.Value);
             }
 
-            return await q.OrderByDescending(x => x.CreatedAt).ToListAsync();
+            return await q.OrderByDescending(x => x.CreatedAt).ToListAsync(ct);
         }
 
-        public async Task<QaQuestion?> GetById(long id) =>
+        public async Task<QaQuestion?> GetById(long id, CancellationToken ct = default) =>
             await _db.QaQuestions
-                .Include(x => x.AskedBy)
+                .AsNoTracking()
+                .Include(x => x.AskedBy)     // AppUser
                 .Include(x => x.Answers)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-        public async Task<QaQuestion> CreateAsync(CreateQaQuestionDto dto, CancellationToken ct = default)
+        public async Task<QaQuestion> Create(CreateQaQuestionDto dto, CancellationToken ct = default)
         {
             if (dto is null)
             {
@@ -62,19 +64,21 @@ namespace Nestly.Services.Repository
 
             if (dto.AskedById.HasValue)
             {
-                var parentExists = await _db.ParentProfiles
-                    .AnyAsync(p => p.Id == dto.AskedById.Value, ct);
+                var userExists = await _db.AppUsers
+                    .AsNoTracking()
+                    .AnyAsync(u => u.Id == dto.AskedById.Value, ct);
 
-                if (!parentExists)
+                if (!userExists)
                 {
-                    throw new ArgumentException("AskedBy (ParentProfile) does not exist.", nameof(dto.AskedById));
+                    throw new ArgumentException("AskedBy user does not exist.", nameof(dto.AskedById));
                 }
             }
 
             var entity = new QaQuestion
             {
                 QuestionText = text,
-                AskedById = dto.AskedById
+                AskedById = dto.AskedById,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _db.QaQuestions.AddAsync(entity, ct);
@@ -82,9 +86,9 @@ namespace Nestly.Services.Repository
             return entity;
         }
 
-        public async Task<QaQuestion?> Patch(long id, QaQuestionPatchDto patch)
+        public async Task<QaQuestion?> Patch(long id, QaQuestionPatchDto patch, CancellationToken ct = default)
         {
-            var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id);
+            var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (q is null)
             {
                 return null;
@@ -97,43 +101,51 @@ namespace Nestly.Services.Repository
 
             if (patch.AskedByUserId is not null && patch.AskedByUserId != q.AskedById)
             {
-                if (!await _db.AppUsers.AnyAsync(u => u.Id == patch.AskedByUserId.Value))
+                var exists = await _db.AppUsers
+                    .AsNoTracking()
+                    .AnyAsync(u => u.Id == patch.AskedByUserId.Value, ct);
+                if (!exists)
                 {
-                    throw new ArgumentException("AskedBy user does not exist.");
+                    throw new ArgumentException("AskedBy user does not exist.", nameof(patch.AskedByUserId));
                 }
 
                 q.AskedById = patch.AskedByUserId.Value;
             }
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return q;
         }
 
-        public async Task<bool> Delete(long id)
+        public async Task<bool> Delete(long id, CancellationToken ct = default)
         {
-            var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id);
+            var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (q is null)
             {
                 return false;
             }
 
             _db.QaQuestions.Remove(q);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return true;
         }
 
-        public async Task<QaAnswer> CreateAnswer(long questionId, QaAnswer answer)
+        public async Task<QaAnswer> CreateAnswer(long questionId, QaAnswer answer, CancellationToken ct = default)
         {
-            var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == questionId);
+            var q = await _db.QaQuestions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == questionId, ct);
             if (q is null)
             {
-                throw new ArgumentException("Question not found.");
+                throw new ArgumentException("Question not found.", nameof(questionId));
             }
 
-            if (answer.AnsweredById is not null &&
-                !await _db.AppUsers.AnyAsync(u => u.Id == answer.AnsweredById.Value))
+            if (answer.AnsweredById is not null)
             {
-                throw new ArgumentException("AnsweredBy user does not exist.");
+                var userExists = await _db.AppUsers
+                    .AsNoTracking()
+                    .AnyAsync(u => u.Id == answer.AnsweredById.Value, ct);
+                if (!userExists)
+                {
+                    throw new ArgumentException("AnsweredBy user does not exist.", nameof(answer.AnsweredById));
+                }
             }
 
             answer.QuestionId = questionId;
@@ -143,16 +155,17 @@ namespace Nestly.Services.Repository
             }
 
             _db.QaAnswers.Add(answer);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return answer;
         }
 
-        public async Task<List<QaAnswer>> GetAnswers(long questionId) =>
+        public async Task<List<QaAnswer>> GetAnswers(long questionId, CancellationToken ct = default) =>
             await _db.QaAnswers
+                .AsNoTracking()
                 .Include(a => a.AnsweredBy)
                 .Where(a => a.QuestionId == questionId)
                 .OrderBy(a => a.CreatedAt)
-                .ToListAsync();
+                .ToListAsync(ct);
     }
 
 }

@@ -1,14 +1,15 @@
-﻿using Nestly.Model.Entity;
-using Nestly.Model.SearchObjects;
+﻿using Nestly.Model.DTOObjects;
+using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
     public interface IAppUserService
     {
-        List<AppUser> Get(AppUserSearchObject? search);
-        AppUser? GetById(long id);
+        List<AppUserResultDto> Get(AppUserSearchObject? search);
+        AppUserResultDto? GetById(long id);
         AppUser Create(AppUser entity);
-        AppUser? Update(long id, AppUser entity);
+        AppUser? Patch(long id, AppUserPatchDto patch);
         bool Delete(long id);
     }
+
 }

@@ -11,8 +11,6 @@ namespace Nestly.Services.Data
         public DbSet<ParentProfile> ParentProfiles { get; set; }
         public DbSet<DoctorProfile> DoctorProfiles { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
-
         public DbSet<BabyProfile> BabyProfiles { get; set; }
         public DbSet<BabyGrowth> BabyGrowths { get; set; }
 
@@ -51,7 +49,6 @@ namespace Nestly.Services.Data
             base.OnModelCreating(modelBuilder);
 
             ConfigureUsersAndProfiles(modelBuilder);
-            ConfigureRoles(modelBuilder);
 
             ConfigureBabyProfileAndChildren(modelBuilder);
             ConfigurePregnancy(modelBuilder);
@@ -72,10 +69,18 @@ namespace Nestly.Services.Data
 
         private static void ConfigureUsersAndProfiles(ModelBuilder model)
         {
+            // Role
+            model.Entity<Role>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Name).IsRequired().HasMaxLength(50);
+                e.HasIndex(x => x.Name).IsUnique();
+            });
+
+            // AppUser
             model.Entity<AppUser>(e =>
             {
                 e.HasKey(x => x.Id);
-
                 e.Property(x => x.Email).IsRequired().HasMaxLength(255);
                 e.Property(x => x.Username).IsRequired().HasMaxLength(100);
                 e.Property(x => x.FirstName).HasMaxLength(150);
@@ -87,54 +92,38 @@ namespace Nestly.Services.Data
                 e.HasIndex(x => x.Email).IsUnique();
                 e.HasIndex(x => x.Username).IsUnique();
 
+                e.HasOne(x => x.Role)
+                 .WithMany(r => r.Users)
+                 .HasForeignKey(x => x.RoleId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                // 1-1 ParentProfile
                 e.HasOne(x => x.ParentProfile)
                  .WithOne(p => p.User)
                  .HasForeignKey<ParentProfile>(p => p.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
 
+                // 1-1 DoctorProfile
                 e.HasOne(x => x.DoctorProfile)
                  .WithOne(d => d.User)
                  .HasForeignKey<DoctorProfile>(d => d.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // ParentProfile
             model.Entity<ParentProfile>(e =>
             {
                 e.HasKey(x => x.Id);
                 e.HasIndex(x => x.UserId).IsUnique();
             });
 
+            // DoctorProfile
             model.Entity<DoctorProfile>(e =>
             {
                 e.HasKey(x => x.Id);
                 e.HasIndex(x => x.UserId).IsUnique();
             });
         }
-
-        private static void ConfigureRoles(ModelBuilder model)
-        {
-            model.Entity<Role>(e =>
-            {
-                e.HasKey(x => x.Id);
-                e.Property(x => x.Name).IsRequired().HasMaxLength(80);
-                e.HasIndex(x => x.Name).IsUnique();
-            });
-
-            model.Entity<UserRole>(e =>
-            {
-                e.HasKey(x => new { x.UserId, x.RoleId });
-                e.HasOne(x => x.User)
-                 .WithMany(u => u.UserRoles)
-                 .HasForeignKey(x => x.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-
-                e.HasOne(x => x.Role)
-                 .WithMany(r => r.UserRoles)
-                 .HasForeignKey(x => x.RoleId)
-                 .OnDelete(DeleteBehavior.Cascade);
-            });
-        }
-
 
         private static void ConfigureBabyProfileAndChildren(ModelBuilder model)
         {
@@ -476,12 +465,12 @@ namespace Nestly.Services.Data
                 e.HasOne(x => x.Question)
                  .WithMany(q => q.Answers)
                  .HasForeignKey(x => x.QuestionId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.NoAction);
 
                 e.HasOne(x => x.AnsweredBy)
                  .WithMany(d => d.QaAnswers)
                  .HasForeignKey(x => x.AnsweredById)
-                 .OnDelete(DeleteBehavior.SetNull);
+                 .OnDelete(DeleteBehavior.SetNull); // ok
             });
         }
     }

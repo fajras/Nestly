@@ -19,15 +19,25 @@ namespace Nestly_WebAPI.Controllers
         public ActionResult<IEnumerable<AppUserResultDto>> Get([FromQuery] AppUserSearchObject? search)
             => Ok(appUserService.Get(search));
 
-        [HttpGet("{id:long}")]
+        [HttpGet("{id:long}", Name = "GetAppUserById")]
         public ActionResult<AppUserResultDto> GetById(long id)
             => appUserService.GetById(id) is { } dto ? Ok(dto) : NotFound();
 
         [HttpPost]
-        public ActionResult<AppUser> Create([FromBody] AppUser request)
+        public ActionResult<AppUserResultDto> Create([FromBody] CreateAppUserDto request)
         {
             var created = appUserService.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+
+            var dto = new AppUserResultDto
+            {
+                Email = created.Email,
+                Username = created.Username,
+                FirstName = created.FirstName,
+                LastName = created.LastName,
+                RoleId = created.RoleId
+            };
+
+            return CreatedAtRoute("GetAppUserById", new { id = created.Id }, dto);
         }
 
         [HttpPatch("{id:long}")]

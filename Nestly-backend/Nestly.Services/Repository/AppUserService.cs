@@ -46,6 +46,7 @@ namespace Nestly.Services.Repository
                     Username = x.Username,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
+                    RoleId = x.RoleId
                 })
                 .ToList();
         }
@@ -66,32 +67,112 @@ namespace Nestly.Services.Repository
                 .FirstOrDefault();
         }
 
-        public AppUser Create(AppUser entity)
+
+        public AppUser Create(CreateAppUserDto dto)
         {
-            if (string.IsNullOrWhiteSpace(entity.Email))
+            if (dto is null)
             {
-                throw new ArgumentException("Email is required.");
+                throw new ArgumentNullException(nameof(dto));
             }
 
-            if (string.IsNullOrWhiteSpace(entity.Username))
+            // --- validacije koje već imaš (skraćeno) ---
+            var email = dto.Email?.Trim();
+            var username = dto.Username?.Trim();
+            var firstName = dto.FirstName?.Trim();
+            var lastName = dto.LastName?.Trim();
+            var phone = dto.PhoneNumber?.Trim();
+            var gender = dto.Gender?.Trim();
+            var password = dto.Password;
+
+            if (string.IsNullOrWhiteSpace(email))
             {
-                throw new ArgumentException("Username is required.");
+                throw new ArgumentException("Email is required.", nameof(dto.Email));
             }
 
-            if (_db.AppUsers.Any(u => u.Email == entity.Email))
+            if (string.IsNullOrWhiteSpace(username))
             {
-                throw new ArgumentException("Email already exists.");
+                throw new ArgumentException("Username is required.", nameof(dto.Username));
             }
 
-            if (_db.AppUsers.Any(u => u.Username == entity.Username))
+            if (string.IsNullOrWhiteSpace(firstName))
             {
-                throw new ArgumentException("Username already exists.");
+                throw new ArgumentException("FirstName is required.", nameof(dto.FirstName));
             }
 
-            _db.AppUsers.Add(entity);
-            _db.SaveChanges();
-            return entity;
+            if (string.IsNullOrWhiteSpace(lastName))
+            {
+                throw new ArgumentException("LastName is required.", nameof(dto.LastName));
+            }
+
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                throw new ArgumentException("PhoneNumber is required.", nameof(dto.PhoneNumber));
+            }
+
+            if (string.IsNullOrWhiteSpace(gender))
+            {
+                throw new ArgumentException("Gender is required.", nameof(dto.Gender));
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                throw new ArgumentException("Password is required.", nameof(dto.Password));
+            }
+
+            if (_db.AppUsers.Any(u => u.Email == email))
+            {
+                throw new ArgumentException("Email already exists.", nameof(dto.Email));
+            }
+
+            if (_db.AppUsers.Any(u => u.Username == username))
+            {
+                throw new ArgumentException("Username already exists.", nameof(dto.Username));
+            }
+
+            var role = _db.Roles.FirstOrDefault(r => r.Id == dto.RoleId)
+                ?? throw new ArgumentException("Role not found.", nameof(dto.RoleId));
+
+            using var tx = _db.Database.BeginTransaction();
+            try
+            {
+                var user = new AppUser
+                {
+                    Email = dto.Email.Trim(),
+                    FirstName = dto.FirstName.Trim(),
+                    LastName = dto.LastName.Trim(),
+                    PhoneNumber = dto.PhoneNumber.Trim(),
+                    DateOfBirth = dto.DateOfBirth,
+                    Gender = dto.Gender.Trim(),
+                    Username = dto.Username.Trim(),
+                    Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    RoleId = role.Id
+                };
+
+                _db.AppUsers.Add(user);
+                _db.SaveChanges();
+
+                var roleName = role.Name.ToUpperInvariant();
+                if (roleName == "PARENT" && !_db.ParentProfiles.Any(p => p.UserId == user.Id))
+                {
+                    _db.ParentProfiles.Add(new ParentProfile { UserId = user.Id });
+                    _db.SaveChanges();
+                }
+                else if (roleName == "DOCTOR" && !_db.DoctorProfiles.Any(d => d.UserId == user.Id))
+                {
+                    _db.DoctorProfiles.Add(new DoctorProfile { UserId = user.Id });
+                    _db.SaveChanges();
+                }
+
+                tx.Commit();
+                return user;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
+
 
         public AppUser? Patch(long id, AppUserPatchDto patch)
         {
@@ -129,7 +210,7 @@ namespace Nestly.Services.Repository
 
             if (patch.Password is not null)
             {
-                u.Password = patch.Password;
+                u.Password = BCrypt.Net.BCrypt.HashPassword(patch.Password);
             }
 
             _db.SaveChanges();

@@ -8,7 +8,7 @@ using Nestly.Services.Data;
 
 #nullable disable
 
-namespace Nestly.Services.Migrations
+namespace Nestly.Services.Data.Migrations
 {
     [DbContext(typeof(NestlyDbContext))]
     partial class NestlyDbContextModelSnapshot : ModelSnapshot
@@ -17,7 +17,7 @@ namespace Nestly.Services.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.19")
+                .HasAnnotation("ProductVersion", "8.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -40,15 +40,18 @@ namespace Nestly.Services.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -56,11 +59,11 @@ namespace Nestly.Services.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -71,6 +74,8 @@ namespace Nestly.Services.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -129,19 +134,26 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Gender")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<long>("UserId")
+                    b.Property<long>("ParentProfileId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("PregnancyId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("PregnancyId");
+
+                    b.HasIndex("ParentProfileId", "BirthDate");
 
                     b.ToTable("BabyProfiles");
                 });
@@ -156,9 +168,13 @@ namespace Nestly.Services.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("BlogCategories");
                 });
@@ -179,11 +195,14 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -191,6 +210,8 @@ namespace Nestly.Services.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
+
+                    b.HasIndex("CreatedAt");
 
                     b.ToTable("BlogPosts");
                 });
@@ -222,7 +243,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -261,7 +284,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.HasKey("RoomId", "UserId");
 
@@ -283,7 +308,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<long>("RoomId")
                         .HasColumnType("bigint");
@@ -293,9 +320,9 @@ namespace Nestly.Services.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoomId");
-
                     b.HasIndex("UserId");
+
+                    b.HasIndex("RoomId", "CreatedAt");
 
                     b.ToTable("ChatMessages");
                 });
@@ -309,16 +336,26 @@ namespace Nestly.Services.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<bool>("IsPrivate")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<long?>("ParentProfileId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentProfileId");
 
                     b.ToTable("ChatRooms");
                 });
@@ -341,7 +378,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("time");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("DiaperState")
                         .IsRequired()
@@ -360,6 +399,25 @@ namespace Nestly.Services.Migrations
                     b.ToTable("DiaperLogs");
                 });
 
+            modelBuilder.Entity("Nestly.Model.Entity.DoctorProfile", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("DoctorProfiles");
+                });
+
             modelBuilder.Entity("Nestly.Model.Entity.FeedingLog", b =>
                 {
                     b.Property<long>("Id")
@@ -369,13 +427,16 @@ namespace Nestly.Services.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<decimal?>("AmountMl")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
 
                     b.Property<long>("BabyId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<DateTime>("FeedDate")
                         .HasColumnType("datetime2");
@@ -388,7 +449,8 @@ namespace Nestly.Services.Migrations
 
                     b.Property<string>("Notes")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.HasKey("Id");
 
@@ -443,9 +505,13 @@ namespace Nestly.Services.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("FoodTypes");
                 });
@@ -462,7 +528,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("DoctorVisit")
                         .IsRequired()
@@ -500,7 +568,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("FoodItem")
                         .IsRequired()
@@ -559,7 +629,9 @@ namespace Nestly.Services.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Dose")
                         .IsRequired()
@@ -626,20 +698,36 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BabyId", "AchievedDate");
+                    b.HasIndex("BabyId");
 
                     b.ToTable("Milestones");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.ParentProfile", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("ParentProfiles");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.Pregnancy", b =>
@@ -651,7 +739,9 @@ namespace Nestly.Services.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
@@ -679,17 +769,15 @@ namespace Nestly.Services.Migrations
 
                     b.Property<string>("AnswerText")
                         .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("AnsweredById")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("AnsweredByUserId")
+                    b.Property<long?>("AnsweredById")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<long>("QuestionId")
                         .HasColumnType("bigint");
@@ -698,7 +786,7 @@ namespace Nestly.Services.Migrations
 
                     b.HasIndex("AnsweredById");
 
-                    b.HasIndex("QuestionId", "CreatedAt");
+                    b.HasIndex("QuestionId");
 
                     b.ToTable("QaAnswers");
                 });
@@ -711,27 +799,44 @@ namespace Nestly.Services.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<long>("AskedById")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("AskedByUserId")
+                    b.Property<long?>("AskedById")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("QuestionText")
                         .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AskedById");
 
-                    b.HasIndex("AskedByUserId", "CreatedAt");
-
                     b.ToTable("QaQuestions");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.Role", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.SleepLog", b =>
@@ -746,7 +851,9 @@ namespace Nestly.Services.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
@@ -793,6 +900,17 @@ namespace Nestly.Services.Migrations
                     b.ToTable("WeeklyAdvices");
                 });
 
+            modelBuilder.Entity("Nestly.Model.Entity.AppUser", b =>
+                {
+                    b.HasOne("Nestly.Model.Entity.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Nestly.Model.Entity.BabyGrowth", b =>
                 {
                     b.HasOne("Nestly.Model.Entity.BabyProfile", "Baby")
@@ -806,20 +924,28 @@ namespace Nestly.Services.Migrations
 
             modelBuilder.Entity("Nestly.Model.Entity.BabyProfile", b =>
                 {
-                    b.HasOne("Nestly.Model.Entity.AppUser", "User")
+                    b.HasOne("Nestly.Model.Entity.ParentProfile", "ParentProfile")
                         .WithMany("Babies")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("ParentProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("Nestly.Model.Entity.Pregnancy", "Pregnancy")
+                        .WithMany()
+                        .HasForeignKey("PregnancyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ParentProfile");
+
+                    b.Navigation("Pregnancy");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.BlogPost", b =>
                 {
-                    b.HasOne("Nestly.Model.Entity.AppUser", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId");
+                    b.HasOne("Nestly.Model.Entity.DoctorProfile", "Author")
+                        .WithMany("BlogPosts")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Author");
                 });
@@ -851,9 +977,10 @@ namespace Nestly.Services.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Nestly.Model.Entity.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                    b.HasOne("Nestly.Model.Entity.ParentProfile", "User")
+                        .WithMany("CalendarEvents")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Baby");
 
@@ -898,6 +1025,13 @@ namespace Nestly.Services.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Nestly.Model.Entity.ChatRoom", b =>
+                {
+                    b.HasOne("Nestly.Model.Entity.ParentProfile", null)
+                        .WithMany("ChatRooms")
+                        .HasForeignKey("ParentProfileId");
+                });
+
             modelBuilder.Entity("Nestly.Model.Entity.DiaperLog", b =>
                 {
                     b.HasOne("Nestly.Model.Entity.BabyProfile", "Baby")
@@ -907,6 +1041,17 @@ namespace Nestly.Services.Migrations
                         .IsRequired();
 
                     b.Navigation("Baby");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.DoctorProfile", b =>
+                {
+                    b.HasOne("Nestly.Model.Entity.AppUser", "User")
+                        .WithOne("DoctorProfile")
+                        .HasForeignKey("Nestly.Model.Entity.DoctorProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.FeedingLog", b =>
@@ -919,7 +1064,8 @@ namespace Nestly.Services.Migrations
 
                     b.HasOne("Nestly.Model.Entity.FoodType", "FoodType")
                         .WithMany()
-                        .HasForeignKey("FoodTypeId");
+                        .HasForeignKey("FoodTypeId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Baby");
 
@@ -961,7 +1107,7 @@ namespace Nestly.Services.Migrations
 
             modelBuilder.Entity("Nestly.Model.Entity.MedicationPlan", b =>
                 {
-                    b.HasOne("Nestly.Model.Entity.AppUser", "User")
+                    b.HasOne("Nestly.Model.Entity.ParentProfile", "User")
                         .WithMany("MedicationPlans")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -992,12 +1138,23 @@ namespace Nestly.Services.Migrations
                     b.Navigation("Baby");
                 });
 
-            modelBuilder.Entity("Nestly.Model.Entity.Pregnancy", b =>
+            modelBuilder.Entity("Nestly.Model.Entity.ParentProfile", b =>
                 {
                     b.HasOne("Nestly.Model.Entity.AppUser", "User")
+                        .WithOne("ParentProfile")
+                        .HasForeignKey("Nestly.Model.Entity.ParentProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.Pregnancy", b =>
+                {
+                    b.HasOne("Nestly.Model.Entity.ParentProfile", "User")
                         .WithMany("Pregnancies")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1005,16 +1162,15 @@ namespace Nestly.Services.Migrations
 
             modelBuilder.Entity("Nestly.Model.Entity.QaAnswer", b =>
                 {
-                    b.HasOne("Nestly.Model.Entity.AppUser", "AnsweredBy")
-                        .WithMany()
+                    b.HasOne("Nestly.Model.Entity.DoctorProfile", "AnsweredBy")
+                        .WithMany("QaAnswers")
                         .HasForeignKey("AnsweredById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Nestly.Model.Entity.QaQuestion", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("AnsweredBy");
@@ -1024,11 +1180,10 @@ namespace Nestly.Services.Migrations
 
             modelBuilder.Entity("Nestly.Model.Entity.QaQuestion", b =>
                 {
-                    b.HasOne("Nestly.Model.Entity.AppUser", "AskedBy")
-                        .WithMany()
+                    b.HasOne("Nestly.Model.Entity.ParentProfile", "AskedBy")
+                        .WithMany("QuestionsAsked")
                         .HasForeignKey("AskedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("AskedBy");
                 });
@@ -1046,11 +1201,9 @@ namespace Nestly.Services.Migrations
 
             modelBuilder.Entity("Nestly.Model.Entity.AppUser", b =>
                 {
-                    b.Navigation("Babies");
+                    b.Navigation("DoctorProfile");
 
-                    b.Navigation("MedicationPlans");
-
-                    b.Navigation("Pregnancies");
+                    b.Navigation("ParentProfile");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.BabyProfile", b =>
@@ -1089,6 +1242,13 @@ namespace Nestly.Services.Migrations
                     b.Navigation("Messages");
                 });
 
+            modelBuilder.Entity("Nestly.Model.Entity.DoctorProfile", b =>
+                {
+                    b.Navigation("BlogPosts");
+
+                    b.Navigation("QaAnswers");
+                });
+
             modelBuilder.Entity("Nestly.Model.Entity.MedicationPlan", b =>
                 {
                     b.Navigation("IntakeLogs");
@@ -1096,9 +1256,29 @@ namespace Nestly.Services.Migrations
                     b.Navigation("Times");
                 });
 
+            modelBuilder.Entity("Nestly.Model.Entity.ParentProfile", b =>
+                {
+                    b.Navigation("Babies");
+
+                    b.Navigation("CalendarEvents");
+
+                    b.Navigation("ChatRooms");
+
+                    b.Navigation("MedicationPlans");
+
+                    b.Navigation("Pregnancies");
+
+                    b.Navigation("QuestionsAsked");
+                });
+
             modelBuilder.Entity("Nestly.Model.Entity.QaQuestion", b =>
                 {
                     b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

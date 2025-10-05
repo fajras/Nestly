@@ -12,6 +12,7 @@ namespace Nestly.Model.DTOObjects
         public string Gender { get; set; } = default!;
         public string Username { get; set; } = default!;
         public string Password { get; set; } = default!;
+        public long RoleId { get; set; }
     }
 
     public class AppUserSearchObject
@@ -47,7 +48,6 @@ namespace Nestly.Model.DTOObjects
         public string Username { get; set; } = default!;
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-
-
+        public long? RoleId { get; set; }
     }
 }

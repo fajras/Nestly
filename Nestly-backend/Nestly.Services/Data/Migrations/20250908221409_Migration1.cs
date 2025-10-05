@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Nestly.Services.Migrations
+namespace Nestly.Services.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Migration1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,14 +17,13 @@ namespace Nestly.Services.Migrations
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Username = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -38,26 +36,11 @@ namespace Nestly.Services.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BlogCategories", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ChatRooms",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsPrivate = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ChatRooms", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -82,11 +65,24 @@ namespace Nestly.Services.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FoodTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Roles",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Roles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -104,26 +100,65 @@ namespace Nestly.Services.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BabyProfiles",
+                name: "DoctorProfiles",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    BabyName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    UserId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BabyProfiles", x => x.Id);
+                    table.PrimaryKey("PK_DoctorProfiles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BabyProfiles_AppUsers_UserId",
+                        name: "FK_DoctorProfiles_AppUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AppUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ParentProfiles",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ParentProfiles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ParentProfiles_AppUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserRoles",
+                columns: table => new
+                {
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    RoleId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserRoles", x => new { x.UserId, x.RoleId });
+                    table.ForeignKey(
+                        name: "FK_UserRoles_AppUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserRoles_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -132,19 +167,41 @@ namespace Nestly.Services.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AuthorId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BlogPosts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BlogPosts_AppUsers_AuthorId",
+                        name: "FK_BlogPosts_DoctorProfiles_AuthorId",
                         column: x => x.AuthorId,
-                        principalTable: "AppUsers",
+                        principalTable: "DoctorProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ChatRooms",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    IsPrivate = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
+                    ParentProfileId = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatRooms", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChatRooms_ParentProfiles_ParentProfileId",
+                        column: x => x.ParentProfileId,
+                        principalTable: "ParentProfiles",
                         principalColumn: "Id");
                 });
 
@@ -159,15 +216,15 @@ namespace Nestly.Services.Migrations
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     MedicineName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Dose = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MedicationPlans", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MedicationPlans_AppUsers_UserId",
+                        name: "FK_MedicationPlans_ParentProfiles_UserId",
                         column: x => x.UserId,
-                        principalTable: "AppUsers",
+                        principalTable: "ParentProfiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -181,17 +238,17 @@ namespace Nestly.Services.Migrations
                     UserId = table.Column<long>(type: "bigint", nullable: false),
                     LmpDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DueDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Pregnancies", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Pregnancies_AppUsers_UserId",
+                        name: "FK_Pregnancies_ParentProfiles_UserId",
                         column: x => x.UserId,
-                        principalTable: "AppUsers",
+                        principalTable: "ParentProfiles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -200,18 +257,41 @@ namespace Nestly.Services.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    QuestionText = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    AskedByUserId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AskedById = table.Column<long>(type: "bigint", nullable: false)
+                    QuestionText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AskedById = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_QaQuestions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_QaQuestions_AppUsers_AskedById",
+                        name: "FK_QaQuestions_ParentProfiles_AskedById",
                         column: x => x.AskedById,
-                        principalTable: "AppUsers",
+                        principalTable: "ParentProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BlogPostCategories",
+                columns: table => new
+                {
+                    PostId = table.Column<long>(type: "bigint", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BlogPostCategories", x => new { x.PostId, x.CategoryId });
+                    table.ForeignKey(
+                        name: "FK_BlogPostCategories_BlogCategories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "BlogCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BlogPostCategories_BlogPosts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "BlogPosts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -222,7 +302,7 @@ namespace Nestly.Services.Migrations
                 {
                     RoomId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
@@ -250,7 +330,7 @@ namespace Nestly.Services.Migrations
                     RoomId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
@@ -265,231 +345,6 @@ namespace Nestly.Services.Migrations
                         name: "FK_ChatMessages_ChatRooms_RoomId",
                         column: x => x.RoomId,
                         principalTable: "ChatRooms",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BabyGrowths",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    WeekNumber = table.Column<short>(type: "smallint", nullable: false),
-                    WeightKg = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true),
-                    HeightCm = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true),
-                    HeadCircumferenceCm = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BabyGrowths", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BabyGrowths_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CalendarEvents",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: true),
-                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    StartAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CalendarEvents", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CalendarEvents_AppUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AppUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_CalendarEvents_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DiaperLogs",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    ChangeDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ChangeTime = table.Column<TimeSpan>(type: "time", nullable: false),
-                    DiaperState = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DiaperLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DiaperLogs_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "FeedingLogs",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    FeedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    FeedTime = table.Column<TimeSpan>(type: "time", nullable: false),
-                    AmountMl = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    FoodTypeId = table.Column<long>(type: "bigint", nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FeedingLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_FeedingLogs_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_FeedingLogs_FoodTypes_FoodTypeId",
-                        column: x => x.FoodTypeId,
-                        principalTable: "FoodTypes",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HealthEntries",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    EntryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TemperatureC = table.Column<decimal>(type: "decimal(4,2)", precision: 4, scale: 2, nullable: true),
-                    Medicines = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    DoctorVisit = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HealthEntries", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_HealthEntries_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "MealPlans",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    WeekNumber = table.Column<short>(type: "smallint", nullable: false),
-                    FoodItem = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    FoodRating = table.Column<short>(type: "smallint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MealPlans", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MealPlans_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Milestones",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    AchievedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Milestones", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Milestones_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "SleepLogs",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BabyId = table.Column<long>(type: "bigint", nullable: false),
-                    SleepDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SleepLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_SleepLogs_BabyProfiles_BabyId",
-                        column: x => x.BabyId,
-                        principalTable: "BabyProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BlogPostCategories",
-                columns: table => new
-                {
-                    PostId = table.Column<long>(type: "bigint", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BlogPostCategories", x => new { x.PostId, x.CategoryId });
-                    table.ForeignKey(
-                        name: "FK_BlogPostCategories_BlogCategories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "BlogCategories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BlogPostCategories_BlogPosts_PostId",
-                        column: x => x.PostId,
-                        principalTable: "BlogPosts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -538,30 +393,261 @@ namespace Nestly.Services.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BabyProfiles",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ParentProfileId = table.Column<long>(type: "bigint", nullable: false),
+                    BabyName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
+                    PregnancyId = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BabyProfiles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BabyProfiles_ParentProfiles_ParentProfileId",
+                        column: x => x.ParentProfileId,
+                        principalTable: "ParentProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BabyProfiles_Pregnancies_PregnancyId",
+                        column: x => x.PregnancyId,
+                        principalTable: "Pregnancies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "QaAnswers",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     QuestionId = table.Column<long>(type: "bigint", nullable: false),
-                    AnswerText = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
-                    AnsweredByUserId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AnsweredById = table.Column<long>(type: "bigint", nullable: false)
+                    AnswerText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AnsweredById = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_QaAnswers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_QaAnswers_AppUsers_AnsweredById",
+                        name: "FK_QaAnswers_DoctorProfiles_AnsweredById",
                         column: x => x.AnsweredById,
-                        principalTable: "AppUsers",
+                        principalTable: "DoctorProfiles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_QaAnswers_QaQuestions_QuestionId",
                         column: x => x.QuestionId,
                         principalTable: "QaQuestions",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BabyGrowths",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    WeekNumber = table.Column<short>(type: "smallint", nullable: false),
+                    WeightKg = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true),
+                    HeightCm = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true),
+                    HeadCircumferenceCm = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BabyGrowths", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BabyGrowths_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CalendarEvents",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    StartAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CalendarEvents", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CalendarEvents_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CalendarEvents_ParentProfiles_UserId",
+                        column: x => x.UserId,
+                        principalTable: "ParentProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DiaperLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    ChangeDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ChangeTime = table.Column<TimeSpan>(type: "time", nullable: false),
+                    DiaperState = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DiaperLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DiaperLogs_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FeedingLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    FeedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FeedTime = table.Column<TimeSpan>(type: "time", nullable: false),
+                    AmountMl = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: true),
+                    FoodTypeId = table.Column<long>(type: "bigint", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FeedingLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FeedingLogs_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FeedingLogs_FoodTypes_FoodTypeId",
+                        column: x => x.FoodTypeId,
+                        principalTable: "FoodTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HealthEntries",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    EntryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TemperatureC = table.Column<decimal>(type: "decimal(4,2)", precision: 4, scale: 2, nullable: true),
+                    Medicines = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    DoctorVisit = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HealthEntries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HealthEntries_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MealPlans",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    WeekNumber = table.Column<short>(type: "smallint", nullable: false),
+                    FoodItem = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    FoodRating = table.Column<short>(type: "smallint", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MealPlans", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MealPlans_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Milestones",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AchievedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Milestones", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Milestones_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SleepLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BabyId = table.Column<long>(type: "bigint", nullable: false),
+                    SleepDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SleepLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SleepLogs_BabyProfiles_BabyId",
+                        column: x => x.BabyId,
+                        principalTable: "BabyProfiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -585,9 +671,20 @@ namespace Nestly.Services.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_BabyProfiles_UserId",
+                name: "IX_BabyProfiles_ParentProfileId_BirthDate",
                 table: "BabyProfiles",
-                column: "UserId");
+                columns: new[] { "ParentProfileId", "BirthDate" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BabyProfiles_PregnancyId",
+                table: "BabyProfiles",
+                column: "PregnancyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlogCategories_Name",
+                table: "BlogCategories",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_BlogPostCategories_CategoryId",
@@ -598,6 +695,11 @@ namespace Nestly.Services.Migrations
                 name: "IX_BlogPosts_AuthorId",
                 table: "BlogPosts",
                 column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlogPosts_CreatedAt",
+                table: "BlogPosts",
+                column: "CreatedAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CalendarEvents_BabyId_StartAt",
@@ -615,9 +717,9 @@ namespace Nestly.Services.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChatMessages_RoomId",
+                name: "IX_ChatMessages_RoomId_CreatedAt",
                 table: "ChatMessages",
-                column: "RoomId");
+                columns: new[] { "RoomId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChatMessages_UserId",
@@ -625,9 +727,20 @@ namespace Nestly.Services.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChatRooms_ParentProfileId",
+                table: "ChatRooms",
+                column: "ParentProfileId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DiaperLogs_BabyId_ChangeDate",
                 table: "DiaperLogs",
                 columns: new[] { "BabyId", "ChangeDate" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DoctorProfiles_UserId",
+                table: "DoctorProfiles",
+                column: "UserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_FeedingLogs_BabyId",
@@ -643,6 +756,12 @@ namespace Nestly.Services.Migrations
                 name: "IX_FetalDevelopmentWeeks_WeekNumber",
                 table: "FetalDevelopmentWeeks",
                 column: "WeekNumber",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FoodTypes_Name",
+                table: "FoodTypes",
+                column: "Name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -671,9 +790,15 @@ namespace Nestly.Services.Migrations
                 column: "PlanId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Milestones_BabyId_AchievedDate",
+                name: "IX_Milestones_BabyId",
                 table: "Milestones",
-                columns: new[] { "BabyId", "AchievedDate" });
+                column: "BabyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ParentProfiles_UserId",
+                table: "ParentProfiles",
+                column: "UserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Pregnancies_UserId_CreatedAt",
@@ -686,9 +811,9 @@ namespace Nestly.Services.Migrations
                 column: "AnsweredById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_QaAnswers_QuestionId_CreatedAt",
+                name: "IX_QaAnswers_QuestionId",
                 table: "QaAnswers",
-                columns: new[] { "QuestionId", "CreatedAt" });
+                column: "QuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QaQuestions_AskedById",
@@ -696,14 +821,20 @@ namespace Nestly.Services.Migrations
                 column: "AskedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_QaQuestions_AskedByUserId_CreatedAt",
-                table: "QaQuestions",
-                columns: new[] { "AskedByUserId", "CreatedAt" });
+                name: "IX_Roles_Name",
+                table: "Roles",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_SleepLogs_BabyId_SleepDate",
                 table: "SleepLogs",
                 columns: new[] { "BabyId", "SleepDate" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserRoles_RoleId",
+                table: "UserRoles",
+                column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WeeklyAdvices_WeekNumber",
@@ -755,13 +886,13 @@ namespace Nestly.Services.Migrations
                 name: "Milestones");
 
             migrationBuilder.DropTable(
-                name: "Pregnancies");
-
-            migrationBuilder.DropTable(
                 name: "QaAnswers");
 
             migrationBuilder.DropTable(
                 name: "SleepLogs");
+
+            migrationBuilder.DropTable(
+                name: "UserRoles");
 
             migrationBuilder.DropTable(
                 name: "WeeklyAdvices");
@@ -786,6 +917,18 @@ namespace Nestly.Services.Migrations
 
             migrationBuilder.DropTable(
                 name: "BabyProfiles");
+
+            migrationBuilder.DropTable(
+                name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "DoctorProfiles");
+
+            migrationBuilder.DropTable(
+                name: "Pregnancies");
+
+            migrationBuilder.DropTable(
+                name: "ParentProfiles");
 
             migrationBuilder.DropTable(
                 name: "AppUsers");

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
@@ -9,16 +9,8 @@ namespace Nestly.Model.Entity
         [Key]
         public long Id { get; set; }
         public string Name { get; set; } = default!;
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        [JsonIgnore]
+        public ICollection<AppUser> Users { get; set; } = new List<AppUser>();
     }
 
-    public class UserRole
-    {
-        [ForeignKey(nameof(AppUser))]
-        public long UserId { get; set; }
-        public AppUser User { get; set; } = default!;
-        [ForeignKey(nameof(Role))]
-        public long RoleId { get; set; }
-        public Role Role { get; set; } = default!;
-    }
 }

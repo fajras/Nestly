@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
@@ -17,7 +18,9 @@ namespace Nestly.Model.Entity
         public string Gender { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        [ForeignKey(nameof(Role))]
+        public long RoleId { get; set; }
+        public Role Role { get; set; } = default!;
         public ParentProfile? ParentProfile { get; set; }
         public DoctorProfile? DoctorProfile { get; set; }
 
@@ -29,6 +32,7 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(AppUser))]
         public long UserId { get; set; }
+        [JsonIgnore]
         public AppUser User { get; set; } = default!;
         public ICollection<BabyProfile>? Babies { get; set; } = new List<BabyProfile>();
         public ICollection<Pregnancy>? Pregnancies { get; set; } = new List<Pregnancy>();
@@ -44,6 +48,7 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(AppUser))]
         public long UserId { get; set; }
+        [JsonIgnore]
         public AppUser User { get; set; } = default!;
         public ICollection<QaAnswer>? QaAnswers { get; set; } = new List<QaAnswer>();
         public ICollection<BlogPost>? BlogPosts { get; set; } = new List<BlogPost>();

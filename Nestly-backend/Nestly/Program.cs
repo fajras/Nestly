@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 using Nestly.Services.Repository;
@@ -9,8 +13,15 @@ var config = builder.Configuration;
 builder.Services.AddDbContext<NestlyDbContext>(options =>
     options.UseSqlServer(
         config.GetConnectionString("db1"),
-        b => b.MigrationsAssembly("Nestly WebAPI")
+        b => b.MigrationsAssembly("Nestly.Services")
     ));
+
+builder.Services.AddDbContext<AuthDbContext>(options =>
+    options.UseSqlServer(
+        config.GetConnectionString("db1"),
+        b => b.MigrationsAssembly("Nestly.Services")
+    ));
+
 
 
 builder.Services.AddHttpContextAccessor();
@@ -32,6 +43,39 @@ builder.Services.AddScoped<ISleepLogService, SleepLogService>();
 builder.Services.AddScoped<IWeeklyAdviceService, WeeklyAdviceService>();
 builder.Services.AddScoped<IQaQuestionService, QaQuestionService>();
 builder.Services.AddScoped<IQaAnswerService, QaAnswerService>();
+
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Nestly")
+    .AddEntityFrameworkStores<AuthDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 0;
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        AuthenticationType = "Jwt",
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
+
 
 builder.Services.AddCors(options =>
 {

@@ -15,30 +15,36 @@ namespace Nestly.Services.Repository
         {
             IQueryable<MealPlan> q = _db.MealPlans
                                         .Include(x => x.Baby)
-                                        .AsQueryable();
+                                        .Include(x => x.FoodType);
 
             if (search?.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.WeekNumber is not null)
+            if (search?.FoodTypeId is not null)
             {
-                q = q.Where(x => x.WeekNumber == search.WeekNumber);
+                q = q.Where(x => x.FoodTypeId == search.FoodTypeId);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.FoodItem))
+            if (search?.From is not null)
             {
-                q = q.Where(x => x.FoodItem.Contains(search.FoodItem));
+                q = q.Where(x => x.TriedAt >= search.From);
             }
 
-            return q.OrderBy(x => x.WeekNumber).ToList();
+            if (search?.To is not null)
+            {
+                q = q.Where(x => x.TriedAt <= search.To);
+            }
+
+            return q.OrderByDescending(x => x.TriedAt).ToList();
         }
 
         public MealPlan? GetById(long id)
         {
             return _db.MealPlans
                       .Include(x => x.Baby)
+                      .Include(x => x.FoodType)
                       .FirstOrDefault(x => x.Id == id);
         }
 
@@ -54,39 +60,27 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
-            if (!babyExists)
+            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
                 throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
 
-            if (dto.WeekNumber <= 0)
+            if (!_db.FoodTypes.Any(f => f.Id == dto.FoodTypeId))
             {
-                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+                throw new ArgumentException("FoodType does not exist.", nameof(dto.FoodTypeId));
             }
 
-            if (string.IsNullOrWhiteSpace(dto.FoodItem))
+            if (dto.Rating is < 0 or > 5)
             {
-                throw new ArgumentException("FoodItem is required.", nameof(dto.FoodItem));
-            }
-
-            if (dto.FoodRating is < 0)
-            {
-                throw new ArgumentException("FoodRating cannot be negative.", nameof(dto.FoodRating));
-            }
-
-            bool exists = _db.MealPlans.Any(m => m.BabyId == dto.BabyId && m.WeekNumber == dto.WeekNumber);
-            if (exists)
-            {
-                throw new InvalidOperationException($"Meal plan for baby {dto.BabyId} and week {dto.WeekNumber} already exists.");
+                throw new ArgumentException("Rating must be between 0 and 5.", nameof(dto.Rating));
             }
 
             var entity = new MealPlan
             {
                 BabyId = dto.BabyId,
-                WeekNumber = dto.WeekNumber,
-                FoodItem = dto.FoodItem.Trim(),
-                FoodRating = dto.FoodRating
+                FoodTypeId = dto.FoodTypeId,
+                Rating = dto.Rating,
+                TriedAt = dto.TriedAt ?? DateTime.UtcNow
             };
 
             _db.MealPlans.Add(entity);
@@ -102,19 +96,19 @@ namespace Nestly.Services.Repository
                 return null;
             }
 
-            if (patch.WeekNumber is not null)
+            if (patch.Rating is not null)
             {
-                dbEntity.WeekNumber = patch.WeekNumber.Value;
+                if (patch.Rating is < 0 or > 5)
+                {
+                    throw new ArgumentException("Rating must be between 0 and 5.", nameof(patch.Rating));
+                }
+
+                dbEntity.Rating = patch.Rating;
             }
 
-            if (patch.FoodItem is not null)
+            if (patch.TriedAt is not null)
             {
-                dbEntity.FoodItem = patch.FoodItem;
-            }
-
-            if (patch.FoodRating is not null)
-            {
-                dbEntity.FoodRating = patch.FoodRating;
+                dbEntity.TriedAt = patch.TriedAt.Value;
             }
 
             _db.SaveChanges();

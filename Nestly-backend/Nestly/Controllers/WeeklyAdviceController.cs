@@ -23,6 +23,13 @@ namespace Nestly_WebAPI.Controllers
             return entity is null ? NotFound() : Ok(entity);
         }
 
+        [HttpGet("week/{weekNumber:int}")]
+        public ActionResult<GetWeeklyAdviceDto> GetByWeek(short weekNumber)
+        {
+            var entity = _service.GetByWeek(weekNumber);
+            return entity is null ? NotFound() : Ok(entity);
+        }
+
         [HttpPost]
         public ActionResult<WeeklyAdvice> Create([FromBody] CreateWeeklyAdviceDto request)
         {

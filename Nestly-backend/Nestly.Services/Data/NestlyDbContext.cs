@@ -28,6 +28,7 @@ namespace Nestly.Services.Data
         public DbSet<FeedingLog> FeedingLogs { get; set; }
         public DbSet<HealthEntry> HealthEntries { get; set; }
         public DbSet<MealPlan> MealPlans { get; set; }
+        public DbSet<MealRecommendation> MealRecommendations { get; set; }
         public DbSet<SleepLog> SleepLogs { get; set; }
         public DbSet<Milestone> Milestones { get; set; }
 
@@ -64,6 +65,8 @@ namespace Nestly.Services.Data
             ConfigureStaticLookups(modelBuilder);
 
             ConfigureQA(modelBuilder);
+            ConfigureMeals(modelBuilder);
+
         }
 
 
@@ -81,29 +84,27 @@ namespace Nestly.Services.Data
             model.Entity<AppUser>(e =>
             {
                 e.HasKey(x => x.Id);
+
+                e.Property(x => x.IdentityUserId).IsRequired().HasMaxLength(64);
                 e.Property(x => x.Email).IsRequired().HasMaxLength(255);
-                e.Property(x => x.Username).IsRequired().HasMaxLength(100);
                 e.Property(x => x.FirstName).HasMaxLength(150);
                 e.Property(x => x.LastName).HasMaxLength(150);
                 e.Property(x => x.PhoneNumber).HasMaxLength(50);
                 e.Property(x => x.Gender).HasMaxLength(20);
-                e.Property(x => x.Password).IsRequired();
 
                 e.HasIndex(x => x.Email).IsUnique();
-                e.HasIndex(x => x.Username).IsUnique();
+                e.HasIndex(x => x.IdentityUserId).IsUnique();
 
                 e.HasOne(x => x.Role)
                  .WithMany(r => r.Users)
                  .HasForeignKey(x => x.RoleId)
                  .OnDelete(DeleteBehavior.Restrict);
 
-                // 1-1 ParentProfile
                 e.HasOne(x => x.ParentProfile)
                  .WithOne(p => p.User)
                  .HasForeignKey<ParentProfile>(p => p.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                // 1-1 DoctorProfile
                 e.HasOne(x => x.DoctorProfile)
                  .WithOne(d => d.User)
                  .HasForeignKey<DoctorProfile>(d => d.UserId)
@@ -124,6 +125,7 @@ namespace Nestly.Services.Data
                 e.HasIndex(x => x.UserId).IsUnique();
             });
         }
+
 
         private static void ConfigureBabyProfileAndChildren(ModelBuilder model)
         {
@@ -210,19 +212,6 @@ namespace Nestly.Services.Data
                 e.HasIndex(x => new { x.BabyId, x.EntryDate });
             });
 
-            model.Entity<MealPlan>(e =>
-            {
-                e.HasKey(x => x.Id);
-                e.Property(x => x.FoodItem).HasMaxLength(200);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
-
-                e.HasOne(x => x.Baby)
-                 .WithMany(b => b.MealPlans)
-                 .HasForeignKey(x => x.BabyId)
-                 .OnDelete(DeleteBehavior.Cascade);
-
-                e.HasIndex(x => new { x.BabyId, x.WeekNumber });
-            });
 
             model.Entity<FeedingLog>(e =>
             {
@@ -248,16 +237,16 @@ namespace Nestly.Services.Data
             model.Entity<Pregnancy>(e =>
             {
                 e.HasKey(x => x.Id);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
                 e.HasOne(x => x.User)
                  .WithMany(p => p.Pregnancies)
                  .HasForeignKey(x => x.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                e.HasIndex(x => new { x.UserId, x.CreatedAt });
+                e.HasIndex(x => new { x.UserId, x.LmpDate });
             });
         }
+
 
 
         private static void ConfigureBlog(ModelBuilder model)
@@ -413,6 +402,40 @@ namespace Nestly.Services.Data
             });
         }
 
+        private static void ConfigureMeals(ModelBuilder model)
+        {
+            model.Entity<MealRecommendation>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.WeekNumber).IsRequired();
+
+                e.HasOne(x => x.FoodType)
+                 .WithMany()
+                 .HasForeignKey(x => x.FoodTypeId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.WeekNumber, x.FoodTypeId }).IsUnique();
+            });
+
+            model.Entity<MealPlan>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Rating);
+                e.Property(x => x.TriedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.MealPlans)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.FoodType)
+                 .WithMany()
+                 .HasForeignKey(x => x.FoodTypeId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(x => new { x.BabyId, x.FoodTypeId, x.TriedAt });
+            });
+        }
 
         private static void ConfigureStaticLookups(ModelBuilder model)
         {
@@ -470,7 +493,7 @@ namespace Nestly.Services.Data
                 e.HasOne(x => x.AnsweredBy)
                  .WithMany(d => d.QaAnswers)
                  .HasForeignKey(x => x.AnsweredById)
-                 .OnDelete(DeleteBehavior.SetNull); // ok
+                 .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

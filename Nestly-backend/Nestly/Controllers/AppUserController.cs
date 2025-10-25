@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
@@ -17,7 +16,7 @@ namespace Nestly_WebAPI.Controllers
 
         [HttpGet]
         public ActionResult<IEnumerable<AppUserResultDto>> Get([FromQuery] AppUserSearchObject? search)
-            => Ok(appUserService.Get(search));
+     => Ok(appUserService.Get(search));
 
         [HttpGet("{id:long}", Name = "GetAppUserById")]
         public ActionResult<AppUserResultDto> GetById(long id)
@@ -26,19 +25,10 @@ namespace Nestly_WebAPI.Controllers
         [HttpPost]
         public ActionResult<AppUserResultDto> Create([FromBody] CreateAppUserDto request)
         {
-            var created = appUserService.Create(request);
-
-            var dto = new AppUserResultDto
-            {
-                Email = created.Email,
-                Username = created.Username,
-                FirstName = created.FirstName,
-                LastName = created.LastName,
-                RoleId = created.RoleId
-            };
-
-            return CreatedAtRoute("GetAppUserById", new { id = created.Id }, dto);
+            var dto = appUserService.Create(request);
+            return CreatedAtRoute("GetAppUserById", new { id = dto.Id }, dto);
         }
+
 
         [HttpPatch("{id:long}")]
         public ActionResult<AppUser> Patch(long id, [FromBody] AppUserPatchDto patch)

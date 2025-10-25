@@ -18,6 +18,18 @@ namespace Nestly.Services.Repository
         public WeeklyAdvice? GetById(int id)
             => _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
 
+        public GetWeeklyAdviceDto GetByWeek(int week)
+        {
+            var entity = _db.WeeklyAdvices.FirstOrDefault(w => w.WeekNumber == week);
+
+            return new GetWeeklyAdviceDto
+            {
+                AdviceText = entity.AdviceText,
+                WeekNumber = entity.WeekNumber
+            };
+        }
+
+
         public WeeklyAdvice Create(CreateWeeklyAdviceDto dto)
         {
             if (dto is null)

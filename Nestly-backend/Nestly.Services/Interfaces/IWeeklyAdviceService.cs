@@ -7,6 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<WeeklyAdvice> Get();
         WeeklyAdvice? GetById(int id);
+        GetWeeklyAdviceDto GetByWeek(int week);
         WeeklyAdvice Create(CreateWeeklyAdviceDto entity);
         WeeklyAdvice? Patch(int id, WeeklyAdvicePatchDto patch);
         bool Delete(int id);

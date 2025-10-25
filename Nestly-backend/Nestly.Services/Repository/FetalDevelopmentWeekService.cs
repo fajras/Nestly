@@ -16,8 +16,33 @@ namespace Nestly.Services.Repository
             return _db.FetalDevelopmentWeeks.ToList();
         }
 
-        public FetalDevelopmentWeek? GetById(int id)
-            => _db.FetalDevelopmentWeeks.FirstOrDefault(f => f.Id == id);
+        public CreateFetalDevelopmentWeekDto? GetById(int id)
+        {
+            return _db.FetalDevelopmentWeeks
+                .Where(f => f.Id == id)
+                .Select(f => new CreateFetalDevelopmentWeekDto
+                {
+                    WeekNumber = f.WeekNumber,
+                    ImageUrl = f.ImageUrl,
+                    BabyDevelopment = f.BabyDevelopment,
+                    MotherChanges = f.MotherChanges
+                })
+                .FirstOrDefault();
+        }
+
+        public CreateFetalDevelopmentWeekDto? GetByWeekNumber(int weekNumber)
+        {
+            return _db.FetalDevelopmentWeeks
+                .Where(f => f.WeekNumber == weekNumber)
+                .Select(f => new CreateFetalDevelopmentWeekDto
+                {
+                    WeekNumber = f.WeekNumber,
+                    ImageUrl = f.ImageUrl,
+                    BabyDevelopment = f.BabyDevelopment,
+                    MotherChanges = f.MotherChanges
+                })
+                .FirstOrDefault();
+        }
 
         public FetalDevelopmentWeek Create(CreateFetalDevelopmentWeekDto dto)
         {

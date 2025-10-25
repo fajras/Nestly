@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Nestly.Model.DTOObjects;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
@@ -9,10 +9,19 @@ namespace Nestly.Services.Repository
     public class AppUserService : IAppUserService
     {
         private readonly NestlyDbContext _db;
-        public AppUserService(NestlyDbContext db)
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public AppUserService(
+            NestlyDbContext db,
+            UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
             _db = db;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
+
         public List<AppUserResultDto> Get(AppUserSearchObject? search)
         {
             IQueryable<AppUser> q = _db.AppUsers
@@ -22,11 +31,6 @@ namespace Nestly.Services.Repository
             if (!string.IsNullOrWhiteSpace(search?.Email))
             {
                 q = q.Where(x => x.Email == search.Email);
-            }
-
-            if (!string.IsNullOrWhiteSpace(search?.Username))
-            {
-                q = q.Where(x => x.Username.Contains(search.Username));
             }
 
             if (!string.IsNullOrWhiteSpace(search?.FirstName))
@@ -39,16 +43,14 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.LastName.Contains(search.LastName));
             }
 
-            return q
-                .Select(x => new AppUserResultDto
-                {
-                    Email = x.Email,
-                    Username = x.Username,
-                    FirstName = x.FirstName,
-                    LastName = x.LastName,
-                    RoleId = x.RoleId
-                })
-                .ToList();
+            return q.Select(x => new AppUserResultDto
+            {
+                Email = x.Email,
+                FirstName = x.FirstName,
+                LastName = x.LastName,
+                RoleId = x.RoleId,
+                IdentityUserId = x.IdentityUserId
+            }).ToList();
         }
 
         public AppUserResultDto? GetById(long id)
@@ -60,119 +62,174 @@ namespace Nestly.Services.Repository
                 .Select(x => new AppUserResultDto
                 {
                     Email = x.Email,
-                    Username = x.Username,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
+                    RoleId = x.RoleId,
+                    IdentityUserId = x.IdentityUserId
                 })
                 .FirstOrDefault();
         }
+        private static (DateTime? Lmp, DateTime? Due) NormalizePregnancyDates(DateTime? lmp, DateTime? due)
+        {
+            if (lmp.HasValue && !due.HasValue)
+            {
+                return (lmp, lmp.Value.AddDays(280));
+            }
 
+            if (!lmp.HasValue && due.HasValue)
+            {
+                return (due.Value.AddDays(-280), due);
+            }
 
-        public AppUser Create(CreateAppUserDto dto)
+            return (lmp, due);
+        }
+
+        public AppUserResultDto Create(CreateAppUserDto dto)
         {
             if (dto is null)
             {
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            // --- validacije koje već imaš (skraćeno) ---
-            var email = dto.Email?.Trim();
-            var username = dto.Username?.Trim();
-            var firstName = dto.FirstName?.Trim();
-            var lastName = dto.LastName?.Trim();
-            var phone = dto.PhoneNumber?.Trim();
-            var gender = dto.Gender?.Trim();
-            var password = dto.Password;
-
-            if (string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(dto.Email))
             {
                 throw new ArgumentException("Email is required.", nameof(dto.Email));
             }
 
-            if (string.IsNullOrWhiteSpace(username))
+            if (string.IsNullOrWhiteSpace(dto.Username))
             {
                 throw new ArgumentException("Username is required.", nameof(dto.Username));
             }
 
-            if (string.IsNullOrWhiteSpace(firstName))
-            {
-                throw new ArgumentException("FirstName is required.", nameof(dto.FirstName));
-            }
-
-            if (string.IsNullOrWhiteSpace(lastName))
-            {
-                throw new ArgumentException("LastName is required.", nameof(dto.LastName));
-            }
-
-            if (string.IsNullOrWhiteSpace(phone))
-            {
-                throw new ArgumentException("PhoneNumber is required.", nameof(dto.PhoneNumber));
-            }
-
-            if (string.IsNullOrWhiteSpace(gender))
-            {
-                throw new ArgumentException("Gender is required.", nameof(dto.Gender));
-            }
-
-            if (string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(dto.Password))
             {
                 throw new ArgumentException("Password is required.", nameof(dto.Password));
             }
 
-            if (_db.AppUsers.Any(u => u.Email == email))
+            if (string.IsNullOrWhiteSpace(dto.FirstName))
             {
-                throw new ArgumentException("Email already exists.", nameof(dto.Email));
+                throw new ArgumentException("FirstName is required.", nameof(dto.FirstName));
             }
 
-            if (_db.AppUsers.Any(u => u.Username == username))
+            if (string.IsNullOrWhiteSpace(dto.LastName))
             {
-                throw new ArgumentException("Username already exists.", nameof(dto.Username));
+                throw new ArgumentException("LastName is required.", nameof(dto.LastName));
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            {
+                throw new ArgumentException("PhoneNumber is required.", nameof(dto.PhoneNumber));
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Gender))
+            {
+                throw new ArgumentException("Gender is required.", nameof(dto.Gender));
+            }
+
+            if (_db.AppUsers.Any(u => u.Email == dto.Email))
+            {
+                throw new ArgumentException("Email already exists in domain.", nameof(dto.Email));
             }
 
             var role = _db.Roles.FirstOrDefault(r => r.Id == dto.RoleId)
                 ?? throw new ArgumentException("Role not found.", nameof(dto.RoleId));
+
+            var identityRoleName = role.Name;
+            if (!_roleManager.RoleExistsAsync(identityRoleName).GetAwaiter().GetResult())
+            {
+                throw new ArgumentException($"Identity role '{identityRoleName}' does not exist. Seed it in AuthDbContext.");
+            }
+
+            var identityUser = new IdentityUser
+            {
+                UserName = dto.Username,
+                Email = dto.Email,
+                EmailConfirmed = true
+            };
+
+            var createResult = _userManager.CreateAsync(identityUser, dto.Password).GetAwaiter().GetResult();
+            if (!createResult.Succeeded)
+            {
+                var msg = string.Join("; ", createResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                throw new InvalidOperationException($"Failed to create Identity user: {msg}");
+            }
+
+            var roleResult = _userManager.AddToRoleAsync(identityUser, identityRoleName).GetAwaiter().GetResult();
+            if (!roleResult.Succeeded)
+            {
+                var msg = string.Join("; ", roleResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                throw new InvalidOperationException($"Failed to add role '{identityRoleName}' to user: {msg}");
+            }
 
             using var tx = _db.Database.BeginTransaction();
             try
             {
                 var user = new AppUser
                 {
+                    IdentityUserId = identityUser.Id,
                     Email = dto.Email.Trim(),
                     FirstName = dto.FirstName.Trim(),
                     LastName = dto.LastName.Trim(),
                     PhoneNumber = dto.PhoneNumber.Trim(),
                     DateOfBirth = dto.DateOfBirth,
                     Gender = dto.Gender.Trim(),
-                    Username = dto.Username.Trim(),
-                    Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     RoleId = role.Id
                 };
 
                 _db.AppUsers.Add(user);
                 _db.SaveChanges();
 
-                var roleName = role.Name.ToUpperInvariant();
-                if (roleName == "PARENT" && !_db.ParentProfiles.Any(p => p.UserId == user.Id))
+                var roleNameUpper = role.Name.ToUpperInvariant();
+
+                if (roleNameUpper == "PARENT" && !_db.ParentProfiles.Any(p => p.UserId == user.Id))
                 {
-                    _db.ParentProfiles.Add(new ParentProfile { UserId = user.Id });
+                    var (normLmp, normDue) = NormalizePregnancyDates(dto.LmpDate, dto.DueDate);
+                    var conception = normLmp.HasValue ? normLmp.Value.AddDays(14) : DateTime.UtcNow.Date;
+
+                    var parentProfile = new ParentProfile
+                    {
+                        UserId = user.Id,
+                        ConceptionDate = conception
+                    };
+                    _db.ParentProfiles.Add(parentProfile);
+                    _db.SaveChanges();
+
+                    var preg = new Pregnancy
+                    {
+                        UserId = parentProfile.Id,
+                        LmpDate = normLmp,
+                        DueDate = normDue,
+                        CycleLengthDays = dto.CycleLengthDays
+                    };
+                    _db.Pregnancies.Add(preg);
                     _db.SaveChanges();
                 }
-                else if (roleName == "DOCTOR" && !_db.DoctorProfiles.Any(d => d.UserId == user.Id))
+                else if (roleNameUpper == "DOCTOR" && !_db.DoctorProfiles.Any(d => d.UserId == user.Id))
                 {
                     _db.DoctorProfiles.Add(new DoctorProfile { UserId = user.Id });
                     _db.SaveChanges();
                 }
 
                 tx.Commit();
-                return user;
+
+                return new AppUserResultDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    RoleId = user.RoleId,
+                    IdentityUserId = user.IdentityUserId
+                };
             }
             catch
             {
                 tx.Rollback();
+                _ = _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
                 throw;
             }
-        }
 
+        }
 
         public AppUser? Patch(long id, AppUserPatchDto patch)
         {
@@ -182,35 +239,29 @@ namespace Nestly.Services.Repository
                 return null;
             }
 
-
             if (patch.FirstName is not null)
             {
-                u.FirstName = patch.FirstName;
+                u.FirstName = patch.FirstName.Trim();
             }
 
             if (patch.LastName is not null)
             {
-                u.LastName = patch.LastName;
+                u.LastName = patch.LastName.Trim();
             }
 
             if (patch.PhoneNumber is not null)
             {
-                u.PhoneNumber = patch.PhoneNumber;
+                u.PhoneNumber = patch.PhoneNumber.Trim();
             }
 
             if (patch.DateOfBirth is not null)
             {
-                u.DateOfBirth = patch.DateOfBirth;
+                u.DateOfBirth = patch.DateOfBirth.Value;
             }
 
             if (patch.Gender is not null)
             {
-                u.Gender = patch.Gender;
-            }
-
-            if (patch.Password is not null)
-            {
-                u.Password = BCrypt.Net.BCrypt.HashPassword(patch.Password);
+                u.Gender = patch.Gender.Trim();
             }
 
             _db.SaveChanges();
@@ -225,11 +276,20 @@ namespace Nestly.Services.Repository
                 return false;
             }
 
+            var identityUser = _userManager.FindByIdAsync(u.IdentityUserId).GetAwaiter().GetResult();
+            if (identityUser != null)
+            {
+                var del = _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
+                if (!del.Succeeded)
+                {
+                    var msg = string.Join("; ", del.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                    throw new InvalidOperationException($"Failed to delete Identity user: {msg}");
+                }
+            }
+
             _db.AppUsers.Remove(u);
             _db.SaveChanges();
             return true;
         }
     }
-
-
 }

@@ -8,6 +8,11 @@
     public class CreateWeeklyAdviceDto
     {
         public short WeekNumber { get; set; }
-        public string AdviceText { get; set; } = default!;
+        public string AdviceText { get; set; }
+    }
+    public class GetWeeklyAdviceDto
+    {
+        public string AdviceText { get; set; }
+        public short WeekNumber { get; set; }
     }
 }

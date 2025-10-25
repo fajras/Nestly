@@ -1,5 +1,4 @@
-﻿using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
+﻿using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
@@ -7,9 +6,10 @@ namespace Nestly.Services.Interfaces
     {
         List<AppUserResultDto> Get(AppUserSearchObject? search);
         AppUserResultDto? GetById(long id);
-        AppUser Create(CreateAppUserDto entity);
+        AppUserResultDto Create(CreateAppUserDto entity);
         AppUser? Patch(long id, AppUserPatchDto patch);
         bool Delete(long id);
     }
+
 
 }

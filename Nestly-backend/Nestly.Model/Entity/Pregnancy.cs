@@ -12,7 +12,7 @@ namespace Nestly.Model.Entity
         public long UserId { get; set; }
         public DateTime? LmpDate { get; set; }
         public DateTime? DueDate { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public int? CycleLengthDays { get; set; }
         public ParentProfile User { get; set; }
     }
 }

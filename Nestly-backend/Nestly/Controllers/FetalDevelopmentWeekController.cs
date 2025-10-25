@@ -17,9 +17,16 @@ namespace Nestly_WebAPI.Controllers
             => Ok(_service.Get());
 
         [HttpGet("{id:int}")]
-        public ActionResult<FetalDevelopmentWeek> GetById(int id)
+        public ActionResult<CreateFetalDevelopmentWeekDto> GetById(int id)
         {
             var entity = _service.GetById(id);
+            return entity is null ? NotFound() : Ok(entity);
+        }
+
+        [HttpGet("week/{weekNumber:int}")]
+        public ActionResult<CreateFetalDevelopmentWeekDto> GetByWeekNumber(int weekNumber)
+        {
+            var entity = _service.GetByWeekNumber(weekNumber);
             return entity is null ? NotFound() : Ok(entity);
         }
 

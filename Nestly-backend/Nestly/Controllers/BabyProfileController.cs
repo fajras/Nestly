@@ -73,6 +73,28 @@ namespace Nestly_WebAPI.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("latest-by-parent/{parentProfileId:long}")]
+        public ActionResult<BabyProfileSummaryDto> GetLatestByParent([FromRoute] long parentProfileId)
+        {
+            var entity = _service.GetLatestByParent(parentProfileId);
+            if (entity is null)
+            {
+                return NotFound();
+            }
+
+            var dto = new BabyProfileSummaryDto
+            {
+                Id = entity.Id,
+                BabyName = entity.BabyName,
+                Gender = entity.Gender,
+                BirthDate = entity.BirthDate
+            };
+
+            return Ok(dto);
+        }
+
+
     }
 }
 

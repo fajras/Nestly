@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart'
+    show BabyGrowthScreen, BabyGrowthTrackerScreen;
 
 class BabyTimeHomeScreen extends StatelessWidget {
   final String babyName;
+  final int babyId;
 
-  const BabyTimeHomeScreen({super.key, required this.babyName});
+  const BabyTimeHomeScreen({
+    super.key,
+    required this.babyName,
+    required this.babyId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +29,9 @@ class BabyTimeHomeScreen extends StatelessWidget {
           ),
         ),
       ),
-
-      // FAB za dodavanje nove bebe
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // TODO: ovdje otvoriš ekran za kreiranje novog baby profila
+          // TODO: otvori ekran za dodavanje nove bebe
         },
         backgroundColor: AppColors.roseDark,
         foregroundColor: Colors.white,
@@ -36,7 +41,6 @@ class BabyTimeHomeScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Column(
@@ -46,62 +50,66 @@ class BabyTimeHomeScreen extends StatelessWidget {
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
-                childAspectRatio: 1.1,
+                childAspectRatio: 1.05,
                 crossAxisSpacing: 18,
                 mainAxisSpacing: 18,
                 children: [
                   _BabyMenuItem(
-                    icon: "📏",
+                    icon: Icons.show_chart_rounded,
                     label: "Praćenje rasta",
                     color: AppColors.babyBlue,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => BabyGrowthTrackerScreen(
+                            babyId: babyId,
+                            babyName: babyName,
+                          ),
+                        ),
+                      );
+                    },
                   ),
+
                   _BabyMenuItem(
-                    icon: "🍼",
+                    icon: Icons.local_drink_rounded,
                     label: "Dnevnik hranjenja",
                     color: AppColors.babyPink,
                     onTap: () {},
                   ),
                   _BabyMenuItem(
-                    icon: "🌙",
+                    icon: Icons.nights_stay_rounded,
                     label: "Dnevnik spavanja",
-                    color: AppColors.babyBlue.withOpacity(0.9),
+                    color: AppColors.babyBlue,
                     onTap: () {},
                   ),
                   _BabyMenuItem(
-                    icon: "🍎",
+                    icon: Icons.restaurant_rounded,
                     label: "Plan ishrane",
-                    color: AppColors.babyPink.withOpacity(0.9),
+                    color: AppColors.babyPink,
                     onTap: () {},
                   ),
                   _BabyMenuItem(
-                    icon: "📅",
+                    icon: Icons.event_note_rounded,
                     label: "Kalendar termina",
                     color: AppColors.babyBlue,
                     onTap: () {},
                   ),
                   _BabyMenuItem(
-                    icon: "💬",
+                    icon: Icons.chat_bubble_outline_rounded,
                     label: "Chat",
                     color: AppColors.babyPink,
                     onTap: () {},
                   ),
                   _BabyMenuItem(
-                    icon: "⭐",
+                    icon: Icons.emoji_events_rounded,
                     label: "Dostignuća",
-                    color: AppColors.babyBlue.withOpacity(.85),
+                    color: AppColors.babyBlue,
                     onTap: () {},
                   ),
                   _BabyMenuItem(
-                    icon: "❤️",
+                    icon: Icons.favorite_border_rounded,
                     label: "Praćenje zdravlja",
-                    color: AppColors.babyPink.withOpacity(.85),
-                    onTap: () {},
-                  ),
-                  _BabyMenuItem(
-                    icon: "🧷",
-                    label: "Praćenje pelena",
-                    color: AppColors.babyBlue.withOpacity(.75),
+                    color: AppColors.babyPink,
                     onTap: () {},
                   ),
                 ],
@@ -114,7 +122,6 @@ class BabyTimeHomeScreen extends StatelessWidget {
   }
 }
 
-/// TOP BANNER – oblaci, zvjezdice, meda + avatar bebe
 class _BabyHeaderBanner extends StatelessWidget {
   final String babyName;
 
@@ -123,7 +130,7 @@ class _BabyHeaderBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 170,
+      height: 160,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: LinearGradient(
@@ -137,53 +144,25 @@ class _BabyHeaderBanner extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Ukrasni emoji oblaci / zvjezdice / meda
+          // lagani ukras – jedan oblak i jedna zvjezdica, ne prešareno
           Positioned(
-            top: 12,
+            top: 14,
             left: 18,
-            child: Text(
-              "☁️",
-              style: TextStyle(
-                fontSize: 26,
-                color: Colors.white.withOpacity(0.9),
-              ),
+            child: Icon(
+              Icons.cloud_rounded,
+              size: 26,
+              color: Colors.white.withOpacity(0.85),
             ),
           ),
           Positioned(
-            top: 18,
+            top: 20,
             right: 24,
-            child: Text(
-              "⭐",
-              style: TextStyle(
-                fontSize: 22,
-                color: Colors.white.withOpacity(0.9),
-              ),
+            child: Icon(
+              Icons.star_rounded,
+              size: 22,
+              color: Colors.white.withOpacity(0.9),
             ),
           ),
-          Positioned(
-            bottom: 12,
-            right: 20,
-            child: Text(
-              "🧸",
-              style: TextStyle(
-                fontSize: 28,
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 8,
-            left: 40,
-            child: Text(
-              "☁️",
-              style: TextStyle(
-                fontSize: 22,
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ),
-
-          // Sadržaj bannera
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
@@ -205,7 +184,7 @@ class _BabyHeaderBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        "Dobrodošli u BabyTime 💕\nPratite rast, rutine i zdravlje vaše bebe.",
+                        "Sve važne stvari o vašoj bebi na jednom mjestu.",
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           height: 1.3,
@@ -223,7 +202,6 @@ class _BabyHeaderBanner extends StatelessWidget {
   }
 }
 
-/// Kružni avatar za bebu – pastelna pozadina + emoji
 class _BabyAvatar extends StatelessWidget {
   final String babyName;
 
@@ -241,16 +219,14 @@ class _BabyAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 72,
-      height: 72,
+      width: 70,
+      height: 70,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [AppColors.babyPink, AppColors.babyBlue],
-        ),
+        gradient: LinearGradient(colors: [AppColors.babyPink, AppColors.seed]),
         boxShadow: [
           BoxShadow(
-            color: AppColors.babyPink.withOpacity(.4),
+            color: AppColors.babyPink.withOpacity(.35),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -260,7 +236,7 @@ class _BabyAvatar extends StatelessWidget {
         child: Text(
           _initials(),
           style: const TextStyle(
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
@@ -270,9 +246,8 @@ class _BabyAvatar extends StatelessWidget {
   }
 }
 
-/// Jedna kartica u gridu – sa blagim bounce efektom na ikoni
 class _BabyMenuItem extends StatefulWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final Color color;
   final VoidCallback onTap;
@@ -301,11 +276,11 @@ class _BabyMenuItemState extends State<_BabyMenuItem>
       duration: const Duration(milliseconds: 900),
     );
     _scale = Tween<double>(
-      begin: 0.95,
-      end: 1.03,
+      begin: 0.97,
+      end: 1.02,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _controller.repeat(reverse: true); // stalno lagano “diše”
+    _controller.repeat(reverse: true);
   }
 
   @override
@@ -320,21 +295,21 @@ class _BabyMenuItemState extends State<_BabyMenuItem>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.color;
+    final Color accent = widget.color;
 
     return InkWell(
       borderRadius: BorderRadius.circular(22),
       onTap: _handleTap,
       child: Ink(
         decoration: BoxDecoration(
-          color: color.withOpacity(.12),
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: color.withOpacity(.5), width: 1),
+          border: Border.all(color: accent.withOpacity(0.45), width: 1.1),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: accent.withOpacity(0.10),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -345,7 +320,15 @@ class _BabyMenuItemState extends State<_BabyMenuItem>
             children: [
               ScaleTransition(
                 scale: _scale,
-                child: Text(widget.icon, style: const TextStyle(fontSize: 36)),
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent,
+                  ),
+                  child: Icon(widget.icon, size: 24, color: Colors.white),
+                ),
               ),
               const SizedBox(height: 10),
               Text(
@@ -353,7 +336,7 @@ class _BabyMenuItemState extends State<_BabyMenuItem>
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: accent,
                 ),
               ),
             ],

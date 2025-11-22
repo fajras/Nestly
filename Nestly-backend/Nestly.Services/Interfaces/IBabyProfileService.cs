@@ -10,5 +10,7 @@ namespace Nestly.Services.Interfaces
         BabyProfile Create(CreateBabyProfileDto entity);
         BabyProfile? Patch(long id, BabyProfilePatchDto patch);
         bool Delete(long id);
+        BabyProfile? GetLatestByParent(long parentProfileId);
+
     }
 }

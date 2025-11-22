@@ -8,6 +8,13 @@ namespace Nestly.Model.DTOObjects
         public string? Gender { get; set; }
         public DateTime? BirthDate { get; set; }
     }
+    public class BabyProfileSummaryDto
+    {
+        public long Id { get; set; }
+        public string BabyName { get; set; } = default!;
+        public string Gender { get; set; } = default!;
+        public DateTime BirthDate { get; set; }
+    }
     public class BabyProfileSearchObject
     {
         public long? UserId { get; set; }

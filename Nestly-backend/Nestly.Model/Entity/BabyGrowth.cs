@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
@@ -13,7 +14,7 @@ namespace Nestly.Model.Entity
         public decimal? WeightKg { get; set; }
         public decimal? HeightCm { get; set; }
         public decimal? HeadCircumferenceCm { get; set; }
-
+        [JsonIgnore]
         public BabyProfile Baby { get; set; }
     }
 

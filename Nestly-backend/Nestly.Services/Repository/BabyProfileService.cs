@@ -150,6 +150,15 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
+        public BabyProfile? GetLatestByParent(long parentProfileId)
+        {
+            return _db.BabyProfiles
+                      .Where(x => x.ParentProfileId == parentProfileId)
+                      .OrderByDescending(x => x.BirthDate)
+                      .FirstOrDefault();
+        }
+
+
     }
 }
 

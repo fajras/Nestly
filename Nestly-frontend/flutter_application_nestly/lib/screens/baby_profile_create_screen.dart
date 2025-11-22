@@ -246,7 +246,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
 
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Datum rođenja
                     Text(
                       'Datum rođenja',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(

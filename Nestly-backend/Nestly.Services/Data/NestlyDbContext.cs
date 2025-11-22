@@ -323,29 +323,28 @@ namespace Nestly.Services.Data
             model.Entity<CalendarEvent>(e =>
             {
                 e.HasKey(x => x.Id);
-                e.Property(x => x.Title).HasMaxLength(200);
-                e.Property(x => x.Description).HasMaxLength(2000);
 
-                e.HasOne(x => x.Baby)
-                 .WithMany(b => b.CalendarEvents)
-                 .HasForeignKey(x => x.BabyId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                e.Property(x => x.Title)
+                    .IsRequired()
+                    .HasMaxLength(200);
 
-                e.HasOne(x => x.User)
-                 .WithMany(p => p.CalendarEvents)
-                 .HasForeignKey(x => x.UserId)
-                 .OnDelete(DeleteBehavior.SetNull);
+                e.Property(x => x.Description)
+                    .HasMaxLength(2000)
+                    .IsRequired(false);
 
-                e.HasOne<ParentProfile>()
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
+                e.HasOne(x => x.BabyProfile)
+                    .WithMany(b => b.CalendarEvents)
+                    .HasForeignKey(x => x.BabyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.ParentProfile)
+                    .WithMany(p => p.CalendarEvents)
+                    .HasForeignKey(x => x.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
-
 
                 e.HasIndex(x => new { x.BabyId, x.StartAt });
             });
         }
-
 
         private static void ConfigureChat(ModelBuilder model)
         {

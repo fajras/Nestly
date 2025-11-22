@@ -40,5 +40,20 @@ namespace Nestly_WebAPI.Controllers
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
             => _service.Delete(id) ? NoContent() : NotFound();
+
+        [HttpGet("Recommendation")]
+        public ActionResult<IEnumerable<MealRecommendationDto>> Get(
+           [FromQuery] MealRecommendationSearchObject? search)
+        {
+            var result = _service.Get(search);
+            return Ok(result);
+        }
+
+        [HttpGet("Recommendation/{id:long}")]
+        public ActionResult<MealRecommendationDto> GetRecommendationById(long id)
+        {
+            var item = _service.GetRecommendationById(id);
+            return item is null ? NotFound() : Ok(item);
+        }
     }
 }

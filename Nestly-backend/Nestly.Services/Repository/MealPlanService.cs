@@ -142,5 +142,49 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
+
+        public List<MealRecommendationDto> Get(MealRecommendationSearchObject? search)
+        {
+            IQueryable<MealRecommendation> q = _db.MealRecommendations
+                                                  .Include(x => x.FoodType);
+
+            if (search?.WeekNumber is not null)
+            {
+                q = q.Where(x => x.WeekNumber == search.WeekNumber.Value);
+            }
+
+            return q
+                .OrderBy(x => x.WeekNumber)
+                .ThenBy(x => x.FoodType.Name)
+                .Select(x => new MealRecommendationDto
+                {
+                    Id = x.Id,
+                    WeekNumber = x.WeekNumber,
+                    FoodTypeId = x.FoodTypeId,
+                    FoodName = x.FoodType.Name
+                })
+                .ToList();
+        }
+
+        public MealRecommendationDto? GetRecommendationById(long id)
+        {
+            var entity = _db.MealRecommendations
+                            .Include(x => x.FoodType)
+                            .OrderBy(x => x.WeekNumber)
+                            .FirstOrDefault(x => x.Id == id);
+
+            if (entity is null)
+            {
+                return null;
+            }
+
+            return new MealRecommendationDto
+            {
+                Id = entity.Id,
+                WeekNumber = entity.WeekNumber,
+                FoodTypeId = entity.FoodTypeId,
+                FoodName = entity.FoodType.Name
+            };
+        }
     }
 }

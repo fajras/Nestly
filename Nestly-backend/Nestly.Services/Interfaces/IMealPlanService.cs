@@ -10,5 +10,7 @@ namespace Nestly.Services.Interfaces
         MealPlan Create(CreateMealPlanDto entity);
         MealPlan? Patch(long id, MealPlanPatchDto patch);
         bool Delete(long id);
+        List<MealRecommendationDto> Get(MealRecommendationSearchObject? search);
+        MealRecommendationDto? GetRecommendationById(long id);
     }
 }

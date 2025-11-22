@@ -261,7 +261,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Visina pri porodu
                     TextFormField(
                       controller: _heightCtrl,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -274,7 +273,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Težina pri porodu
                     TextFormField(
                       controller: _weightCtrl,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -343,13 +341,10 @@ class _GenderChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  /// Boja pozadine kad je selektovan (roza/plava)
   final Color selectedColor;
 
-  /// Osnovna boja za “neutralno” stanje (koristimo je s manjom providnošću)
   final Color unselectedColor;
 
-  /// Boja teksta/ikonice kad nije selektovano
   final Color accentColor;
 
   @override

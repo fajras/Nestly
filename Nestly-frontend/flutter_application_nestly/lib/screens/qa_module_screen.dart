@@ -6,10 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_application_nestly/main.dart';
-
-/// ===============================
-/// CONFIG
-/// ===============================
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 
 String _devBase() {
   if (kIsWeb) return 'http://localhost:5167';
@@ -28,16 +25,12 @@ Map<String, String> _jsonHeaders() => {
   'Accept': 'application/json',
 };
 
-/// ===============================
-/// MODELI (FE)
-/// ===============================
-
 enum QuestionStatus { pending, answered }
 
 class Answer {
   final String text;
   final DateTime createdAt;
-  final String? responderName; // ako backend kasnije pošalje ime
+  final String? responderName;
 
   Answer({required this.text, required this.createdAt, this.responderName});
 }
@@ -58,18 +51,10 @@ class Question {
   });
 }
 
-/// ===============================
-/// QA SERVICE INTERFACE
-/// ===============================
-
 abstract class QaService {
   Future<List<Question>> fetchMyQuestions();
   Future<Question> createQuestion(String text);
 }
-
-/// ===============================
-/// API IMPLEMENTACIJA
-/// ===============================
 
 class ApiQaService implements QaService {
   final int parentProfileId;
@@ -105,7 +90,6 @@ class ApiQaService implements QaService {
       final createdRaw = (qJson['createdAt'] ?? qJson['CreatedAt'])?.toString();
       final createdAt = DateTime.tryParse(createdRaw ?? '') ?? DateTime.now();
 
-      // --- povuci odgovore za to pitanje ---
       Answer? latestAnswer;
       try {
         final ansRes = await http
@@ -115,7 +99,6 @@ class ApiQaService implements QaService {
         if (ansRes.statusCode == 200) {
           final ansBody = jsonDecode(ansRes.body);
           if (ansBody is List && ansBody.isNotEmpty) {
-            // uzmi zadnji po createdAt (ako postoji) ili prvi
             Map<String, dynamic> best = ansBody.first;
             DateTime? bestCreated = _parseDate(
               best['createdAt'] ?? best['CreatedAt'],
@@ -135,7 +118,6 @@ class ApiQaService implements QaService {
                 .toString();
             final aCreated = bestCreated ?? createdAt;
 
-            // ako backend nekad doda ime, mapiraj ovdje:
             final responderName =
                 (best['answeredByName'] ?? best['AnsweredByName'])?.toString();
 
@@ -148,9 +130,7 @@ class ApiQaService implements QaService {
             }
           }
         }
-      } catch (_) {
-        // ako faila odgovori, samo prikaži pitanje bez odgovora
-      }
+      } catch (_) {}
 
       final status = latestAnswer == null
           ? QuestionStatus.pending
@@ -167,7 +147,6 @@ class ApiQaService implements QaService {
       );
     }
 
-    // najnovije prvo
     questions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return questions;
   }
@@ -210,7 +189,6 @@ class ApiQaService implements QaService {
   }
 }
 
-/// (Opcija za testiranje bez backend-a, možeš ostaviti ili obrisati)
 class InMemoryQaService implements QaService {
   final List<Question> _data = [];
   int _id = 0;
@@ -234,10 +212,6 @@ class InMemoryQaService implements QaService {
     return q;
   }
 }
-
-/// ===============================
-/// EKRAN: MOJA PITANJA
-/// ===============================
 
 class MyQuestionsScreen extends StatefulWidget {
   const MyQuestionsScreen({
@@ -289,9 +263,7 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
       MaterialPageRoute(builder: (_) => AskQuestionScreen(service: _service)),
     );
     if (created != null && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Pitanje poslano.')));
+      NestlyToast.success(context, 'Pitanje je uspješno poslano.');
       _load();
     }
   }
@@ -523,7 +495,11 @@ class _QuestionCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.verified, size: 16, color: AppColors.seed),
+                  const Icon(
+                    Icons.verified,
+                    size: 16,
+                    color: AppColors.roseDark,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Odgovorio: ${question.answer!.responderName ?? 'Tim'} • ${_formatDate(question.answer!.createdAt)}',
@@ -574,10 +550,6 @@ class _QuestionCard extends StatelessWidget {
   }
 }
 
-/// ===============================
-/// EKRAN: POSTAVI PITANJE
-/// ===============================
-
 class AskQuestionScreen extends StatefulWidget {
   const AskQuestionScreen({super.key, required this.service});
   final QaService service;
@@ -608,9 +580,10 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
       Navigator.of(context).pop(q);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
+      NestlyToast.error(
         context,
-      ).showSnackBar(SnackBar(content: Text('Greška pri slanju: $e')));
+        'Greška pri slanju pitanja. Pokušajte ponovo.',
+      );
     } finally {
       if (mounted) {
         setState(() => _sending = false);
@@ -648,7 +621,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
           child: Card(
             elevation: 3,
             color: AppColors.card,
-            shadowColor: AppColors.babyPink.withOpacity(0.35),
+            shadowColor: AppColors.roseDark.withOpacity(0.35),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
@@ -662,10 +635,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.babyPink.withOpacity(.2),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
+
                         child: const Icon(
                           Icons.chat_bubble_rounded,
                           color: AppColors.roseDark,
@@ -728,6 +698,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                       controller: _controller,
                       minLines: 2,
                       maxLines: 8,
+                      cursorColor: AppColors.roseDark,
                       decoration: InputDecoration(
                         hintText:
                             'Npr. Imam jake mučnine ujutro, šta mogu uraditi?',
@@ -752,10 +723,36 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                         prefixIconConstraints: const BoxConstraints(
                           minWidth: 40,
                         ),
-                        border: OutlineInputBorder(
+
+                        enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.lg),
-                          borderSide: BorderSide.none,
+                          borderSide: BorderSide(
+                            color: AppColors.roseDark.withOpacity(0.8),
+                            width: 1.3,
+                          ),
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          borderSide: const BorderSide(
+                            color: AppColors.roseDark,
+                            width: 1.6,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          borderSide: const BorderSide(
+                            color: Colors.red,
+                            width: 1.3,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          borderSide: const BorderSide(
+                            color: Colors.red,
+                            width: 1.6,
+                          ),
+                        ),
+
                         contentPadding: const EdgeInsets.all(AppSpacing.lg),
                       ),
                       validator: (v) {
@@ -772,7 +769,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // mali info tekst ispod
                   Row(
                     children: [
                       const Icon(

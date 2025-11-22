@@ -8,10 +8,6 @@ import 'package:table_calendar/table_calendar.dart';
 
 import 'package:flutter_application_nestly/main.dart';
 
-/// ===============================================
-/// MODELI
-/// ===============================================
-
 class CalendarEventEntry {
   final int id;
   final int babyId;
@@ -72,10 +68,6 @@ class CreateCalendarEventRequest {
     'endAt': endAt?.toIso8601String(),
   };
 }
-
-/// ===============================================
-/// API SERVICE
-/// ===============================================
 
 String _devBase() {
   if (kIsWeb) return 'http://localhost:5167';
@@ -142,15 +134,11 @@ class CalendarEventApiService {
   }
 }
 
-/// ===============================================
-/// SCREEN
-/// ===============================================
-
 class CalendarEventScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
   final String? token;
-  final int? userId; // ako želiš slati i userId, može biti null
+  final int? userId;
 
   const CalendarEventScreen({
     super.key,
@@ -170,10 +158,8 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
 
-  /// svi eventi za trenutno učitani mjesec
   List<CalendarEventEntry> _events = [];
 
-  /// mapirano po danu radi TableCalendar eventLoader-a
   final Map<DateTime, List<CalendarEventEntry>> _eventsByDay = {};
 
   DateTime _focusedDay = DateTime.now();
@@ -265,7 +251,6 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
 
     setState(() => _isSaving = true);
 
-    // datum + vrijeme (ako nema vremena, uzimamo 10:00)
     final time = _timeOfDay ?? const TimeOfDay(hour: 10, minute: 0);
     final startAt = DateTime(
       _selectedDay.year,
@@ -373,8 +358,6 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
     );
   }
 
-  /// ================= CALENDAR =================
-
   Widget _buildCalendar() {
     return Container(
       decoration: BoxDecoration(
@@ -453,8 +436,6 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       ),
     );
   }
-
-  /// ================= LISTA TERMINA =================
 
   Widget _buildEventList(List<CalendarEventEntry> events) {
     final dateLabel =
@@ -537,8 +518,6 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       ),
     );
   }
-
-  /// ================= FORMA =================
 
   Widget _buildFormCard() {
     final timeLabel = _timeOfDay == null

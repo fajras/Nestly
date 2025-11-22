@@ -14,9 +14,10 @@ namespace Nestly.Services.Repository
         public List<CalendarEvent> Get(CalendarEventSearchObject? search)
         {
             IQueryable<CalendarEvent> q = _db.CalendarEvents
-                .Include(e => e.Baby)
-                .Include(e => e.User)
-                .AsQueryable();
+     .Include(e => e.BabyProfile)
+     .Include(e => e.ParentProfile)
+     .AsQueryable();
+
 
             if (search?.BabyId is not null)
             {
@@ -33,11 +34,6 @@ namespace Nestly.Services.Repository
                 q = q.Where(e => e.StartAt >= search.From.Value);
             }
 
-            if (search?.To is not null)
-            {
-                q = q.Where(e => e.StartAt <= search.To.Value);
-            }
-
             if (!string.IsNullOrWhiteSpace(search?.Title))
             {
                 q = q.Where(e => e.Title.Contains(search.Title));
@@ -49,9 +45,10 @@ namespace Nestly.Services.Repository
         public CalendarEvent? GetById(long id)
         {
             return _db.CalendarEvents
-                     .Include(e => e.Baby)
-                     .Include(e => e.User)
-                     .FirstOrDefault(e => e.Id == id);
+                .Include(e => e.BabyProfile)
+                .Include(e => e.ParentProfile)
+                .FirstOrDefault(e => e.Id == id);
+
         }
 
         public CalendarEvent Create(CreateCalendarEventDto dto)
@@ -100,11 +97,6 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("StartAt is required.", nameof(dto.StartAt));
             }
 
-            if (dto.EndAt is not null && dto.EndAt < dto.StartAt)
-            {
-                throw new ArgumentException("EndAt must be >= StartAt.", nameof(dto.EndAt));
-            }
-
             var entity = new CalendarEvent
             {
                 BabyId = dto.BabyId,
@@ -112,7 +104,6 @@ namespace Nestly.Services.Repository
                 Title = dto.Title.Trim(),
                 Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
                 StartAt = dto.StartAt,
-                EndAt = dto.EndAt
             };
 
             _db.CalendarEvents.Add(entity);
@@ -143,16 +134,6 @@ namespace Nestly.Services.Repository
             if (patch.StartAt is not null)
             {
                 ev.StartAt = patch.StartAt.Value;
-            }
-
-            if (patch.EndAt is not null)
-            {
-                ev.EndAt = patch.EndAt;
-            }
-
-            if (ev.EndAt is not null && ev.EndAt < ev.StartAt)
-            {
-                throw new ArgumentException("EndAt must be >= StartAt.");
             }
 
             _db.SaveChanges();

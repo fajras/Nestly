@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
@@ -15,9 +16,9 @@ namespace Nestly.Model.Entity
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime StartAt { get; set; }
-        public DateTime? EndAt { get; set; }
-
-        public BabyProfile Baby { get; set; }
-        public ParentProfile User { get; set; }
+        [JsonIgnore]
+        public BabyProfile BabyProfile { get; set; }
+        [JsonIgnore]
+        public ParentProfile ParentProfile { get; set; }
     }
 }

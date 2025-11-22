@@ -66,6 +66,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         builder: (_) => BabyTimeHomeScreen(
           babyName: _babyName ?? 'Vaša beba',
           babyId: _babyId!,
+          parentProfileId: widget.parentProfileId,
         ),
       ),
     );

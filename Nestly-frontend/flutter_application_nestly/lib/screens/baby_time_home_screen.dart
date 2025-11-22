@@ -3,17 +3,21 @@ import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart'
     show BabyGrowthScreen, BabyGrowthTrackerScreen;
 import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
+import 'package:flutter_application_nestly/screens/meal_plan_screen.dart'
+    show MealRecommendationScreen;
 import 'package:flutter_application_nestly/screens/sleep_log_screen.dart'
     show SleepLogOverviewScreen;
 
 class BabyTimeHomeScreen extends StatelessWidget {
   final String babyName;
   final int babyId;
+  final int parentProfileId;
 
   const BabyTimeHomeScreen({
     super.key,
     required this.babyName,
     required this.babyId,
+    required this.parentProfileId,
   });
 
   @override
@@ -33,9 +37,7 @@ class BabyTimeHomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: otvori ekran za dodavanje nove bebe
-        },
+        onPressed: () {},
         backgroundColor: AppColors.roseDark,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
@@ -99,7 +101,14 @@ class BabyTimeHomeScreen extends StatelessWidget {
                     icon: Icons.restaurant_rounded,
                     label: "Plan ishrane",
                     color: AppColors.babyPink,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              MealRecommendationScreen(babyId: babyId),
+                        ),
+                      );
+                    },
                   ),
                   _BabyMenuItem(
                     icon: Icons.event_note_rounded,
@@ -111,6 +120,7 @@ class BabyTimeHomeScreen extends StatelessWidget {
                           builder: (_) => CalendarEventScreen(
                             babyId: babyId,
                             babyName: babyName,
+                            userId: parentProfileId,
                           ),
                         ),
                       );
@@ -166,7 +176,6 @@ class _BabyHeaderBanner extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // lagani ukras – jedan oblak i jedna zvjezdica, ne prešareno
           Positioned(
             top: 14,
             left: 18,

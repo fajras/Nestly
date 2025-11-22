@@ -200,7 +200,6 @@ namespace Nestly.Services.Data
             model.Entity<SleepLog>(e =>
             {
                 e.HasKey(x => x.Id);
-                e.Property(x => x.Notes).HasMaxLength(1000);
                 e.Ignore(x => x.DurationMinutes);
 
                 e.HasOne(x => x.Baby)

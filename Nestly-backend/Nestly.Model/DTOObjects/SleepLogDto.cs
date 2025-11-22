@@ -7,7 +7,6 @@ namespace Nestly.Model.DTOObjects
         public DateTime? SleepDate { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
-        public string? Notes { get; set; }
     }
     public class CreateSleepLogDto
     {
@@ -15,7 +14,6 @@ namespace Nestly.Model.DTOObjects
         public DateTime SleepDate { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public string? Notes { get; set; }
     }
     public class SleepLogSearchObject
     {

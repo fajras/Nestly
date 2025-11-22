@@ -81,19 +81,12 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("EndTime must be after StartTime.", nameof(dto.EndTime));
             }
 
-            var notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim();
-            if (notes is not null && notes.Length > 1000)
-            {
-                throw new ArgumentException("Notes must be at most 1000 characters.", nameof(dto.Notes));
-            }
-
             var entity = new SleepLog
             {
                 BabyId = dto.BabyId,
                 SleepDate = dto.SleepDate.Date,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
-                Notes = notes
             };
 
             _db.SleepLogs.Add(entity);
@@ -123,11 +116,6 @@ namespace Nestly.Services.Repository
             if (patch.EndTime is not null)
             {
                 dbEntity.EndTime = patch.EndTime.Value;
-            }
-
-            if (patch.Notes is not null)
-            {
-                dbEntity.Notes = patch.Notes;
             }
 
             _db.SaveChanges();

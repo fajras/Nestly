@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart'
     show BabyGrowthScreen, BabyGrowthTrackerScreen;
+import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
+import 'package:flutter_application_nestly/screens/sleep_log_screen.dart'
+    show SleepLogOverviewScreen;
 
 class BabyTimeHomeScreen extends StatelessWidget {
   final String babyName;
@@ -80,8 +83,18 @@ class BabyTimeHomeScreen extends StatelessWidget {
                     icon: Icons.nights_stay_rounded,
                     label: "Dnevnik spavanja",
                     color: AppColors.babyBlue,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => SleepLogOverviewScreen(
+                            babyId: babyId,
+                            babyName: babyName,
+                          ),
+                        ),
+                      );
+                    },
                   ),
+
                   _BabyMenuItem(
                     icon: Icons.restaurant_rounded,
                     label: "Plan ishrane",
@@ -92,7 +105,16 @@ class BabyTimeHomeScreen extends StatelessWidget {
                     icon: Icons.event_note_rounded,
                     label: "Kalendar termina",
                     color: AppColors.babyBlue,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CalendarEventScreen(
+                            babyId: babyId,
+                            babyName: babyName,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _BabyMenuItem(
                     icon: Icons.chat_bubble_outline_rounded,

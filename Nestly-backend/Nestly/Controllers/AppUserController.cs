@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -31,12 +30,26 @@ namespace Nestly_WebAPI.Controllers
 
 
         [HttpPatch("{id:long}")]
-        public ActionResult<AppUser> Patch(long id, [FromBody] AppUserPatchDto patch)
+        public ActionResult<AppUserResultDto> Patch(long id, [FromBody] AppUserPatchDto patch)
         {
             try
             {
                 var updated = appUserService.Patch(id, patch);
-                return updated is null ? NotFound() : Ok(updated);
+                if (updated is null)
+                {
+                    return NotFound();
+                }
+
+                var dto = new AppUserResultDto
+                {
+                    Id = updated.Id,
+                    Email = updated.Email,
+                    FirstName = updated.FirstName,
+                    LastName = updated.LastName,
+                    RoleId = updated.RoleId,
+                    IdentityUserId = updated.IdentityUserId
+                };
+                return Ok(dto);
             }
             catch (ArgumentException ex)
             {

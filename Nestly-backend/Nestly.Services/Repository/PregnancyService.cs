@@ -14,12 +14,12 @@ namespace Nestly.Services.Repository
         public List<Pregnancy> Get(PregnancySearchObject? search)
         {
             IQueryable<Pregnancy> q = _db.Pregnancies
-                                          .Include(p => p.User)
+                                          .Include(p => p.ParentProfile)
                                           .AsQueryable();
 
             if (search?.UserId is not null)
             {
-                q = q.Where(p => p.UserId == search.UserId);
+                q = q.Where(p => p.ParentProfileId == search.UserId);
             }
 
             if (search?.LmpFrom is not null)
@@ -42,13 +42,17 @@ namespace Nestly.Services.Repository
                 q = q.Where(p => p.DueDate <= search.DueTo.Value);
             }
 
-            return q.OrderByDescending(p => p.CreatedAt).ToList();
+            return q
+            .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
+            .ThenByDescending(p => p.DueDate ?? DateTime.MinValue)
+            .ThenByDescending(p => p.Id)
+            .ToList();
         }
 
         public Pregnancy? GetById(long id)
         {
             return _db.Pregnancies
-                      .Include(p => p.User)
+                      .Include(p => p.ParentProfile)
                       .FirstOrDefault(p => p.Id == id);
         }
 
@@ -77,7 +81,7 @@ namespace Nestly.Services.Repository
 
             var entity = new Pregnancy
             {
-                UserId = dto.UserId,
+                ParentProfileId = dto.UserId,
                 LmpDate = dto.LmpDate,
                 DueDate = dto.DueDate
             };
@@ -95,14 +99,14 @@ namespace Nestly.Services.Repository
                 return null;
             }
 
-            if (patch.UserId is not null && patch.UserId.Value != dbEntity.UserId)
+            if (patch.UserId is not null && patch.UserId.Value != dbEntity.ParentProfileId)
             {
                 if (!_db.AppUsers.Any(u => u.Id == patch.UserId.Value))
                 {
                     throw new ArgumentException("User does not exist.");
                 }
 
-                dbEntity.UserId = patch.UserId.Value;
+                dbEntity.ParentProfileId = patch.UserId.Value;
             }
 
             if (patch.LmpDate is not null)
@@ -130,6 +134,73 @@ namespace Nestly.Services.Repository
             _db.Pregnancies.Remove(dbEntity);
             _db.SaveChanges();
             return true;
+        }
+
+        private const int GestationFromLmpDays = 280;
+        public PregnancyStatusDto? GetStatus(long parentProfileId)
+        {
+            // Uzimamo zadnju trudnoću za tog roditelja (ako ih ima više)
+            var pregnancy = _db.Pregnancies
+                .Where(p => p.ParentProfileId == parentProfileId)
+                .OrderByDescending(p => p.LmpDate ?? p.DueDate)
+                .FirstOrDefault();
+
+            if (pregnancy == null)
+            {
+                return null;
+            }
+
+            if (!pregnancy.LmpDate.HasValue && !pregnancy.DueDate.HasValue)
+            {
+                return null;
+            }
+
+            var today = DateTime.UtcNow.Date;
+
+            DateTime lmp;
+            DateTime due;
+
+            if (pregnancy.LmpDate.HasValue)
+            {
+                lmp = pregnancy.LmpDate.Value.Date;
+                due = (pregnancy.DueDate ?? lmp.AddDays(GestationFromLmpDays)).Date;
+            }
+            else
+            {
+                // Nema LMP, ali ima DueDate -> izračunaj LMP unazad
+                due = pregnancy.DueDate!.Value.Date;
+                lmp = due.AddDays(-GestationFromLmpDays);
+            }
+
+            // gestacijska dob u danima (ne ispod 0)
+            var ageDays = (today - lmp).Days;
+            if (ageDays < 0)
+            {
+                ageDays = 0;
+            }
+
+            // sedmica trudnoće (1-based)
+            var week = (ageDays / 7) + 1;
+            if (week < 1)
+            {
+                week = 1;
+            }
+
+            // preostali dani (ne ispod 0)
+            var remaining = (due - today).Days;
+            if (remaining < 0)
+            {
+                remaining = 0;
+            }
+
+            return new PregnancyStatusDto
+            {
+                ParentProfileId = parentProfileId,
+                LmpDate = lmp,
+                DueDate = due,
+                GestationalWeek = week,
+                DaysRemaining = remaining
+            };
         }
     }
 }

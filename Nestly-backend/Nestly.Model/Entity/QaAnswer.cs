@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
@@ -15,7 +16,9 @@ namespace Nestly.Model.Entity
         public long? AnsweredById { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        [JsonIgnore]
         public QaQuestion Question { get; set; }
+        [JsonIgnore]
         public DoctorProfile AnsweredBy { get; set; }
     }
 }

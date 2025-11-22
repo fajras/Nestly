@@ -14,7 +14,7 @@ namespace Nestly.Model.Entity
         public decimal? TemperatureC { get; set; }
         public string Medicines { get; set; }
         public string DoctorVisit { get; set; }
-        public DateTime CreatedAt { get; set; }
+
 
         public BabyProfile Baby { get; set; }
     }

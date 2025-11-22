@@ -1,47 +1,162 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/screens/baby_profile_create_screen.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/screens/advice_center_screen.dart';
 import 'package:flutter_application_nestly/screens/baby_growth_screen.dart';
+import 'package:flutter_application_nestly/screens/blog_module_screen.dart';
+import 'package:flutter_application_nestly/screens/qa_module_screen.dart';
 import 'package:flutter_application_nestly/screens/symptom_diary_screen.dart';
+import 'package:flutter_application_nestly/screens/therapy_module_mock.dart';
+import 'package:flutter_application_nestly/screens/baby_time_home_screen.dart';
 
-class HomeDashboardScreen extends StatelessWidget {
-  const HomeDashboardScreen({super.key, required this.conceptionDate});
+class HomeDashboardScreen extends StatefulWidget {
+  const HomeDashboardScreen({
+    super.key,
+    required this.parentProfileId,
+    required this.token,
+  });
 
-  final DateTime conceptionDate;
+  final int parentProfileId;
+  final String token;
 
-  static const int _GESTATION_DAYS = 266;
-  static const Color _roseDark = Color(0xFFE68FB0);
+  @override
+  State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
+}
 
-  int _daysSinceConception() {
-    final now = DateTime.now();
-    return now.difference(conceptionDate).inDays.clamp(0, 10000);
+class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+  static const String _baseUrl = 'http://10.0.2.2:5167'; // prilagodi po potrebi
+
+  int? _gestationalWeek;
+  int? _daysRemaining;
+  DateTime? _lmpDate;
+  DateTime? _dueDate;
+
+  bool _loading = true;
+  bool _error = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPregnancyStatus();
   }
 
-  int _currentWeek() {
-    final days = _daysSinceConception();
-    final week = (days / 7).floor() + 1;
-    return week < 1 ? 1 : week;
+  Future<void> _loadPregnancyStatus() async {
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
+
+    try {
+      final uri = Uri.parse(
+        '$_baseUrl/api/Pregnancy/status?parentProfileId=${widget.parentProfileId}',
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        _gestationalWeek = data['gestationalWeek'] as int?;
+        _daysRemaining = data['daysRemaining'] as int?;
+
+        final lmp = data['lmpDate'];
+        final due = data['dueDate'];
+        if (lmp != null) _lmpDate = DateTime.parse(lmp.toString());
+        if (due != null) _dueDate = DateTime.parse(due.toString());
+      } else {
+        _error = true;
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _error = true;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
-  int _daysRemaining() {
-    return _GESTATION_DAYS - _daysSinceConception();
+  int get _week {
+    if (_gestationalWeek == null || _gestationalWeek! < 1) return 1;
+    return _gestationalWeek!;
   }
 
-  double _progress() {
-    final done = _daysSinceConception().clamp(0, _GESTATION_DAYS);
-    return (done / _GESTATION_DAYS).clamp(0.0, 1.0);
+  double get _progress {
+    if (_daysRemaining == null) return 0.0;
+
+    const totalDays = 280;
+    final done = (totalDays - _daysRemaining!).clamp(0, totalDays);
+    return done / totalDays;
+  }
+
+  String get _subtitle {
+    if (_error) {
+      return 'Nije moguće učitati podatke o trudnoći.';
+    }
+    if (_gestationalWeek == null || _daysRemaining == null) {
+      return 'Nema podataka o trudnoći. Dodajte informacije u profilu.';
+    }
+    if (_daysRemaining! > 0) {
+      return 'Preostalo ${_daysRemaining!} dana';
+    }
+    return 'Termin je prošao';
   }
 
   @override
   Widget build(BuildContext context) {
-    final week = _currentWeek();
-    final remaining = _daysRemaining();
-    final subtitle = remaining > 0
-        ? 'Preostalo $remaining dana'
-        : 'Termin je prošao';
-
     return Scaffold(
       backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'BellyTime',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppColors.roseDark,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              // TODO: ovdje kasnije ubaci pravo ime bebe iz backenda
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const BabyTimeHomeScreen(babyName: 'Vaša beba'),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.child_care_rounded,
+              color: AppColors.roseDark,
+              size: 22,
+            ),
+            label: const Text(
+              'BabyTime',
+              style: TextStyle(
+                color: AppColors.roseDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -52,60 +167,83 @@ class HomeDashboardScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _HeaderSimple(
-                    title: 'Sedmica $week',
-                    subtitle: subtitle,
-                    progress: _progress(),
+                    title: 'Sedmica $_week',
+                    subtitle: _subtitle,
+                    progress: _progress,
+                    loading: _loading,
                   ),
                   const SizedBox(height: AppSpacing.xl),
 
+                  // Veličina ploda
                   _GradientPinkCard(
                     icon: Icons.local_florist_rounded,
                     label: 'Veličina ploda',
+                    onTap: () => _open(context, BabyGrowthScreen(week: _week)),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Dnevnik simptoma
+                  _GradientPinkCard(
+                    icon: Icons.fact_check_rounded,
+                    label: 'Dnevnik simptoma',
                     onTap: () => _open(
                       context,
-                      BabyGrowthScreen(
-                        week: _currentWeek(),
-                        remainingDays: _daysRemaining(),
+                      SymptomDiaryScreen(
+                        parentProfileId: widget.parentProfileId,
                       ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _GradientPinkCard(
-                    icon: Icons.fact_check_rounded,
-                    label: 'Dnevnik simptoma',
-                    onTap: () => _open(context, const SymptomDiaryScreen()),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+
+                  // Savjetni centar
                   _GradientPinkCard(
                     icon: Icons.lightbulb_outline_rounded,
                     label: 'Savjetni centar',
                     onTap: () => _open(
                       context,
-                      const AdviceCenterScreen(
-                        /* highlightWeek: currentWeek */
-                      ),
+                      AdviceCenterScreen(gestationalWeek: _week),
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.md),
+
+                  // Blog
                   _GradientPinkCard(
                     icon: Icons.article_outlined,
                     label: 'Blog',
-                    onTap: () => _open(context, const _Placeholder('Blog')),
+                    onTap: () => _open(
+                      context,
+                      BlogScreen(parentProfileId: widget.parentProfileId),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
+
+                  // Pitanja
                   _GradientPinkCard(
                     icon: Icons.help_outline_rounded,
                     label: 'Pitanja',
-                    onTap: () => _open(context, const _Placeholder('Pitanja')),
+                    onTap: () => _open(
+                      context,
+                      MyQuestionsScreen(
+                        parentProfileId: widget.parentProfileId,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
+
+                  // Terapija
                   _GradientPinkCard(
                     icon: Icons.medical_services_outlined,
                     label: 'Terapija',
-                    onTap: () => _open(context, const _Placeholder('Terapija')),
+                    onTap: () => _open(
+                      context,
+                      TherapyCalendarScreen(
+                        parentProfileId: widget.parentProfileId,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
+
+                  // Uredi profil
                   _GradientPinkCard(
                     icon: Icons.manage_accounts_rounded,
                     label: 'Uredi profil',
@@ -115,12 +253,18 @@ class HomeDashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xl),
 
+                  // Beba je rođena
                   _BabyBornCard(
                     icon: Icons.favorite_rounded,
                     label: 'Beba je rođena',
                     subtitle: 'Zabilježite rođenje i započnite novi period',
-                    onTap: () =>
-                        _open(context, const _Placeholder('Beba je rođena')),
+                    onTap: () => _open(
+                      context,
+                      BabyProfileCreateScreen(
+                        parentProfileId: widget.parentProfileId,
+                        // pregnancyId: currentPregnancyId,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -137,16 +281,19 @@ class HomeDashboardScreen extends StatelessWidget {
 }
 
 /* ---------- HEADER ---------- */
+
 class _HeaderSimple extends StatelessWidget {
   const _HeaderSimple({
     required this.title,
     required this.subtitle,
     required this.progress,
+    required this.loading,
   });
 
   final String title;
   final String subtitle;
   final double progress;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -161,48 +308,67 @@ class _HeaderSimple extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: AppColors.roseDark,
+            if (loading) ...[
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Učitavanje podataka o trudnoći...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+            ] else ...[
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.roseDark,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Container(
-              height: 12,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey.shade200,
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Stack(
-                  children: [
-                    FractionallySizedBox(
-                      widthFactor: progress,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [AppColors.babyPink, AppColors.roseDark],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
+              const SizedBox(height: AppSpacing.lg),
+              Container(
+                height: 12,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade200,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    children: [
+                      FractionallySizedBox(
+                        widthFactor: progress.clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppColors.babyPink, AppColors.roseDark],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -210,7 +376,8 @@ class _HeaderSimple extends StatelessWidget {
   }
 }
 
-/* ---------- KARTICE: babyPink → white + roze ikonice ---------- */
+/* ---------- KARTICE ---------- */
+
 class _GradientPinkCard extends StatelessWidget {
   const _GradientPinkCard({
     required this.icon,
@@ -296,6 +463,8 @@ class _GradientPinkCard extends StatelessWidget {
   }
 }
 
+/* ---------- BEBA JE ROĐENA ---------- */
+
 class _BabyBornCard extends StatelessWidget {
   const _BabyBornCard({
     required this.icon,
@@ -348,7 +517,6 @@ class _BabyBornCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.lg),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,6 +547,7 @@ class _BabyBornCard extends StatelessWidget {
 }
 
 /* ---------- PLACEHOLDER ---------- */
+
 class _Placeholder extends StatelessWidget {
   const _Placeholder(this.title);
   final String title;

@@ -11,5 +11,6 @@ namespace Nestly.Services.Interfaces
         Pregnancy Create(CreatePregnancyDto entity);
         Pregnancy? Patch(long id, PregnancyPatchDto patch);
         bool Delete(long id);
+        PregnancyStatusDto? GetStatus(long parentProfileId);
     }
 }

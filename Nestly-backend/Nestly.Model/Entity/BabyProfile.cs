@@ -14,7 +14,6 @@ namespace Nestly.Model.Entity
         public string BabyName { get; set; }
         public string Gender { get; set; }
         public DateTime BirthDate { get; set; }
-        public DateTime CreatedAt { get; set; }
         [ForeignKey(nameof(Pregnancy))]
         public long? PregnancyId { get; set; }
         public ParentProfile ParentProfile { get; set; }

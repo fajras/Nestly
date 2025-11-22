@@ -1,22 +1,195 @@
+import 'dart:convert';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
+Map<String, String> defaultHeaders({String? token}) => {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  if (token != null) 'Authorization': 'Bearer $token',
+};
+
+String _devBase() {
+  if (kIsWeb) return 'http://localhost:5167';
+  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
+  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
+  return 'http://localhost:5167';
+}
+
+String get kApiBase =>
+    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
+    ? const String.fromEnvironment('API_BASE')
+    : _devBase();
+
+String get kSymptomDiaryBase => '$kApiBase/api/SymptomDiary';
+
+class SymptomDiaryEntry {
+  final int id;
+  final int parentProfileId;
+  final DateTime date;
+  final int? nausea;
+  final int? fatigue;
+  final int? headache;
+  final int? heartburn;
+  final int? legSwelling;
+
+  SymptomDiaryEntry({
+    required this.id,
+    required this.parentProfileId,
+    required this.date,
+    this.nausea,
+    this.fatigue,
+    this.headache,
+    this.heartburn,
+    this.legSwelling,
+  });
+
+  factory SymptomDiaryEntry.fromJson(Map<String, dynamic> json) {
+    T? _get<T>(String camel, String pascal) {
+      final v = json[camel] ?? json[pascal];
+      if (v == null) return null;
+      if (T == int) return (v as num).toInt() as T;
+      if (T == DateTime) return DateTime.parse(v.toString()) as T;
+      return v as T;
+    }
+
+    final id = _get<int>('id', 'Id');
+    final parentId = _get<int>('parentProfileId', 'ParentProfileId');
+    final date = _get<DateTime>('date', 'Date');
+
+    if (id == null || parentId == null || date == null) {
+      throw Exception('Neispravan SymptomDiary JSON: $json');
+    }
+
+    return SymptomDiaryEntry(
+      id: id,
+      parentProfileId: parentId,
+      date: date,
+      nausea: _get<int>('nausea', 'Nausea'),
+      fatigue: _get<int>('fatigue', 'Fatigue'),
+      headache: _get<int>('headache', 'Headache'),
+      heartburn: _get<int>('heartburn', 'Heartburn'),
+      legSwelling: _get<int>('legSwelling', 'LegSwelling'),
+    );
+  }
+}
+
+class SymptomDiaryApiService {
+  String get _baseUrl => kSymptomDiaryBase;
+
+  String _formatDate(DateTime d) {
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return '$y-$m-$day';
+  }
+
+  Future<SymptomDiaryEntry?> getByDate(
+    int parentProfileId,
+    DateTime date,
+  ) async {
+    final formatted = _formatDate(date);
+    final uri = Uri.parse('$_baseUrl/by-date').replace(
+      queryParameters: {
+        'parentProfileId': parentProfileId.toString(),
+        'date': formatted,
+      },
+    );
+
+    final res = await http
+        .get(uri, headers: defaultHeaders())
+        .timeout(const Duration(seconds: 10));
+
+    if (res.statusCode == 404) return null;
+
+    if (res.statusCode != 200) {
+      throw Exception(
+        'Failed to load symptom diary (${res.statusCode}): ${res.body}',
+      );
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return SymptomDiaryEntry.fromJson(data);
+  }
+
+  Future<SymptomDiaryEntry> create(
+    int parentProfileId,
+    DateTime date,
+    Map<String, int> values,
+  ) async {
+    final formatted = _formatDate(date);
+
+    final body = {
+      'parentProfileId': parentProfileId,
+      'date': formatted,
+      'nausea': values['mucnina'],
+      'fatigue': values['umor'],
+      'headache': values['glavobolja'],
+      'heartburn': values['zgaravica'],
+      'legSwelling': values['oticanje'],
+    };
+
+    final uri = Uri.parse(_baseUrl);
+
+    final res = await http
+        .post(uri, headers: defaultHeaders(), body: jsonEncode(body))
+        .timeout(const Duration(seconds: 10));
+
+    if (res.statusCode != 201) {
+      throw Exception(
+        'Failed to create symptom diary (${res.statusCode}): ${res.body}',
+      );
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return SymptomDiaryEntry.fromJson(data);
+  }
+
+  Future<void> update(int id, Map<String, int> values) async {
+    final body = {
+      'nausea': values['mucnina'],
+      'fatigue': values['umor'],
+      'headache': values['glavobolja'],
+      'heartburn': values['zgaravica'],
+      'legSwelling': values['oticanje'],
+    };
+
+    final uri = Uri.parse('$_baseUrl/$id');
+
+    final res = await http
+        .patch(uri, headers: defaultHeaders(), body: jsonEncode(body))
+        .timeout(const Duration(seconds: 10));
+
+    if (res.statusCode != 200 && res.statusCode != 204) {
+      throw Exception(
+        'Failed to update symptom diary (${res.statusCode}): ${res.body}',
+      );
+    }
+  }
+}
+
 class SymptomDiaryScreen extends StatefulWidget {
-  const SymptomDiaryScreen({super.key});
+  final int parentProfileId;
+
+  const SymptomDiaryScreen({super.key, required this.parentProfileId});
 
   @override
   State<SymptomDiaryScreen> createState() => _SymptomDiaryScreenState();
 }
 
 class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
-  final _service = _MockSymptomDiaryService(); // ⬅️ zamijeni stvarnim servisom
+  final _service = SymptomDiaryApiService();
+
   late DateTime _date;
   bool _loading = true;
   bool _saving = false;
-  String? _entryId; // ako postoji unos za taj datum -> PATCH, inače POST
+  int? _entryId;
 
-  // skala 0..5 (0 = nije zabilježeno)
   final List<_SymptomItem> _symptoms = [
     _SymptomItem(key: 'mucnina', label: 'Mučnina'),
     _SymptomItem(key: 'umor', label: 'Umor'),
@@ -32,25 +205,18 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     _load();
   }
 
-  int _asInt05(dynamic raw) {
-    // prihvati int/double/string/null i vrati int u rasponu 0..5
-    if (raw == null) return 0;
-    if (raw is int) return raw.clamp(0, 5);
-    if (raw is num) return raw.toInt().clamp(0, 5);
-    if (raw is String) {
-      final p = int.tryParse(raw) ?? 0;
-      return p.clamp(0, 5);
-    }
-    return 0;
+  int _asInt05(int? v) {
+    if (v == null) return 0;
+    if (v < 0) return 0;
+    if (v > 5) return 5;
+    return v;
   }
 
-  // dozvola uređivanja: samo ako je datum u prošlosti najviše 7 dana (i ne u budućnosti)
   bool get _canEdit {
     final now = DateTime.now();
     final diff = now
         .difference(DateTime(_date.year, _date.month, _date.day))
         .inDays;
-    // diff < 0 => budućnost (zabrani), diff==0 danas (dozvoli), diff 1..7 (dozvoli), >7 (zabrani)
     return diff >= 0 && diff <= 7;
   }
 
@@ -73,7 +239,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
   }
 
   Future<void> _pickDate() async {
-    // dozvoli biranje npr. zadnjih 300 dana do danas (možeš prilagoditi)
     final now = DateTime.now();
     final first = now.subtract(const Duration(days: 300));
     final picked = await showDatePicker(
@@ -83,7 +248,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
       lastDate: now,
       helpText: 'Odaberite datum',
       builder: (context, child) {
-        // lagani zaobljeni stil
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
@@ -105,25 +269,49 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final res = await _service.getByDate(
-      _date,
-    ); // GET /symptoms?date=yyyy-mm-dd
-    if (!mounted) return;
 
-    if (res == null) {
-      // nema zapisa: sve 0
-      for (final s in _symptoms) {
-        s.value = 0;
+    try {
+      final res = await _service.getByDate(widget.parentProfileId, _date);
+
+      if (!mounted) return;
+
+      if (res == null) {
+        _entryId = null;
+        for (final s in _symptoms) {
+          s.value = 0;
+        }
+      } else {
+        _entryId = res.id;
+
+        for (final s in _symptoms) {
+          switch (s.key) {
+            case 'mucnina':
+              s.value = _asInt05(res.nausea);
+              break;
+            case 'umor':
+              s.value = _asInt05(res.fatigue);
+              break;
+            case 'glavobolja':
+              s.value = _asInt05(res.headache);
+              break;
+            case 'zgaravica':
+              s.value = _asInt05(res.heartburn);
+              break;
+            case 'oticanje':
+              s.value = _asInt05(res.legSwelling);
+              break;
+            default:
+              s.value = 0;
+          }
+        }
       }
-      _entryId = null;
-    } else {
-      _entryId = res.id;
-      final map = res.values; // može sadržati null/double/string
-      for (final s in _symptoms) {
-        s.value = _asInt05(map[s.key]);
+    } catch (e) {
+      if (mounted) {
+        NestlyToast.error(context, 'Greška pri učitavanju dnevnika simptoma.');
       }
     }
-    setState(() => _loading = false);
+
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _save() async {
@@ -136,17 +324,30 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     }
 
     setState(() => _saving = true);
+
     final values = {for (final s in _symptoms) s.key: s.value};
 
-    if (_entryId == null) {
-      final created = await _service.create(_date, values); // POST
-      _entryId = created.id;
-      if (mounted) {
-        NestlyToast.success(context, 'Unos spremljen.');
+    try {
+      if (_entryId == null) {
+        final created = await _service.create(
+          widget.parentProfileId,
+          _date,
+          values,
+        );
+        _entryId = created.id;
+        if (mounted) {
+          NestlyToast.success(context, 'Unos spremljen.');
+        }
+      } else {
+        await _service.update(_entryId!, values);
+        if (mounted) {
+          NestlyToast.success(context, 'Izmjene sačuvane.');
+        }
       }
-    } else {
-      await _service.update(_entryId!, values); // PATCH
-      NestlyToast.success(context, 'Izmjene sačuvane.');
+    } catch (e) {
+      if (mounted) {
+        NestlyToast.error(context, 'Greška pri spremanju podataka.');
+      }
     }
 
     if (mounted) setState(() => _saving = false);
@@ -165,7 +366,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: AppColors.textPrimary,
+            color: AppColors.roseDark,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -186,7 +387,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // datum čip (tap = promijeni datum)
                 InkWell(
                   onTap: _pickDate,
                   borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -229,7 +429,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
                 const SizedBox(height: AppSpacing.md),
 
-                // Banner: samo pregled
                 if (!_canEdit)
                   Container(
                     margin: const EdgeInsets.only(top: 6),
@@ -265,7 +464,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
                 const SizedBox(height: AppSpacing.xl),
 
-                // kartica sa skalama
                 Card(
                   elevation: 3,
                   shape: RoundedRectangleBorder(
@@ -307,7 +505,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
                 const SizedBox(height: AppSpacing.xl),
 
-                // dugme Dodaj / Sačuvaj (disabled kad se ne može uređivati)
                 SizedBox(
                   height: 52,
                   child: ElevatedButton(
@@ -348,7 +545,13 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
   }
 }
 
-/* ─────────────  UI helpers  ───────────── */
+class _SymptomItem {
+  final String key;
+  final String label;
+  int value;
+
+  _SymptomItem({required this.key, required this.label, this.value = 0});
+}
 
 class _IntensityTile extends StatelessWidget {
   const _IntensityTile({
@@ -441,7 +644,7 @@ class _IntensityChips extends StatelessWidget {
     required this.enabled,
   });
 
-  final int value; // 0..5
+  final int value;
   final ValueChanged<int> onChanged;
   final bool enabled;
 
@@ -495,61 +698,6 @@ class _IntensityChips extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _SymptomItem {
-  final String key;
-  final String label;
-  int value; // 0..5
-  _SymptomItem({required this.key, required this.label, this.value = 0});
-}
-
-/* ─────────────  MOCK SERVICE (zamijeni pravim API-jem)  ───────────── */
-class _SymptomEntry {
-  final String id;
-  final DateTime date;
-  final Map<String, int> values;
-  _SymptomEntry({required this.id, required this.date, required this.values});
-}
-
-class _MockSymptomDiaryService {
-  final Map<String, _SymptomEntry> _store = {};
-
-  String _key(DateTime d) {
-    final y = d.year.toString();
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
-  }
-
-  Future<_SymptomEntry?> getByDate(DateTime date) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    return _store[_key(date)];
-    // PRAVI API: GET /symptoms?date=yyyy-MM-dd
-  }
-
-  Future<_SymptomEntry> create(DateTime date, Map<String, int> values) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
-    final entry = _SymptomEntry(id: id, date: date, values: Map.of(values));
-    _store[_key(date)] = entry;
-    // PRAVI API: POST /symptoms { date, values }
-    return entry;
-  }
-
-  Future<void> update(String id, Map<String, int> values) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    // PRAVI API: PATCH /symptoms/{id} { values }
-    final kv = _store.entries.firstWhere(
-      (e) => e.value.id == id,
-      orElse: () => throw Exception('Not found'),
-    );
-    _store[kv.key] = _SymptomEntry(
-      id: id,
-      date: kv.value.date,
-      values: Map.of(values),
     );
   }
 }

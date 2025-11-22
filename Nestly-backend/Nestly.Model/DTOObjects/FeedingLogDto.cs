@@ -7,7 +7,7 @@ namespace Nestly.Model.DTOObjects
         public DateTime? FeedDate { get; set; }
         public TimeSpan? FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
-        public long? FoodTypeId { get; set; }
+        public int? FoodTypeId { get; set; }
         public string? Notes { get; set; }
     }
     public class CreateFeedingLogDto
@@ -16,7 +16,7 @@ namespace Nestly.Model.DTOObjects
         public DateTime FeedDate { get; set; }
         public TimeSpan FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
-        public long? FoodTypeId { get; set; }
+        public int? FoodTypeId { get; set; }
         public string? Notes { get; set; }
     }
     public class FeedingLogSearchObject

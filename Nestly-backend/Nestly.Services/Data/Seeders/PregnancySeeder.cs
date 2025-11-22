@@ -12,7 +12,7 @@ namespace Nestly.Services.Data.Seeders
                 new Pregnancy
                 {
                     Id = 1,
-                    UserId = 1,
+                    ParentProfileId = 1,
                     LmpDate = lmp,
                     DueDate = lmp.AddDays(280),
                     CycleLengthDays = 28

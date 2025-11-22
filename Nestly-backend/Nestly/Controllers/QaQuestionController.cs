@@ -12,27 +12,51 @@ namespace Nestly_WebAPI.Controllers
         private readonly IQaQuestionService _service;
         public QaQuestionController(IQaQuestionService service) => _service = service;
 
+        // GET /api/qaquestion?...
         [HttpGet]
-        public ActionResult<IEnumerable<QaQuestion>> Get([FromQuery] QaQuestionSearchObject? search)
-            => Ok(_service.Get(search));
-
-        [HttpGet("{id:long}")]
-        public ActionResult<QaQuestion> GetById(long id)
-            => _service.GetById(id) is { } q ? Ok(q) : NotFound();
-
-        [HttpPost]
-        public ActionResult<QaQuestion> Create([FromBody] CreateQaQuestionDto request)
+        public async Task<ActionResult<IEnumerable<QaQuestion>>> Get([FromQuery] QaQuestionSearchObject? search)
         {
-            var created = _service.Create(request);
+            var result = await _service.Get(search);
+            return Ok(result);
+        }
+
+        // GET /api/qaquestion/{id}
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<QaQuestion>> GetById(long id)
+        {
+            var q = await _service.GetById(id);
+            return q is null ? NotFound() : Ok(q);
+        }
+
+        // GET /api/qaquestion/user/{userId}
+        [HttpGet("user/{userId:long}")]
+        public async Task<ActionResult<IEnumerable<QaQuestion>>> GetByUser(long userId)
+        {
+            var result = await _service.GetByUserAsync(userId);
+
+            if (result == null || !result.Any())
+            {
+                return NotFound(new { message = $"No questions found for user id {userId}." });
+            }
+
+            return Ok(result);
+        }
+
+        // POST /api/qaquestion
+        [HttpPost]
+        public async Task<ActionResult<QaQuestion>> Create([FromBody] CreateQaQuestionDto request)
+        {
+            var created = await _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        // PATCH /api/qaquestion/{id}
         [HttpPatch("{id:long}")]
-        public ActionResult<QaQuestion> Patch(long id, [FromBody] QaQuestionPatchDto patch)
+        public async Task<ActionResult<QaQuestion>> Patch(long id, [FromBody] QaQuestionPatchDto patch)
         {
             try
             {
-                var updated = _service.Patch(id, patch);
+                var updated = await _service.Patch(id, patch);
                 return updated is null ? NotFound() : Ok(updated);
             }
             catch (ArgumentException ex)
@@ -41,16 +65,18 @@ namespace Nestly_WebAPI.Controllers
             }
         }
 
+        // DELETE /api/qaquestion/{id}
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id)
             => await _service.Delete(id) ? NoContent() : NotFound();
 
+        // POST /api/qaquestion/{questionId}/answers
         [HttpPost("{questionId:long}/answers")]
-        public ActionResult<QaAnswer> CreateAnswer(long questionId, [FromBody] QaAnswer request)
+        public async Task<ActionResult<QaAnswer>> CreateAnswer(long questionId, [FromBody] QaAnswer request)
         {
             try
             {
-                var created = _service.CreateAnswer(questionId, request);
+                var created = await _service.CreateAnswer(questionId, request);
                 return CreatedAtAction(nameof(QaAnswerController.GetById),
                     "QaAnswer", new { id = created.Id }, created);
             }
@@ -60,8 +86,12 @@ namespace Nestly_WebAPI.Controllers
             }
         }
 
+        // GET /api/qaquestion/{questionId}/answers
         [HttpGet("{questionId:long}/answers")]
-        public ActionResult<IEnumerable<QaAnswer>> GetAnswers(long questionId)
-            => Ok(_service.GetAnswers(questionId));
+        public async Task<ActionResult<IEnumerable<QaAnswer>>> GetAnswers(long questionId)
+        {
+            var answers = await _service.GetAnswers(questionId);
+            return Ok(answers);
+        }
     }
 }

@@ -48,6 +48,21 @@ namespace Nestly.Services.Repository
                       .FirstOrDefault(x => x.Id == id);
         }
 
+        public CreateFetalDevelopmentWeekDto? GetByWeekNumber(int weekNumber)
+        {
+            return _db.FetalDevelopmentWeeks
+                .Where(f => f.WeekNumber == weekNumber)
+                .Select(f => new CreateFetalDevelopmentWeekDto
+                {
+                    WeekNumber = f.WeekNumber,
+                    ImageUrl = f.ImageUrl,
+                    BabyDevelopment = f.BabyDevelopment,
+                    MotherChanges = f.MotherChanges
+                })
+                .FirstOrDefault();
+        }
+
+
         public MealPlan Create(CreateMealPlanDto dto)
         {
             if (dto is null)

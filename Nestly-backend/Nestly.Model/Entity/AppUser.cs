@@ -41,12 +41,10 @@ namespace Nestly.Model.Entity
     public class ParentProfile
     {
         [Key] public long Id { get; set; }
-        public DateTime ConceptionDate { get; set; }
-
         [ForeignKey(nameof(AppUser))]
         public long UserId { get; set; }
-
         [JsonIgnore] public AppUser User { get; set; } = default!;
+        public ICollection<SymptomDiary>? SymptomDiaries { get; set; } = new List<SymptomDiary>();
         public ICollection<BabyProfile>? Babies { get; set; } = new List<BabyProfile>();
         public ICollection<Pregnancy>? Pregnancies { get; set; } = new List<Pregnancy>();
         public ICollection<MedicationPlan>? MedicationPlans { get; set; } = new List<MedicationPlan>();
@@ -62,8 +60,11 @@ namespace Nestly.Model.Entity
         [ForeignKey(nameof(AppUser))]
         public long UserId { get; set; }
 
-        [JsonIgnore] public AppUser User { get; set; } = default!;
+        [JsonIgnore]
+        public AppUser User { get; set; } = default!;
+        [JsonIgnore]
         public ICollection<QaAnswer>? QaAnswers { get; set; } = new List<QaAnswer>();
+        [JsonIgnore]
         public ICollection<BlogPost>? BlogPosts { get; set; } = new List<BlogPost>();
     }
 }

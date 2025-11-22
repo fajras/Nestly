@@ -22,12 +22,6 @@ namespace Nestly_WebAPI.Controllers
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
-        [HttpGet("week/{weekNumber:int}")]
-        public ActionResult<GetWeeklyAdviceDto> GetByWeek(short weekNumber)
-        {
-            var entity = _service.GetByWeek(weekNumber);
-            return entity is null ? NotFound() : Ok(entity);
-        }
 
         [HttpPost]
         public ActionResult<MealPlan> Create([FromBody] CreateMealPlanDto request)

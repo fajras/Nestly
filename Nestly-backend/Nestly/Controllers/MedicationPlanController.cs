@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -12,26 +11,34 @@ namespace Nestly_WebAPI.Controllers
         private readonly IMedicationPlanService _service;
         public MedicationPlanController(IMedicationPlanService service) => _service = service;
 
+        // GET /api/medicationplan?UserId=123
         [HttpGet]
-        public ActionResult<IEnumerable<MedicationPlan>> Get([FromQuery] MedicationPlanSearchObject? search)
+        public ActionResult<IEnumerable<MedicationPlanResponseDto>> Get(
+            [FromQuery] MedicationPlanSearchObject? search)
             => Ok(_service.Get(search));
 
+        // GET /api/medicationplan/{id}
         [HttpGet("{id:long}")]
-        public ActionResult<MedicationPlan> GetById(long id)
+        public ActionResult<MedicationPlanResponseDto> GetById(long id)
         {
-            var entity = _service.GetById(id);
-            return entity is null ? NotFound() : Ok(entity);
+            var dto = _service.GetById(id);
+            return dto is null ? NotFound() : Ok(dto);
         }
 
+        // POST /api/medicationplan
         [HttpPost]
-        public ActionResult<MedicationPlan> Create([FromBody] CreateMedicationPlanDto request)
+        public ActionResult<MedicationPlanResponseDto> Create(
+            [FromBody] CreateMedicationPlanDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        // PATCH /api/medicationplan/{id}
         [HttpPatch("{id:long}")]
-        public ActionResult<MedicationPlan> Patch(long id, [FromBody] MedicationPlanPatchDto patch)
+        public ActionResult<MedicationPlanResponseDto> Patch(
+            long id,
+            [FromBody] MedicationPlanPatchDto patch)
         {
             try
             {
@@ -44,6 +51,7 @@ namespace Nestly_WebAPI.Controllers
             }
         }
 
+        // DELETE /api/medicationplan/{id}
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
             => _service.Delete(id) ? NoContent() : NotFound();

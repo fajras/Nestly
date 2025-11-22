@@ -11,6 +11,7 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public string ImageUrl { get; set; }
         [ForeignKey(nameof(DoctorProfile))]
         public long? AuthorId { get; set; }
         public DateTime CreatedAt { get; set; }

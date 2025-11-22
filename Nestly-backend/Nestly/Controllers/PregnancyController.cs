@@ -47,5 +47,19 @@ namespace Nestly_WebAPI.Controllers
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
             => _service.Delete(id) ? NoContent() : NotFound();
+
+
+        [HttpGet("status")]
+        public ActionResult<PregnancyStatusDto> GetStatus([FromQuery] long parentProfileId)
+        {
+            var status = _service.GetStatus(parentProfileId);
+
+            if (status is null)
+            {
+                return NotFound(new { message = "Pregnancy data not found for this parent." });
+            }
+
+            return Ok(status);
+        }
     }
 }

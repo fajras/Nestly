@@ -184,25 +184,26 @@ namespace Nestly.Services.Repository
                 if (roleNameUpper == "PARENT" && !_db.ParentProfiles.Any(p => p.UserId == user.Id))
                 {
                     var (normLmp, normDue) = NormalizePregnancyDates(dto.LmpDate, dto.DueDate);
-                    var conception = normLmp.HasValue ? normLmp.Value.AddDays(14) : DateTime.UtcNow.Date;
 
                     var parentProfile = new ParentProfile
                     {
                         UserId = user.Id,
-                        ConceptionDate = conception
                     };
                     _db.ParentProfiles.Add(parentProfile);
                     _db.SaveChanges();
 
-                    var preg = new Pregnancy
+                    if (normLmp.HasValue || normDue.HasValue)
                     {
-                        UserId = parentProfile.Id,
-                        LmpDate = normLmp,
-                        DueDate = normDue,
-                        CycleLengthDays = dto.CycleLengthDays
-                    };
-                    _db.Pregnancies.Add(preg);
-                    _db.SaveChanges();
+                        var preg = new Pregnancy
+                        {
+                            ParentProfileId = parentProfile.Id,
+                            LmpDate = normLmp,
+                            DueDate = normDue,
+                            CycleLengthDays = dto.CycleLengthDays
+                        };
+                        _db.Pregnancies.Add(preg);
+                        _db.SaveChanges();
+                    }
                 }
                 else if (roleNameUpper == "DOCTOR" && !_db.DoctorProfiles.Any(d => d.UserId == user.Id))
                 {

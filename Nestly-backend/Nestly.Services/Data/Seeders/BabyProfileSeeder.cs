@@ -15,7 +15,6 @@ namespace Nestly.Services.Data.Seeders
                     BabyName = "Emma",
                     Gender = "Female",
                     BirthDate = new DateTime(2024, 12, 18),
-                    CreatedAt = DateTime.UtcNow.AddDays(-15),
                     PregnancyId = 1
                 }
             );

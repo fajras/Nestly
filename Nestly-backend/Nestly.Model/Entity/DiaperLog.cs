@@ -14,7 +14,6 @@ namespace Nestly.Model.Entity
         public TimeSpan ChangeTime { get; set; }
         public string DiaperState { get; set; }
         public string Notes { get; set; }
-        public DateTime CreatedAt { get; set; }
 
         public BabyProfile Baby { get; set; }
     }

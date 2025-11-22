@@ -9,10 +9,10 @@ namespace Nestly.Model.Entity
         [Key]
         public long Id { get; set; }
         [ForeignKey(nameof(ParentProfile))]
-        public long UserId { get; set; }
+        public long ParentProfileId { get; set; }
         public DateTime? LmpDate { get; set; }
         public DateTime? DueDate { get; set; }
         public int? CycleLengthDays { get; set; }
-        public ParentProfile User { get; set; }
+        public ParentProfile ParentProfile { get; set; }
     }
 }

@@ -1,5 +1,5 @@
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
 
 namespace Nestly.Services.Interfaces
 {
@@ -10,5 +10,8 @@ namespace Nestly.Services.Interfaces
         BlogPost Create(CreateBlogPostDto entity);
         BlogPost? Patch(long id, BlogPostPatchDto patch);
         bool Delete(long id);
+        Task<List<BlogCategoryDto>> GetAllAsync();
+        List<BlogPost> GetByCategoryId(int categoryId);
+
     }
 }

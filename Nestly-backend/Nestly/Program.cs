@@ -43,7 +43,8 @@ builder.Services.AddScoped<ISleepLogService, SleepLogService>();
 builder.Services.AddScoped<IWeeklyAdviceService, WeeklyAdviceService>();
 builder.Services.AddScoped<IQaQuestionService, QaQuestionService>();
 builder.Services.AddScoped<IQaAnswerService, QaAnswerService>();
-
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<ISymptomDiaryService, SymptomDiaryService>();
 builder.Services.AddIdentityCore<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Nestly")
@@ -76,6 +77,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 });
 builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 
+
+//builder.Services.AddSwaggerGen(c =>
+//{
+
+
+//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//    {
+//        Description = "Enter the JWT token here in the format: Bearer {token}",
+//        Name = "Authorization",
+//        In = ParameterLocation.Header,
+//        Type = SecuritySchemeType.Http,
+//        Scheme = "Bearer"
+//    });
+
+//    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+//    {
+//        {
+//            new OpenApiSecurityScheme
+//            {
+//                Reference = new OpenApiReference
+//                {
+//                    Type = ReferenceType.SecurityScheme,
+//                    Id = "Bearer"
+//                }
+//            },
+//            new string[] { }
+//        }
+//    });
+//});
 
 builder.Services.AddCors(options =>
 {

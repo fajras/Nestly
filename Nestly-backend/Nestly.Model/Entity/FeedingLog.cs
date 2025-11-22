@@ -14,9 +14,8 @@ namespace Nestly.Model.Entity
         public TimeSpan FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
         [ForeignKey(nameof(FoodType))]
-        public long? FoodTypeId { get; set; }
+        public int? FoodTypeId { get; set; }
         public string Notes { get; set; }
-        public DateTime CreatedAt { get; set; }
 
         public BabyProfile Baby { get; set; }
         public FoodType FoodType { get; set; }

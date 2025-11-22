@@ -11,157 +11,109 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public MedicationPlanService(NestlyDbContext db) => _db = db;
 
-        public List<MedicationPlan> Get(MedicationPlanSearchObject? search)
+        private static MedicationPlanResponseDto ToDto(MedicationPlan m) => new()
         {
-            IQueryable<MedicationPlan> q = _db.MedicationPlans
-                                              .Include(p => p.Times)
-                                              .Include(p => p.IntakeLogs)
-                                              .Include(p => p.User);
+            Id = m.Id,
+            UserId = m.UserId,
+            MedicineName = m.MedicineName,
+            Dose = m.Dose,
+            StartDate = m.StartDate,
+            EndDate = m.EndDate
+        };
+
+        public IEnumerable<MedicationPlanResponseDto> Get(MedicationPlanSearchObject? search)
+        {
+            IQueryable<MedicationPlan> q = _db.MedicationPlans.AsNoTracking();
 
             if (search?.UserId is not null)
             {
-                q = q.Where(p => p.UserId == search.UserId);
+                q = q.Where(x => x.UserId == search.UserId);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.MedicineName))
+            if (search?.From is not null)
             {
-                q = q.Where(p => p.MedicineName.Contains(search.MedicineName));
+                q = q.Where(x => x.StartDate >= search.From);
             }
 
-            if (search?.ActiveOn is not null)
+            if (search?.To is not null)
             {
-                q = q.Where(p => p.StartDate <= search.ActiveOn.Value &&
-                                 p.EndDate >= search.ActiveOn.Value);
+                q = q.Where(x => x.EndDate <= search.To);
             }
 
-            return q.OrderByDescending(p => p.CreatedAt).ToList();
+            return q
+                .OrderBy(x => x.StartDate)
+                .Select(ToDto)
+                .ToList();
         }
 
-        public MedicationPlan? GetById(long id)
+        public MedicationPlanResponseDto? GetById(long id)
         {
-            return _db.MedicationPlans
-                      .Include(p => p.Times)
-                      .Include(p => p.IntakeLogs)
-                      .Include(p => p.User)
-                      .FirstOrDefault(p => p.Id == id);
+            var m = _db.MedicationPlans.AsNoTracking().FirstOrDefault(x => x.Id == id);
+            return m is null ? null : ToDto(m);
         }
 
-        public MedicationPlan Create(CreateMedicationPlanDto dto)
+        public MedicationPlanResponseDto Create(CreateMedicationPlanDto dto)
         {
-            if (dto is null)
+            if (!_db.AppUsers.Any(u => u.Id == dto.UserId))
             {
-                throw new ArgumentNullException(nameof(dto));
-            }
-
-            if (dto.UserId <= 0)
-            {
-                throw new ArgumentException("UserId (ParentProfileId) is required.", nameof(dto.UserId));
-            }
-
-            bool parentExists = _db.ParentProfiles.Any(p => p.Id == dto.UserId);
-            if (!parentExists)
-            {
-                throw new ArgumentException("Parent profile does not exist.", nameof(dto.UserId));
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.MedicineName))
-            {
-                throw new ArgumentException("MedicineName is required.", nameof(dto.MedicineName));
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.Dose))
-            {
-                throw new ArgumentException("Dose is required.", nameof(dto.Dose));
-            }
-
-            if (dto.StartDate == default)
-            {
-                throw new ArgumentException("StartDate is required.", nameof(dto.StartDate));
-            }
-
-            if (dto.EndDate == default)
-            {
-                throw new ArgumentException("EndDate is required.", nameof(dto.EndDate));
-            }
-
-            if (dto.StartDate >= dto.EndDate)
-            {
-                throw new ArgumentException("StartDate must be before EndDate.", nameof(dto.EndDate));
-            }
-
-            bool overlaps = _db.MedicationPlans.Any(p =>
-                p.UserId == dto.UserId &&
-                p.MedicineName == dto.MedicineName &&
-                p.EndDate > dto.StartDate &&
-                p.StartDate < dto.EndDate
-            );
-            if (overlaps)
-            {
-                throw new InvalidOperationException("Overlapping plan for the same medicine already exists for this user.");
+                throw new ArgumentException("User not found.", nameof(dto.UserId));
             }
 
             var entity = new MedicationPlan
             {
                 UserId = dto.UserId,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
                 MedicineName = dto.MedicineName.Trim(),
-                Dose = dto.Dose.Trim()
+                Dose = dto.Dose.Trim(),
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate
             };
 
             _db.MedicationPlans.Add(entity);
             _db.SaveChanges();
-            return entity;
+            return ToDto(entity);
         }
 
-        public MedicationPlan? Patch(long id, MedicationPlanPatchDto patch)
+        public MedicationPlanResponseDto? Patch(long id, MedicationPlanPatchDto patch)
         {
-            var plan = _db.MedicationPlans.FirstOrDefault(p => p.Id == id);
-            if (plan is null)
+            var m = _db.MedicationPlans.FirstOrDefault(x => x.Id == id);
+            if (m is null)
             {
                 return null;
             }
 
-            if (patch.StartDate is not null)
+            if (!string.IsNullOrWhiteSpace(patch.MedicineName))
             {
-                plan.StartDate = patch.StartDate.Value;
+                m.MedicineName = patch.MedicineName.Trim();
             }
 
-            if (patch.EndDate is not null)
+            if (!string.IsNullOrWhiteSpace(patch.Dose))
             {
-                plan.EndDate = patch.EndDate.Value;
+                m.Dose = patch.Dose.Trim();
             }
 
-            if (patch.MedicineName is not null)
+            if (patch.StartDate.HasValue)
             {
-                plan.MedicineName = patch.MedicineName;
+                m.StartDate = patch.StartDate.Value;
             }
 
-            if (patch.Dose is not null)
+            if (patch.EndDate.HasValue)
             {
-                plan.Dose = patch.Dose;
+                m.EndDate = patch.EndDate.Value;
             }
-
-            if (plan.StartDate >= plan.EndDate)
-            {
-                throw new ArgumentException("StartDate must be before EndDate.");
-            }
-
-            plan.CreatedAt = plan.CreatedAt == default ? DateTime.UtcNow : plan.CreatedAt;
 
             _db.SaveChanges();
-            return plan;
+            return ToDto(m);
         }
 
         public bool Delete(long id)
         {
-            var plan = _db.MedicationPlans.FirstOrDefault(p => p.Id == id);
-            if (plan is null)
+            var m = _db.MedicationPlans.FirstOrDefault(x => x.Id == id);
+            if (m is null)
             {
                 return false;
             }
 
-            _db.MedicationPlans.Remove(plan);
+            _db.MedicationPlans.Remove(m);
             _db.SaveChanges();
             return true;
         }

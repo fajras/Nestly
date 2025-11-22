@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nestly.Model.Entity;
+using Nestly.Services.Data.Seeders;
+using Nestly.Services.Database.Seeders;
 
 namespace Nestly.Services.Data
 {
@@ -35,6 +37,7 @@ namespace Nestly.Services.Data
         public DbSet<FetalDevelopmentWeek> FetalDevelopmentWeeks { get; set; }
         public DbSet<FoodType> FoodTypes { get; set; }
         public DbSet<WeeklyAdvice> WeeklyAdvices { get; set; }
+        public DbSet<SymptomDiary> SymptomDiaries { get; set; }
 
         public DbSet<MedicationPlan> MedicationPlans { get; set; }
         public DbSet<MedicationScheduleTime> MedicationScheduleTimes { get; set; }
@@ -45,30 +48,54 @@ namespace Nestly.Services.Data
         public DbSet<QaQuestion> QaQuestions { get; set; }
         public DbSet<QaAnswer> QaAnswers { get; set; }
 
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
             ConfigureUsersAndProfiles(modelBuilder);
-
             ConfigureBabyProfileAndChildren(modelBuilder);
             ConfigurePregnancy(modelBuilder);
-
             ConfigureBlog(modelBuilder);
-
             ConfigureCalendar(modelBuilder);
-
             ConfigureChat(modelBuilder);
-
             ConfigureMedication(modelBuilder);
-
             ConfigureStaticLookups(modelBuilder);
-
             ConfigureQA(modelBuilder);
             ConfigureMeals(modelBuilder);
+            ConfigureSymptoms(modelBuilder);
 
+
+            modelBuilder.Entity<AppUser>().SeedData();
+            modelBuilder.Entity<BabyProfile>().SeedData();
+            modelBuilder.Entity<BlogCategory>().SeedData();
+            modelBuilder.Entity<BlogPostCategory>().SeedData();
+            modelBuilder.Entity<BlogPost>().SeedData();
+            modelBuilder.Entity<DoctorProfile>().SeedData();
+            modelBuilder.Entity<FetalDevelopmentWeek>().SeedData();
+            modelBuilder.Entity<FoodType>().SeedData();
+            modelBuilder.Entity<MealRecommendation>().SeedData();
+            modelBuilder.Entity<ParentProfile>().SeedData();
+            modelBuilder.Entity<Pregnancy>().SeedData();
+            modelBuilder.Entity<Role>().SeedData();
+            modelBuilder.Entity<WeeklyAdvice>().SeedData();
         }
 
+        private void ConfigureSymptoms(ModelBuilder model)
+        {
+            model.Entity<SymptomDiary>().Property(x => x.Date).HasColumnType("date");
+
+            model.Entity<SymptomDiary>()
+            .HasOne(s => s.ParentProfile)
+            .WithMany(p => p.SymptomDiaries)
+            .HasForeignKey(s => s.ParentProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            model.Entity<SymptomDiary>()
+                .HasIndex(s => new { s.ParentProfileId, s.Date })
+                .IsUnique();
+        }
 
         private static void ConfigureUsersAndProfiles(ModelBuilder model)
         {
@@ -84,16 +111,21 @@ namespace Nestly.Services.Data
             model.Entity<AppUser>(e =>
             {
                 e.HasKey(x => x.Id);
+                e.Property(x => x.IdentityUserId)
+                    .HasMaxLength(64)
+                    .IsRequired(false);
 
-                e.Property(x => x.IdentityUserId).IsRequired().HasMaxLength(64);
+                e.Property(x => x.IdentityUserId).HasMaxLength(64);
                 e.Property(x => x.Email).IsRequired().HasMaxLength(255);
                 e.Property(x => x.FirstName).HasMaxLength(150);
                 e.Property(x => x.LastName).HasMaxLength(150);
                 e.Property(x => x.PhoneNumber).HasMaxLength(50);
                 e.Property(x => x.Gender).HasMaxLength(20);
-
                 e.HasIndex(x => x.Email).IsUnique();
-                e.HasIndex(x => x.IdentityUserId).IsUnique();
+
+                e.HasIndex(x => x.IdentityUserId)
+                 .IsUnique()
+                 .HasFilter("[IdentityUserId] IS NOT NULL");
 
                 e.HasOne(x => x.Role)
                  .WithMany(r => r.Users)
@@ -135,7 +167,6 @@ namespace Nestly.Services.Data
 
                 e.Property(x => x.BabyName).HasMaxLength(150);
                 e.Property(x => x.Gender).HasMaxLength(20);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
                 e.HasOne(x => x.ParentProfile)
                  .WithMany(p => p.Babies)
@@ -170,7 +201,6 @@ namespace Nestly.Services.Data
             {
                 e.HasKey(x => x.Id);
                 e.Property(x => x.Notes).HasMaxLength(1000);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
                 e.Ignore(x => x.DurationMinutes);
 
                 e.HasOne(x => x.Baby)
@@ -179,6 +209,7 @@ namespace Nestly.Services.Data
                  .OnDelete(DeleteBehavior.Cascade);
 
                 e.HasIndex(x => new { x.BabyId, x.SleepDate });
+                e.Property(x => x.SleepDate).HasColumnType("date");
             });
 
             model.Entity<DiaperLog>(e =>
@@ -186,7 +217,7 @@ namespace Nestly.Services.Data
                 e.HasKey(x => x.Id);
                 e.Property(x => x.DiaperState).HasMaxLength(30);
                 e.Property(x => x.Notes).HasMaxLength(1000);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+                e.Property(x => x.ChangeDate).HasColumnType("date");
 
                 e.HasOne(x => x.Baby)
                  .WithMany(b => b.DiaperLogs)
@@ -202,7 +233,7 @@ namespace Nestly.Services.Data
                 e.Property(x => x.Medicines).HasMaxLength(1000);
                 e.Property(x => x.DoctorVisit).HasMaxLength(500);
                 e.Property(x => x.TemperatureC).HasPrecision(4, 2);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+                e.Property(x => x.EntryDate).HasColumnType("date");
 
                 e.HasOne(x => x.Baby)
                  .WithMany(b => b.HealthEntries)
@@ -218,7 +249,6 @@ namespace Nestly.Services.Data
                 e.HasKey(x => x.Id);
                 e.Property(x => x.AmountMl).HasPrecision(10, 2);
                 e.Property(x => x.Notes).HasMaxLength(1000);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
                 e.HasOne(x => x.Baby)
                  .WithMany(b => b.FeedingLogs)
@@ -238,12 +268,12 @@ namespace Nestly.Services.Data
             {
                 e.HasKey(x => x.Id);
 
-                e.HasOne(x => x.User)
+                e.HasOne(x => x.ParentProfile)
                  .WithMany(p => p.Pregnancies)
-                 .HasForeignKey(x => x.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .HasForeignKey(x => x.ParentProfileId)
+                     .OnDelete(DeleteBehavior.Restrict);
 
-                e.HasIndex(x => new { x.UserId, x.LmpDate });
+                e.HasIndex(x => new { x.ParentProfileId, x.LmpDate });
             });
         }
 
@@ -296,18 +326,22 @@ namespace Nestly.Services.Data
                 e.HasKey(x => x.Id);
                 e.Property(x => x.Title).HasMaxLength(200);
                 e.Property(x => x.Description).HasMaxLength(2000);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
                 e.HasOne(x => x.Baby)
                  .WithMany(b => b.CalendarEvents)
                  .HasForeignKey(x => x.BabyId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                // UserId -> ParentProfile (nullable)
                 e.HasOne(x => x.User)
                  .WithMany(p => p.CalendarEvents)
                  .HasForeignKey(x => x.UserId)
                  .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne<ParentProfile>()
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
 
                 e.HasIndex(x => new { x.BabyId, x.StartAt });
             });
@@ -368,7 +402,6 @@ namespace Nestly.Services.Data
                 e.HasKey(x => x.Id);
                 e.Property(x => x.MedicineName).IsRequired().HasMaxLength(200);
                 e.Property(x => x.Dose).IsRequired().HasMaxLength(100);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
                 e.HasOne(x => x.User)
                  .WithMany(p => p.MedicationPlans)

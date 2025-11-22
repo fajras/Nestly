@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 
@@ -36,6 +36,12 @@ namespace Nestly.Services.Repository
             if (search?.CreatedTo is not null)
             {
                 q = q.Where(p => p.CreatedAt <= search.CreatedTo.Value);
+            }
+            if (search.CategoryId.HasValue)
+            {
+                var catId = search.CategoryId.Value;
+                q = q.Where(p => p.BlogPostCategories
+                    .Any(c => c.CategoryId == catId));
             }
 
             return q.OrderByDescending(p => p.CreatedAt).ToList();
@@ -161,5 +167,28 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
+
+        public async Task<List<BlogCategoryDto>> GetAllAsync()
+        {
+            return await _db.BlogCategories
+                .AsNoTracking()
+                .Select(c => new BlogCategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+        }
+
+        public List<BlogPost> GetByCategoryId(int categoryId)
+        {
+            return _db.BlogPosts
+                .Include(p => p.Author)
+                .Include(p => p.BlogPostCategories)
+                .Where(p => p.BlogPostCategories.Any(c => c.CategoryId == categoryId))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+        }
+
     }
 }

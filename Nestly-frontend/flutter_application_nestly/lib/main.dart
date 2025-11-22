@@ -1,8 +1,18 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter_application_nestly/screens/home_dashboard.dart';
 import 'package:flutter_application_nestly/screens/register.dart';
 
-void main() {
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting('bs_BA', null);
+
   runApp(const NestlyApp());
 }
 
@@ -99,6 +109,15 @@ class NestlyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Nestly',
       theme: buildTheme(),
+
+      locale: const Locale('bs', 'BA'),
+      supportedLocales: const [Locale('bs', 'BA'), Locale('en', 'US')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       home: const LoginScreen(),
     );
   }
@@ -118,6 +137,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   bool _loading = false;
 
+  static const String _baseUrl = 'http://10.0.2.2:5167';
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -126,12 +147,72 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _onLogin() async {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) =>
-            HomeDashboardScreen(conceptionDate: DateTime(2025, 1, 5)),
-      ),
-    );
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _loading = true);
+
+    try {
+      final uri = Uri.parse('$_baseUrl/api/Auth/login');
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailCtrl.text.trim(),
+          'password': _pwCtrl.text.trim(),
+        }),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        final token = data['token'] as String?;
+        final parentProfileId = data['parentProfileId'] as int?;
+
+        if (token == null || parentProfileId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Neispravan odgovor sa servera (nedostaje token ili parentProfileId).',
+              ),
+            ),
+          );
+          setState(() => _loading = false);
+          return;
+        }
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => HomeDashboardScreen(
+              parentProfileId: parentProfileId,
+              token: token,
+            ),
+          ),
+        );
+      } else {
+        String message = 'Pogrešan email ili lozinka.';
+        try {
+          final body = jsonDecode(response.body);
+          if (body is Map && body['title'] != null) {
+            message = body['title'];
+          }
+        } catch (_) {}
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Greška pri spajanju na server. Provjeri backend.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   void _onRegister() {
@@ -154,11 +235,8 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // HEADER (logo + naslov)
                   const _LogoHeader(),
                   const SizedBox(height: AppSpacing.xl),
-
-                  // KARTICA S FORMOM
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -174,7 +252,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: AppSpacing.lg),
-
                             TextFormField(
                               controller: _emailCtrl,
                               keyboardType: TextInputType.emailAddress,
@@ -195,7 +272,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                             const SizedBox(height: AppSpacing.md),
-
                             TextFormField(
                               controller: _pwCtrl,
                               obscureText: _obscure,
@@ -207,31 +283,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Icons.lock_outline_rounded,
                                 ),
                                 suffixIcon: IconButton(
-                                  onPressed: () => setState(() {
-                                    _obscure = !_obscure;
-                                  }),
+                                  onPressed: () =>
+                                      setState(() => _obscure = !_obscure),
                                   icon: Icon(
                                     _obscure
                                         ? Icons.visibility
                                         : Icons.visibility_off,
                                   ),
-                                  tooltip: _obscure ? 'Prika\u017Ei' : 'Sakrij',
+                                  tooltip: _obscure
+                                      ? 'Prikaži lozinku'
+                                      : 'Sakrij',
                                 ),
                               ),
                               validator: (v) {
                                 if (v == null || v.isEmpty) {
                                   return 'Unesite lozinku';
                                 }
-                                if (v.length < 6) {
-                                  return 'Minimalno 6 znakova';
-                                }
                                 return null;
                               },
                             ),
-
                             const SizedBox(height: AppSpacing.xl),
-
-                            // PRIJAVI SE (primary)
                             SizedBox(
                               height: 52,
                               child: ElevatedButton(
@@ -247,14 +318,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     : const Text('Prijavi se'),
                               ),
                             ),
-
                             const SizedBox(height: AppSpacing.md),
-
-                            // REGISTRUJ SE (secondary)
                             SizedBox(
                               height: 52,
                               child: OutlinedButton(
-                                onPressed: _onRegister,
+                                onPressed: _loading ? null : _onRegister,
                                 child: const Text('Registruj se'),
                               ),
                             ),
@@ -263,12 +331,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.lg),
-
-                  // FOOTER (terms / help linkovi - po\u017Eeljno kasnije)
                   Text(
-                    'Nastavkom prihvatate Uslove kori\u0161tenja i Politiku privatnosti',
+                    'Nastavkom prihvatate Uslove korištenja i Politiku privatnosti',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
@@ -292,7 +357,6 @@ class _LogoHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Privremeni logo/slika dok ne ubacimo pravi (FlutterLogo je lagan i lijep)
         Container(
           width: 96,
           height: 96,
@@ -312,52 +376,20 @@ class _LogoHeader extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          'Dobrodo\u0161li u Nestly',
+          'Dobrodošli u Nestly',
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Digitalni saputnik za trudno\u0107u i rani razvoj',
+          'Digitalni saputnik za trudnoću i rani razvoj',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
       ],
-    );
-  }
-}
-
-/// Privremeni ekran nakon uspje\u0161ne prijave
-class _DummyHome extends StatelessWidget {
-  const _DummyHome();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nestly')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle_outline, size: 64),
-              const SizedBox(height: AppSpacing.lg),
-              const Text('Uspje\u0161na prijava! Ovo je demo Home.'),
-              const SizedBox(height: AppSpacing.lg),
-              ElevatedButton(
-                onPressed: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const LoginScreen())),
-                child: const Text('Odjava (nazad na Login)'),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

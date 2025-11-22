@@ -18,7 +18,6 @@ namespace Nestly.Model.Entity
         public int DurationMinutes => (int)(EndTime - StartTime).TotalMinutes;
 
         public string Notes { get; set; }
-        public DateTime CreatedAt { get; set; }
 
         public BabyProfile Baby { get; set; }
     }

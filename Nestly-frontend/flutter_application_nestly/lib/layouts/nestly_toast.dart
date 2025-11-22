@@ -79,7 +79,6 @@ class NestlyToast {
         ),
         child: Row(
           children: [
-            // okrugli “chip” sa ikonkom
             Container(
               width: 34,
               height: 34,
@@ -97,7 +96,6 @@ class NestlyToast {
               child: Icon(icon, size: 20, color: iconColor),
             ),
             const SizedBox(width: 12),
-            // poruka
             Expanded(
               child: Text(
                 message,
@@ -107,7 +105,6 @@ class NestlyToast {
                 ),
               ),
             ),
-            // dismiss (po želji)
             GestureDetector(
               onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
               child: const Icon(

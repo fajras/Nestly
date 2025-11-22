@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
-using Nestly.Model.PatchObjects;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -17,7 +17,7 @@ namespace Nestly_WebAPI.Controllers
             => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
-        public ActionResult<BlogPost> GetById(long id)
+        public ActionResult<BlogPostResponseDto> GetById(long id)
         {
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
@@ -47,5 +47,25 @@ namespace Nestly_WebAPI.Controllers
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
             => _service.Delete(id) ? NoContent() : NotFound();
+
+        [HttpGet("category")]
+        public async Task<IActionResult> GetAll()
+        {
+            var categories = await _service.GetAllAsync();
+            return Ok(categories);
+        }
+
+        [HttpGet("category/{categoryId:int}")]
+        public ActionResult<IEnumerable<BlogPost>> GetByCategoryId(int categoryId)
+        {
+            var posts = _service.GetByCategoryId(categoryId);
+
+            if (posts == null || !posts.Any())
+            {
+                return NotFound(new { message = $"No blog posts found for category id {categoryId}." });
+            }
+
+            return Ok(posts);
+        }
     }
 }

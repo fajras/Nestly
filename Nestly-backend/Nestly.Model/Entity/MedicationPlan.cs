@@ -17,7 +17,6 @@ namespace Nestly.Model.Entity
 
         public string MedicineName { get; set; }
         public string Dose { get; set; }
-        public DateTime CreatedAt { get; set; }
 
 
         public ParentProfile User { get; set; }

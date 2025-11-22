@@ -11,7 +11,6 @@ namespace Nestly.Services.Data.Seeders
             {
                 Id = 1,
                 UserId = 1,
-                ConceptionDate = new DateTime(2025, 1, 1)
             });
         }
     }

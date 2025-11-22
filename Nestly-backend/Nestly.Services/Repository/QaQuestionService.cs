@@ -15,7 +15,7 @@ namespace Nestly.Services.Repository
         {
             IQueryable<QaQuestion> q = _db.QaQuestions
                 .AsNoTracking()
-                .Include(x => x.AskedBy)     // AppUser
+                .Include(x => x.AskedBy)
                 .Include(x => x.Answers);
 
             if (search?.AskedByUserId is not null)
@@ -25,7 +25,7 @@ namespace Nestly.Services.Repository
 
             if (!string.IsNullOrWhiteSpace(search?.Query))
             {
-                q = q.Where(x => x.QuestionText.Contains(search!.Query!));
+                q = q.Where(x => x.QuestionText.Contains(search.Query));
             }
 
             if (search?.From is not null)
@@ -38,15 +38,28 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.CreatedAt <= search.To.Value);
             }
 
-            return await q.OrderByDescending(x => x.CreatedAt).ToListAsync(ct);
+            return await q
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync(ct);
         }
 
         public async Task<QaQuestion?> GetById(long id, CancellationToken ct = default) =>
             await _db.QaQuestions
                 .AsNoTracking()
-                .Include(x => x.AskedBy)     // AppUser
+                .Include(x => x.AskedBy)
                 .Include(x => x.Answers)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+        public async Task<List<QaQuestion>> GetByUserAsync(long askedByUserId, CancellationToken ct = default)
+        {
+            return await _db.QaQuestions
+                .AsNoTracking()
+                .Include(x => x.AskedBy)
+                .Include(x => x.Answers)
+                .Where(x => x.AskedById == askedByUserId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync(ct);
+        }
 
         public async Task<QaQuestion> Create(CreateQaQuestionDto dto, CancellationToken ct = default)
         {
@@ -83,6 +96,7 @@ namespace Nestly.Services.Repository
 
             await _db.QaQuestions.AddAsync(entity, ct);
             await _db.SaveChangesAsync(ct);
+
             return entity;
         }
 
@@ -104,6 +118,7 @@ namespace Nestly.Services.Repository
                 var exists = await _db.AppUsers
                     .AsNoTracking()
                     .AnyAsync(u => u.Id == patch.AskedByUserId.Value, ct);
+
                 if (!exists)
                 {
                     throw new ArgumentException("AskedBy user does not exist.", nameof(patch.AskedByUserId));
@@ -131,7 +146,10 @@ namespace Nestly.Services.Repository
 
         public async Task<QaAnswer> CreateAnswer(long questionId, QaAnswer answer, CancellationToken ct = default)
         {
-            var q = await _db.QaQuestions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == questionId, ct);
+            var q = await _db.QaQuestions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == questionId, ct);
+
             if (q is null)
             {
                 throw new ArgumentException("Question not found.", nameof(questionId));
@@ -142,6 +160,7 @@ namespace Nestly.Services.Repository
                 var userExists = await _db.AppUsers
                     .AsNoTracking()
                     .AnyAsync(u => u.Id == answer.AnsweredById.Value, ct);
+
                 if (!userExists)
                 {
                     throw new ArgumentException("AnsweredBy user does not exist.", nameof(answer.AnsweredById));
@@ -149,6 +168,7 @@ namespace Nestly.Services.Repository
             }
 
             answer.QuestionId = questionId;
+
             if (answer.CreatedAt == default)
             {
                 answer.CreatedAt = DateTime.UtcNow;
@@ -156,16 +176,18 @@ namespace Nestly.Services.Repository
 
             _db.QaAnswers.Add(answer);
             await _db.SaveChangesAsync(ct);
+
             return answer;
         }
 
-        public async Task<List<QaAnswer>> GetAnswers(long questionId, CancellationToken ct = default) =>
-            await _db.QaAnswers
+        public async Task<List<QaAnswer>> GetAnswers(long questionId, CancellationToken ct = default)
+        {
+            return await _db.QaAnswers
                 .AsNoTracking()
                 .Include(a => a.AnsweredBy)
                 .Where(a => a.QuestionId == questionId)
                 .OrderBy(a => a.CreatedAt)
                 .ToListAsync(ct);
+        }
     }
-
 }

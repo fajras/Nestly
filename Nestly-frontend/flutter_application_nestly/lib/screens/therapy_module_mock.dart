@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
+    show NestlyToast;
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_application_nestly/main.dart';
@@ -522,9 +524,8 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate() || _start == null || _end == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Molimo unesite sve podatke.')),
-      );
+      NestlyToast.info(context, 'Molimo unesite sve podatke.');
+
       return;
     }
 
@@ -539,11 +540,11 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pop();
+      NestlyToast.success(context, 'Uspješno ste dodali terapiju!');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Greška pri spremanju: $e')));
+
+      NestlyToast.error(context, 'Greška pri spremanju: $e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

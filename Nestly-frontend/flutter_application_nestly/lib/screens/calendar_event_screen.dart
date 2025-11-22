@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
+    show NestlyToast;
 import 'package:http/http.dart' as http;
 import 'package:table_calendar/table_calendar.dart';
 
@@ -221,9 +223,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri učitavanju termina: $e')),
-      );
+      NestlyToast.error(context, 'Greška pri učitavanju termina: $e');
     }
   }
 
@@ -243,9 +243,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
 
   Future<void> _saveEvent() async {
     if (_titleCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Unesite naziv termina.')));
+      NestlyToast.info(context, 'Unesite naziv termina.');
       return;
     }
 
@@ -283,14 +281,10 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
 
       await _loadEventsForMonth(_focusedDay);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Termin je sačuvan.')));
+      NestlyToast.success(context, 'Termin je uspješno sačuvan.');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri spremanju termina: $e')),
-      );
+      NestlyToast.error(context, 'Greška pri spremanju termina: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

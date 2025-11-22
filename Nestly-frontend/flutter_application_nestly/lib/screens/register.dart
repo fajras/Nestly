@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
+    show NestlyToast;
 import 'package:flutter_application_nestly/main.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -98,21 +100,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!valid) return;
 
     if (_dob == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Odaberite datum rođenja')));
+      NestlyToast.info(context, 'Odaberite datum rođenja');
       return;
     }
     if (_gender == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Odaberite spol')));
+      NestlyToast.info(context, 'Odaberite spol');
       return;
     }
     if (_conceptionDate == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Odaberite datum začeća')));
+      NestlyToast.info(context, 'Odaberite datum začeća');
       return;
     }
 
@@ -120,7 +116,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     await Future.delayed(const Duration(milliseconds: 900));
     setState(() => _loading = false);
 
-    // 🟢 Dodano conceptionDate u payload
     final payload = {
       "email": _emailCtrl.text.trim(),
       "firstName": _firstNameCtrl.text.trim(),
@@ -133,12 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       "password": _passwordCtrl.text,
     };
 
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Registracija uspješna (demo). Payload: $payload'),
-      ),
-    );
+    NestlyToast.success(context, 'Registracija uspješna 🎉');
 
     if (!mounted) return;
     Navigator.pop(context);

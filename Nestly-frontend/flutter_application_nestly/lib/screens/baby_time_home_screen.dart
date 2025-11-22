@@ -3,8 +3,11 @@ import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart'
     show BabyGrowthScreen, BabyGrowthTrackerScreen;
 import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
+import 'package:flutter_application_nestly/screens/health_tracking_screen.dart';
 import 'package:flutter_application_nestly/screens/meal_plan_screen.dart'
     show MealRecommendationScreen;
+import 'package:flutter_application_nestly/screens/milestone_screen.dart'
+    show MilestoneScreen;
 import 'package:flutter_application_nestly/screens/sleep_log_screen.dart'
     show SleepLogOverviewScreen;
 
@@ -136,13 +139,32 @@ class BabyTimeHomeScreen extends StatelessWidget {
                     icon: Icons.emoji_events_rounded,
                     label: "Dostignuća",
                     color: AppColors.babyBlue,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MilestoneScreen(
+                            babyId: babyId,
+                            babyName: babyName,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _BabyMenuItem(
                     icon: Icons.favorite_border_rounded,
                     label: "Praćenje zdravlja",
                     color: AppColors.babyPink,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => HealthTrackingScreen(
+                            babyId: babyId,
+                            babyName: babyName,
+                            userId: parentProfileId,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -4,6 +4,8 @@ import 'dart:io' show Platform;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
+    show NestlyToast;
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_application_nestly/main.dart';
@@ -213,9 +215,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
       _fillFormFromSelected();
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri učitavanju podataka: $e')),
-      );
+      NestlyToast.error(context, 'Greška pri učitavanju podataka: $e');
     }
   }
 
@@ -312,6 +312,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
           _selected = created;
           _isNewEntry = false;
         });
+        NestlyToast.success(context, 'Podaci o rastu su uspješno sačuvani.');
       } else if (_isEditingLatest) {
         final updated = await _service.patch(
           id: _selected!.id,
@@ -328,17 +329,15 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
             _selected = updated;
           });
         }
+        NestlyToast.success(context, 'Posljednji unos je uspješno ažuriran.');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Možete uređivati samo posljednji unos.'),
-          ),
+        NestlyToast.info(
+          context,
+          'Možete uređivati samo posljednji uneseni tjedan.',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri spremanju podataka: $e')),
-      );
+      NestlyToast.error(context, 'Greška pri spremanju podataka: $e');
     } finally {
       setState(() => _isLoading = false);
     }

@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_application_nestly/main.dart';
@@ -203,9 +204,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri učitavanju podataka: $e')),
-      );
+      NestlyToast.error(context, 'Greška pri učitavanju podataka: $e');
     }
   }
 
@@ -321,11 +320,8 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
 
   Future<void> _save() async {
     if (_startTime == null || _endTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Molimo unesite početak i kraj spavanja.'),
-        ),
-      );
+      NestlyToast.info(context, 'Molimo unesite početak i kraj spavanja.');
+
       return;
     }
 
@@ -373,15 +369,11 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
 
       await _loadData();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Zapis spavanja je sačuvan.')),
-      );
+      NestlyToast.success(context, 'Zapis spavanja je sačuvan.');
     } catch (e) {
       setState(() => _isSaving = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Greška pri spremanju: $e')));
+      NestlyToast.error(context, 'Greška pri spremanju: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

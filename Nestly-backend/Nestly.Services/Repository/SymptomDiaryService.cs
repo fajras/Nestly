@@ -130,5 +130,14 @@ namespace Nestly.Services.Repository
                 throw new ArgumentOutOfRangeException(field, "Value must be between 1 and 5.");
             }
         }
+        public IEnumerable<DateTime> GetMarkedDays(long parentProfileId)
+        {
+            return _db.SymptomDiaries
+                .Where(s => s.ParentProfileId == parentProfileId)
+                .Select(s => s.Date)
+                .Distinct()
+                .ToList();
+        }
+
     }
 }

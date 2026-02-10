@@ -69,5 +69,13 @@ namespace Nestly_WebAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("marked-days")]
+        public ActionResult<IEnumerable<DateTime>> GetMarkedDays(
+        [FromQuery] long parentProfileId)
+        {
+            return Ok(_service.GetMarkedDays(parentProfileId));
+        }
+
     }
 }

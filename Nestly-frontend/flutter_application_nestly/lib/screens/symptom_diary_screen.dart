@@ -5,8 +5,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+
+/// =============================================================
+/// API & CONFIG
+/// =============================================================
 
 Map<String, String> defaultHeaders({String? token}) => {
   'Content-Type': 'application/json',
@@ -17,7 +22,6 @@ Map<String, String> defaultHeaders({String? token}) => {
 String _devBase() {
   if (kIsWeb) return 'http://localhost:5167';
   if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
   return 'http://localhost:5167';
 }
 
@@ -28,155 +32,130 @@ String get kApiBase =>
 
 String get kSymptomDiaryBase => '$kApiBase/api/SymptomDiary';
 
+/// =============================================================
+/// MODEL
+/// =============================================================
+
 class SymptomDiaryEntry {
   final int id;
-  final int parentProfileId;
   final DateTime date;
-  final int? nausea;
-  final int? fatigue;
-  final int? headache;
-  final int? heartburn;
-  final int? legSwelling;
+  final Map<String, int> values;
 
   SymptomDiaryEntry({
     required this.id,
-    required this.parentProfileId,
     required this.date,
-    this.nausea,
-    this.fatigue,
-    this.headache,
-    this.heartburn,
-    this.legSwelling,
+    required this.values,
   });
 
   factory SymptomDiaryEntry.fromJson(Map<String, dynamic> json) {
-    T? _get<T>(String camel, String pascal) {
-      final v = json[camel] ?? json[pascal];
-      if (v == null) return null;
-      if (T == int) return (v as num).toInt() as T;
-      if (T == DateTime) return DateTime.parse(v.toString()) as T;
-      return v as T;
-    }
-
-    final id = _get<int>('id', 'Id');
-    final parentId = _get<int>('parentProfileId', 'ParentProfileId');
-    final date = _get<DateTime>('date', 'Date');
-
-    if (id == null || parentId == null || date == null) {
-      throw Exception('Neispravan SymptomDiary JSON: $json');
-    }
+    int _i(dynamic v) => v == null ? 0 : (v as num).toInt();
 
     return SymptomDiaryEntry(
-      id: id,
-      parentProfileId: parentId,
-      date: date,
-      nausea: _get<int>('nausea', 'Nausea'),
-      fatigue: _get<int>('fatigue', 'Fatigue'),
-      headache: _get<int>('headache', 'Headache'),
-      heartburn: _get<int>('heartburn', 'Heartburn'),
-      legSwelling: _get<int>('legSwelling', 'LegSwelling'),
+      id: json['id'],
+      date: DateTime.parse(json['date']),
+      values: {
+        'mucnina': _i(json['nausea']),
+        'umor': _i(json['fatigue']),
+        'glavobolja': _i(json['headache']),
+        'zgaravica': _i(json['heartburn']),
+        'oticanje': _i(json['legSwelling']),
+      },
     );
   }
 }
 
-class SymptomDiaryApiService {
-  String get _baseUrl => kSymptomDiaryBase;
+/// =============================================================
+/// SERVICE
+/// =============================================================
 
-  String _formatDate(DateTime d) {
-    final y = d.year.toString().padLeft(4, '0');
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
-  }
+class SymptomDiaryApiService {
+  String get _base => kSymptomDiaryBase;
+
+  String _fmt(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Future<SymptomDiaryEntry?> getByDate(
     int parentProfileId,
     DateTime date,
   ) async {
-    final formatted = _formatDate(date);
-    final uri = Uri.parse('$_baseUrl/by-date').replace(
+    final uri = Uri.parse('$_base/by-date').replace(
       queryParameters: {
         'parentProfileId': parentProfileId.toString(),
-        'date': formatted,
+        'date': _fmt(date),
       },
     );
 
-    final res = await http
-        .get(uri, headers: defaultHeaders())
-        .timeout(const Duration(seconds: 10));
-
+    final res = await http.get(uri, headers: defaultHeaders());
     if (res.statusCode == 404) return null;
+    if (res.statusCode != 200) throw Exception();
 
-    if (res.statusCode != 200) {
-      throw Exception(
-        'Failed to load symptom diary (${res.statusCode}): ${res.body}',
-      );
-    }
-
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    return SymptomDiaryEntry.fromJson(data);
+    return SymptomDiaryEntry.fromJson(jsonDecode(res.body));
   }
 
-  Future<SymptomDiaryEntry> create(
+  Future<Set<DateTime>> getMarkedDays(int parentProfileId) async {
+    final uri = Uri.parse(
+      '$_base/marked-days',
+    ).replace(queryParameters: {'parentProfileId': parentProfileId.toString()});
+
+    final res = await http.get(uri, headers: defaultHeaders());
+    if (res.statusCode != 200) return {};
+
+    final List data = jsonDecode(res.body);
+
+    return data
+        .map<DateTime>((e) => DateTime.parse(e as String))
+        .map((d) => DateTime(d.year, d.month, d.day))
+        .toSet();
+  }
+
+  Future<int> create(
     int parentProfileId,
     DateTime date,
     Map<String, int> values,
   ) async {
-    final formatted = _formatDate(date);
+    final res = await http.post(
+      Uri.parse(_base),
+      headers: defaultHeaders(),
+      body: jsonEncode({
+        'parentProfileId': parentProfileId,
+        'date': _fmt(date),
+        ..._mapToApi(values),
+      }),
+    );
 
-    final body = {
-      'parentProfileId': parentProfileId,
-      'date': formatted,
-      'nausea': values['mucnina'],
-      'fatigue': values['umor'],
-      'headache': values['glavobolja'],
-      'heartburn': values['zgaravica'],
-      'legSwelling': values['oticanje'],
-    };
-
-    final uri = Uri.parse(_baseUrl);
-
-    final res = await http
-        .post(uri, headers: defaultHeaders(), body: jsonEncode(body))
-        .timeout(const Duration(seconds: 10));
-
-    if (res.statusCode != 201) {
-      throw Exception(
-        'Failed to create symptom diary (${res.statusCode}): ${res.body}',
-      );
-    }
-
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    return SymptomDiaryEntry.fromJson(data);
+    if (res.statusCode != 201) throw Exception();
+    return jsonDecode(res.body)['id'];
   }
 
   Future<void> update(int id, Map<String, int> values) async {
-    final body = {
-      'nausea': values['mucnina'],
-      'fatigue': values['umor'],
-      'headache': values['glavobolja'],
-      'heartburn': values['zgaravica'],
-      'legSwelling': values['oticanje'],
-    };
-
-    final uri = Uri.parse('$_baseUrl/$id');
-
-    final res = await http
-        .patch(uri, headers: defaultHeaders(), body: jsonEncode(body))
-        .timeout(const Duration(seconds: 10));
+    final res = await http.patch(
+      Uri.parse('$_base/$id'),
+      headers: defaultHeaders(),
+      body: jsonEncode(_mapToApi(values)),
+    );
 
     if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception(
-        'Failed to update symptom diary (${res.statusCode}): ${res.body}',
-      );
+      throw Exception();
     }
   }
+
+  Map<String, int> _mapToApi(Map<String, int> v) => {
+    'nausea': v['mucnina'] ?? 0,
+    'fatigue': v['umor'] ?? 0,
+    'headache': v['glavobolja'] ?? 0,
+    'heartburn': v['zgaravica'] ?? 0,
+    'legSwelling': v['oticanje'] ?? 0,
+  };
 }
 
-class SymptomDiaryScreen extends StatefulWidget {
-  final int parentProfileId;
+/// =============================================================
+/// SCREEN
+/// =============================================================
 
+class SymptomDiaryScreen extends StatefulWidget {
   const SymptomDiaryScreen({super.key, required this.parentProfileId});
+
+  final int parentProfileId;
 
   @override
   State<SymptomDiaryScreen> createState() => _SymptomDiaryScreenState();
@@ -185,130 +164,58 @@ class SymptomDiaryScreen extends StatefulWidget {
 class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
   final _service = SymptomDiaryApiService();
 
-  late DateTime _date;
+  final Map<String, String> _labels = const {
+    'mucnina': 'Mučnina',
+    'umor': 'Umor',
+    'glavobolja': 'Glavobolja',
+    'zgaravica': 'Žgaravica',
+    'oticanje': 'Oticanje nogu',
+  };
+
+  DateTime _focusedDay = DateTime.now();
+  DateTime _selectedDay = DateTime.now();
+
+  int? _entryId;
   bool _loading = true;
   bool _saving = false;
-  int? _entryId;
 
-  final List<_SymptomItem> _symptoms = [
-    _SymptomItem(key: 'mucnina', label: 'Mučnina'),
-    _SymptomItem(key: 'umor', label: 'Umor'),
-    _SymptomItem(key: 'glavobolja', label: 'Glavobolja'),
-    _SymptomItem(key: 'zgaravica', label: 'Žgaravica'),
-    _SymptomItem(key: 'oticanje', label: 'Oticanje nogu'),
-  ];
+  Set<DateTime> _markedDays = {};
+  late Map<String, int> _values;
 
   @override
   void initState() {
     super.initState();
-    _date = DateTime.now();
-    _load();
-  }
-
-  int _asInt05(int? v) {
-    if (v == null) return 0;
-    if (v < 0) return 0;
-    if (v > 5) return 5;
-    return v;
+    _values = {for (final k in _labels.keys) k: 0};
+    _loadAll();
   }
 
   bool get _canEdit {
-    final now = DateTime.now();
-    final diff = now
-        .difference(DateTime(_date.year, _date.month, _date.day))
-        .inDays;
-    return diff >= 0 && diff <= 7;
-  }
-
-  String _formatBosnianDate(DateTime d) {
-    final months = [
-      'januar',
-      'februar',
-      'mart',
-      'april',
-      'maj',
-      'juni',
-      'juli',
-      'august',
-      'septembar',
-      'oktobar',
-      'novembar',
-      'decembar',
-    ];
-    return '${d.day}. ${months[d.month - 1]}';
-  }
-
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final first = now.subtract(const Duration(days: 300));
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
-      firstDate: first,
-      lastDate: now,
-      helpText: 'Odaberite datum',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.roseDark,
-              surface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
+    final diff = DateTime.now().difference(
+      DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day),
     );
-    if (picked != null) {
-      setState(() {
-        _date = DateTime(picked.year, picked.month, picked.day);
-      });
-      await _load();
-    }
+    return diff.inDays >= 0 && diff.inDays <= 7;
   }
 
-  Future<void> _load() async {
+  Future<void> _loadAll() async {
     setState(() => _loading = true);
 
     try {
-      final res = await _service.getByDate(widget.parentProfileId, _date);
+      _markedDays = await _service.getMarkedDays(widget.parentProfileId);
 
-      if (!mounted) return;
+      final entry = await _service.getByDate(
+        widget.parentProfileId,
+        _selectedDay,
+      );
 
-      if (res == null) {
+      if (entry == null) {
         _entryId = null;
-        for (final s in _symptoms) {
-          s.value = 0;
-        }
+        _values.updateAll((_, __) => 0);
       } else {
-        _entryId = res.id;
-
-        for (final s in _symptoms) {
-          switch (s.key) {
-            case 'mucnina':
-              s.value = _asInt05(res.nausea);
-              break;
-            case 'umor':
-              s.value = _asInt05(res.fatigue);
-              break;
-            case 'glavobolja':
-              s.value = _asInt05(res.headache);
-              break;
-            case 'zgaravica':
-              s.value = _asInt05(res.heartburn);
-              break;
-            case 'oticanje':
-              s.value = _asInt05(res.legSwelling);
-              break;
-            default:
-              s.value = 0;
-          }
-        }
+        _entryId = entry.id;
+        _values = Map.of(entry.values);
       }
-    } catch (e) {
-      if (mounted) {
-        NestlyToast.error(context, 'Greška pri učitavanju dnevnika simptoma.');
-      }
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri učitavanju');
     }
 
     if (mounted) setState(() => _loading = false);
@@ -316,60 +223,44 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
   Future<void> _save() async {
     if (!_canEdit) {
-      NestlyToast.warning(
-        context,
-        'Unos/izmjene su dostupni samo za datume unutar zadnjih 7 dana.',
-      );
+      NestlyToast.warning(context, 'Izmjene su moguće samo za zadnjih 7 dana');
       return;
     }
 
     setState(() => _saving = true);
 
-    final values = {for (final s in _symptoms) s.key: s.value};
-
     try {
       if (_entryId == null) {
-        final created = await _service.create(
+        _entryId = await _service.create(
           widget.parentProfileId,
-          _date,
-          values,
+          _selectedDay,
+          _values,
         );
-        _entryId = created.id;
-        if (mounted) {
-          NestlyToast.success(context, 'Unos spremljen.');
-        }
+        NestlyToast.success(context, 'Unos spremljen');
       } else {
-        await _service.update(_entryId!, values);
-        if (mounted) {
-          NestlyToast.success(context, 'Izmjene sačuvane.');
-        }
+        await _service.update(_entryId!, _values);
+        NestlyToast.success(context, 'Izmjene sačuvane');
       }
-    } catch (e) {
-      if (mounted) {
-        NestlyToast.error(context, 'Greška pri spremanju podataka.');
-      }
+
+      _markedDays = await _service.getMarkedDays(widget.parentProfileId);
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri spremanju');
     }
 
     if (mounted) setState(() => _saving = false);
   }
 
+  String _fmtDate(DateTime d) => '${d.day}.${d.month}.${d.year}';
+  DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
   @override
   Widget build(BuildContext context) {
-    final dateLabel = _formatBosnianDate(_date);
-    final isExisting = _entryId != null;
-
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.roseDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: AppColors.roseDark),
         title: Text(
           'Dnevnik simptoma',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -379,257 +270,161 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
         ),
         centerTitle: true,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                InkWell(
-                  onTap: _pickDate,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  child: Ink(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.babyBlue.withOpacity(.25),
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.calendar_today_rounded,
-                          size: 18,
-                          color: AppColors.roseDark,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          dateLabel,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.roseDark,
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.edit_calendar_rounded,
-                          size: 18,
-                          color: AppColors.roseDark,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                const SizedBox(height: AppSpacing.md),
-
-                if (!_canEdit)
-                  Container(
-                    margin: const EdgeInsets.only(top: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(.12),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: Colors.orange.withOpacity(.35)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.lock_clock_rounded,
-                          color: Colors.orange,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Unose starije od 7 dana nije moguće mijenjati.',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Colors.orange.shade900,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  NestlyCalendar(
+                    focusedDay: _focusedDay,
+                    selectedDay: _selectedDay,
+                    markerIcon: Icons.favorite_rounded,
+                    eventLoader: (day) {
+                      final d = _dayOnly(day);
+                      return _markedDays.contains(d) ? const [1] : const [];
+                    },
+                    onDaySelected: (selected, focused) async {
+                      setState(() {
+                        _selectedDay = _dayOnly(selected);
+                        _focusedDay = _dayOnly(focused);
+                      });
+                      await _loadAll();
+                    },
                   ),
 
-                const SizedBox(height: AppSpacing.xl),
-
-                Card(
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                  ),
-                  color: Colors.white,
-                  shadowColor: AppColors.babyPink.withOpacity(0.35),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: _loading
-                        ? const Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.roseDark,
-                              ),
-                            ),
-                          )
-                        : Column(
-                            children: [
-                              for (int i = 0; i < _symptoms.length; i++) ...[
-                                _IntensityTile(
-                                  item: _symptoms[i],
-                                  enabled: _canEdit,
-                                  onChanged: (v) =>
-                                      setState(() => _symptoms[i].value = v),
-                                ),
-                                if (i != _symptoms.length - 1)
-                                  Divider(
-                                    height: 22,
-                                    thickness: .6,
-                                    color: Colors.black.withOpacity(0.07),
-                                  ),
-                              ],
-                            ],
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: AppSpacing.xl),
-
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: _canEdit
-                          ? AppColors.roseDark
-                          : AppColors.roseDark.withOpacity(.45),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                      ),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Unosi za ${_fmtDate(_selectedDay)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.roseDark,
                     ),
-                    onPressed: (_loading || _saving || !_canEdit)
-                        ? null
-                        : _save,
-                    child: _saving
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : Text(isExisting ? 'Sačuvaj izmjene' : 'Dodaj'),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.lg),
+                  _SymptomsCard(
+                    labels: _labels,
+                    values: _values,
+                    enabled: _canEdit,
+                    onChanged: (k, v) => setState(() => _values[k] = v),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  _SaveButton(
+                    enabled: _canEdit && !_saving,
+                    saving: _saving,
+                    onTap: _save,
+                  ),
+                ],
+              ),
             ),
-          ),
+    );
+  }
+}
+
+/// =============================================================
+/// UI HELPERS
+/// =============================================================
+
+class _SymptomsCard extends StatelessWidget {
+  const _SymptomsCard({
+    required this.labels,
+    required this.values,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final Map<String, String> labels;
+  final Map<String, int> values;
+  final bool enabled;
+  final void Function(String, int) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          children: labels.keys.map((k) {
+            return Column(
+              children: [
+                _IntensityTile(
+                  label: labels[k]!,
+                  value: values[k]!,
+                  enabled: enabled,
+                  onChanged: (v) => onChanged(k, v),
+                ),
+                if (k != labels.keys.last)
+                  Divider(color: Colors.black.withOpacity(.07)),
+              ],
+            );
+          }).toList(),
         ),
       ),
     );
   }
 }
 
-class _SymptomItem {
-  final String key;
-  final String label;
-  int value;
-
-  _SymptomItem({required this.key, required this.label, this.value = 0});
-}
-
 class _IntensityTile extends StatelessWidget {
   const _IntensityTile({
-    required this.item,
-    required this.onChanged,
+    required this.label,
+    required this.value,
     required this.enabled,
+    required this.onChanged,
   });
 
-  final _SymptomItem item;
-  final ValueChanged<int> onChanged;
+  final String label;
+  final int value;
   final bool enabled;
-
-  String _labelFor(int v) {
-    switch (v) {
-      case 1:
-        return 'Blago';
-      case 2:
-        return 'Lagano';
-      case 3:
-        return 'Umjereno';
-      case 4:
-        return 'Jako';
-      case 5:
-        return 'Vrlo jako';
-      default:
-        return 'Nije zabilježeno';
-    }
-  }
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final chips = _IntensityChips(
-      value: item.value,
-      enabled: enabled,
-      onChanged: onChanged,
-    );
-
     return Opacity(
-      opacity: enabled ? 1.0 : 0.6,
+      opacity: enabled ? 1 : .6,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.roseDark,
+            ),
+          ),
+
+          const SizedBox(height: 6),
           Row(
-            children: [
-              Icon(
-                Icons.local_hospital_rounded,
-                size: 18,
-                color: AppColors.babyPink,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+            children: List.generate(5, (i) {
+              final v = i + 1;
+              final selected = value == v;
+              return Expanded(
+                child: InkWell(
+                  onTap: enabled ? () => onChanged(v) : null,
+                  child: Container(
+                    height: 40,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.babyPink
+                          : AppColors.babyBlue.withOpacity(.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$v',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: selected ? Colors.white : AppColors.roseDark,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                item.value == 0 ? '-' : item.value.toString(),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.roseDark,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          chips,
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              _labelFor(item.value),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-            ),
+              );
+            }),
           ),
         ],
       ),
@@ -637,67 +432,32 @@ class _IntensityTile extends StatelessWidget {
   }
 }
 
-class _IntensityChips extends StatelessWidget {
-  const _IntensityChips({
-    required this.value,
-    required this.onChanged,
+class _SaveButton extends StatelessWidget {
+  const _SaveButton({
     required this.enabled,
+    required this.saving,
+    required this.onTap,
   });
 
-  final int value;
-  final ValueChanged<int> onChanged;
   final bool enabled;
+  final bool saving;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final items = List<int>.generate(5, (i) => i + 1);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: items.map((v) {
-        final selected = value == v;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: enabled ? () => onChanged(v) : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
-                height: 40,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: selected
-                      ? AppColors.babyPink
-                      : AppColors.babyBlue.withOpacity(.18),
-                  border: Border.all(
-                    color: selected
-                        ? AppColors.roseDark
-                        : Colors.black.withOpacity(.05),
-                    width: selected ? 1.2 : 1,
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: AppColors.babyPink.withOpacity(.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  v.toString(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: selected ? Colors.white : AppColors.roseDark,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+    return SizedBox(
+      height: 52,
+      width: 120,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: AppColors.roseDark,
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        onPressed: enabled ? onTap : null,
+        child: saving
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text('Sačuvaj'),
+      ),
     );
   }
 }

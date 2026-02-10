@@ -2,70 +2,93 @@ using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
+using Nestly.Services.Repository;
 
-namespace Nestly_WebAPI.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class BlogPostController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class BlogPostController : ControllerBase
+    private readonly IBlogPostService _service;
+    private readonly AzureBlobService _blob;
+
+    public BlogPostController(
+        IBlogPostService service,
+        AzureBlobService blob)
     {
-        private readonly IBlogPostService _service;
-        public BlogPostController(IBlogPostService service) => _service = service;
+        _service = service;
+        _blob = blob;
+    }
 
-        [HttpGet]
-        public ActionResult<IEnumerable<BlogPost>> Get([FromQuery] BlogPostSearchObject? search)
-            => Ok(_service.Get(search));
+    [HttpGet]
+    public ActionResult<IEnumerable<BlogPost>> Get([FromQuery] BlogPostSearchObject? search)
+        => Ok(_service.Get(search));
 
-        [HttpGet("{id:long}")]
-        public ActionResult<BlogPostResponseDto> GetById(long id)
+    [HttpGet("{id:long}")]
+    public ActionResult<BlogPostResponseDto> GetById(long id)
+    {
+        var post = _service.GetById(id);
+        if (post == null)
         {
-            var entity = _service.GetById(id);
-            return entity is null ? NotFound() : Ok(entity);
+            return NotFound();
         }
 
-        [HttpPost]
-        public ActionResult<BlogPost> Create([FromBody] CreateBlogPostDto request)
+        return Ok(new BlogPostResponseDto
         {
-            var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            Id = post.Id,
+            Title = post.Title,
+            Content = post.Content,
+            ImageUrl = post.ImageUrl,
+            AuthorId = post.AuthorId
+        });
+    }
+
+
+    [HttpPost]
+    public ActionResult<BlogPost> Create([FromBody] CreateBlogPostDto request)
+    {
+        var created = _service.Create(request);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
+
+    [HttpPatch("{id:long}")]
+    public ActionResult<BlogPost> Patch(long id, [FromBody] BlogPostPatchDto patch)
+    {
+        try
+        {
+            var updated = _service.Patch(id, patch);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete(long id)
+    {
+        var deleted = _service.Delete(id);
+        if (!deleted)
+        {
+            return NotFound();
         }
 
-        [HttpPatch("{id:long}")]
-        public ActionResult<BlogPost> Patch(long id, [FromBody] BlogPostPatchDto patch)
+        await _blob.DeleteBlogImageAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("category")]
+    public async Task<IActionResult> GetAll()
+        => Ok(await _service.GetAllAsync());
+
+    [HttpGet("category/{categoryId:int}")]
+    public ActionResult<IEnumerable<BlogPost>> GetByCategoryId(int categoryId)
+    {
+        var posts = _service.GetByCategoryId(categoryId);
+        if (!posts.Any())
         {
-            try
-            {
-                var updated = _service.Patch(id, patch);
-                return updated is null ? NotFound() : Ok(updated);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return NotFound();
         }
-
-        [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
-            => _service.Delete(id) ? NoContent() : NotFound();
-
-        [HttpGet("category")]
-        public async Task<IActionResult> GetAll()
-        {
-            var categories = await _service.GetAllAsync();
-            return Ok(categories);
-        }
-
-        [HttpGet("category/{categoryId:int}")]
-        public ActionResult<IEnumerable<BlogPost>> GetByCategoryId(int categoryId)
-        {
-            var posts = _service.GetByCategoryId(categoryId);
-
-            if (posts == null || !posts.Any())
-            {
-                return NotFound(new { message = $"No blog posts found for category id {categoryId}." });
-            }
-
-            return Ok(posts);
-        }
+        return Ok(posts);
     }
 }

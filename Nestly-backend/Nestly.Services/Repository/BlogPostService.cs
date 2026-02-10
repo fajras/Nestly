@@ -57,69 +57,33 @@ namespace Nestly.Services.Repository
 
         public BlogPost Create(CreateBlogPostDto dto)
         {
-            if (dto is null)
-            {
-                throw new ArgumentNullException(nameof(dto));
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.Title))
-            {
-                throw new ArgumentException("Title is required.", nameof(dto.Title));
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.Content))
-            {
-                throw new ArgumentException("Content is required.", nameof(dto.Content));
-            }
-
-            if (dto.AuthorId.HasValue &&
-                !_db.DoctorProfiles.Any(d => d.Id == dto.AuthorId.Value))
-            {
-                throw new ArgumentException("Author (DoctorProfile) does not exist.", nameof(dto.AuthorId));
-            }
-
-            var categoryIds = (dto.CategoryIds ?? new List<int>()).Distinct().ToList();
-            if (categoryIds.Count > 0)
-            {
-                var existing = _db.BlogCategories
-                                  .Where(c => categoryIds.Contains(c.Id))
-                                  .Select(c => c.Id)
-                                  .ToList();
-
-                var missing = categoryIds.Except(existing).ToList();
-                if (missing.Count > 0)
-                {
-                    throw new ArgumentException($"Unknown category ids: {string.Join(", ", missing)}", nameof(dto.CategoryIds));
-                }
-            }
-
             var post = new BlogPost
             {
                 Title = dto.Title.Trim(),
                 Content = dto.Content,
-                AuthorId = dto.AuthorId
+                AuthorId = dto.AuthorId,
+                CreatedAt = DateTime.UtcNow
             };
-
-            using var tx = _db.Database.BeginTransaction();
 
             _db.BlogPosts.Add(post);
             _db.SaveChanges();
 
-            if (categoryIds.Count > 0)
+            if (dto.CategoryIds.Any())
             {
-                var links = categoryIds.Select(cid => new BlogPostCategory
-                {
-                    PostId = post.Id,
-                    CategoryId = cid
-                });
-
-                _db.BlogPostCategories.AddRange(links);
+                _db.BlogPostCategories.AddRange(
+                    dto.CategoryIds.Select(cid => new BlogPostCategory
+                    {
+                        PostId = post.Id,
+                        CategoryId = cid
+                    })
+                );
                 _db.SaveChanges();
             }
 
-            tx.Commit();
             return post;
         }
+
+
 
         public BlogPost? Patch(long id, BlogPostPatchDto patch)
         {

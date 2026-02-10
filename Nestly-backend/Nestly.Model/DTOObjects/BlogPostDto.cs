@@ -11,11 +11,13 @@ namespace Nestly.Model.DTOObjects
     }
     public class BlogPostResponseDto
     {
+        public long Id { get; set; }
         public string? Title { get; set; }
         public string? Content { get; set; }
-        public string ImageUrl { get; set; }
+        public string? ImageUrl { get; set; }
         public long? AuthorId { get; set; }
     }
+
     public class BlogPostSearchObject
     {
         public long? AuthorId { get; set; }
@@ -29,7 +31,6 @@ namespace Nestly.Model.DTOObjects
         public string Title { get; set; } = default!;
         public string Content { get; set; } = default!;
         public long? AuthorId { get; set; }
-        public string ImageUrl { get; set; }
         public List<int> CategoryIds { get; set; }
     }
     public class BlogCategoryDto
@@ -37,4 +38,5 @@ namespace Nestly.Model.DTOObjects
         public int Id { get; set; }
         public string Name { get; set; } = default!;
     }
+
 }

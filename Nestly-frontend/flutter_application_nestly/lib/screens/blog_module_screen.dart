@@ -4,10 +4,13 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter_application_nestly/main.dart';
 
-Map<String, String> _headers() => {
+/* ================= API CONFIG ================= */
+
+Map<String, String> _headers() => const {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
 };
@@ -15,7 +18,6 @@ Map<String, String> _headers() => {
 String _devBase() {
   if (kIsWeb) return 'http://localhost:5167';
   if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
   return 'http://localhost:5167';
 }
 
@@ -26,22 +28,24 @@ String get _apiBase =>
 
 String get _blogBase => '$_apiBase/api/BlogPost';
 
+/* ================= UTIL ================= */
+
 String _snippet(String text, {int max = 140}) {
   if (text.isEmpty) return '—';
   if (text.length <= max) return text;
-  return text.substring(0, max).trimRight() + '...';
+  return '${text.substring(0, max).trimRight()}...';
 }
+
+/* ================= DTOs ================= */
 
 class BlogCategory {
   final int id;
   final String name;
 
-  BlogCategory({required this.id, required this.name});
+  const BlogCategory({required this.id, required this.name});
 
-  factory BlogCategory.fromJson(Map<String, dynamic> json) => BlogCategory(
-    id: json['id'] as int,
-    name: (json['name'] ?? '').toString(),
-  );
+  factory BlogCategory.fromJson(Map<String, dynamic> json) =>
+      BlogCategory(id: json['id'], name: json['name'] ?? '');
 }
 
 class BlogPostDto {
@@ -49,91 +53,65 @@ class BlogPostDto {
   final String title;
   final String content;
   final String? imageUrl;
-  final int? authorId;
   final DateTime? createdAt;
   final List<int> categoryIds;
 
-  BlogPostDto({
+  const BlogPostDto({
     required this.id,
     required this.title,
     required this.content,
     this.imageUrl,
-    this.authorId,
     this.createdAt,
     required this.categoryIds,
   });
 
   factory BlogPostDto.fromJson(Map<String, dynamic> json) {
-    List<int> _cat(dynamic v) {
-      if (v is List) {
-        return v
-            .map((e) => int.tryParse(e.toString()))
-            .whereType<int>()
-            .toList();
-      }
-      return [];
-    }
-
+    final raw = json['categoryIds'];
     return BlogPostDto(
-      id: json['id'] as int,
-      title: (json['title'] ?? '').toString(),
-      content: (json['content'] ?? '').toString(),
-      imageUrl: json['imageUrl']?.toString(),
-      authorId: json['authorId'] as int?,
+      id: json['id'],
+      title: json['title'] ?? '',
+      content: json['content'] ?? '',
+      imageUrl: json['imageUrl'],
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
+          ? DateTime.tryParse(json['createdAt'])
           : null,
-      categoryIds: _cat(json['categoryIds']),
+      categoryIds: raw is List
+          ? raw.map((e) => int.tryParse(e.toString())).whereType<int>().toList()
+          : const [],
     );
   }
 }
+
+/* ================= API ================= */
 
 Future<List<BlogCategory>> fetchCategories() async {
   final res = await http
       .get(Uri.parse('$_blogBase/category'), headers: _headers())
       .timeout(const Duration(seconds: 10));
 
-  if (res.statusCode != 200) {
-    throw Exception('Greška pri učitavanju kategorija (${res.statusCode})');
-  }
-
-  final list = jsonDecode(res.body) as List;
-  return list
-      .map((e) => BlogCategory.fromJson(e as Map<String, dynamic>))
-      .toList();
+  final List data = jsonDecode(res.body);
+  return data.map((e) => BlogCategory.fromJson(e)).toList();
 }
 
 Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
-  Uri uri;
-  if (categoryId != null) {
-    uri = Uri.parse('$_blogBase/category/$categoryId');
-  } else {
-    uri = Uri.parse(_blogBase);
-  }
+  final uri = categoryId == null
+      ? Uri.parse(_blogBase)
+      : Uri.parse('$_blogBase/category/$categoryId');
 
   final res = await http
       .get(uri, headers: _headers())
       .timeout(const Duration(seconds: 10));
 
-  if (res.statusCode != 200) {
-    throw Exception('Greška pri učitavanju objava (${res.statusCode})');
-  }
-
   final body = jsonDecode(res.body);
-  if (body is List) {
-    return body
-        .map((e) => BlogPostDto.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-  if (body is Map<String, dynamic>) {
-    return [BlogPostDto.fromJson(body)];
-  }
-  return [];
+  return body is List
+      ? body.map((e) => BlogPostDto.fromJson(e)).toList()
+      : const [];
 }
+
+/* ================= BLOG SCREEN ================= */
 
 class BlogScreen extends StatefulWidget {
   const BlogScreen({super.key, required this.parentProfileId});
-
   final int parentProfileId;
 
   @override
@@ -141,9 +119,8 @@ class BlogScreen extends StatefulWidget {
 }
 
 class _BlogScreenState extends State<BlogScreen> {
-  List<BlogCategory> _categories = [];
-  List<BlogPostDto> _posts = [];
-
+  List<BlogCategory> _categories = const [];
+  List<BlogPostDto> _posts = const [];
   int? _selectedCategoryId;
   bool _loading = true;
   String? _error;
@@ -151,22 +128,18 @@ class _BlogScreenState extends State<BlogScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAll();
+    _init();
   }
 
-  Future<void> _loadAll() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
+  Future<void> _init() async {
     try {
       final cats = await fetchCategories();
-      final posts = await fetchPosts();
+      if (!mounted) return;
+      setState(() => _categories = cats);
 
+      final posts = await fetchPosts();
       if (!mounted) return;
       setState(() {
-        _categories = cats;
         _posts = posts;
         _loading = false;
       });
@@ -179,27 +152,18 @@ class _BlogScreenState extends State<BlogScreen> {
     }
   }
 
-  Future<void> _onCategorySelected(int? categoryId) async {
+  Future<void> _selectCategory(int? id) async {
     setState(() {
-      _selectedCategoryId = categoryId;
+      _selectedCategoryId = id;
       _loading = true;
-      _error = null;
     });
 
-    try {
-      final posts = await fetchPosts(categoryId: _selectedCategoryId);
-      if (!mounted) return;
-      setState(() {
-        _posts = posts;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
+    final posts = await fetchPosts(categoryId: id);
+    if (!mounted) return;
+    setState(() {
+      _posts = posts;
+      _loading = false;
+    });
   }
 
   void _openDetail(BlogPostDto post) {
@@ -215,13 +179,7 @@ class _BlogScreenState extends State<BlogScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.roseDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: BackButton(color: AppColors.roseDark),
         title: Text(
           'Blog',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -232,91 +190,97 @@ class _BlogScreenState extends State<BlogScreen> {
         centerTitle: true,
       ),
       body: RefreshIndicator(
+        onRefresh: _init,
         color: AppColors.roseDark,
-        onRefresh: _loadAll,
-        child: SingleChildScrollView(
+        child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _CategoryFilterBar(
-                    categories: _categories,
-                    selectedId: _selectedCategoryId,
-                    onSelected: _onCategorySelected,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
+          itemCount: _posts.length + 2,
+          itemBuilder: (context, index) {
+            // 0 – filter bar
+            if (index == 0) {
+              return _CategoryFilterBar(
+                categories: _categories,
+                selectedId: _selectedCategoryId,
+                onSelected: _selectCategory,
+              );
+            }
 
-                  if (_loading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(
-                          color: AppColors.roseDark,
-                        ),
-                      ),
-                    )
-                  else if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Text(
-                        'Greška: $_error',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.red[700],
-                        ),
-                      ),
-                    )
-                  else if (_posts.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Text(
-                        'Nema objava za odabranu kategoriju.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    )
-                  else
-                    Column(
-                      children: _posts
-                          .map(
-                            (p) => Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: AppSpacing.md,
-                              ),
-                              child: _BlogPostCard(
-                                post: p,
-                                onTap: () => _openDetail(p),
-                              ),
-                            ),
-                          )
-                          .toList(),
+            // 1 – loading / error / empty state
+            if (index == 1) {
+              if (_loading) {
+                return const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.roseDark),
+                  ),
+                );
+              }
+
+              if (_error != null) {
+                return Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                );
+              }
+
+              if (_posts.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: Text(
+                      'Trenutno nema blog objava.',
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
-                ],
+                  ),
+                );
+              }
+
+              // ako ima postova, ništa se ne crta na index 1
+              return const SizedBox.shrink();
+            }
+
+            // odavde kreću postovi
+            final postIndex = index - 2;
+
+            if (postIndex < 0 || postIndex >= _posts.length) {
+              return const SizedBox.shrink();
+            }
+
+            final post = _posts[postIndex];
+
+            return RepaintBoundary(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: _BlogPostCard(
+                  post: post,
+                  onTap: () => _openDetail(post),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
+/* ================= CATEGORY FILTER ================= */
+
 class _CategoryFilterBar extends StatelessWidget {
+  final List<BlogCategory> categories;
+  final int? selectedId;
+  final ValueChanged<int?> onSelected;
+
   const _CategoryFilterBar({
     required this.categories,
     required this.selectedId,
     required this.onSelected,
   });
-
-  final List<BlogCategory> categories;
-  final int? selectedId;
-  final ValueChanged<int?> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -345,15 +309,15 @@ class _CategoryFilterBar extends StatelessWidget {
 }
 
 class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
   const _CategoryChip({
     required this.label,
     required this.selected,
     required this.onTap,
   });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -383,16 +347,16 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-class _BlogPostCard extends StatelessWidget {
-  const _BlogPostCard({required this.post, required this.onTap});
+/* ================= BLOG CARD ================= */
 
+class _BlogPostCard extends StatelessWidget {
   final BlogPostDto post;
   final VoidCallback onTap;
 
+  const _BlogPostCard({required this.post, required this.onTap});
+
   @override
   Widget build(BuildContext context) {
-    final subtitle = _snippet(post.content);
-
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(
@@ -405,85 +369,54 @@ class _BlogPostCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Image.network(
-                    post.imageUrl!,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
-
-                      final expected = loadingProgress.expectedTotalBytes;
-                      final loaded = loadingProgress.cumulativeBytesLoaded;
-
-                      return Container(
-                        width: 80,
-                        height: 80,
-                        alignment: Alignment.center,
-                        color: AppColors.babyPink.withOpacity(.1),
-                        child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: AppColors.roseDark,
-                            value: expected != null ? loaded / expected : null,
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (_, __, ___) => _fallbackIcon(),
-                  ),
-                )
-              else
-                _fallbackIcon(),
+              _PostImage(imageUrl: post.imageUrl),
               const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.roseDark,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                    if (post.createdAt != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        '${post.createdAt!.day.toString().padLeft(2, '0')}.${post.createdAt!.month.toString().padLeft(2, '0')}.${post.createdAt!.year}.',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+              Expanded(child: _PostText(post: post)),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _PostImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _PostImage({this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return _fallbackIcon();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl!,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+
+        // OVO JE KLJUČNO
+        memCacheWidth: 160,
+        memCacheHeight: 160,
+
+        placeholder: (_, __) => _skeleton(),
+        errorWidget: (_, __, ___) => _fallbackIcon(),
+      ),
+    );
+  }
+
+  Widget _skeleton() => Container(
+    width: 80,
+    height: 80,
+    decoration: BoxDecoration(
+      color: AppColors.babyBlue.withOpacity(.2),
+      borderRadius: BorderRadius.circular(14),
+    ),
+  );
 
   Widget _fallbackIcon() => Container(
     width: 80,
@@ -500,9 +433,46 @@ class _BlogPostCard extends StatelessWidget {
   );
 }
 
-class BlogPostDetailScreen extends StatelessWidget {
-  const BlogPostDetailScreen({super.key, required this.post});
+class _PostText extends StatelessWidget {
   final BlogPostDto post;
+
+  const _PostText({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          post.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.roseDark,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _snippet(post.content),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/* ================= BLOG DETAIL ================= */
+
+class BlogPostDetailScreen extends StatelessWidget {
+  final BlogPostDto post;
+
+  const BlogPostDetailScreen({super.key, required this.post});
 
   @override
   Widget build(BuildContext context) {
@@ -511,13 +481,7 @@ class BlogPostDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.roseDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: BackButton(color: AppColors.roseDark),
         title: Text(
           post.title,
           maxLines: 1,
@@ -540,38 +504,8 @@ class BlogPostDetailScreen extends StatelessWidget {
                 if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.xl),
-                    child: Image.network(
-                      post.imageUrl!,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) {
-                          return child;
-                        }
-
-                        final expected = loadingProgress.expectedTotalBytes;
-                        final loaded = loadingProgress.cumulativeBytesLoaded;
-
-                        return Container(
-                          height: 220,
-                          alignment: Alignment.center,
-                          color: AppColors.babyBlue.withOpacity(.1),
-                          child: SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: AppColors.roseDark,
-                              value: expected != null
-                                  ? loaded / expected
-                                  : null,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
+                    child: Image.network(post.imageUrl!, fit: BoxFit.cover),
                   ),
-
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   post.title,
@@ -580,15 +514,6 @@ class BlogPostDetailScreen extends StatelessWidget {
                     color: AppColors.roseDark,
                   ),
                 ),
-                if (post.createdAt != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    '${post.createdAt!.day.toString().padLeft(2, '0')}.${post.createdAt!.month.toString().padLeft(2, '0')}.${post.createdAt!.year}.',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.textSecondary.withOpacity(0.8),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: AppSpacing.xl),
                 Text(
                   post.content,

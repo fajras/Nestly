@@ -14,9 +14,10 @@ namespace Nestly_WebAPI.Controllers
 
         // GET /api/qaquestion?...
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<QaQuestion>>> Get([FromQuery] QaQuestionSearchObject? search)
+        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetAdminQuestions(
+         [FromQuery] QaQuestionSearchObject? search)
         {
-            var result = await _service.Get(search);
+            var result = await _service.GetAllWithLatestAnswer(search);
             return Ok(result);
         }
 
@@ -93,5 +94,19 @@ namespace Nestly_WebAPI.Controllers
             var answers = await _service.GetAnswers(questionId);
             return Ok(answers);
         }
+
+        [HttpGet("my")]
+        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetMyQuestions(
+        [FromQuery] QaQuestionSearchObject search)
+        {
+            if (search.AskedByUserId is null)
+            {
+                return BadRequest("AskedByUserId is required");
+            }
+
+            var result = await _service.GetWithLatestAnswer(search);
+            return Ok(result);
+        }
+
     }
 }

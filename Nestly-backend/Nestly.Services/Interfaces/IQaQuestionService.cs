@@ -5,7 +5,7 @@ namespace Nestly.Services.Interfaces
 {
     public interface IQaQuestionService
     {
-        Task<List<QaQuestion>> Get(QaQuestionSearchObject? search, CancellationToken ct = default);
+        Task<List<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(QaQuestionSearchObject? search, CancellationToken ct = default);
         Task<QaQuestion?> GetById(long id, CancellationToken ct = default);
         Task<List<QaQuestion>> GetByUserAsync(long askedByUserId, CancellationToken ct = default);
         Task<QaQuestion> Create(CreateQaQuestionDto dto, CancellationToken ct = default);
@@ -13,5 +13,8 @@ namespace Nestly.Services.Interfaces
         Task<bool> Delete(long id, CancellationToken ct = default);
         Task<QaAnswer> CreateAnswer(long questionId, QaAnswer answer, CancellationToken ct = default);
         Task<List<QaAnswer>> GetAnswers(long questionId, CancellationToken ct = default);
+        Task<List<QaQuestionWithLatestAnswerDto>> GetWithLatestAnswer(QaQuestionSearchObject search, CancellationToken ct = default);
+
+
     }
 }

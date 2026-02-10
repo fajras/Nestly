@@ -11,37 +11,62 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public QaQuestionService(NestlyDbContext db) => _db = db;
 
-        public async Task<List<QaQuestion>> Get(QaQuestionSearchObject? search, CancellationToken ct = default)
+        public async Task<List<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(
+     QaQuestionSearchObject? search,
+     CancellationToken ct = default)
         {
-            IQueryable<QaQuestion> q = _db.QaQuestions
+            var query = _db.QaQuestions
                 .AsNoTracking()
-                .Include(x => x.AskedBy)
-                .Include(x => x.Answers);
-
-            if (search?.AskedByUserId is not null)
-            {
-                q = q.Where(x => x.AskedById == search.AskedByUserId);
-            }
-
-            if (!string.IsNullOrWhiteSpace(search?.Query))
-            {
-                q = q.Where(x => x.QuestionText.Contains(search.Query));
-            }
-
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.AnsweredBy)
+                        .ThenInclude(u => u.User)
+                .AsQueryable();
+            query = query.Where(q => !q.Answers.Any());
             if (search?.From is not null)
             {
-                q = q.Where(x => x.CreatedAt >= search.From.Value);
+                query = query.Where(q => q.CreatedAt >= search.From.Value);
             }
 
             if (search?.To is not null)
             {
-                q = q.Where(x => x.CreatedAt <= search.To.Value);
+                query = query.Where(q => q.CreatedAt <= search.To.Value);
             }
 
-            return await q
+            if (!string.IsNullOrWhiteSpace(search?.Query))
+            {
+                query = query.Where(q => q.QuestionText.Contains(search.Query));
+            }
+
+            return await query
+                .Select(q => new QaQuestionWithLatestAnswerDto
+                {
+                    Id = q.Id,
+                    QuestionText = q.QuestionText,
+                    CreatedAt = q.CreatedAt,
+
+                    IsAnswered = q.Answers.Any(),
+
+                    LatestAnswerText = q.Answers
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => a.AnswerText)
+                        .FirstOrDefault(),
+
+                    LatestAnswerCreatedAt = q.Answers
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => (DateTime?)a.CreatedAt)
+                        .FirstOrDefault(),
+
+                    AnsweredByName = q.Answers
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => a.AnsweredBy != null
+                            ? a.AnsweredBy.User.FirstName + " " + a.AnsweredBy.User.LastName
+                            : null)
+                        .FirstOrDefault()
+                })
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync(ct);
         }
+
 
         public async Task<QaQuestion?> GetById(long id, CancellationToken ct = default) =>
             await _db.QaQuestions
@@ -189,5 +214,44 @@ namespace Nestly.Services.Repository
                 .OrderBy(a => a.CreatedAt)
                 .ToListAsync(ct);
         }
+
+        public async Task<List<QaQuestionWithLatestAnswerDto>> GetWithLatestAnswer(
+    QaQuestionSearchObject search,
+    CancellationToken ct = default)
+        {
+            var query = _db.QaQuestions
+                .AsNoTracking()
+                .Where(q => q.AskedById == search.AskedByUserId);
+
+            return await query
+                .Select(q => new QaQuestionWithLatestAnswerDto
+                {
+                    Id = q.Id,
+                    QuestionText = q.QuestionText,
+                    CreatedAt = q.CreatedAt,
+
+                    IsAnswered = q.Answers.Any(),
+
+                    LatestAnswerText = q.Answers
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => a.AnswerText)
+                        .FirstOrDefault(),
+
+                    LatestAnswerCreatedAt = q.Answers
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => (DateTime?)a.CreatedAt)
+                        .FirstOrDefault(),
+
+                    AnsweredByName = q.Answers
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => a.AnsweredBy != null
+                            ? a.AnsweredBy.User.FirstName + " " + a.AnsweredBy.User.LastName
+                            : null)
+                        .FirstOrDefault()
+                })
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync(ct);
+        }
+
     }
 }

@@ -39,4 +39,17 @@ namespace Nestly.Model.DTOObjects
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
     }
+    public class QaQuestionWithLatestAnswerDto
+    {
+        public long Id { get; set; }
+        public string QuestionText { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public bool IsAnswered { get; set; }
+
+        public string? LatestAnswerText { get; set; }
+        public DateTime? LatestAnswerCreatedAt { get; set; }
+        public string? AnsweredByName { get; set; }
+    }
+
 }

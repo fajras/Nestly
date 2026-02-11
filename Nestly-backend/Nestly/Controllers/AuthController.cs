@@ -26,41 +26,49 @@ namespace Nestly_WebAPI.Controllers
         }
 
 
-        [HttpPost]
-        [Route("login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
-            //check password
             var identityUser = await userManager.FindByEmailAsync(request.Email);
-            if (identityUser != null)
+            if (identityUser == null)
             {
-                //check password
-                var checkPasswordResult = await userManager.CheckPasswordAsync(identityUser, request.Password);
-
-                if (checkPasswordResult)
-                {
-                    var roles = await userManager.GetRolesAsync(identityUser);
-                    //create a token response
-                    var jwtToken = tokenRepository.CreateJwtToken(identityUser, roles.ToList());
-
-                    var profileId = _db.AppUsers
-         .FirstOrDefault(p => p.IdentityUserId == identityUser.Id);
-
-                    long ProfileId = profileId.Id;
-                    var response = new LoginResponseDto()
-                    {
-                        Email = request.Email,
-                        Role = string.Join(",", roles),
-                        token = jwtToken,
-                        parentProfileId = ProfileId,
-                        UserName = identityUser?.UserName
-                    };
-                    return Ok(response);
-                }
+                return Unauthorized("Email or password is incorrect.");
             }
-            ModelState.AddModelError("", "Email or Password is incorrect");
 
-            return ValidationProblem(ModelState);
+            var passwordOk = await userManager.CheckPasswordAsync(identityUser, request.Password);
+            if (!passwordOk)
+            {
+                return Unauthorized("Email or password is incorrect.");
+            }
+
+            var appUser = _db.AppUsers
+                .FirstOrDefault(u => u.IdentityUserId == identityUser.Id);
+
+            if (appUser == null)
+            {
+                return Unauthorized("User profile not found.");
+            }
+
+            var roles = await userManager.GetRolesAsync(identityUser);
+
+            var jwtToken = tokenRepository.CreateJwtToken(
+                identityUser,
+                roles.ToList(),
+                appUser.Id
+            );
+
+            return Ok(new LoginResponseDto
+            {
+                Email = request.Email,
+                Role = string.Join(",", roles),
+                token = jwtToken,
+
+                // realno je AppUserId, ali ostavljamo ime
+                parentProfileId = appUser.Id,
+
+                UserName = identityUser.UserName
+            });
         }
+
     }
 }

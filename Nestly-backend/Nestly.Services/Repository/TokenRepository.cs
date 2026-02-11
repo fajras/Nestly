@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Nestly.Services.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace Nestly.Services.Repository
 {
@@ -15,34 +16,44 @@ namespace Nestly.Services.Repository
         {
             this.configuration = configuration;
         }
-        public string CreateJwtToken(IdentityUser user, List<string> roles)
+
+        public string CreateJwtToken(
+            IdentityUser user,
+            List<string> roles,
+            long appUserId
+        )
         {
-            //create claims from roles that we have
             var claims = new List<Claim>
-           {
-               new Claim(ClaimTypes.Email, user.Email),
-               new Claim(ClaimTypes.NameIdentifier, user.Id),
+            {
+                // 🔑 KLJUČNO: DOMAIN USER ID
+                new Claim(ClaimTypes.NameIdentifier, appUserId.ToString()),
 
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
+            };
 
-           };
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-            //JWT Security Token Parameters
+            claims.AddRange(
+                roles.Select(r => new Claim(ClaimTypes.Role, r))
+            );
 
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(configuration["Jwt:Key"])
+            );
 
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(
+                key,
+                SecurityAlgorithms.HmacSha256
+            );
 
             var token = new JwtSecurityToken(
                 issuer: configuration["Jwt:Issuer"],
                 audience: configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(15),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: credentials
-                );
+            );
 
-            //return token
             return new JwtSecurityTokenHandler().WriteToken(token);
-
         }
     }
 }

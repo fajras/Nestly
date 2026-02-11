@@ -4,6 +4,11 @@ namespace Nestly.Services.Interfaces
 {
     public interface ITokenRepository
     {
-        string CreateJwtToken(IdentityUser user, List<string> roles);
+        string CreateJwtToken(
+            IdentityUser user,
+            List<string> roles,
+            long appUserId
+        );
     }
 }
+

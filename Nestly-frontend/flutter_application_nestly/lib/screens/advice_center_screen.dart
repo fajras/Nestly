@@ -1,31 +1,7 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-Map<String, String> defaultHeaders({String? token}) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  if (token != null) 'Authorization': 'Bearer $token',
-};
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
-  return 'http://localhost:5167';
-}
-
-String get kApiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-String get kFetalWeekBase => '$kApiBase/api/FetalDevelopmentWeek';
 
 String snippet(String text, {int max = 200}) {
   if (text.isEmpty) return '—';
@@ -59,22 +35,19 @@ class FetalWeekDto {
 }
 
 class FetalApi {
-  Future<FetalWeekDto> getByWeek(int week, {String? token}) async {
-    final url = '$kFetalWeekBase/week/$week';
-    final res = await http
-        .get(Uri.parse(url), headers: defaultHeaders(token: token))
-        .timeout(const Duration(seconds: 10));
+  Future<FetalWeekDto> getByWeek(int week) async {
+    final res = await ApiClient.get(
+      '/api/FetalDevelopmentWeek/week/$week',
+    ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode == 404) {
       throw Exception('Nema podataka za sedmicu $week.');
     }
     if (res.statusCode != 200) {
-      throw Exception(
-        'Greška (${res.statusCode}) prilikom dohvaćanja podataka.',
-      );
+      throw Exception('Greška (${res.statusCode})');
     }
 
-    final map = json.decode(res.body) as Map<String, dynamic>;
+    final map = jsonDecode(res.body) as Map<String, dynamic>;
     return FetalWeekDto.fromJson(map);
   }
 }
@@ -104,10 +77,12 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
   }
 
   Future<void> _refresh() async {
+    final week = widget.gestationalWeek.clamp(1, 40);
     setState(() {
-      _currentWeek = widget.gestationalWeek.clamp(1, 40);
-      _featuredFuture = _fetalApi.getByWeek(_currentWeek);
+      _currentWeek = week;
+      _featuredFuture = _fetalApi.getByWeek(week);
     });
+    await _featuredFuture;
   }
 
   void _openDetail(int week) {
@@ -205,21 +180,22 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
                         horizontal: AppSpacing.lg,
                         vertical: AppSpacing.lg,
                       ),
-                      child: Column(
-                        children: [
-                          for (int i = 0; i < _weeks.length; i++) ...[
-                            WeekTile(
-                              week: _weeks[i],
-                              isCurrent: _weeks[i] == highlight,
-                              onTap: () => _openDetail(_weeks[i]),
-                            ),
-                            if (i != _weeks.length - 1)
-                              Divider(
-                                height: 22,
-                                color: Colors.black.withOpacity(0.06),
-                              ),
-                          ],
-                        ],
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _weeks.length,
+                        separatorBuilder: (_, __) => Divider(
+                          height: 22,
+                          color: Colors.black.withOpacity(0.06),
+                        ),
+                        itemBuilder: (context, i) {
+                          final w = _weeks[i];
+                          return WeekTile(
+                            week: w,
+                            isCurrent: w == highlight,
+                            onTap: () => _openDetail(w),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -387,7 +363,6 @@ class _FeaturedAdviceCard extends StatelessWidget {
 
 class AdviceDetailScreen extends StatelessWidget {
   const AdviceDetailScreen({super.key, required this.week});
-
   final int week;
 
   @override

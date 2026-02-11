@@ -1,33 +1,8 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-/// =======================
-/// API BASE
-/// =======================
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers(String token) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer $token',
-};
 
 /// =======================
 /// MODEL
@@ -56,13 +31,9 @@ class WeeklyAdviceRow {
 /// =======================
 /// SERVICE
 /// =======================
-
 class WeeklyAdviceAdminService {
-  Future<List<WeeklyAdviceRow>> getAll(String token) async {
-    final res = await http.get(
-      Uri.parse('$_apiBase/api/weeklyadvice'),
-      headers: _headers(token),
-    );
+  Future<List<WeeklyAdviceRow>> getAll() async {
+    final res = await ApiClient.get('/api/weeklyadvice');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load weekly advice');
@@ -73,14 +44,12 @@ class WeeklyAdviceAdminService {
   }
 
   Future<void> updateAdvice({
-    required String token,
     required int id,
     required String adviceText,
   }) async {
-    final res = await http.patch(
-      Uri.parse('$_apiBase/api/weeklyadvice/$id'),
-      headers: _headers(token),
-      body: jsonEncode({'adviceText': adviceText}),
+    final res = await ApiClient.patch(
+      '/api/weeklyadvice/$id',
+      body: {'adviceText': adviceText},
     );
 
     if (res.statusCode != 200) {
@@ -94,8 +63,7 @@ class WeeklyAdviceAdminService {
 /// =======================
 
 class DoctorAdminWeeklyAdviceScreen extends StatefulWidget {
-  final String token;
-  const DoctorAdminWeeklyAdviceScreen({super.key, required this.token});
+  const DoctorAdminWeeklyAdviceScreen({super.key});
 
   @override
   State<DoctorAdminWeeklyAdviceScreen> createState() =>
@@ -121,7 +89,7 @@ class _DoctorAdminWeeklyAdviceScreenState
     setState(() => _loading = true);
 
     try {
-      final data = await _service.getAll(widget.token);
+      final data = await _service.getAll();
       data.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
 
       setState(() {
@@ -192,7 +160,6 @@ class _DoctorAdminWeeklyAdviceScreenState
                   itemBuilder: (context, i) {
                     return _WeeklyAdviceCard(
                       advice: _filtered[i],
-                      token: widget.token,
                       onSaved: _load,
                     );
                   },
@@ -209,14 +176,9 @@ class _DoctorAdminWeeklyAdviceScreenState
 
 class _WeeklyAdviceCard extends StatefulWidget {
   final WeeklyAdviceRow advice;
-  final String token;
   final VoidCallback onSaved;
 
-  const _WeeklyAdviceCard({
-    required this.advice,
-    required this.token,
-    required this.onSaved,
-  });
+  const _WeeklyAdviceCard({required this.advice, required this.onSaved});
 
   @override
   State<_WeeklyAdviceCard> createState() => _WeeklyAdviceCardState();
@@ -241,7 +203,6 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
 
     try {
       await _service.updateAdvice(
-        token: widget.token,
         id: widget.advice.id,
         adviceText: _controller.text,
       );

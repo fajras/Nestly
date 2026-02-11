@@ -1,40 +1,9 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-/// =============================================================
-/// API & CONFIG
-/// =============================================================
-
-Map<String, String> defaultHeaders({String? token}) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  if (token != null) 'Authorization': 'Bearer $token',
-};
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get kApiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-String get kSymptomDiaryBase => '$kApiBase/api/SymptomDiary';
-
-/// =============================================================
-/// MODEL
-/// =============================================================
 
 class SymptomDiaryEntry {
   final int id;
@@ -69,8 +38,6 @@ class SymptomDiaryEntry {
 /// =============================================================
 
 class SymptomDiaryApiService {
-  String get _base => kSymptomDiaryBase;
-
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -78,26 +45,26 @@ class SymptomDiaryApiService {
     int parentProfileId,
     DateTime date,
   ) async {
-    final uri = Uri.parse('$_base/by-date').replace(
-      queryParameters: {
-        'parentProfileId': parentProfileId.toString(),
-        'date': _fmt(date),
-      },
+    final res = await ApiClient.get(
+      '/api/SymptomDiary/by-date'
+      '?parentProfileId=$parentProfileId'
+      '&date=${_fmt(date)}',
     );
 
-    final res = await http.get(uri, headers: defaultHeaders());
     if (res.statusCode == 404) return null;
-    if (res.statusCode != 200) throw Exception();
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load symptom diary entry');
+    }
 
     return SymptomDiaryEntry.fromJson(jsonDecode(res.body));
   }
 
   Future<Set<DateTime>> getMarkedDays(int parentProfileId) async {
-    final uri = Uri.parse(
-      '$_base/marked-days',
-    ).replace(queryParameters: {'parentProfileId': parentProfileId.toString()});
+    final res = await ApiClient.get(
+      '/api/SymptomDiary/marked-days'
+      '?parentProfileId=$parentProfileId',
+    );
 
-    final res = await http.get(uri, headers: defaultHeaders());
     if (res.statusCode != 200) return {};
 
     final List data = jsonDecode(res.body);
@@ -113,29 +80,30 @@ class SymptomDiaryApiService {
     DateTime date,
     Map<String, int> values,
   ) async {
-    final res = await http.post(
-      Uri.parse(_base),
-      headers: defaultHeaders(),
-      body: jsonEncode({
+    final res = await ApiClient.post(
+      '/api/SymptomDiary',
+      body: {
         'parentProfileId': parentProfileId,
         'date': _fmt(date),
         ..._mapToApi(values),
-      }),
+      },
     );
 
-    if (res.statusCode != 201) throw Exception();
-    return jsonDecode(res.body)['id'];
+    if (res.statusCode != 201) {
+      throw Exception('Failed to create symptom diary entry');
+    }
+
+    return jsonDecode(res.body)['id'] as int;
   }
 
   Future<void> update(int id, Map<String, int> values) async {
-    final res = await http.patch(
-      Uri.parse('$_base/$id'),
-      headers: defaultHeaders(),
-      body: jsonEncode(_mapToApi(values)),
+    final res = await ApiClient.patch(
+      '/api/SymptomDiary/$id',
+      body: _mapToApi(values),
     );
 
     if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception();
+      throw Exception('Failed to update symptom diary entry');
     }
   }
 

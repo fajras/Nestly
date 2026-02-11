@@ -1,31 +1,8 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-Map<String, String> defaultHeaders({String? token}) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  if (token != null) 'Authorization': 'Bearer $token',
-};
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
-  return 'http://localhost:5167';
-}
-
-String get kApiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-String get kFetalWeekBase => '$kApiBase/api/FetalDevelopmentWeek';
 
 class FetalWeekDto {
   final int weekNumber;
@@ -33,7 +10,7 @@ class FetalWeekDto {
   final String motherChanges;
   final String? imageUrl;
 
-  FetalWeekDto({
+  const FetalWeekDto({
     required this.weekNumber,
     required this.babyDevelopment,
     required this.motherChanges,
@@ -41,90 +18,137 @@ class FetalWeekDto {
   });
 
   factory FetalWeekDto.fromJson(Map<String, dynamic> json) {
-    String _s(dynamic v) => (v ?? '').toString();
+    String s(dynamic v) => (v ?? '').toString();
     return FetalWeekDto(
       weekNumber: (json['weekNumber'] ?? json['WeekNumber'] ?? 0) as int,
-      babyDevelopment: _s(json['babyDevelopment'] ?? json['BabyDevelopment']),
-      motherChanges: _s(json['motherChanges'] ?? json['MotherChanges']),
+      babyDevelopment: s(json['babyDevelopment'] ?? json['BabyDevelopment']),
+      motherChanges: s(json['motherChanges'] ?? json['MotherChanges']),
       imageUrl: (json['imageUrl'] ?? json['ImageUrl'])?.toString(),
     );
   }
 }
 
+FetalWeekDto _parseWeek(String body) {
+  final map = json.decode(body) as Map<String, dynamic>;
+  return FetalWeekDto.fromJson(map);
+}
+
 class FetalApi {
-  Future<FetalWeekDto> getByWeek(int week, {String? token}) async {
-    final url = '$kFetalWeekBase/week/$week';
-    final res = await http
-        .get(Uri.parse(url), headers: defaultHeaders(token: token))
-        .timeout(const Duration(seconds: 10));
+  static const int _maxWeeks = 40;
+
+  static final Map<int, Future<FetalWeekDto>> _cache = {};
+
+  Future<FetalWeekDto> getByWeek(int week) {
+    final w = week.clamp(1, _maxWeeks);
+
+    final cached = _cache[w];
+    if (cached != null) return cached;
+
+    final future = _fetch(w);
+    _cache[w] = future;
+    future.catchError((e) {
+      _cache.remove(w);
+      throw e;
+    });
+
+    return future;
+  }
+
+  Future<FetalWeekDto> _fetch(int week) async {
+    final res = await ApiClient.get(
+      '/api/FetalDevelopmentWeek/week/$week',
+    ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode == 404) {
       throw Exception('Nema podataka za sedmicu $week.');
     }
     if (res.statusCode != 200) {
-      throw Exception(
-        'Greška (${res.statusCode}) prilikom dohvaćanja podataka.',
-      );
+      throw Exception('HTTP ${res.statusCode}');
     }
 
-    final map = json.decode(res.body) as Map<String, dynamic>;
-    return FetalWeekDto.fromJson(map);
+    if (kIsWeb) {
+      return _parseWeek(res.body);
+    }
+    return compute(_parseWeek, res.body);
+  }
+
+  void prefetchAround(int week) {
+    final w = week.clamp(1, _maxWeeks);
+
+    if (w > 1 && !_cache.containsKey(w - 1)) {
+      getByWeek(w - 1);
+    }
+    if (w < _maxWeeks && !_cache.containsKey(w + 1)) {
+      getByWeek(w + 1);
+    }
   }
 }
+
+/* ==================== SCREEN ==================== */
 
 class BabyGrowthScreen extends StatefulWidget {
   const BabyGrowthScreen({super.key, required this.week});
 
   final int week;
+
   @override
   State<BabyGrowthScreen> createState() => _BabyGrowthScreenState();
 }
 
-class _BabyGrowthScreenState extends State<BabyGrowthScreen> {
-  final FetalApi _fetalApi = FetalApi();
+class _BabyGrowthScreenState extends State<BabyGrowthScreen>
+    with AutomaticKeepAliveClientMixin {
+  static const int _maxWeeks = 40;
+
+  final FetalApi _api = FetalApi();
 
   late int _currentWeek;
-
   late Future<FetalWeekDto> _futureWeek;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
 
-    _currentWeek = widget.week.clamp(1, 40);
+    _currentWeek = widget.week.clamp(1, _maxWeeks);
+    _futureWeek = _api.getByWeek(_currentWeek);
 
-    _futureWeek = _loadWeek();
+    // Warm up cache in background
+    _api.prefetchAround(_currentWeek);
   }
 
-  Future<FetalWeekDto> _loadWeek() {
-    return _fetalApi.getByWeek(_currentWeek);
+  void _loadWeek(int week) {
+    if (!mounted) return;
+
+    final w = week.clamp(1, _maxWeeks);
+
+    setState(() {
+      _currentWeek = w;
+      _futureWeek = _api.getByWeek(w);
+    });
+
+    _api.prefetchAround(w);
   }
 
   void _goPrev() {
     if (_currentWeek <= 1) return;
-    setState(() {
-      _currentWeek -= 1;
-      _futureWeek = _loadWeek();
-    });
+    _loadWeek(_currentWeek - 1);
   }
 
   void _goNext() {
-    if (_currentWeek >= 40) return;
-    setState(() {
-      _currentWeek += 1;
-      _futureWeek = _loadWeek();
-    });
+    if (_currentWeek >= _maxWeeks) return;
+    _loadWeek(_currentWeek + 1);
   }
 
   void _goToday() {
-    setState(() {
-      _currentWeek = widget.week.clamp(1, 40);
-      _futureWeek = _loadWeek();
-    });
+    _loadWeek(widget.week.clamp(1, _maxWeeks));
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -158,12 +182,10 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen> {
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity == null) return;
-          if (details.primaryVelocity! < 0) {
-            _goNext();
-          } else {
-            _goPrev();
-          }
+          final v = details.primaryVelocity;
+          if (v == null) return;
+          if (v < -300) _goNext();
+          if (v > 300) _goPrev();
         },
         child: FutureBuilder<FetalWeekDto>(
           future: _futureWeek,
@@ -198,47 +220,43 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            onPressed: _currentWeek > 1 ? _goPrev : null,
-                            icon: const Icon(Icons.chevron_left_rounded),
-                            color: AppColors.roseDark,
-                            iconSize: 34,
-                          ),
-
-                          Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: AppColors.babyBlue.withOpacity(0.15),
-                              shape: BoxShape.circle,
+                      RepaintBoundary(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: _currentWeek > 1 ? _goPrev : null,
+                              icon: const Icon(Icons.chevron_left_rounded),
+                              color: AppColors.roseDark,
+                              iconSize: 34,
                             ),
-                            child: Center(
-                              child: ClipOval(
-                                child:
-                                    (dto.imageUrl != null &&
-                                        dto.imageUrl!.isNotEmpty)
-                                    ? Image.network(
-                                        dto.imageUrl!,
-                                        width: 140,
-                                        height: 140,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                              if (loadingProgress == null) {
-                                                return child;
-                                              }
-
-                                              final expected = loadingProgress
-                                                  .expectedTotalBytes;
-                                              final loaded = loadingProgress
-                                                  .cumulativeBytesLoaded;
-
-                                              return Center(
-                                                child: SizedBox(
+                            Container(
+                              width: 200,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                color: AppColors.babyBlue.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: ClipOval(
+                                  child:
+                                      (dto.imageUrl != null &&
+                                          dto.imageUrl!.isNotEmpty)
+                                      ? Image.network(
+                                          dto.imageUrl!,
+                                          width: 140,
+                                          height: 140,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder:
+                                              (context, child, progress) {
+                                                if (progress == null) {
+                                                  return child;
+                                                }
+                                                final expected =
+                                                    progress.expectedTotalBytes;
+                                                final loaded = progress
+                                                    .cumulativeBytesLoaded;
+                                                return SizedBox(
                                                   width: 32,
                                                   height: 32,
                                                   child:
@@ -250,36 +268,35 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen> {
                                                             ? loaded / expected
                                                             : null,
                                                       ),
-                                                ),
-                                              );
-                                            },
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(
-                                              Icons.child_care_rounded,
-                                              size: 80,
-                                              color: AppColors.roseDark,
-                                            ),
-                                      )
-                                    : const Icon(
-                                        Icons.child_care_rounded,
-                                        size: 80,
-                                        color: AppColors.roseDark,
-                                      ),
+                                                );
+                                              },
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(
+                                                Icons.child_care_rounded,
+                                                size: 80,
+                                                color: AppColors.roseDark,
+                                              ),
+                                        )
+                                      : const Icon(
+                                          Icons.child_care_rounded,
+                                          size: 80,
+                                          color: AppColors.roseDark,
+                                        ),
+                                ),
                               ),
                             ),
-                          ),
-
-                          IconButton(
-                            onPressed: _currentWeek < 40 ? _goNext : null,
-                            icon: const Icon(Icons.chevron_right_rounded),
-                            color: AppColors.roseDark,
-                            iconSize: 34,
-                          ),
-                        ],
+                            IconButton(
+                              onPressed: _currentWeek < _maxWeeks
+                                  ? _goNext
+                                  : null,
+                              icon: const Icon(Icons.chevron_right_rounded),
+                              color: AppColors.roseDark,
+                              iconSize: 34,
+                            ),
+                          ],
+                        ),
                       ),
-
                       const SizedBox(height: AppSpacing.xl),
-
                       _InfoCard(
                         title: 'Razvoj bebe',
                         icon: Icons.child_care_rounded,
@@ -287,9 +304,7 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen> {
                             ? dto.babyDevelopment
                             : '—',
                       ),
-
                       const SizedBox(height: AppSpacing.lg),
-
                       _InfoCard(
                         title: 'Promjene kod majke',
                         icon: Icons.pregnant_woman_rounded,
@@ -308,6 +323,8 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen> {
     );
   }
 }
+
+/* ==================== INFO CARD ==================== */
 
 class _InfoCard extends StatelessWidget {
   const _InfoCard({

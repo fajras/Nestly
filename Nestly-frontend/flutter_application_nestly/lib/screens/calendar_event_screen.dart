@@ -1,13 +1,9 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
     show NestlyToast;
-import 'package:http/http.dart' as http;
-import 'package:table_calendar/table_calendar.dart';
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 
 class CalendarEventEntry {
@@ -19,7 +15,7 @@ class CalendarEventEntry {
   final DateTime startAt;
   final DateTime? endAt;
 
-  CalendarEventEntry({
+  const CalendarEventEntry({
     required this.id,
     required this.babyId,
     this.userId,
@@ -37,9 +33,7 @@ class CalendarEventEntry {
       title: json['title'] as String,
       description: json['description'] as String?,
       startAt: DateTime.parse(json['startAt'] as String),
-      endAt: json['endAt'] != null
-          ? DateTime.parse(json['endAt'] as String)
-          : null,
+      endAt: json['endAt'] != null ? DateTime.parse(json['endAt']) : null,
     );
   }
 }
@@ -52,7 +46,7 @@ class CreateCalendarEventRequest {
   final DateTime startAt;
   final DateTime? endAt;
 
-  CreateCalendarEventRequest({
+  const CreateCalendarEventRequest({
     required this.babyId,
     this.userId,
     required this.title,
@@ -71,82 +65,58 @@ class CreateCalendarEventRequest {
   };
 }
 
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers([String? token]) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  if (token != null) 'Authorization': 'Bearer $token',
-};
-
 class CalendarEventApiService {
-  String get _baseUrl => '$_apiBase/api/CalendarEvent';
-
   Future<List<CalendarEventEntry>> getForBabyInRange({
     required int babyId,
     required DateTime from,
     required DateTime to,
-    String? token,
   }) async {
-    final uri = Uri.parse(
-      '$_baseUrl?BabyId=$babyId'
+    final resp = await ApiClient.get(
+      '/api/CalendarEvent'
+      '?BabyId=$babyId'
       '&From=${from.toIso8601String()}'
       '&To=${to.toIso8601String()}',
     );
 
-    final resp = await http.get(uri, headers: _headers(token));
     if (resp.statusCode != 200) {
-      throw Exception('Greška pri dohvaćanju termina');
+      throw Exception('Failed to fetch calendar events');
     }
 
-    final List<dynamic> data = jsonDecode(resp.body) as List<dynamic>;
-    return data
-        .map((e) => CalendarEventEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final List data = jsonDecode(resp.body) as List;
+    return data.map((e) => CalendarEventEntry.fromJson(e)).toList();
   }
 
   Future<CalendarEventEntry> create({
     required CreateCalendarEventRequest request,
-    String? token,
   }) async {
-    final uri = Uri.parse(_baseUrl);
-    final resp = await http.post(
-      uri,
-      headers: _headers(token),
-      body: jsonEncode(request.toJson()),
+    final resp = await ApiClient.post(
+      '/api/CalendarEvent',
+      body: request.toJson(),
     );
 
-    if (resp.statusCode != 201 && resp.statusCode != 200) {
-      throw Exception('Greška pri spremanju termina');
+    if (resp.statusCode != 200 && resp.statusCode != 201) {
+      throw Exception('Failed to save calendar event');
     }
 
-    final Map<String, dynamic> data =
-        jsonDecode(resp.body) as Map<String, dynamic>;
-    return CalendarEventEntry.fromJson(data);
+    return CalendarEventEntry.fromJson(jsonDecode(resp.body));
   }
 }
+
+/*
+|--------------------------------------------------------------------------
+| SCREEN
+|--------------------------------------------------------------------------
+*/
 
 class CalendarEventScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
-  final String? token;
   final int? userId;
 
   const CalendarEventScreen({
     super.key,
     required this.babyId,
     required this.babyName,
-    this.token,
     this.userId,
   });
 
@@ -157,10 +127,8 @@ class CalendarEventScreen extends StatefulWidget {
 class _CalendarEventScreenState extends State<CalendarEventScreen> {
   final _service = CalendarEventApiService();
 
-  bool _isLoading = true;
-  bool _isSaving = false;
-
-  List<CalendarEventEntry> _events = [];
+  bool _loading = true;
+  bool _saving = false;
 
   final Map<DateTime, List<CalendarEventEntry>> _eventsByDay = {};
 
@@ -174,13 +142,9 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
+    _selectedDay = _dateOnly(DateTime.now());
     _focusedDay = _selectedDay;
-    _loadEventsForMonth(_focusedDay);
+    _loadMonth(_focusedDay);
   }
 
   @override
@@ -190,55 +154,52 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
     super.dispose();
   }
 
-  DateTime _firstDayOfMonth(DateTime date) =>
-      DateTime(date.year, date.month, 1);
+  DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+  DateTime _monthStart(DateTime d) => DateTime(d.year, d.month, 1);
+  DateTime _monthEnd(DateTime d) =>
+      DateTime(d.year, d.month + 1, 0, 23, 59, 59);
 
-  DateTime _lastDayOfMonth(DateTime date) =>
-      DateTime(date.year, date.month + 1, 0, 23, 59, 59);
+  Future<void> _loadMonth(DateTime month, {bool calendarOnly = false}) async {
+    if (!calendarOnly) {
+      setState(() => _loading = true);
+    }
 
-  DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
-
-  Future<void> _loadEventsForMonth(DateTime month) async {
-    setState(() => _isLoading = true);
     try {
-      final from = _firstDayOfMonth(month);
-      final to = _lastDayOfMonth(month);
-
       final list = await _service.getForBabyInRange(
         babyId: widget.babyId,
-        from: from,
-        to: to,
-        token: widget.token,
+        from: _monthStart(month),
+        to: _monthEnd(month),
       );
 
-      _events = list;
-      _eventsByDay.clear();
-      for (final ev in list) {
-        final key = _dateOnly(ev.startAt);
-        _eventsByDay.putIfAbsent(key, () => []);
-        _eventsByDay[key]!.add(ev);
+      if (mounted) {
+        setState(() {
+          _eventsByDay.clear();
+          for (final ev in list) {
+            final key = _dateOnly(ev.startAt);
+            _eventsByDay.putIfAbsent(key, () => []).add(ev);
+          }
+        });
       }
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri učitavanju termina');
+    }
 
-      setState(() => _isLoading = false);
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri učitavanju termina: $e');
+    if (mounted) {
+      setState(() {
+        _loading = false;
+      });
     }
   }
 
-  List<CalendarEventEntry> _getEventsForDay(DateTime day) {
-    return _eventsByDay[_dateOnly(day)] ?? [];
-  }
+  List<CalendarEventEntry> _eventsForDay(DateTime day) =>
+      _eventsByDay[_dateOnly(day)] ?? const [];
 
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
       initialTime: _timeOfDay ?? TimeOfDay.now(),
     );
-    if (picked != null) {
-      setState(() => _timeOfDay = picked);
-    }
+    if (picked != null) setState(() => _timeOfDay = picked);
   }
 
   Future<void> _saveEvent() async {
@@ -247,9 +208,10 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       return;
     }
 
-    setState(() => _isSaving = true);
+    setState(() => _saving = true);
 
-    final time = _timeOfDay ?? const TimeOfDay(hour: 10, minute: 0);
+    final time = _timeOfDay ?? TimeOfDay.now();
+
     final startAt = DateTime(
       _selectedDay.year,
       _selectedDay.month,
@@ -268,80 +230,55 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
               ? null
               : _descriptionCtrl.text.trim(),
           startAt: startAt,
-          endAt: null,
         ),
-        token: widget.token,
       );
-
-      if (!mounted) return;
 
       _titleCtrl.clear();
       _descriptionCtrl.clear();
       _timeOfDay = null;
 
-      await _loadEventsForMonth(_focusedDay);
-
+      await _loadMonth(_focusedDay);
       NestlyToast.success(context, 'Termin je uspješno sačuvan.');
-    } catch (e) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri spremanju termina: $e');
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri spremanju termina.');
     }
-  }
 
-  InputDecoration _fieldDecoration(String label) => InputDecoration(
-    labelText: label,
-    filled: true,
-    fillColor: Colors.white,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: AppColors.babyBlue.withOpacity(0.35)),
-    ),
-  );
+    if (mounted) setState(() => _saving = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final selectedEvents = _getEventsForDay(_selectedDay);
-
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.seed,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        centerTitle: true,
+        iconTheme: const IconThemeData(color: AppColors.seed),
         title: Text(
-          "Kalendar termina",
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          'Kalendar termina',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
             color: AppColors.seed,
           ),
         ),
+        centerTitle: true,
       ),
-      body: _isLoading
+      body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 children: [
                   _buildCalendar(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.lg),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildEventList(selectedEvents),
-                          const SizedBox(height: 16),
-                          _buildFormCard(),
+                          _buildEventList(_eventsForDay(_selectedDay)),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildForm(),
                         ],
                       ),
                     ),
@@ -353,94 +290,42 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
   }
 
   Widget _buildCalendar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TableCalendar<CalendarEventEntry>(
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2100, 12, 31),
-        focusedDay: _focusedDay,
-        calendarFormat: CalendarFormat.month,
-        startingDayOfWeek: StartingDayOfWeek.monday,
-        selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
-        eventLoader: _getEventsForDay,
-        headerStyle: HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-          titleTextStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-            color: AppColors.seed,
-          ),
-          leftChevronIcon: const Icon(
-            Icons.chevron_left_rounded,
-            color: AppColors.seed,
-          ),
-          rightChevronIcon: const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.seed,
-          ),
-        ),
-        calendarStyle: CalendarStyle(
-          todayDecoration: BoxDecoration(
-            color: AppColors.babyPink.withOpacity(0.9),
-            shape: BoxShape.circle,
-          ),
-          selectedDecoration: const BoxDecoration(
-            color: AppColors.babyBlue,
-            shape: BoxShape.circle,
-          ),
-          selectedTextStyle: const TextStyle(color: Colors.white),
-          todayTextStyle: const TextStyle(color: Colors.white),
-          markerDecoration: const BoxDecoration(
-            color: AppColors.seed,
-            shape: BoxShape.circle,
-          ),
-          markersMaxCount: 3,
-        ),
-        daysOfWeekStyle: const DaysOfWeekStyle(
-          weekdayStyle: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-          weekendStyle: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        onDaySelected: (selectedDay, focusedDay) {
-          setState(() {
-            _selectedDay = _dateOnly(selectedDay);
-            _focusedDay = focusedDay;
-          });
-        },
-        onPageChanged: (focusedDay) {
-          _focusedDay = focusedDay;
-          _loadEventsForMonth(focusedDay);
-        },
-      ),
+    return NestlyCalendar(
+      focusedDay: _focusedDay,
+      selectedDay: _selectedDay,
+
+      accentColor: AppColors.seed,
+
+      markerIcon: Icons.event_note_rounded,
+
+      eventLoader: (day) => _eventsForDay(day),
+
+      onDaySelected: (selected, focused) {
+        setState(() {
+          _selectedDay = _dateOnly(selected);
+          _focusedDay = _dateOnly(focused);
+        });
+      },
+
+      onPageChanged: (focused) {
+        _focusedDay = _dateOnly(focused);
+        _loadMonth(_focusedDay, calendarOnly: true);
+      },
     );
   }
 
   Widget _buildEventList(List<CalendarEventEntry> events) {
-    final dateLabel =
-        "${_selectedDay.day.toString().padLeft(2, '0')}.${_selectedDay.month.toString().padLeft(2, '0')}.${_selectedDay.year}.";
+    final label =
+        '${_selectedDay.day.toString().padLeft(2, '0')}.'
+        '${_selectedDay.month.toString().padLeft(2, '0')}.'
+        '${_selectedDay.year}.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Termini za $dateLabel",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          'Termini za $label',
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
@@ -448,154 +333,132 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         const SizedBox(height: 8),
         if (events.isEmpty)
           const Text(
-            "Nema zakazanih termina za ovaj dan.",
-            style: TextStyle(fontSize: 13),
+            'Nema zakazanih termina za ovaj dan.',
+            style: TextStyle(color: AppColors.textSecondary),
           )
         else
-          Column(children: events.map((e) => _eventTile(e)).toList()),
+          Column(children: events.map(_eventTile).toList()),
       ],
     );
   }
 
   Widget _eventTile(CalendarEventEntry ev) {
-    final timeText =
-        "${ev.startAt.hour.toString().padLeft(2, '0')}:${ev.startAt.minute.toString().padLeft(2, '0')}";
+    final time =
+        '${ev.startAt.hour.toString().padLeft(2, '0')}:${ev.startAt.minute.toString().padLeft(2, '0')}';
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.babyBlue.withOpacity(0.25)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.event_note_rounded,
-            color: AppColors.babyBlue,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  ev.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            const Icon(Icons.event_note_rounded, color: AppColors.seed),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ev.title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  timeText,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                if (ev.description != null && ev.description!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      ev.description!,
-                      style: const TextStyle(fontSize: 13),
+                  Text(time, style: const TextStyle(fontSize: 12)),
+                  if (ev.description?.isNotEmpty == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(ev.description!),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFormCard() {
+  Widget _buildForm() {
     final timeLabel = _timeOfDay == null
-        ? "Odaberi vrijeme"
+        ? 'Odaberi vrijeme'
         : _timeOfDay!.format(context);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bg.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(22),
+    InputDecoration deco(String label) => InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Novi termin",
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.seed,
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _titleCtrl,
-            decoration: _fieldDecoration("Naziv (npr. Vakcina)"),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _descriptionCtrl,
-            maxLines: 3,
-            decoration: _fieldDecoration("Opis (opcionalno)"),
-          ),
-          const SizedBox(height: 12),
-          InkWell(
-            onTap: _pickTime,
-            borderRadius: BorderRadius.circular(14),
-            child: InputDecorator(
-              decoration: _fieldDecoration("Vrijeme termina"),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(timeLabel),
-                  const Icon(
-                    Icons.access_time_rounded,
-                    size: 18,
-                    color: AppColors.babyBlue,
-                  ),
-                ],
+    );
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Novi termin',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.seed,
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _saveEvent,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.seed,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            const SizedBox(height: 12),
+            TextField(controller: _titleCtrl, decoration: deco('Naziv')),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descriptionCtrl,
+              maxLines: 3,
+              decoration: deco('Opis (opcionalno)'),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: _pickTime,
+              child: InputDecorator(
+                decoration: deco('Vrijeme termina'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(timeLabel),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      color: AppColors.babyBlue,
+                    ),
+                  ],
                 ),
               ),
-              child: _isSaving
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      "Sačuvaj termin",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saving ? null : _saveEvent,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.seed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                  ),
+                ),
+
+                child: _saving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Sačuvaj termin',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

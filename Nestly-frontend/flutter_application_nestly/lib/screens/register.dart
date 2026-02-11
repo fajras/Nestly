@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
-    show NestlyToast;
+import 'package:http/http.dart' as http;
+
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -21,11 +23,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
 
   DateTime? _dob;
-  DateTime? _conceptionDate; // 🟢 NOVO
+  DateTime? _dueDate;
   String? _gender;
+  bool _isPregnant = false;
 
   bool _obscure = true;
   bool _loading = false;
+
+  static const _baseUrl = 'http://10.0.2.2:5167';
 
   @override
   void dispose() {
@@ -38,385 +43,300 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _pickDateOfBirth() async {
-    final now = DateTime.now();
-    final first = DateTime(now.year - 100, 1, 1);
-    final last = DateTime(now.year, now.month, now.day);
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dob ?? DateTime(now.year - 20, now.month, now.day),
-      firstDate: first,
-      lastDate: last,
-      helpText: 'Odaberi datum rođenja',
+  InputDecoration _decoration({required String label, required IconData icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: AppColors.babyPink.withOpacity(.15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: const BorderSide(color: AppColors.roseDark, width: 1.6),
+      ),
+      floatingLabelStyle: const TextStyle(
+        color: AppColors.roseDark,
+        fontWeight: FontWeight.w600,
+      ),
+      prefixIconColor: AppColors.roseDark,
     );
-    if (picked != null) {
-      setState(() => _dob = picked);
-    }
   }
 
-  // 🟢 NOVO — Date picker za datum začeća
-  Future<void> _pickConceptionDate() async {
-    final now = DateTime.now();
-    final first = DateTime(now.year - 2, 1, 1);
-    final last = DateTime(now.year, now.month, now.day);
+  Future<void> _pickDate({
+    required DateTime initial,
+    required void Function(DateTime) onPicked,
+    required String title,
+  }) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _conceptionDate ?? DateTime(now.year, now.month, now.day),
-      firstDate: first,
-      lastDate: last,
-      helpText: 'Odaberi datum začeća',
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      helpText: title,
     );
-    if (picked != null) {
-      setState(() => _conceptionDate = picked);
-    }
+    if (picked != null) onPicked(picked);
   }
 
-  String? _required(String? v, {String msg = 'Obavezno polje'}) {
-    if (v == null || v.trim().isEmpty) return msg;
-    return null;
-  }
+  String? _required(String? v, String msg) =>
+      v == null || v.trim().isEmpty ? msg : null;
 
   String? _validateEmail(String? v) {
-    if (_required(v) != null) return 'Unesite email';
+    if (_required(v, '') != null) return 'Unesite email';
     final ok = RegExp(r'^[^@\n]+@[^@\n]+\.[^@\n]+$').hasMatch(v!.trim());
     return ok ? null : 'Email nije ispravan';
   }
 
-  String? _validatePassword(String? v) {
-    if (_required(v) != null) return 'Unesite lozinku';
-    if (v!.length < 6) return 'Minimalno 6 znakova';
-    return null;
-  }
-
-  String? _validatePhone(String? v) {
-    if (_required(v) != null) return 'Unesite broj telefona';
-    final cleaned = v!.replaceAll(RegExp(r'[^0-9+]'), '');
-    if (cleaned.length < 6) return 'Broj telefona nije ispravan';
-    return null;
-  }
-
   Future<void> _onSubmit() async {
-    final valid = _formKey.currentState?.validate() ?? false;
-    if (!valid) return;
+    if (!_formKey.currentState!.validate()) return;
 
     if (_dob == null) {
       NestlyToast.info(context, 'Odaberite datum rođenja');
       return;
     }
+
     if (_gender == null) {
       NestlyToast.info(context, 'Odaberite spol');
       return;
     }
-    if (_conceptionDate == null) {
-      NestlyToast.info(context, 'Odaberite datum začeća');
+
+    if (_isPregnant && _dueDate == null) {
+      NestlyToast.info(context, 'Odaberite termin poroda');
       return;
     }
 
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    setState(() => _loading = false);
 
-    final payload = {
-      "email": _emailCtrl.text.trim(),
-      "firstName": _firstNameCtrl.text.trim(),
-      "lastName": _lastNameCtrl.text.trim(),
-      "phoneNumber": _phoneCtrl.text.trim(),
-      "dateOfBirth": _dob!.toIso8601String(),
-      "conceptionDate": _conceptionDate!.toIso8601String(),
-      "gender": _gender,
-      "username": _usernameCtrl.text.trim(),
-      "password": _passwordCtrl.text,
-    };
+    try {
+      final res = await http.post(
+        Uri.parse('$_baseUrl/AppUser'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "email": _emailCtrl.text.trim(),
+          "firstName": _firstNameCtrl.text.trim(),
+          "lastName": _lastNameCtrl.text.trim(),
+          "phoneNumber": _phoneCtrl.text.trim(),
+          "dateOfBirth": _dob!.toIso8601String(),
+          "gender": _gender,
+          "username": _usernameCtrl.text.trim(),
+          "password": _passwordCtrl.text,
+          "roleId": 1,
+          "dueDate": _isPregnant ? _dueDate?.toIso8601String() : null,
+        }),
+      );
 
-    NestlyToast.success(context, 'Registracija uspješna 🎉');
-
-    if (!mounted) return;
-    Navigator.pop(context);
+      if (res.statusCode == 201) {
+        NestlyToast.success(context, 'Registracija uspješna 🎉');
+        if (mounted) Navigator.pop(context);
+      } else {
+        NestlyToast.error(context, 'Greška pri registraciji');
+      }
+    } catch (_) {
+      NestlyToast.error(context, 'Server nedostupan');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        title: Text(
+          'Registracija',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.roseDark,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Form(
+              key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _LogoHeaderRegister(),
-                  const SizedBox(height: AppSpacing.xl),
+                  TextFormField(
+                    controller: _emailCtrl,
+                    decoration: _decoration(
+                      label: 'Email',
+                      icon: Icons.email_rounded,
+                    ),
+                    validator: _validateEmail,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
 
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Registracija',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                              textAlign: TextAlign.center,
+                  TextFormField(
+                    controller: _firstNameCtrl,
+                    decoration: _decoration(
+                      label: 'Ime',
+                      icon: Icons.person_rounded,
+                    ),
+                    validator: (v) => _required(v, 'Unesite ime'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  TextFormField(
+                    controller: _lastNameCtrl,
+                    decoration: _decoration(
+                      label: 'Prezime',
+                      icon: Icons.person_outline,
+                    ),
+                    validator: (v) => _required(v, 'Unesite prezime'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  TextFormField(
+                    controller: _phoneCtrl,
+                    decoration: _decoration(
+                      label: 'Telefon',
+                      icon: Icons.phone,
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  TextFormField(
+                    controller: _usernameCtrl,
+                    decoration: _decoration(
+                      label: 'Korisničko ime',
+                      icon: Icons.account_circle_rounded,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  TextFormField(
+                    controller: _passwordCtrl,
+                    obscureText: _obscure,
+                    decoration:
+                        _decoration(
+                          label: 'Lozinka',
+                          icon: Icons.lock_rounded,
+                        ).copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
-                            const SizedBox(height: AppSpacing.lg),
-
-                            TextFormField(
-                              controller: _emailCtrl,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                hintText: 'primjer@nestly.app',
-                                prefixIcon: Icon(Icons.alternate_email_rounded),
-                              ),
-                              validator: _validateEmail,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            TextFormField(
-                              controller: _firstNameCtrl,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Ime',
-                                prefixIcon: Icon(Icons.person_outline_rounded),
-                              ),
-                              validator: _required,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            TextFormField(
-                              controller: _lastNameCtrl,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Prezime',
-                                prefixIcon: Icon(Icons.person_2_outlined),
-                              ),
-                              validator: _required,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            TextFormField(
-                              controller: _phoneCtrl,
-                              keyboardType: TextInputType.phone,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Telefon',
-                                hintText: '+387 61 234 567',
-                                prefixIcon: Icon(Icons.phone_outlined),
-                              ),
-                              validator: _validatePhone,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            // 🟢 Datum rođenja
-                            GestureDetector(
-                              onTap: _pickDateOfBirth,
-                              child: AbsorbPointer(
-                                child: TextFormField(
-                                  readOnly: true,
-                                  decoration: InputDecoration(
-                                    labelText: 'Datum rođenja',
-                                    hintText: 'Odaberite datum',
-                                    prefixIcon: const Icon(Icons.cake_outlined),
-                                    suffixIcon: IconButton(
-                                      onPressed: _pickDateOfBirth,
-                                      icon: const Icon(Icons.calendar_today),
-                                    ),
-                                  ),
-                                  controller: TextEditingController(
-                                    text: _dob == null
-                                        ? ''
-                                        : '${_dob!.day.toString().padLeft(2, '0')}.${_dob!.month.toString().padLeft(2, '0')}.${_dob!.year}',
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            // 🟢 Datum začeća (novo polje)
-                            GestureDetector(
-                              onTap: _pickConceptionDate,
-                              child: AbsorbPointer(
-                                child: TextFormField(
-                                  readOnly: true,
-                                  decoration: InputDecoration(
-                                    labelText: 'Datum začeća',
-                                    hintText: 'Odaberite datum',
-                                    prefixIcon: const Icon(
-                                      Icons.favorite_outline_rounded,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      onPressed: _pickConceptionDate,
-                                      icon: const Icon(Icons.calendar_today),
-                                    ),
-                                  ),
-                                  controller: TextEditingController(
-                                    text: _conceptionDate == null
-                                        ? ''
-                                        : '${_conceptionDate!.day.toString().padLeft(2, '0')}.${_conceptionDate!.month.toString().padLeft(2, '0')}.${_conceptionDate!.year}',
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            DropdownButtonFormField<String>(
-                              value: _gender,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'F',
-                                  child: Text('Žensko'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'M',
-                                  child: Text('Muško'),
-                                ),
-                              ],
-                              onChanged: (v) => setState(() => _gender = v),
-                              decoration: const InputDecoration(
-                                labelText: 'Spol',
-                                prefixIcon: Icon(Icons.wc_outlined),
-                              ),
-                              validator: (v) =>
-                                  v == null ? 'Odaberite spol' : null,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            TextFormField(
-                              controller: _usernameCtrl,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Korisničko ime',
-                                prefixIcon: Icon(Icons.badge_outlined),
-                              ),
-                              validator: _required,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            TextFormField(
-                              controller: _passwordCtrl,
-                              obscureText: _obscure,
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _onSubmit(),
-                              decoration: InputDecoration(
-                                labelText: 'Lozinka',
-                                prefixIcon: const Icon(
-                                  Icons.lock_outline_rounded,
-                                ),
-                                suffixIcon: IconButton(
-                                  onPressed: () =>
-                                      setState(() => _obscure = !_obscure),
-                                  icon: Icon(
-                                    _obscure
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                  ),
-                                  tooltip: _obscure ? 'Prikaži' : 'Sakrij',
-                                ),
-                              ),
-                              validator: _validatePassword,
-                            ),
-
-                            const SizedBox(height: AppSpacing.xl),
-
-                            SizedBox(
-                              height: 52,
-                              child: ElevatedButton(
-                                onPressed: _loading ? null : _onSubmit,
-                                child: _loading
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                        ),
-                                      )
-                                    : const Text('Kreiraj nalog'),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-
-                            SizedBox(
-                              height: 52,
-                              child: OutlinedButton(
-                                onPressed: _loading
-                                    ? null
-                                    : () => Navigator.pop(context),
-                                child: const Text('Imate nalog? Prijavite se'),
-                              ),
-                            ),
-                          ],
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
                         ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  DropdownButtonFormField<String>(
+                    value: _gender,
+                    decoration: _decoration(
+                      label: 'Spol',
+                      icon: Icons.wc_rounded,
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'female', child: Text('Ženski')),
+                      DropdownMenuItem(value: 'male', child: Text('Muški')),
+                    ],
+                    onChanged: (v) => setState(() => _gender = v),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
+                    tileColor: AppColors.babyPink.withOpacity(.15),
+                    title: Text(
+                      _dob == null
+                          ? 'Datum rođenja'
+                          : '${_dob!.day}.${_dob!.month}.${_dob!.year}',
+                    ),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () => _pickDate(
+                      initial: DateTime.now(),
+                      title: 'Datum rođenja',
+                      onPicked: (d) => setState(() => _dob = d),
+                    ),
+                  ),
+
+                  SwitchListTile(
+                    title: const Text('Trenutno sam trudna'),
+                    value: _isPregnant,
+                    activeColor: AppColors.roseDark,
+                    onChanged: (v) => setState(() => _isPregnant = v),
+                  ),
+
+                  if (_isPregnant)
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                      ),
+                      tileColor: AppColors.babyPink.withOpacity(.15),
+                      title: Text(
+                        _dueDate == null
+                            ? 'Termin poroda'
+                            : '${_dueDate!.day}.${_dueDate!.month}.${_dueDate!.year}',
+                      ),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () => _pickDate(
+                        initial: DateTime.now(),
+                        title: 'Termin poroda',
+                        onPicked: (d) => setState(() => _dueDate = d),
                       ),
                     ),
-                  ),
+
                   const SizedBox(height: AppSpacing.lg),
 
-                  Text(
-                    'Kreiranjem naloga prihvatate Uslove korištenja i Politiku privatnosti',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _onSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.roseDark,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                        ),
+                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Kreiraj nalog',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                   ),
-                  SizedBox(height: size.height * 0.04),
                 ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _LogoHeaderRegister extends StatelessWidget {
-  const _LogoHeaderRegister();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const FlutterLogo(size: 56),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          'Kreirajte svoj Nestly nalog',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Brz početak – samo nekoliko detalja',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 }

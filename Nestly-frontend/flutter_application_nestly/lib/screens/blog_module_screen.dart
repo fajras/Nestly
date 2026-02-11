@@ -1,34 +1,8 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:flutter_application_nestly/main.dart';
-
-/* ================= API CONFIG ================= */
-
-Map<String, String> _headers() => const {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-String get _blogBase => '$_apiBase/api/BlogPost';
-
-/* ================= UTIL ================= */
 
 String _snippet(String text, {int max = 140}) {
   if (text.isEmpty) return '—';
@@ -82,32 +56,6 @@ class BlogPostDto {
   }
 }
 
-/* ================= API ================= */
-
-Future<List<BlogCategory>> fetchCategories() async {
-  final res = await http
-      .get(Uri.parse('$_blogBase/category'), headers: _headers())
-      .timeout(const Duration(seconds: 10));
-
-  final List data = jsonDecode(res.body);
-  return data.map((e) => BlogCategory.fromJson(e)).toList();
-}
-
-Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
-  final uri = categoryId == null
-      ? Uri.parse(_blogBase)
-      : Uri.parse('$_blogBase/category/$categoryId');
-
-  final res = await http
-      .get(uri, headers: _headers())
-      .timeout(const Duration(seconds: 10));
-
-  final body = jsonDecode(res.body);
-  return body is List
-      ? body.map((e) => BlogPostDto.fromJson(e)).toList()
-      : const [];
-}
-
 /* ================= BLOG SCREEN ================= */
 
 class BlogScreen extends StatefulWidget {
@@ -132,21 +80,25 @@ class _BlogScreenState extends State<BlogScreen> {
   }
 
   Future<void> _init() async {
-    try {
-      final cats = await fetchCategories();
-      if (!mounted) return;
-      setState(() => _categories = cats);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
-      final posts = await fetchPosts();
+    try {
+      final results = await Future.wait([fetchCategories(), fetchPosts()]);
+
       if (!mounted) return;
+
       setState(() {
-        _posts = posts;
+        _categories = results[0] as List<BlogCategory>;
+        _posts = results[1] as List<BlogPostDto>;
         _loading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = 'Greška pri učitavanju bloga';
         _loading = false;
       });
     }
@@ -398,8 +350,6 @@ class _PostImage extends StatelessWidget {
         width: 80,
         height: 80,
         fit: BoxFit.cover,
-
-        // OVO JE KLJUČNO
         memCacheWidth: 160,
         memCacheHeight: 160,
 
@@ -466,6 +416,35 @@ class _PostText extends StatelessWidget {
     );
   }
 }
+/* ================= API ================= */
+
+Future<List<BlogCategory>> fetchCategories() async {
+  final res = await ApiClient.get('/api/BlogPost/category');
+
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load categories');
+  }
+
+  final List data = jsonDecode(res.body);
+  return data.map((e) => BlogCategory.fromJson(e)).toList();
+}
+
+Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
+  final path = categoryId == null
+      ? '/api/BlogPost'
+      : '/api/BlogPost/category/$categoryId';
+
+  final res = await ApiClient.get(path);
+
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load posts');
+  }
+
+  final body = jsonDecode(res.body);
+  return body is List
+      ? body.map((e) => BlogPostDto.fromJson(e)).toList()
+      : const [];
+}
 
 /* ================= BLOG DETAIL ================= */
 
@@ -504,8 +483,25 @@ class BlogPostDetailScreen extends StatelessWidget {
                 if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.xl),
-                    child: Image.network(post.imageUrl!, fit: BoxFit.cover),
+                    child: CachedNetworkImage(
+                      imageUrl: post.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        height: 220,
+                        color: AppColors.babyBlue.withOpacity(.15),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        height: 220,
+                        color: AppColors.babyPink.withOpacity(.15),
+                        child: const Icon(
+                          Icons.article_rounded,
+                          size: 48,
+                          color: AppColors.roseDark,
+                        ),
+                      ),
+                    ),
                   ),
+
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   post.title,

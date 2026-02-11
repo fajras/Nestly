@@ -1,12 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/screens/doctor_admin_dashboard_screen.dart';
+import 'package:flutter_application_nestly/screens/splash_screen.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter_application_nestly/screens/home_dashboard.dart';
 import 'package:flutter_application_nestly/screens/register.dart';
-
+import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,6 +113,7 @@ class NestlyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [routeObserver],
       debugShowCheckedModeBanner: false,
       title: 'Nestly',
       theme: buildTheme(),
@@ -118,7 +126,7 @@ class NestlyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -134,16 +142,53 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _pwCtrl = TextEditingController();
+
   bool _obscure = true;
   bool _loading = false;
 
-  static const String _baseUrl = 'http://10.0.2.2:5167';
+  static String get _baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5167';
+    }
+
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:5167';
+    }
+
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      return 'http://localhost:5167';
+    }
+
+    return 'http://localhost:5167';
+  }
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _pwCtrl.dispose();
     super.dispose();
+  }
+
+  InputDecoration _decoration({required String label, required IconData icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: AppColors.babyPink.withOpacity(.15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: const BorderSide(color: AppColors.roseDark, width: 1.6),
+      ),
+      floatingLabelStyle: const TextStyle(
+        color: AppColors.roseDark,
+        fontWeight: FontWeight.w600,
+      ),
+      prefixIconColor: AppColors.roseDark,
+    );
   }
 
   Future<void> _onLogin() async {
@@ -169,47 +214,42 @@ class _LoginScreenState extends State<LoginScreen> {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
         final token = data['token'] as String?;
+        final role = data['role'] as String?;
         final parentProfileId = data['parentProfileId'] as int?;
-
-        if (token == null || parentProfileId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Neispravan odgovor sa servera (nedostaje token ili parentProfileId).',
-              ),
-            ),
-          );
-          setState(() => _loading = false);
+        await AuthStorage.saveLogin(
+          token: token,
+          role: role,
+          parentProfileId: parentProfileId,
+        );
+        if (token == null || role == null) {
+          NestlyToast.error(context, 'Neispravan odgovor sa servera');
           return;
         }
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => HomeDashboardScreen(
-              parentProfileId: parentProfileId,
-              token: token,
-            ),
-          ),
-        );
-      } else {
-        String message = 'Pogrešan email ili lozinka.';
-        try {
-          final body = jsonDecode(response.body);
-          if (body is Map && body['title'] != null) {
-            message = body['title'];
+        if (role.toUpperCase() == 'PARENT') {
+          if (parentProfileId == null) {
+            NestlyToast.error(context, 'Nedostaje parent profil');
+            return;
           }
-        } catch (_) {}
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) =>
+                  HomeDashboardScreen(parentProfileId: parentProfileId),
+            ),
+          );
+        } else if (role.toUpperCase() == 'DOCTOR') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => DoctorAdminDashboardScreen()),
+          );
+        } else {
+          NestlyToast.error(context, 'Nepoznata korisnička rola');
+        }
+      } else {
+        NestlyToast.error(context, 'Pogrešan email ili lozinka');
       }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Greška pri spajanju na server. Provjeri backend.'),
-        ),
-      );
+    } catch (_) {
+      NestlyToast.error(context, 'Server nedostupan');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -223,124 +263,166 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: AppColors.roseDark,
+          selectionColor: AppColors.roseDark,
+          selectionHandleColor: AppColors.roseDark,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _LogoHeader(),
+                    const SizedBox(height: AppSpacing.xl),
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const _LogoHeader(),
-                  const SizedBox(height: AppSpacing.xl),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Prijava',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            TextFormField(
-                              controller: _emailCtrl,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                hintText: 'primjer@nestly.app',
-                                prefixIcon: Icon(Icons.alternate_email_rounded),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Prijava',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.roseDark,
+                                    ),
                               ),
-                              validator: (v) {
-                                if (v == null || v.trim().isEmpty) {
-                                  return 'Unesite email';
-                                }
-                                final ok = RegExp(
-                                  r'^[^@\n]+@[^@\n]+\.[^@\n]+$',
-                                ).hasMatch(v.trim());
-                                return ok ? null : 'Email nije ispravan';
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            TextFormField(
-                              controller: _pwCtrl,
-                              obscureText: _obscure,
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _onLogin(),
-                              decoration: InputDecoration(
-                                labelText: 'Lozinka',
-                                prefixIcon: const Icon(
-                                  Icons.lock_outline_rounded,
+                              const SizedBox(height: AppSpacing.lg),
+
+                              TextFormField(
+                                controller: _emailCtrl,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: _decoration(
+                                  label: 'Email',
+                                  icon: Icons.alternate_email_rounded,
                                 ),
-                                suffixIcon: IconButton(
-                                  onPressed: () =>
-                                      setState(() => _obscure = !_obscure),
-                                  icon: Icon(
-                                    _obscure
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                  ),
-                                  tooltip: _obscure
-                                      ? 'Prikaži lozinku'
-                                      : 'Sakrij',
-                                ),
+                                validator: (v) {
+                                  if (v == null || v.trim().isEmpty) {
+                                    return 'Unesite email';
+                                  }
+                                  final ok = RegExp(
+                                    r'^[^@\n]+@[^@\n]+\.[^@\n]+$',
+                                  ).hasMatch(v.trim());
+                                  return ok ? null : 'Email nije ispravan';
+                                },
                               ),
-                              validator: (v) {
-                                if (v == null || v.isEmpty) {
-                                  return 'Unesite lozinku';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
-                            SizedBox(
-                              height: 52,
-                              child: ElevatedButton(
-                                onPressed: _loading ? null : _onLogin,
-                                child: _loading
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
+                              const SizedBox(height: AppSpacing.md),
+
+                              TextFormField(
+                                controller: _pwCtrl,
+                                obscureText: _obscure,
+                                onFieldSubmitted: (_) => _onLogin(),
+                                decoration:
+                                    _decoration(
+                                      label: 'Lozinka',
+                                      icon: Icons.lock_rounded,
+                                    ).copyWith(
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscure
+                                              ? Icons.visibility_off
+                                              : Icons.visibility,
                                         ),
-                                      )
-                                    : const Text('Prijavi se'),
+                                        onPressed: () => setState(
+                                          () => _obscure = !_obscure,
+                                        ),
+                                      ),
+                                    ),
+                                validator: (v) => v == null || v.isEmpty
+                                    ? 'Unesite lozinku'
+                                    : null,
                               ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            SizedBox(
-                              height: 52,
-                              child: OutlinedButton(
-                                onPressed: _loading ? null : _onRegister,
-                                child: const Text('Registruj se'),
+
+                              const SizedBox(height: AppSpacing.xl),
+
+                              SizedBox(
+                                height: 52,
+                                child: ElevatedButton(
+                                  onPressed: _loading ? null : _onLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.roseDark,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: _loading
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Prijavi se',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                ),
                               ),
-                            ),
-                          ],
+
+                              const SizedBox(height: AppSpacing.md),
+
+                              SizedBox(
+                                height: 52,
+                                child: OutlinedButton(
+                                  onPressed: _loading ? null : _onRegister,
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                      color: AppColors.roseDark,
+                                      width: 1.4,
+                                    ),
+                                    foregroundColor: AppColors.roseDark,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.lg,
+                                      ),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Registruj se',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Nastavkom prihvatate Uslove korištenja i Politiku privatnosti',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    Text(
+                      'Nastavkom prihvatate Uslove korištenja i Politiku privatnosti',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: size.height * 0.04),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -358,36 +440,45 @@ class _LogoHeader extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 96,
-          height: 96,
+          width: 104,
+          height: 104,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 16,
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
             ],
           ),
           alignment: Alignment.center,
-          child: const FlutterLogo(size: 56),
+
+          child: const Icon(
+            Icons.child_care_rounded,
+            size: 56,
+            color: AppColors.roseDark,
+          ),
         ),
+
         const SizedBox(height: AppSpacing.lg),
+
         Text(
           'Dobrodošli u Nestly',
           style: Theme.of(
             context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
+
         const SizedBox(height: AppSpacing.sm),
+
         Text(
           'Digitalni saputnik za trudnoću i rani razvoj',
+          textAlign: TextAlign.center,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
         ),
       ],
     );

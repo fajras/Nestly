@@ -1,29 +1,8 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _jsonHeaders() => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
 
 class MealRecommendation {
   final int id;
@@ -31,98 +10,95 @@ class MealRecommendation {
   final int foodTypeId;
   final String foodName;
 
-  MealRecommendation({
+  const MealRecommendation({
     required this.id,
     required this.weekNumber,
     required this.foodTypeId,
     required this.foodName,
   });
+
+  factory MealRecommendation.fromJson(Map<String, dynamic> json) {
+    return MealRecommendation(
+      id: (json['id'] ?? json['Id']) as int,
+      weekNumber: (json['weekNumber'] ?? json['WeekNumber']) as int,
+      foodTypeId: (json['foodTypeId'] ?? json['FoodTypeId']) as int,
+      foodName: (json['foodName'] ?? json['FoodName'] ?? '').toString(),
+    );
+  }
 }
+
+/// =============================================================
+/// API SERVICE
+/// =============================================================
 
 class MealPlanApiService {
   final int babyId;
-  final String baseUrl;
 
-  MealPlanApiService({required this.babyId, String? baseUrl})
-    : baseUrl = baseUrl ?? _apiBase;
-
-  String get _planBase => '$baseUrl/api/MealPlan';
-  String get _recBase => '$baseUrl/api/MealPlan/Recommendation';
+  MealPlanApiService({required this.babyId});
 
   Future<List<MealRecommendation>> fetchRecommendations() async {
-    final uri = Uri.parse(_recBase);
-    final res = await http
-        .get(uri, headers: _jsonHeaders())
-        .timeout(const Duration(seconds: 10));
+    final res = await ApiClient.get('/api/MealPlan/Recommendation');
 
     if (res.statusCode != 200) {
-      throw Exception('Greška pri učitavanju preporuka (${res.statusCode}).');
+      throw Exception('Failed to load meal recommendations');
     }
 
-    final body = jsonDecode(res.body);
-    if (body is! List) return [];
+    final decoded = jsonDecode(res.body);
+    if (decoded is! List) return const [];
 
-    return body.map((raw) {
-      final m = raw as Map<String, dynamic>;
-      return MealRecommendation(
-        id: (m['id'] ?? m['Id']) as int,
-        weekNumber: (m['weekNumber'] ?? m['WeekNumber']) as int,
-        foodTypeId: (m['foodTypeId'] ?? m['FoodTypeId']) as int,
-        foodName: (m['foodName'] ?? m['FoodName'] ?? '').toString(),
-      );
-    }).toList()..sort((a, b) {
-      final c = a.weekNumber.compareTo(b.weekNumber);
-      if (c != 0) return c;
-      return a.foodName.compareTo(b.foodName);
+    final items = decoded
+        .cast<Map<String, dynamic>>()
+        .map(MealRecommendation.fromJson)
+        .toList();
+
+    items.sort((a, b) {
+      final byWeek = a.weekNumber.compareTo(b.weekNumber);
+      return byWeek != 0 ? byWeek : a.foodName.compareTo(b.foodName);
     });
+
+    return items;
   }
 
   Future<Map<int, int?>> fetchRatingsForBaby() async {
-    final uri = Uri.parse('$_planBase?BabyId=$babyId');
-
-    final res = await http
-        .get(uri, headers: _jsonHeaders())
-        .timeout(const Duration(seconds: 10));
+    final res = await ApiClient.get('/api/MealPlan?BabyId=$babyId');
 
     if (res.statusCode != 200) {
-      throw Exception('Greška pri učitavanju ocjena (${res.statusCode}).');
+      throw Exception('Failed to load ratings');
     }
 
-    final body = jsonDecode(res.body);
-    if (body is! List) return {};
+    final decoded = jsonDecode(res.body);
+    if (decoded is! List) return const {};
 
     final map = <int, int?>{};
-    for (final raw in body) {
-      final m = raw as Map<String, dynamic>;
-      final foodTypeId = (m['foodTypeId'] ?? m['FoodTypeId']) as int;
-      final ratingDynamic = m['rating'] ?? m['Rating'];
-      final rating = ratingDynamic == null
-          ? null
-          : int.tryParse('$ratingDynamic');
-      map[foodTypeId] = rating;
+    for (final raw in decoded.cast<Map<String, dynamic>>()) {
+      final foodTypeId = raw['foodTypeId'] as int;
+      final rating = raw['rating'];
+      map[foodTypeId] = rating == null ? null : int.tryParse(rating.toString());
     }
+
     return map;
   }
 
   Future<void> rateFood({required int foodTypeId, required int rating}) async {
-    final uri = Uri.parse(_planBase);
-
-    final body = jsonEncode({
-      'babyId': babyId,
-      'foodTypeId': foodTypeId,
-      'rating': rating,
-      'triedAt': DateTime.now().toIso8601String(),
-    });
-
-    final res = await http
-        .post(uri, headers: _jsonHeaders(), body: body)
-        .timeout(const Duration(seconds: 10));
+    final res = await ApiClient.post(
+      '/api/MealPlan',
+      body: {
+        'babyId': babyId,
+        'foodTypeId': foodTypeId,
+        'rating': rating,
+        'triedAt': DateTime.now().toIso8601String(),
+      },
+    );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Greška pri spremanju ocjene (${res.statusCode}).');
+      throw Exception('Failed to save rating');
     }
   }
 }
+
+/// =============================================================
+/// SCREEN
+/// =============================================================
 
 class MealRecommendationScreen extends StatefulWidget {
   const MealRecommendationScreen({super.key, required this.babyId});
@@ -141,7 +117,7 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
   bool _saving = false;
   String? _error;
 
-  List<MealRecommendation> _items = [];
+  List<MealRecommendation> _items = const [];
   Map<int, int?> _ratings = {};
   final Map<int, int> _dirtyRatings = {};
 
@@ -159,12 +135,16 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
     });
 
     try {
-      final recs = await _service.fetchRecommendations();
-      final ratings = await _service.fetchRatingsForBaby();
+      final results = await Future.wait([
+        _service.fetchRecommendations(),
+        _service.fetchRatingsForBaby(),
+      ]);
+
       if (!mounted) return;
+
       setState(() {
-        _items = recs;
-        _ratings = ratings;
+        _items = results[0] as List<MealRecommendation>;
+        _ratings = results[1] as Map<int, int?>;
         _dirtyRatings.clear();
         _loading = false;
       });
@@ -177,12 +157,10 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
     }
   }
 
-  int? _getRatingForFood(int foodTypeId) => _ratings[foodTypeId];
-
-  void _onChangeRating(int foodTypeId, int newRating) {
+  void _onRatingChanged(int foodTypeId, int rating) {
     setState(() {
-      _ratings[foodTypeId] = newRating;
-      _dirtyRatings[foodTypeId] = newRating;
+      _ratings[foodTypeId] = rating;
+      _dirtyRatings[foodTypeId] = rating;
     });
   }
 
@@ -192,9 +170,7 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       return;
     }
 
-    setState(() {
-      _saving = true;
-    });
+    setState(() => _saving = true);
 
     try {
       for (final entry in _dirtyRatings.entries) {
@@ -202,6 +178,7 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       }
 
       if (!mounted) return;
+
       setState(() {
         _dirtyRatings.clear();
         _saving = false;
@@ -210,9 +187,7 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       NestlyToast.success(context, 'Ocjene su uspješno sačuvane.');
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _saving = false;
-      });
+      setState(() => _saving = false);
       NestlyToast.error(context, 'Greška pri spremanju ocjena: $e');
     }
   }
@@ -260,7 +235,6 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
             child: ElevatedButton(
               onPressed: !_saving && hasChanges ? _saveChanges : null,
               style: ElevatedButton.styleFrom(
-                foregroundColor: AppColors.card,
                 backgroundColor: AppColors.roseDark,
                 disabledBackgroundColor: AppColors.roseDark.withOpacity(0.35),
                 shape: RoundedRectangleBorder(
@@ -288,20 +262,17 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.xl),
-        children: [
-          const SizedBox(height: AppSpacing.lg),
-          ...List.generate(
-            4,
-            (_) => Container(
-              height: 64,
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
+        children: List.generate(
+          4,
+          (_) => Container(
+            height: 64,
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
           ),
-        ],
+        ),
       );
     }
 
@@ -310,7 +281,6 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.xl),
         children: [
-          const SizedBox(height: AppSpacing.lg),
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
@@ -335,7 +305,6 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.xl),
         children: [
-          const SizedBox(height: AppSpacing.lg),
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
@@ -354,27 +323,24 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       );
     }
 
-    final items = _items;
     final children = <Widget>[];
     int? currentWeek;
 
-    for (final rec in items) {
+    for (final rec in _items) {
       if (currentWeek != rec.weekNumber) {
         currentWeek = rec.weekNumber;
         children.add(const SizedBox(height: AppSpacing.lg));
         children.add(_WeekHeader(weekNumber: rec.weekNumber));
-        children.add(const SizedBox(height: AppSpacing.sm));
       }
-
-      final rating = _getRatingForFood(rec.foodTypeId);
 
       children.add(
         _FoodRow(
           recommendation: rec,
-          rating: rating,
-          onRatingChanged: (val) => _onChangeRating(rec.foodTypeId, val),
+          rating: _ratings[rec.foodTypeId],
+          onRatingChanged: (v) => _onRatingChanged(rec.foodTypeId, v),
         ),
       );
+
       children.add(
         Divider(height: 1, color: AppColors.babyPink.withOpacity(0.25)),
       );
@@ -382,20 +348,15 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        AppSpacing.xl,
-        AppSpacing.xl,
-        AppSpacing.xl,
-      ),
-      children: [
-        const SizedBox(height: AppSpacing.lg),
-        ...children,
-        const SizedBox(height: 80),
-      ],
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      children: [...children, const SizedBox(height: 80)],
     );
   }
 }
+
+/// =============================================================
+/// UI COMPONENTS
+/// =============================================================
 
 class _WeekHeader extends StatelessWidget {
   const _WeekHeader({required this.weekNumber});
@@ -420,7 +381,7 @@ class _WeekHeader extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '${weekNumber}. sedmica',
+            '$weekNumber. sedmica',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: AppColors.roseDark,
               fontWeight: FontWeight.w700,
@@ -445,7 +406,7 @@ class _FoodRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentRating = rating ?? 0;
+    final current = rating ?? 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -477,9 +438,7 @@ class _FoodRow extends StatelessWidget {
                 color: AppColors.roseDark,
               ),
             ),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Text(
                 recommendation.foodName,
@@ -490,14 +449,12 @@ class _FoodRow extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(width: 8),
-
             Row(
               mainAxisSize: MainAxisSize.min,
-              children: List.generate(5, (index) {
-                final value = index + 1;
-                final isFilled = value <= currentRating;
+              children: List.generate(5, (i) {
+                final value = i + 1;
+                final filled = value <= current;
 
                 return GestureDetector(
                   onTap: () => onRatingChanged(value),
@@ -506,7 +463,7 @@ class _FoodRow extends StatelessWidget {
                     child: Icon(
                       Icons.favorite_rounded,
                       size: 20,
-                      color: isFilled
+                      color: filled
                           ? AppColors.roseDark
                           : AppColors.roseDark.withOpacity(0.20),
                     ),

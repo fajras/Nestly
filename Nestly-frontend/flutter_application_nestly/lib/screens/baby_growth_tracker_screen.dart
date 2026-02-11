@@ -1,15 +1,13 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
     show NestlyToast;
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart'
+    show ApiClient;
 import 'package:flutter_application_nestly/main.dart';
 
+/* ==================== MODELS ==================== */
 class BabyGrowthEntry {
   final int id;
   final int babyId;
@@ -18,7 +16,7 @@ class BabyGrowthEntry {
   final double? heightCm;
   final double? headCircumferenceCm;
 
-  BabyGrowthEntry({
+  const BabyGrowthEntry({
     required this.id,
     required this.babyId,
     required this.weekNumber,
@@ -46,7 +44,7 @@ class CreateBabyGrowthRequest {
   final double? heightCm;
   final double? headCircumferenceCm;
 
-  CreateBabyGrowthRequest({
+  const CreateBabyGrowthRequest({
     required this.babyId,
     required this.weekNumber,
     this.weightKg,
@@ -68,7 +66,7 @@ class BabyGrowthPatchRequest {
   final double? heightCm;
   final double? headCircumferenceCm;
 
-  BabyGrowthPatchRequest({
+  const BabyGrowthPatchRequest({
     this.weightKg,
     this.heightCm,
     this.headCircumferenceCm,
@@ -81,85 +79,57 @@ class BabyGrowthPatchRequest {
   };
 }
 
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers([String? token]) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  if (token != null) 'Authorization': 'Bearer $token',
-};
-
 class BabyGrowthApiService {
-  String get _baseUrl => '$_apiBase/api/BabyGrowth';
+  static const String _basePath = '/api/BabyGrowth';
 
-  Future<List<BabyGrowthEntry>> getForBaby({
-    required int babyId,
-    String? token,
-  }) async {
-    final uri = Uri.parse('$_baseUrl?BabyId=$babyId');
-    final resp = await http.get(uri, headers: _headers(token));
+  static final Map<int, List<BabyGrowthEntry>> _cache = {};
+
+  Future<List<BabyGrowthEntry>> getForBaby({required int babyId}) async {
+    if (_cache.containsKey(babyId)) {
+      return _cache[babyId]!;
+    }
+
+    final resp = await ApiClient.get('$_basePath?BabyId=$babyId');
 
     if (resp.statusCode != 200) {
       throw Exception('Failed to load baby growth data');
     }
 
-    final List<dynamic> data = jsonDecode(resp.body) as List<dynamic>;
-    return data
-        .map((e) => BabyGrowthEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final List<dynamic> data = jsonDecode(resp.body);
+    final list = data.map((e) => BabyGrowthEntry.fromJson(e)).toList()
+      ..sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
+
+    _cache[babyId] = list;
+    return list;
   }
 
   Future<BabyGrowthEntry> create({
     required CreateBabyGrowthRequest request,
-    String? token,
   }) async {
-    final uri = Uri.parse(_baseUrl);
-    final resp = await http.post(
-      uri,
-      headers: _headers(token),
-      body: jsonEncode(request.toJson()),
-    );
+    final resp = await ApiClient.post(_basePath, body: request.toJson());
 
     if (resp.statusCode != 201 && resp.statusCode != 200) {
       throw Exception('Failed to create baby growth entry');
     }
 
-    final Map<String, dynamic> data =
-        jsonDecode(resp.body) as Map<String, dynamic>;
-    return BabyGrowthEntry.fromJson(data);
+    return BabyGrowthEntry.fromJson(jsonDecode(resp.body));
   }
 
   Future<BabyGrowthEntry> patch({
     required int id,
     required BabyGrowthPatchRequest patch,
-    String? token,
   }) async {
-    final uri = Uri.parse('$_baseUrl/$id');
-    final resp = await http.patch(
-      uri,
-      headers: _headers(token),
-      body: jsonEncode(patch.toJson()),
-    );
+    final resp = await ApiClient.patch('$_basePath/$id', body: patch.toJson());
 
     if (resp.statusCode != 200) {
       throw Exception('Failed to update baby growth entry');
     }
 
-    final Map<String, dynamic> data =
-        jsonDecode(resp.body) as Map<String, dynamic>;
-    return BabyGrowthEntry.fromJson(data);
+    return BabyGrowthEntry.fromJson(jsonDecode(resp.body));
   }
 }
+
+/* ==================== SCREEN ==================== */
 
 class BabyGrowthTrackerScreen extends StatefulWidget {
   final int babyId;
@@ -179,14 +149,14 @@ class BabyGrowthTrackerScreen extends StatefulWidget {
 class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   final _service = BabyGrowthApiService();
 
+  final _weightCtrl = TextEditingController();
+  final _heightCtrl = TextEditingController();
+  final _headCtrl = TextEditingController();
+
   List<BabyGrowthEntry> _entries = [];
   BabyGrowthEntry? _selected;
   bool _isNewEntry = false;
   bool _isLoading = true;
-
-  final _weightCtrl = TextEditingController();
-  final _heightCtrl = TextEditingController();
-  final _headCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -205,44 +175,39 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   Future<void> _loadData() async {
     try {
       final list = await _service.getForBaby(babyId: widget.babyId);
-      list.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
       setState(() {
         _entries = list;
-        _selected = _entries.isNotEmpty ? _entries.last : null;
-        _isNewEntry = false;
+        _selected = list.isNotEmpty ? list.last : null;
         _isLoading = false;
       });
-      _fillFormFromSelected();
+      _fillForm();
     } catch (e) {
       setState(() => _isLoading = false);
-      NestlyToast.error(context, 'Greška pri učitavanju podataka: $e');
+      NestlyToast.error(context, 'Greška pri učitavanju podataka');
     }
   }
 
-  int get _maxWeek => _entries.isEmpty
-      ? 1
-      : _entries.map((e) => e.weekNumber).reduce((a, b) => a > b ? a : b);
+  int get _maxWeek => _entries.isEmpty ? 1 : _entries.last.weekNumber;
 
-  BabyGrowthEntry? get _latestEntry => _entries.isEmpty
-      ? null
-      : _entries.reduce((a, b) => a.weekNumber > b.weekNumber ? a : b);
+  bool get _canEdit =>
+      _isNewEntry ||
+      (_selected != null &&
+          _entries.isNotEmpty &&
+          _selected!.id == _entries.last.id);
 
-  bool get _isEditingLatest =>
-      !_isNewEntry &&
-      _selected != null &&
-      _latestEntry != null &&
-      _selected!.id == _latestEntry!.id;
+  void _fillForm() {
+    if (_selected == null) return;
+    _weightCtrl.text = _selected!.weightKg?.toStringAsFixed(1) ?? '';
+    _heightCtrl.text = _selected!.heightCm?.toStringAsFixed(1) ?? '';
+    _headCtrl.text = _selected!.headCircumferenceCm?.toStringAsFixed(1) ?? '';
+  }
 
-  void _startNewWeekEntry() {
-    final nextWeek = _entries.isEmpty ? 1 : _maxWeek + 1;
+  void _startNewWeek() {
     setState(() {
       _selected = BabyGrowthEntry(
         id: 0,
         babyId: widget.babyId,
-        weekNumber: nextWeek,
-        weightKg: null,
-        heightCm: null,
-        headCircumferenceCm: null,
+        weekNumber: _maxWeek + 1,
       );
       _isNewEntry = true;
     });
@@ -251,47 +216,12 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
     _headCtrl.clear();
   }
 
-  void _fillFormFromSelected() {
+  Future<void> _save() async {
     if (_selected == null) return;
 
-    _weightCtrl.text = _selected!.weightKg != null
-        ? _selected!.weightKg!.toStringAsFixed(1)
-        : '';
-    _heightCtrl.text = _selected!.heightCm != null
-        ? _selected!.heightCm!.toStringAsFixed(1)
-        : '';
-    _headCtrl.text = _selected!.headCircumferenceCm != null
-        ? _selected!.headCircumferenceCm!.toStringAsFixed(1)
-        : '';
-  }
-
-  void _onWeekSelectedFromChart(int week) {
-    final entry = _entries.firstWhere(
-      (e) => e.weekNumber == week,
-      orElse: () =>
-          _selected ??
-          _latestEntry ??
-          (_entries.isNotEmpty ? _entries.last : _entries.first),
-    );
-    setState(() {
-      _selected = entry;
-      _isNewEntry = false;
-    });
-    _fillFormFromSelected();
-  }
-
-  Future<void> _onSavePressed() async {
-    final weight = _weightCtrl.text.trim().isEmpty
-        ? null
-        : double.tryParse(_weightCtrl.text.trim());
-    final height = _heightCtrl.text.trim().isEmpty
-        ? null
-        : double.tryParse(_heightCtrl.text.trim());
-    final head = _headCtrl.text.trim().isEmpty
-        ? null
-        : double.tryParse(_headCtrl.text.trim());
-
-    if (_selected == null) return;
+    final weight = double.tryParse(_weightCtrl.text);
+    final height = double.tryParse(_heightCtrl.text);
+    final head = double.tryParse(_headCtrl.text);
 
     setState(() => _isLoading = true);
 
@@ -306,14 +236,10 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
             headCircumferenceCm: head,
           ),
         );
-        setState(() {
-          _entries.add(created);
-          _entries.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
-          _selected = created;
-          _isNewEntry = false;
-        });
-        NestlyToast.success(context, 'Podaci o rastu su uspješno sačuvani.');
-      } else if (_isEditingLatest) {
+        _entries.add(created);
+        _selected = created;
+        _isNewEntry = false;
+      } else {
         final updated = await _service.patch(
           id: _selected!.id,
           patch: BabyGrowthPatchRequest(
@@ -323,30 +249,22 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
           ),
         );
         final idx = _entries.indexWhere((e) => e.id == updated.id);
-        if (idx != -1) {
-          setState(() {
-            _entries[idx] = updated;
-            _selected = updated;
-          });
-        }
-        NestlyToast.success(context, 'Posljednji unos je uspješno ažuriran.');
-      } else {
-        NestlyToast.info(
-          context,
-          'Možete uređivati samo posljednji uneseni tjedan.',
-        );
+        if (idx != -1) _entries[idx] = updated;
+        _selected = updated;
       }
-    } catch (e) {
-      NestlyToast.error(context, 'Greška pri spremanju podataka: $e');
-    } finally {
-      setState(() => _isLoading = false);
+      BabyGrowthApiService._cache.remove(widget.babyId);
+
+      NestlyToast.success(context, 'Podaci su sačuvani');
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri spremanju');
     }
+
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedWeek =
-        _selected?.weekNumber ?? (_entries.isEmpty ? 1 : _maxWeek);
+    final selectedWeek = _selected?.weekNumber ?? 1;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -356,12 +274,12 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           color: AppColors.seed,
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
         title: Text(
-          "Praćenje rasta",
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          'Praćenje rasta',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
             color: AppColors.seed,
           ),
@@ -369,297 +287,165 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildChartCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Row(
                     children: [
                       Text(
-                        "Sedmica $selectedWeek",
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.seed,
-                            ),
+                        'Sedmica $selectedWeek',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.seed,
+                        ),
                       ),
                       const Spacer(),
                       TextButton.icon(
-                        onPressed: _startNewWeekEntry,
+                        onPressed: _startNewWeek,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Nova sedmica'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.seed,
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
                         ),
-                        icon: Icon(
-                          Icons.add_circle_outline,
-                          color: AppColors.seed,
-                        ),
-                        label: const Text("Nova sedmica"),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: _buildFormCard(
-                      canEdit: _isNewEntry || _isEditingLatest,
-                    ),
-                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildFormCard(),
                 ],
               ),
             ),
     );
   }
+
+  /* ==================== UI ==================== */
 
   Widget _buildChartCard() {
-    if (_entries.isEmpty) {
-      return Container(
-        height: 600,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: Colors.white,
-        ),
-        child: Center(
-          child: Text(
-            "Još nema podataka o rastu.\nDodajte prvi unos za sedmicu 1.",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-          ),
-        ),
-      );
-    }
-
-    final maxWeek = _maxWeek.toDouble();
-    final weightSpots = _entries
-        .where((e) => e.weightKg != null)
-        .map((e) => FlSpot(e.weekNumber.toDouble(), e.weightKg!))
-        .toList();
-    final heightSpots = _entries
-        .where((e) => e.heightCm != null)
-        .map((e) => FlSpot(e.weekNumber.toDouble(), e.heightCm!))
-        .toList();
-    final headSpots = _entries
-        .where((e) => e.headCircumferenceCm != null)
-        .map((e) => FlSpot(e.weekNumber.toDouble(), e.headCircumferenceCm!))
-        .toList();
-
-    return Container(
-      height: 260,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _legendDot(color: AppColors.babyBlue, label: "Težina"),
-              const SizedBox(width: 12),
-              _legendDot(color: AppColors.seed, label: "Dužina"),
-              const SizedBox(width: 12),
-              _legendDot(color: AppColors.babyPink, label: "Obim glave"),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                minX: 1,
-                maxX: maxWeek,
-                lineTouchData: LineTouchData(
-                  touchCallback: (event, response) {
-                    if (!event.isInterestedForInteractions ||
-                        response == null ||
-                        response.lineBarSpots == null ||
-                        response.lineBarSpots!.isEmpty) {
-                      return;
-                    }
-                    final spot = response.lineBarSpots!.first;
-                    _onWeekSelectedFromChart(spot.x.round());
-                  },
-                ),
-                gridData: FlGridData(show: true),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 32,
-                      getTitlesWidget: (value, meta) => Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
-                        ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: SizedBox(
+          height: 240,
+          child: _entries.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Još nema podataka.\nDodajte prvi unos.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : LineChart(
+                  LineChartData(
+                    minX: 1,
+                    maxX: _maxWeek.toDouble(),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _entries
+                            .where((e) => e.weightKg != null)
+                            .map(
+                              (e) =>
+                                  FlSpot(e.weekNumber.toDouble(), e.weightKg!),
+                            )
+                            .toList(),
+                        color: AppColors.babyBlue,
+                        isCurved: true,
+                        barWidth: 3,
                       ),
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) => Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
-                        ),
+                      LineChartBarData(
+                        spots: _entries
+                            .where((e) => e.heightCm != null)
+                            .map(
+                              (e) =>
+                                  FlSpot(e.weekNumber.toDouble(), e.heightCm!),
+                            )
+                            .toList(),
+                        color: AppColors.seed,
+                        isCurved: true,
+                        barWidth: 3,
                       ),
-                    ),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                      LineChartBarData(
+                        spots: _entries
+                            .where((e) => e.headCircumferenceCm != null)
+                            .map(
+                              (e) => FlSpot(
+                                e.weekNumber.toDouble(),
+                                e.headCircumferenceCm!,
+                              ),
+                            )
+                            .toList(),
+                        color: AppColors.babyPink,
+                        isCurved: true,
+                        barWidth: 3,
+                      ),
+                    ],
                   ),
                 ),
-                borderData: FlBorderData(show: true),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: weightSpots,
-                    color: AppColors.babyBlue,
-                    isCurved: true,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                  ),
-                  LineChartBarData(
-                    spots: heightSpots,
-                    color: AppColors.seed,
-                    isCurved: true,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                  ),
-                  LineChartBarData(
-                    spots: headSpots,
-                    color: AppColors.babyPink,
-                    isCurved: true,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "sedmica",
-            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _legendDot({required Color color, required String label}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: AppColors.textPrimary),
-        ),
-      ],
+  Widget _buildFormCard() {
+    InputDecoration deco(String label, String suffix) => InputDecoration(
+      labelText: label,
+      suffixText: suffix,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
     );
-  }
 
-  Widget _buildFormCard({required bool canEdit}) {
-    InputDecoration inputDecoration(String label, String suffix) =>
-        InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          suffixText: suffix,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: AppColors.babyBlue.withOpacity(0.4)),
-          ),
-        );
-
-    return SingleChildScrollView(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.bg.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(22),
-        ),
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
             TextField(
               controller: _weightCtrl,
-              enabled: canEdit,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: inputDecoration("Težina", "kg"),
+              enabled: _canEdit,
+              decoration: deco('Težina', 'kg'),
             ),
             const SizedBox(height: 12),
-
-            const SizedBox(height: 4),
             TextField(
               controller: _heightCtrl,
-              enabled: canEdit,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: inputDecoration("Dužina", "cm"),
+              enabled: _canEdit,
+              decoration: deco('Dužina', 'cm'),
             ),
             const SizedBox(height: 12),
-
-            const SizedBox(height: 4),
             TextField(
               controller: _headCtrl,
-              enabled: canEdit,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: inputDecoration("Obim glave", "cm"),
+              enabled: _canEdit,
+              decoration: deco('Obim glave', 'cm'),
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: canEdit ? _onSavePressed : null,
+                onPressed: _canEdit ? _save : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.seed,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
                 ),
                 child: const Text(
-                  "Spremi",
+                  'Spremi',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
             ),
-            if (!canEdit && _selected != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  "Možete uređivati samo posljednji unos.",
-                  style: TextStyle(fontSize: 12, color: Colors.red.shade400),
-                ),
-              ),
           ],
         ),
       ),

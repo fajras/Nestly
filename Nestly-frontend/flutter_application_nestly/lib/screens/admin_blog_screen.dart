@@ -1,34 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _authHeader(String token) => {
-  'Authorization': 'Bearer $token',
-};
-
-Map<String, String> _jsonHeaders(String token) => {
-  'Authorization': 'Bearer $token',
-  'Content-Type': 'application/json',
-};
 
 /// =======================
 /// MODELS
@@ -76,11 +53,8 @@ class BlogCategoryRow {
 /// =======================
 
 class BlogAdminService {
-  Future<List<BlogPostRow>> getBlogs(String token) async {
-    final res = await http.get(
-      Uri.parse('$_apiBase/api/blogpost'),
-      headers: _authHeader(token),
-    );
+  Future<List<BlogPostRow>> getBlogs() async {
+    final res = await ApiClient.get('/api/blogpost');
 
     if (res.statusCode != 200) {
       throw Exception(res.body);
@@ -90,11 +64,8 @@ class BlogAdminService {
     return data.map((e) => BlogPostRow.fromJson(e)).toList();
   }
 
-  Future<List<BlogCategoryRow>> getCategories(String token) async {
-    final res = await http.get(
-      Uri.parse('$_apiBase/api/blogpost/category'),
-      headers: _authHeader(token),
-    );
+  Future<List<BlogCategoryRow>> getCategories() async {
+    final res = await ApiClient.get('/api/blogpost/category');
 
     if (res.statusCode != 200) {
       throw Exception(res.body);
@@ -104,22 +75,19 @@ class BlogAdminService {
     return data.map((e) => BlogCategoryRow.fromJson(e)).toList();
   }
 
-  /// 1️⃣ Create blog WITHOUT image
   Future<int> createBlogWithoutImage({
-    required String token,
     required String title,
     required String content,
     required List<int> categoryIds,
   }) async {
-    final res = await http.post(
-      Uri.parse('$_apiBase/api/blogpost'),
-      headers: _jsonHeaders(token),
-      body: jsonEncode({
+    final res = await ApiClient.post(
+      '/api/blogpost',
+      body: {
         'title': title,
         'content': content,
         'authorId': 1,
         'categoryIds': categoryIds,
-      }),
+      },
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
@@ -131,51 +99,14 @@ class BlogAdminService {
   }
 
   Future<void> uploadBlogImage({
-    required String token,
     required int blogId,
     required File file,
   }) async {
-    Exception? lastError;
-
-    for (int attempt = 0; attempt < 3; attempt++) {
-      try {
-        final req = http.MultipartRequest(
-          'POST',
-          Uri.parse('$_apiBase/api/blogmedia/upload/$blogId'),
-        );
-
-        req.headers.addAll(_authHeader(token));
-
-        req.files.add(
-          await http.MultipartFile.fromPath(
-            'file',
-            file.path,
-            filename: file.path.split('/').last,
-          ),
-        );
-
-        final res = await req.send();
-
-        if (res.statusCode == 200 || res.statusCode == 201) {
-          return;
-        }
-
-        final body = await res.stream.bytesToString();
-        throw Exception(body);
-      } catch (e) {
-        lastError = Exception(e.toString());
-        await Future.delayed(const Duration(milliseconds: 300));
-      }
-    }
-
-    throw lastError ?? Exception('Upload failed');
+    await ApiClient.multipart('/api/blogmedia/upload/$blogId', file: file);
   }
 
-  Future<void> deleteBlog(String token, int id) async {
-    final res = await http.delete(
-      Uri.parse('$_apiBase/api/blogpost/$id'),
-      headers: _authHeader(token),
-    );
+  Future<void> deleteBlog(int id) async {
+    final res = await ApiClient.delete('/api/blogpost/$id');
 
     if (res.statusCode != 204) {
       throw Exception(res.body);
@@ -188,8 +119,7 @@ class BlogAdminService {
 /// =======================
 
 class DoctorAdminBlogScreen extends StatefulWidget {
-  final String token;
-  const DoctorAdminBlogScreen({super.key, required this.token});
+  const DoctorAdminBlogScreen({super.key});
 
   @override
   State<DoctorAdminBlogScreen> createState() => _DoctorAdminBlogScreenState();
@@ -210,7 +140,7 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
     setState(() => _loading = true);
 
     try {
-      final data = await _service.getBlogs(widget.token);
+      final data = await _service.getBlogs();
       if (!mounted) return;
       setState(() => _blogs = data);
     } catch (_) {
@@ -227,7 +157,7 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _BlogEditorSheet(token: widget.token, onSaved: _load),
+      builder: (_) => _BlogEditorSheet(onSaved: _load),
     );
   }
 
@@ -284,7 +214,7 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () async {
-                      await _service.deleteBlog(widget.token, b.id);
+                      await _service.deleteBlog(b.id);
                       _load();
                     },
                   ),
@@ -303,10 +233,9 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
 /// =======================
 
 class _BlogEditorSheet extends StatefulWidget {
-  final String token;
   final VoidCallback onSaved;
 
-  const _BlogEditorSheet({required this.token, required this.onSaved});
+  const _BlogEditorSheet({required this.onSaved});
 
   @override
   State<_BlogEditorSheet> createState() => _BlogEditorSheetState();
@@ -332,7 +261,7 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
 
   Future<void> _loadCategories() async {
     try {
-      _categories = await _service.getCategories(widget.token);
+      _categories = await _service.getCategories();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -358,18 +287,13 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
 
     try {
       final blogId = await _service.createBlogWithoutImage(
-        token: widget.token,
         title: _title.text,
         content: _content.text,
         categoryIds: _selectedCategoryIds.toList(),
       );
       await Future.delayed(const Duration(milliseconds: 400));
       if (_image != null) {
-        await _service.uploadBlogImage(
-          token: widget.token,
-          blogId: blogId,
-          file: _image!,
-        );
+        await _service.uploadBlogImage(blogId: blogId, file: _image!);
       }
 
       if (!mounted) return;

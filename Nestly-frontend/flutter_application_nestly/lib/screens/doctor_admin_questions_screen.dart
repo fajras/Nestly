@@ -1,29 +1,8 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers(String token) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer $token',
-};
+import 'package:flutter_application_nestly/network/api_client.dart';
 
 /// =======================
 /// MODELI
@@ -55,13 +34,9 @@ class QaQuestionRow {
 /// =======================
 /// SERVICE
 /// =======================
-
 class QaAdminService {
-  Future<List<QaQuestionRow>> getUnansweredQuestions(String token) async {
-    final res = await http.get(
-      Uri.parse('$_apiBase/api/qaquestion'),
-      headers: _headers(token),
-    );
+  Future<List<QaQuestionRow>> getUnansweredQuestions() async {
+    final res = await ApiClient.get('/api/qaquestion');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load questions');
@@ -76,19 +51,17 @@ class QaAdminService {
   }
 
   Future<void> answerQuestion({
-    required String token,
     required int questionId,
     required String answerText,
     required int answeredById,
   }) async {
-    final res = await http.post(
-      Uri.parse('$_apiBase/api/qaanswer'),
-      headers: _headers(token),
-      body: jsonEncode({
+    final res = await ApiClient.post(
+      '/api/qaanswer',
+      body: {
         'questionId': questionId,
         'answerText': answerText,
         'answeredById': answeredById,
-      }),
+      },
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
@@ -102,8 +75,7 @@ class QaAdminService {
 /// =======================
 
 class DoctorAdminQuestionsScreen extends StatefulWidget {
-  final String token;
-  const DoctorAdminQuestionsScreen({super.key, required this.token});
+  const DoctorAdminQuestionsScreen({super.key});
 
   @override
   State<DoctorAdminQuestionsScreen> createState() =>
@@ -129,7 +101,7 @@ class _DoctorAdminQuestionsScreenState
     setState(() => _loading = true);
 
     try {
-      final data = await _service.getUnansweredQuestions(widget.token);
+      final data = await _service.getUnansweredQuestions();
 
       setState(() {
         _questions = data;
@@ -203,7 +175,7 @@ class _DoctorAdminQuestionsScreenState
                   itemBuilder: (context, i) {
                     return _QuestionCard(
                       question: _filtered[i],
-                      token: widget.token,
+
                       onAnswered: _load,
                     );
                   },
@@ -220,14 +192,10 @@ class _DoctorAdminQuestionsScreenState
 
 class _QuestionCard extends StatefulWidget {
   final QaQuestionRow question;
-  final String token;
+
   final VoidCallback onAnswered;
 
-  const _QuestionCard({
-    required this.question,
-    required this.token,
-    required this.onAnswered,
-  });
+  const _QuestionCard({required this.question, required this.onAnswered});
 
   @override
   State<_QuestionCard> createState() => _QuestionCardState();
@@ -246,7 +214,6 @@ class _QuestionCardState extends State<_QuestionCard> {
 
     try {
       await _service.answerQuestion(
-        token: widget.token,
         questionId: widget.question.id,
         answerText: _controller.text,
         answeredById: 1,

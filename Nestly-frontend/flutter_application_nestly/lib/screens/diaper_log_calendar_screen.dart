@@ -1,29 +1,9 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers() => const {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
 
 class DiaperLog {
   final int id;
@@ -53,19 +33,17 @@ class DiaperLogApiService {
 
   DiaperLogApiService(this.babyId);
 
-  String get _base => '$_apiBase/api/DiaperLog';
-
   Future<List<DiaperLog>> getForRange({
     required DateTime from,
     required DateTime to,
   }) async {
-    final uri = Uri.parse(
-      '$_base?BabyId=$babyId'
+    final res = await ApiClient.get(
+      '/api/DiaperLog'
+      '?BabyId=$babyId'
       '&DateFrom=${from.toIso8601String()}'
       '&DateTo=${to.toIso8601String()}',
     );
 
-    final res = await http.get(uri, headers: _headers());
     if (res.statusCode != 200) throw Exception();
 
     final List data = jsonDecode(res.body);
@@ -78,19 +56,17 @@ class DiaperLogApiService {
     required String state,
     String? notes,
   }) async {
-    final res = await http.post(
-      Uri.parse(_base),
-      headers: _headers(),
-      body: jsonEncode({
-        'babyId': babyId,
-        'changeDate': date.toIso8601String(),
-        'changeTime':
-            '${time.hour.toString().padLeft(2, '0')}:'
-            '${time.minute.toString().padLeft(2, '0')}:00',
-        'diaperState': state.toLowerCase(),
-        'notes': notes,
-      }),
-    );
+    final body = <String, dynamic>{
+      'babyId': babyId,
+      'changeDate': date.toIso8601String(),
+      'changeTime':
+          '${time.hour.toString().padLeft(2, '0')}:'
+          '${time.minute.toString().padLeft(2, '0')}:00',
+      'diaperState': state.toLowerCase(),
+      if (notes != null) 'notes': notes,
+    };
+
+    final res = await ApiClient.post('/api/DiaperLog', body: body);
 
     if (res.statusCode != 200 && res.statusCode != 201) {
       throw Exception('Neuspješno spremanje');
@@ -128,6 +104,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
     super.initState();
     _service = DiaperLogApiService(widget.babyId);
     _focusedDay = _dayOnly(DateTime.now());
+    _selectedDay = _focusedDay;
     _loadMonth(_focusedDay);
   }
 
@@ -145,10 +122,14 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
         to: _monthEnd(month),
       );
 
-      _logsByDay.clear();
-      for (final e in list) {
-        final key = _dayOnly(e.date);
-        _logsByDay.putIfAbsent(key, () => []).add(e);
+      if (mounted) {
+        setState(() {
+          _logsByDay.clear();
+          for (final e in list) {
+            final key = _dayOnly(e.date);
+            _logsByDay.putIfAbsent(key, () => []).add(e);
+          }
+        });
       }
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju');
@@ -172,7 +153,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
         date: _selectedDay!,
         time: _time,
         state: _state,
-        notes: _notesCtrl.text.trim().isEmpty ? '' : _notesCtrl.text.trim(),
+        notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       );
 
       _notesCtrl.clear();

@@ -1,31 +1,9 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
-    show NestlyToast;
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-import 'package:table_calendar/table_calendar.dart';
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  if (Platform.isIOS || Platform.isMacOS) return 'http://localhost:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers() => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
 
 class Therapy {
   final int id;
@@ -34,7 +12,7 @@ class Therapy {
   final DateTime start;
   final DateTime end;
 
-  Therapy({
+  const Therapy({
     required this.id,
     required this.name,
     required this.dose,
@@ -46,104 +24,100 @@ class Therapy {
     final d = DateTime(date.year, date.month, date.day);
     final s = DateTime(start.year, start.month, start.day);
     final e = DateTime(end.year, end.month, end.day);
+
     return (d.isAtSameMomentAs(s) || d.isAfter(s)) &&
         (d.isAtSameMomentAs(e) || d.isBefore(e));
   }
 }
 
-abstract class TherapyService {
-  Future<List<Therapy>> fetchTherapies();
-  Future<void> addTherapy({
-    required String name,
-    required String dose,
-    required DateTime start,
-    required DateTime end,
-  });
-}
+/// =============================================================
+/// API SERVICE
+/// =============================================================
 
-class MedicationPlanApiService implements TherapyService {
+class MedicationPlanApiService {
   final int userId;
-  final String baseUrl;
 
-  MedicationPlanApiService({required this.userId, String? baseUrl})
-    : baseUrl = baseUrl ?? _apiBase;
+  MedicationPlanApiService(this.userId);
 
-  String get _base => '$baseUrl/api/MedicationPlan';
-
-  @override
   Future<List<Therapy>> fetchTherapies() async {
-    final uri = Uri.parse('$_base?UserId=$userId');
-
-    final res = await http
-        .get(uri, headers: _headers())
-        .timeout(const Duration(seconds: 10));
+    final res = await ApiClient.get('/api/MedicationPlan?UserId=$userId');
 
     if (res.statusCode != 200) {
-      throw Exception('Greška pri učitavanju terapija (${res.statusCode}).');
+      throw Exception('Failed to load therapies');
     }
 
-    final body = jsonDecode(res.body);
-    if (body is! List) return [];
-
-    return body.map<Therapy>((raw) {
-      final map = raw as Map<String, dynamic>;
-
-      final id = (map['id'] ?? map['Id']) as int;
-      final medicineName = (map['medicineName'] ?? map['MedicineName'] ?? '')
-          .toString();
-      final dose = (map['dose'] ?? map['Dose'] ?? '').toString();
-
-      final startStr = (map['startDate'] ?? map['StartDate'])?.toString() ?? '';
-      final endStr = (map['endDate'] ?? map['EndDate'])?.toString() ?? '';
-
-      final start = DateTime.tryParse(startStr) ?? DateTime.now();
-      final end = DateTime.tryParse(endStr) ?? start;
-
+    final List data = jsonDecode(res.body);
+    return data.map((e) {
       return Therapy(
-        id: id,
-        name: medicineName,
-        dose: dose,
-        start: start,
-        end: end,
+        id: e['id'],
+        name: e['medicineName'],
+        dose: e['dose'],
+        start: DateTime.parse(e['startDate']),
+        end: DateTime.parse(e['endDate']),
       );
     }).toList();
   }
 
-  @override
-  Future<void> addTherapy({
+  Future<void> create({
     required String name,
     required String dose,
     required DateTime start,
     required DateTime end,
   }) async {
-    final uri = Uri.parse(_base);
+    final res = await ApiClient.post(
+      '/api/MedicationPlan',
+      body: {
+        'userId': userId,
+        'medicineName': name,
+        'dose': dose,
+        'startDate': start.toIso8601String(),
+        'endDate': end.toIso8601String(),
+      },
+    );
 
-    final body = jsonEncode({
-      'userId': userId,
-      'startDate': start.toIso8601String(),
-      'endDate': end.toIso8601String(),
-      'medicineName': name,
-      'dose': dose,
-    });
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception('Failed to create therapy');
+    }
+  }
 
-    final res = await http
-        .post(uri, headers: _headers(), body: body)
-        .timeout(const Duration(seconds: 10));
+  Future<void> update(
+    int id, {
+    String? name,
+    String? dose,
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    final res = await ApiClient.patch(
+      '/api/MedicationPlan/$id',
+      body: {
+        if (name != null) 'medicineName': name,
+        if (dose != null) 'dose': dose,
+        if (start != null) 'startDate': start.toIso8601String(),
+        if (end != null) 'endDate': end.toIso8601String(),
+      },
+    );
 
-    if (res.statusCode != 201 && res.statusCode != 200) {
-      throw Exception('Greška pri spremanju terapije (${res.statusCode}).');
+    if (res.statusCode != 200) {
+      throw Exception('Failed to update therapy');
+    }
+  }
+
+  Future<void> delete(int id) async {
+    final res = await ApiClient.delete('/api/MedicationPlan/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete therapy');
     }
   }
 }
 
-class TherapyCalendarScreen extends StatefulWidget {
-  const TherapyCalendarScreen({
-    super.key,
-    this.service,
-    required this.parentProfileId,
-  });
+/// =============================================================
+/// SCREEN
+/// =============================================================
 
-  final TherapyService? service;
+class TherapyCalendarScreen extends StatefulWidget {
+  const TherapyCalendarScreen({super.key, required this.parentProfileId});
+
   final int parentProfileId;
 
   @override
@@ -151,43 +125,35 @@ class TherapyCalendarScreen extends StatefulWidget {
 }
 
 class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
-  late final TherapyService _service;
+  late final MedicationPlanApiService _service;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<Therapy> _therapies = [];
+
   bool _loading = true;
-  String? _error;
+  List<Therapy> _therapies = [];
 
   @override
   void initState() {
     super.initState();
-    _service =
-        widget.service ??
-        MedicationPlanApiService(userId: widget.parentProfileId);
+    _service = MedicationPlanApiService(widget.parentProfileId);
     _load();
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
+    setState(() => _loading = true);
     try {
       _therapies = await _service.fetchTherapies();
-    } catch (e) {
-      _error = e.toString();
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri učitavanju terapija');
     }
-
-    if (mounted) {
-      setState(() => _loading = false);
-    }
+    if (mounted) setState(() => _loading = false);
   }
 
-  List<Therapy> _getTherapiesForDay(DateTime day) {
-    return _therapies.where((t) => t.contains(day)).toList();
-  }
+  List<Therapy> _forDay(DateTime day) =>
+      _therapies.where((t) => t.contains(day)).toList();
+
+  DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
   Widget build(BuildContext context) {
@@ -196,13 +162,7 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.roseDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: AppColors.roseDark),
         title: Text(
           'Terapija',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -214,134 +174,25 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Text(
-                  'Greška: $_error',
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
           : Column(
               children: [
-                _buildCalendar(),
-                _buildCalendarHint(),
+                NestlyCalendar(
+                  focusedDay: _focusedDay,
+                  selectedDay: _selectedDay,
+                  markerIcon: Icons.medication_rounded,
+                  eventLoader: (day) => _forDay(day),
+                  onDaySelected: (selected, focused) {
+                    setState(() {
+                      _selectedDay = _dayOnly(selected);
+                      _focusedDay = _dayOnly(focused);
+                    });
+                  },
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 Expanded(child: _buildDayDetails()),
               ],
             ),
-
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            0,
-            AppSpacing.xl,
-            AppSpacing.lg,
-          ),
-          child: SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => AddTherapyScreen(service: _service),
-                  ),
-                );
-                _load();
-              },
-              style: ElevatedButton.styleFrom(
-                foregroundColor: AppColors.card,
-                backgroundColor: AppColors.roseDark,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                ),
-                elevation: 0,
-                textStyle: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              icon: const Icon(Icons.add),
-              label: const Text('Dodaj terapiju'),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCalendar() {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: TableCalendar(
-            focusedDay: _focusedDay,
-            firstDay: DateTime.utc(2024, 1, 1),
-            lastDay: DateTime.utc(2026, 12, 31),
-            locale: 'bs_BA',
-            selectedDayPredicate: (day) =>
-                _selectedDay != null &&
-                day.year == _selectedDay!.year &&
-                day.month == _selectedDay!.month &&
-                day.day == _selectedDay!.day,
-            calendarFormat: CalendarFormat.month,
-            headerStyle: const HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-              titleTextStyle: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.roseDark,
-              ),
-              leftChevronIcon: const Icon(
-                Icons.chevron_left_rounded,
-                color: AppColors.roseDark,
-              ),
-              rightChevronIcon: const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.roseDark,
-              ),
-            ),
-            calendarStyle: CalendarStyle(
-              outsideDaysVisible: false,
-              defaultDecoration: const BoxDecoration(shape: BoxShape.rectangle),
-              selectedDecoration: BoxDecoration(
-                color: AppColors.seed.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              todayDecoration: BoxDecoration(
-                color: AppColors.seed.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            eventLoader: (day) => _getTherapiesForDay(day),
-            onDaySelected: (selected, focused) {
-              setState(() {
-                _selectedDay = selected;
-                _focusedDay = focused;
-              });
-            },
-            calendarBuilders: CalendarBuilders(
-              markerBuilder: (context, date, events) {
-                if (events.isEmpty) return null;
-                return const Padding(
-                  padding: EdgeInsets.only(top: 30),
-                  child: Icon(
-                    Icons.medication_outlined,
-                    color: AppColors.seed,
-                    size: 18,
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
+      bottomNavigationBar: _buildAddButton(),
     );
   }
 
@@ -349,237 +200,190 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
     if (_selectedDay == null) {
       return const Center(
         child: Text(
-          'Odaberite dan u kalendaru da vidite terapije.',
+          'Odaberite dan u kalendaru.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
       );
     }
 
-    final list = _getTherapiesForDay(_selectedDay!);
-
+    final list = _forDay(_selectedDay!);
     if (list.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.medication_liquid_rounded,
-              size: 32,
-              color: AppColors.roseDark,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Nema terapije za odabrani dan.',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ],
+      return const Center(
+        child: Text(
+          'Nema terapije za odabrani dan.',
+          style: TextStyle(color: AppColors.textSecondary),
         ),
       );
     }
 
-    final prettyDate =
-        '${_selectedDay!.day.toString().padLeft(2, '0')}.${_selectedDay!.month.toString().padLeft(2, '0')}.${_selectedDay!.year}.';
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: list.map(_therapyCard).toList(),
+    );
+  }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.lg,
+  Widget _therapyCard(Therapy t) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
-      itemCount: list.length + 2,
-      itemBuilder: (context, i) {
-        if (i == 0) {
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.medication_outlined,
-                          color: AppColors.roseDark,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Terapije za $prettyDate',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppColors.roseDark,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        if (i == list.length + 1) {
-          return const SizedBox(height: 90);
-        }
-
-        final t = list[i - 1];
-
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            const Icon(Icons.local_pharmacy_rounded, color: AppColors.roseDark),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.babyBlue.withOpacity(.22),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                    child: const Icon(
-                      Icons.local_pharmacy_rounded,
+                  Text(
+                    t.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
                       color: AppColors.roseDark,
-                      size: 22,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.name,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppColors.roseDark,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                        if (t.dose.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Doza: ${t.dose}',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: AppColors.textSecondary),
-                          ),
-                        ],
-                        const SizedBox(height: 6),
-                        Text(
-                          'Trajanje: ${_fmt(t.start)} – ${_fmt(t.end)}',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
-                        ),
-                      ],
+                  Text(
+                    'Doza: ${t.dose}',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  Text(
+                    '${_fmt(t.start)} – ${_fmt(t.end)}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
+            PopupMenuButton<String>(
+              onSelected: (v) async {
+                if (v == 'delete') {
+                  await _service.delete(t.id);
+                  _load();
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'delete', child: Text('Obriši')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.roseDark,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(52),
           ),
-        );
-      },
+          onPressed: () async {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AddTherapyScreen(service: _service),
+              ),
+            );
+            _load();
+          },
+          child: const Text('Dodaj terapiju'),
+        ),
+      ),
     );
   }
 
   String _fmt(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}.';
+      '${d.day.toString().padLeft(2, '0')}.'
+      '${d.month.toString().padLeft(2, '0')}.'
+      '${d.year}.';
 }
+
+/// =============================================================
+/// ADD / EDIT SCREEN
+/// =============================================================
 
 class AddTherapyScreen extends StatefulWidget {
   const AddTherapyScreen({super.key, required this.service});
-
-  final TherapyService service;
+  final MedicationPlanApiService service;
 
   @override
   State<AddTherapyScreen> createState() => _AddTherapyScreenState();
 }
 
 class _AddTherapyScreenState extends State<AddTherapyScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _doseController = TextEditingController();
-
+  final _name = TextEditingController();
+  final _dose = TextEditingController();
   DateTime? _start;
   DateTime? _end;
   bool _saving = false;
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate() || _start == null || _end == null) {
-      NestlyToast.info(context, 'Molimo unesite sve podatke.');
+    if (_name.text.trim().isEmpty || _dose.text.trim().isEmpty) {
+      NestlyToast.error(context, 'Popunite sva polja');
+      return;
+    }
 
+    if (_start == null || _end == null) {
+      NestlyToast.error(context, 'Odaberite period terapije');
+      return;
+    }
+
+    if (_end!.isBefore(_start!)) {
+      NestlyToast.error(context, 'Datum završetka ne može biti prije početka');
       return;
     }
 
     setState(() => _saving = true);
-
     try {
-      await widget.service.addTherapy(
-        name: _nameController.text.trim(),
-        dose: _doseController.text.trim(),
+      await widget.service.create(
+        name: _name.text.trim(),
+        dose: _dose.text.trim(),
         start: _start!,
         end: _end!,
       );
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      NestlyToast.success(context, 'Uspješno ste dodali terapiju!');
-    } catch (e) {
-      if (!mounted) return;
-
-      NestlyToast.error(context, 'Greška pri spremanju: $e');
-    } finally {
-      if (mounted) setState(() => _saving = false);
+      Navigator.pop(context);
+      NestlyToast.success(context, 'Terapija dodana');
+    } catch (_) {
+      NestlyToast.error(context, 'Greška');
     }
+    if (mounted) setState(() => _saving = false);
   }
 
-  Future<void> _pickDate(bool start) async {
+  Future<void> _pickDate({
+    required DateTime? current,
+    required ValueChanged<DateTime> onPicked,
+  }) async {
     final now = DateTime.now();
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: current ?? now,
       firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
+      lastDate: DateTime(now.year + 5),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
+            colorScheme: ColorScheme.light(
               primary: AppColors.roseDark,
-              surface: Colors.white,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
         );
       },
     );
+
     if (picked != null) {
-      setState(() {
-        if (start) {
-          _start = picked;
-          if (_end != null && _end!.isBefore(_start!)) {
-            _end = _start;
-          }
-        } else {
-          _end = picked;
-        }
-      });
+      onPicked(picked);
     }
   }
 
@@ -590,13 +394,7 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.roseDark,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: AppColors.roseDark),
         title: Text(
           'Dodaj terapiju',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -604,201 +402,134 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
             color: AppColors.roseDark,
           ),
         ),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Card(
-            elevation: 3,
-            color: AppColors.card,
-            shadowColor: AppColors.babyPink.withOpacity(0.35),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+      body: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          children: [
+            TextField(
+              controller: _name,
+              decoration: _decoration(
+                label: 'Naziv terapije',
+                icon: Icons.medication_rounded,
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppColors.babyBlue.withOpacity(.2),
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: const Icon(
-                            Icons.medication_rounded,
-                            color: AppColors.roseDark,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Dodajte terapiju',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: AppColors.roseDark,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Unesite naziv lijeka, dozu i period u kojem treba da se uzima.',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                      height: 1.4,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+            const SizedBox(height: AppSpacing.md),
 
-                    const SizedBox(height: AppSpacing.xl),
+            TextField(
+              controller: _dose,
+              decoration: _decoration(label: 'Doza', icon: Icons.scale_rounded),
+            ),
+            const SizedBox(height: AppSpacing.md),
 
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Naziv terapije (npr. Vitamin D)',
-                        prefixIcon: Icon(Icons.medication_liquid_rounded),
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Unesite naziv.' : null,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _doseController,
-                      decoration: const InputDecoration(
-                        labelText: 'Doza (npr. 1x dnevno, 400 IU)',
-                        prefixIcon: Icon(Icons.numbers_rounded),
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Unesite dozu.' : null,
-                    ),
-
-                    const SizedBox(height: AppSpacing.lg),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => _pickDate(true),
-                            child: Text(
-                              _start == null
-                                  ? 'Početni datum'
-                                  : 'Od: ${_fmt(_start!)}',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => _pickDate(false),
-                            child: Text(
-                              _end == null
-                                  ? 'Krajnji datum'
-                                  : 'Do: ${_fmt(_end!)}',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppSpacing.xl),
-
-                    SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _saving ? null : _save,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.roseDark,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                          ),
-                          elevation: 0,
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        child: _saving
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : const Text(
-                                'Unesi terapiju',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                      ),
-                    ),
-                  ],
+            InkWell(
+              onTap: () => _pickDate(
+                current: _start,
+                onPicked: (d) => setState(() => _start = d),
+              ),
+              child: InputDecorator(
+                decoration: _decoration(
+                  label: 'Datum početka',
+                  icon: Icons.calendar_today_rounded,
+                ),
+                child: Text(
+                  _start == null ? 'Odaberite datum' : _fmt(_start!),
+                  style: TextStyle(
+                    color: _start == null
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                  ),
                 ),
               ),
             ),
-          ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            InkWell(
+              onTap: () => _pickDate(
+                current: _end,
+                onPicked: (d) => setState(() => _end = d),
+              ),
+              child: InputDecorator(
+                decoration: _decoration(
+                  label: 'Datum završetka',
+                  icon: Icons.event_rounded,
+                ),
+                child: Text(
+                  _end == null ? 'Odaberite datum' : _fmt(_end!),
+                  style: TextStyle(
+                    color: _end == null
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            SizedBox(
+              height: 52,
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.roseDark,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                child: _saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Text('Sačuvaj'),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  String _fmt(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}.';
 }
 
-Widget _buildCalendarHint() {
-  return Center(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 520),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.babyBlue.withOpacity(.15),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.info_outline_rounded,
-                size: 18,
-                color: AppColors.roseDark,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Dodirnite dan u kalendaru da vidite terapije koje važe za taj datum.',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    height: 1.3,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+String _fmt(DateTime d) {
+  return '${d.day.toString().padLeft(2, '0')}.'
+      '${d.month.toString().padLeft(2, '0')}.'
+      '${d.year}.';
+}
+
+InputDecoration _decoration({required String label, required IconData icon}) {
+  return InputDecoration(
+    labelText: label,
+    prefixIcon: Icon(icon),
+    filled: true,
+    fillColor: AppColors.babyPink.withOpacity(.15),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      borderSide: BorderSide.none,
     ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      borderSide: const BorderSide(color: AppColors.roseDark, width: 1.6),
+    ),
+    floatingLabelStyle: const TextStyle(
+      color: AppColors.roseDark,
+      fontWeight: FontWeight.w600,
+    ),
+    prefixIconColor: AppColors.roseDark,
   );
 }

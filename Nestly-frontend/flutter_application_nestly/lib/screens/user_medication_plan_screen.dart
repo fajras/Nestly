@@ -1,35 +1,13 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-import 'package:http/http.dart' as http;
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase => _devBase();
-
-Map<String, String> _headers(String token) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer $token',
-};
+import 'package:flutter_application_nestly/network/api_client.dart';
 
 class UserMedicationPlanScreen extends StatefulWidget {
   final int userId;
-  final String token;
 
-  const UserMedicationPlanScreen({
-    super.key,
-    required this.userId,
-    required this.token,
-  });
+  const UserMedicationPlanScreen({super.key, required this.userId});
 
   @override
   State<UserMedicationPlanScreen> createState() =>
@@ -48,9 +26,8 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
 
   Future<void> _load() async {
     try {
-      final res = await http.get(
-        Uri.parse('$_apiBase/api/medicationplan?UserId=${widget.userId}'),
-        headers: _headers(widget.token),
+      final res = await ApiClient.get(
+        '/api/MedicationPlan?UserId=${widget.userId}',
       );
 
       if (res.statusCode != 200) {
@@ -64,7 +41,7 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju terapije');
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 

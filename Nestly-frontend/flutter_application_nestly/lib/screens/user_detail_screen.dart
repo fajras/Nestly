@@ -1,45 +1,18 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
-
-/// =======================
-/// API
-/// =======================
-
-String _devBase() {
-  if (kIsWeb) return 'http://localhost:5167';
-  if (Platform.isAndroid) return 'http://10.0.2.2:5167';
-  return 'http://localhost:5167';
-}
-
-String get _apiBase =>
-    const String.fromEnvironment('API_BASE', defaultValue: '').isNotEmpty
-    ? const String.fromEnvironment('API_BASE')
-    : _devBase();
-
-Map<String, String> _headers(String token) => {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer $token',
-};
+import 'package:flutter_application_nestly/main.dart';
 
 /// =======================
 /// SERVICE
 /// =======================
 
 class AdminDashboardService {
-  Future<List<AppUserRow>> getUsers(String token) async {
-    final res = await http.get(
-      Uri.parse('$_apiBase/AppUser'),
-      headers: _headers(token),
-    );
+  Future<List<AppUserRow>> getUsers() async {
+    final res = await ApiClient.get('/AppUser');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load users');
@@ -81,16 +54,15 @@ class MedicationPlanRow {
 /// =======================
 
 class UserDetailsScreen extends StatefulWidget {
-  final String token;
   final AppUserRow? user;
 
-  const UserDetailsScreen({super.key, required this.token, this.user});
+  const UserDetailsScreen({super.key, this.user});
 
   @override
   State<UserDetailsScreen> createState() => _UserDetailsScreenState();
 }
 
-class _UserDetailsScreenState extends State<UserDetailsScreen> {
+class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
   final _service = AdminDashboardService();
 
   List<AppUserRow> _users = [];
@@ -100,7 +72,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   String _activeModule = '';
 
   AppUserRow? _selectedUser;
-
   bool _loading = true;
 
   @override
@@ -109,9 +80,59 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _resetScreen();
+  }
+
+  void _resetScreen() {
+    if (!mounted) return;
+    setState(() {
+      _selectedUser = null;
+      _details.clear();
+      _activeModule = '';
+      _loadingDetails = false;
+      _filtered = _users;
+    });
+  }
+
+  Future<void> _load() async {
+    try {
+      final users = await _service.getUsers();
+      if (!mounted) return;
+
+      setState(() {
+        _users = users;
+        _filtered = users;
+        _selectedUser = null; // BITNO: ne biraj automatski prvu
+      });
+    } catch (_) {
+      if (!mounted) return;
+      NestlyToast.error(context, 'Greška pri učitavanju korisnica');
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
   Future<void> _loadDetails({
     required String module,
-    required String url,
+    required String path,
     required List<DetailItem> Function(List data) mapper,
   }) async {
     if (_selectedUser == null) {
@@ -129,21 +150,22 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     });
 
     try {
-      final res = await http.get(
-        Uri.parse(url),
-        headers: _headers(widget.token),
-      );
+      final res = await ApiClient.get(path);
+      if (!mounted) return;
 
       if (res.statusCode != 200) throw Exception();
 
       final List data = jsonDecode(res.body);
 
+      if (!mounted) return;
       setState(() {
         _details = mapper(data);
       });
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju $module');
     } finally {
+      if (!mounted) return;
       setState(() => _loadingDetails = false);
     }
   }
@@ -223,21 +245,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     }).toList();
   }
 
-  Future<void> _load() async {
-    try {
-      final users = await _service.getUsers(widget.token);
-      setState(() {
-        _users = users;
-        _filtered = users;
-        _selectedUser = users.isNotEmpty ? users.first : null;
-      });
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri učitavanju korisnica');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
   void _onSearch(String value) {
     final q = value.toLowerCase();
     setState(() {
@@ -302,6 +309,17 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   ),
 
                 const SizedBox(height: AppSpacing.lg),
+                if (_selectedUser == null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: Text(
+                      'Odaberite korisnicu da biste vidjeli detalje',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
 
                 /// MODULE CARDS
                 GridView.count(
@@ -314,82 +332,96 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Terapija',
-                      onTap: () => _loadDetails(
-                        module: 'Terapija',
-                        url:
-                            '$_apiBase/api/medicationplan?UserId=${_selectedUser!.id}',
-                        mapper: _mapMedication,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Terapija',
+                              path:
+                                  '/api/medicationplan?UserId=${_selectedUser!.id}',
+                              mapper: _mapMedication,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Simptomi',
-                      onTap: () => _loadDetails(
-                        module: 'Simptomi',
-                        url:
-                            '$_apiBase/api/symptomdiary/parent/${_selectedUser!.id}',
-                        mapper: _mapSymptoms,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Simptomi',
+                              path:
+                                  '/api/symptomdiary/parent/${_selectedUser!.id}',
+                              mapper: _mapSymptoms,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Hrana',
-                      onTap: () => _loadDetails(
-                        module: 'Hrana',
-                        url:
-                            '$_apiBase/api/mealplan?BabyId=${_selectedUser!.id}',
-                        mapper: _mapMeals,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Hrana',
+                              path: '/api/mealplan?BabyId=${_selectedUser!.id}',
+                              mapper: _mapMeals,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Zdravlje',
-                      onTap: () => _loadDetails(
-                        module: 'Zdravlje',
-                        url:
-                            '$_apiBase/api/medicationplan?UserId=${_selectedUser!.id}',
-                        mapper: _mapMedication,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Zdravlje',
+                              path:
+                                  '/api/medicationplan?UserId=${_selectedUser!.id}',
+                              mapper: _mapMedication,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Pelene',
-                      onTap: () => _loadDetails(
-                        module: 'Pelene',
-                        url:
-                            '$_apiBase/api/diaperlog?BabyId=${_selectedUser!.id}',
-                        mapper: _mapDiapers,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Pelene',
+                              path:
+                                  '/api/diaperlog?BabyId=${_selectedUser!.id}',
+                              mapper: _mapDiapers,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'San bebe',
-                      onTap: () => _loadDetails(
-                        module: 'San bebe',
-                        url:
-                            '$_apiBase/api/sleeplog?BabyId=${_selectedUser!.id}',
-                        mapper: _mapSleep,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'San bebe',
+                              path: '/api/sleeplog?BabyId=${_selectedUser!.id}',
+                              mapper: _mapSleep,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Rast bebe',
-                      onTap: () => _loadDetails(
-                        module: 'Rast bebe',
-                        url:
-                            '$_apiBase/api/babygrowth?BabyId=${_selectedUser!.id}',
-                        mapper: _mapGrowth,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Rast bebe',
+                              path:
+                                  '/api/babygrowth?BabyId=${_selectedUser!.id}',
+                              mapper: _mapGrowth,
+                            ),
                     ),
                     _ModuleCard(
                       icon: Icons.medication,
                       label: 'Pitanja',
-                      onTap: () => _loadDetails(
-                        module: 'Pitanja',
-                        url:
-                            '$_apiBase/api/qaquestion/my?AskedByUserId=${_selectedUser!.id}',
-                        mapper: _mapQuestions,
-                      ),
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Pitanja',
+                              path:
+                                  '/api/qaquestion/my?AskedByUserId=${_selectedUser!.id}',
+                              mapper: _mapQuestions,
+                            ),
                     ),
                   ],
                 ),

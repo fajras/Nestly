@@ -22,8 +22,7 @@ namespace Nestly.Services.Data
 
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
 
-        public DbSet<ChatRoom> ChatRooms { get; set; }
-        public DbSet<ChatMember> ChatMembers { get; set; }
+        public DbSet<ChatConversation> ChatConversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
         public DbSet<DiaperLog> DiaperLogs { get; set; }
@@ -348,50 +347,50 @@ namespace Nestly.Services.Data
 
         private static void ConfigureChat(ModelBuilder model)
         {
-            model.Entity<ChatRoom>(e =>
+            model.Entity<ChatConversation>(e =>
             {
                 e.HasKey(x => x.Id);
-                e.Property(x => x.Name).HasMaxLength(150);
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
-                e.Property(x => x.IsPrivate).HasDefaultValue(false);
-            });
 
-            model.Entity<ChatMember>(e =>
-            {
-                e.HasKey(x => new { x.RoomId, x.UserId });
-                e.Property(x => x.JoinedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+                e.Property(x => x.CreatedAt)
+                    .HasDefaultValueSql("SYSUTCDATETIME()");
 
-                e.HasOne(x => x.Room)
-                 .WithMany(r => r.Members)
-                 .HasForeignKey(x => x.RoomId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.User1)
+                    .WithMany()
+                    .HasForeignKey(x => x.User1Id)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                e.HasOne(x => x.User)
-                 .WithMany()
-                 .HasForeignKey(x => x.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.User2)
+                    .WithMany()
+                    .HasForeignKey(x => x.User2Id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(x => new { x.User1Id, x.User2Id })
+                    .IsUnique();
             });
 
             model.Entity<ChatMessage>(e =>
             {
                 e.HasKey(x => x.Id);
-                e.Property(x => x.Content).IsRequired();
-                e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
-                e.HasOne(x => x.Room)
-                 .WithMany(r => r.Messages)
-                 .HasForeignKey(x => x.RoomId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                e.Property(x => x.Content)
+                    .IsRequired()
+                    .HasMaxLength(4000);
 
-                e.HasOne(x => x.User)
-                 .WithMany()
-                 .HasForeignKey(x => x.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                e.Property(x => x.CreatedAt)
+                    .HasDefaultValueSql("SYSUTCDATETIME()");
 
-                e.HasIndex(x => new { x.RoomId, x.CreatedAt });
+                e.HasOne(x => x.Conversation)
+                    .WithMany(c => c.Messages)
+                    .HasForeignKey(x => x.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Sender)
+                    .WithMany()
+                    .HasForeignKey(x => x.SenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
-        }
 
+        }
 
         private static void ConfigureMedication(ModelBuilder model)
         {

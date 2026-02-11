@@ -24,9 +24,9 @@ namespace Nestly.Services.Repository
 
         public List<AppUserResultDto> Get(AppUserSearchObject? search)
         {
-            IQueryable<AppUser> q = _db.AppUsers
-                .Include(u => u.ParentProfile)
-                .Include(u => u.DoctorProfile);
+            var nowUtc = DateTime.UtcNow;
+
+            IQueryable<AppUser> q = _db.AppUsers.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(search?.Email))
             {
@@ -43,32 +43,131 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.LastName.Contains(search.LastName));
             }
 
-            return q.Select(x => new AppUserResultDto
+            var rows = q.Select(x => new AppUserRow
             {
+                Id = x.Id,
                 Email = x.Email,
                 FirstName = x.FirstName,
                 LastName = x.LastName,
                 RoleId = x.RoleId,
-                IdentityUserId = x.IdentityUserId
+                IdentityUserId = x.IdentityUserId,
+
+                LatestBabyBirthDate = x.ParentProfile != null
+                    ? x.ParentProfile.Babies
+                        .OrderByDescending(b => b.BirthDate)
+                        .Select(b => (DateTime?)b.BirthDate)
+                        .FirstOrDefault()
+                    : null,
+
+                LatestPregnancyDueDate = x.ParentProfile != null
+                    ? x.ParentProfile.Pregnancies
+                        .Where(p => p.DueDate != null && p.DueDate > nowUtc)
+                        .OrderByDescending(p => p.DueDate)
+                        .Select(p => p.DueDate)
+                        .FirstOrDefault()
+                    : null
+            }).ToList();
+
+            return rows.Select(r =>
+            {
+                var dto = new AppUserResultDto
+                {
+                    Id = r.Id,
+                    Email = r.Email,
+                    FirstName = r.FirstName,
+                    LastName = r.LastName,
+                    RoleId = r.RoleId,
+                    IdentityUserId = r.IdentityUserId,
+                    ParentStatus = "UNKNOWN",
+                    BabyAgeMonths = null,
+                    PregnancyTrimester = null
+                };
+
+                if (r.LatestBabyBirthDate.HasValue)
+                {
+                    dto.ParentStatus = "PARENT";
+                    dto.BabyAgeMonths = CalculateBabyAgeInMonths(r.LatestBabyBirthDate.Value);
+                    return dto;
+                }
+
+                if (r.LatestPregnancyDueDate.HasValue)
+                {
+                    dto.ParentStatus = "PREGNANT";
+                    dto.PregnancyTrimester = CalculatePregnancyTrimester(r.LatestPregnancyDueDate.Value);
+                    return dto;
+                }
+
+                return dto;
             }).ToList();
         }
 
         public AppUserResultDto? GetById(long id)
         {
-            return _db.AppUsers
-                .Include(u => u.ParentProfile)
-                .Include(u => u.DoctorProfile)
+            var nowUtc = DateTime.UtcNow;
+
+            var row = _db.AppUsers.AsNoTracking()
                 .Where(u => u.Id == id)
-                .Select(x => new AppUserResultDto
+                .Select(x => new AppUserRow
                 {
+                    Id = x.Id,
                     Email = x.Email,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
                     RoleId = x.RoleId,
-                    IdentityUserId = x.IdentityUserId
+                    IdentityUserId = x.IdentityUserId,
+
+                    LatestBabyBirthDate = x.ParentProfile != null
+                        ? x.ParentProfile.Babies
+                            .OrderByDescending(b => b.BirthDate)
+                            .Select(b => (DateTime?)b.BirthDate)
+                            .FirstOrDefault()
+                        : null,
+
+                    LatestPregnancyDueDate = x.ParentProfile != null
+                        ? x.ParentProfile.Pregnancies
+                            .Where(p => p.DueDate != null && p.DueDate > nowUtc)
+                            .OrderByDescending(p => p.DueDate)
+                            .Select(p => p.DueDate)
+                            .FirstOrDefault()
+                        : null
                 })
                 .FirstOrDefault();
+
+            if (row == null)
+            {
+                return null;
+            }
+
+            var dto = new AppUserResultDto
+            {
+                Id = row.Id,
+                Email = row.Email,
+                FirstName = row.FirstName,
+                LastName = row.LastName,
+                RoleId = row.RoleId,
+                IdentityUserId = row.IdentityUserId,
+                ParentStatus = "UNKNOWN",
+                BabyAgeMonths = null,
+                PregnancyTrimester = null
+            };
+
+            if (row.LatestBabyBirthDate.HasValue)
+            {
+                dto.ParentStatus = "PARENT";
+                dto.BabyAgeMonths = CalculateBabyAgeInMonths(row.LatestBabyBirthDate.Value);
+                return dto;
+            }
+
+            if (row.LatestPregnancyDueDate.HasValue)
+            {
+                dto.ParentStatus = "PREGNANT";
+                dto.PregnancyTrimester = CalculatePregnancyTrimester(row.LatestPregnancyDueDate.Value);
+                return dto;
+            }
+
+            return dto;
         }
+
         private static (DateTime? Lmp, DateTime? Due) NormalizePregnancyDates(DateTime? lmp, DateTime? due)
         {
             if (lmp.HasValue && !due.HasValue)
@@ -78,7 +177,7 @@ namespace Nestly.Services.Repository
 
             if (!lmp.HasValue && due.HasValue)
             {
-                return (due.Value.AddDays(-280), due);
+                return (due.Value.AddDays(280 * -1), due);
             }
 
             return (lmp, due);
@@ -135,6 +234,7 @@ namespace Nestly.Services.Repository
                 ?? throw new ArgumentException("Role not found.", nameof(dto.RoleId));
 
             var identityRoleName = role.Name;
+
             if (!_roleManager.RoleExistsAsync(identityRoleName).GetAwaiter().GetResult())
             {
                 throw new ArgumentException($"Identity role '{identityRoleName}' does not exist. Seed it in AuthDbContext.");
@@ -187,8 +287,9 @@ namespace Nestly.Services.Repository
 
                     var parentProfile = new ParentProfile
                     {
-                        UserId = user.Id,
+                        UserId = user.Id
                     };
+
                     _db.ParentProfiles.Add(parentProfile);
                     _db.SaveChanges();
 
@@ -201,6 +302,7 @@ namespace Nestly.Services.Repository
                             DueDate = normDue,
                             CycleLengthDays = dto.CycleLengthDays
                         };
+
                         _db.Pregnancies.Add(preg);
                         _db.SaveChanges();
                     }
@@ -220,7 +322,10 @@ namespace Nestly.Services.Repository
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     RoleId = user.RoleId,
-                    IdentityUserId = user.IdentityUserId
+                    IdentityUserId = user.IdentityUserId,
+                    ParentStatus = "UNKNOWN",
+                    BabyAgeMonths = null,
+                    PregnancyTrimester = null
                 };
             }
             catch
@@ -229,7 +334,6 @@ namespace Nestly.Services.Repository
                 _ = _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
                 throw;
             }
-
         }
 
         public AppUser? Patch(long id, AppUserPatchDto patch)
@@ -291,6 +395,44 @@ namespace Nestly.Services.Repository
             _db.AppUsers.Remove(u);
             _db.SaveChanges();
             return true;
+        }
+
+        private static int CalculateBabyAgeInMonths(DateTime birthDate)
+        {
+            var now = DateTime.UtcNow;
+            return (now.Year - birthDate.Year) * 12 + now.Month - birthDate.Month;
+        }
+
+        private static int CalculatePregnancyTrimester(DateTime dueDate)
+        {
+            const int totalWeeks = 40;
+            var weeksLeft = (dueDate - DateTime.UtcNow).Days / 7;
+            var currentWeek = totalWeeks - weeksLeft;
+
+            if (currentWeek <= 13)
+            {
+                return 1;
+            }
+
+            if (currentWeek <= 27)
+            {
+                return 2;
+            }
+
+            return 3;
+        }
+
+        private sealed class AppUserRow
+        {
+            public long Id { get; set; }
+            public string Email { get; set; } = default!;
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public long? RoleId { get; set; }
+            public string IdentityUserId { get; set; } = default!;
+
+            public DateTime? LatestBabyBirthDate { get; set; }
+            public DateTime? LatestPregnancyDueDate { get; set; }
         }
     }
 }

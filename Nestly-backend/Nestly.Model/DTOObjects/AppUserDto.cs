@@ -43,5 +43,8 @@ public class AppUserResultDto
     public string? LastName { get; set; }
     public long? RoleId { get; set; }
     public string IdentityUserId { get; set; } = default!;
+    public string ParentStatus { get; set; }
+    public int? BabyAgeMonths { get; set; }
+    public int? PregnancyTrimester { get; set; }
 }
 

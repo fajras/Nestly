@@ -50,7 +50,7 @@ namespace Nestly.Model.Entity
         public ICollection<MedicationPlan>? MedicationPlans { get; set; } = new List<MedicationPlan>();
         public ICollection<QaQuestion>? QuestionsAsked { get; set; } = new List<QaQuestion>();
         public ICollection<CalendarEvent>? CalendarEvents { get; set; } = new List<CalendarEvent>();
-        public ICollection<ChatRoom>? ChatRooms { get; set; } = new List<ChatRoom>();
+        public ICollection<ChatConversation>? ChatConversations { get; set; } = new List<ChatConversation>();
     }
 
     public class DoctorProfile

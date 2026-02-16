@@ -8,10 +8,12 @@ namespace Nestly.Model.Entity
     {
         [Key]
         public long Id { get; set; }
+
         [ForeignKey(nameof(MedicationPlan))]
         public long PlanId { get; set; }
+
         public TimeSpan IntakeTime { get; set; }
 
-        public MedicationPlan Plan { get; set; }
+        public MedicationPlan Plan { get; set; } = default!;
     }
 }

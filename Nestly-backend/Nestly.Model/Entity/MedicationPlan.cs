@@ -9,18 +9,19 @@ namespace Nestly.Model.Entity
     {
         [Key]
         public long Id { get; set; }
+
         [ForeignKey(nameof(ParentProfile))]
-        public long UserId { get; set; }
+        public long ParentProfileId { get; set; }
+
+        public string MedicineName { get; set; } = default!;
+        public string Dose { get; set; } = default!;
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public string MedicineName { get; set; }
-        public string Dose { get; set; }
+        public ParentProfile ParentProfile { get; set; } = default!;
 
-
-        public ParentProfile User { get; set; }
-        public ICollection<MedicationScheduleTime> Times { get; set; }
-        public ICollection<MedicationIntakeLog> IntakeLogs { get; set; }
+        public ICollection<MedicationScheduleTime> Times { get; set; } = new List<MedicationScheduleTime>();
+        public ICollection<MedicationIntakeLog> IntakeLogs { get; set; } = new List<MedicationIntakeLog>();
     }
 }

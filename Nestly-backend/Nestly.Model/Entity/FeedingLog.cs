@@ -15,7 +15,7 @@ namespace Nestly.Model.Entity
         public decimal? AmountMl { get; set; }
         [ForeignKey(nameof(FoodType))]
         public int? FoodTypeId { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         public BabyProfile Baby { get; set; }
         public FoodType FoodType { get; set; }

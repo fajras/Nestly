@@ -400,9 +400,9 @@ namespace Nestly.Services.Data
                 e.Property(x => x.MedicineName).IsRequired().HasMaxLength(200);
                 e.Property(x => x.Dose).IsRequired().HasMaxLength(100);
 
-                e.HasOne(x => x.User)
+                e.HasOne(x => x.ParentProfile)
                  .WithMany(p => p.MedicationPlans)
-                 .HasForeignKey(x => x.UserId)
+                 .HasForeignKey(x => x.ParentProfileId)
                  .OnDelete(DeleteBehavior.Cascade);
 
                 e.HasMany(x => x.Times)
@@ -415,7 +415,7 @@ namespace Nestly.Services.Data
                  .HasForeignKey(l => l.PlanId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                e.HasIndex(x => new { x.UserId, x.MedicineName });
+                e.HasIndex(x => new { x.ParentProfileId, x.MedicineName });
             });
 
             model.Entity<MedicationScheduleTime>(e =>

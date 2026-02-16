@@ -236,7 +236,11 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
               onPressed: !_saving && hasChanges ? _saveChanges : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.roseDark,
+                foregroundColor: Colors.white, // 👈 KLJUČNO
                 disabledBackgroundColor: AppColors.roseDark.withOpacity(0.35),
+                disabledForegroundColor: Colors.white.withOpacity(
+                  0.8,
+                ), // 👈 da i disabled ostane bijel
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.lg),
                 ),
@@ -247,9 +251,15 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
                   ? const SizedBox(
                       height: 22,
                       width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     )
-                  : Text(hasChanges ? 'Sačuvaj promjene' : 'Nema izmjena'),
+                  : Text(
+                      hasChanges ? 'Sačuvaj promjene' : 'Nema izmjena',
+                      style: const TextStyle(),
+                    ),
             ),
           ),
         ),

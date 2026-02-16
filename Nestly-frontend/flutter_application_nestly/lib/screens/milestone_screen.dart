@@ -181,7 +181,11 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
         _saving = false;
       });
 
-      NestlyToast.success(context, 'Dostignuće je sačuvano');
+      NestlyToast.success(
+        context,
+        'Dostignuće je sačuvano',
+        accentColor: AppColors.seed,
+      );
     } catch (_) {
       setState(() => _saving = false);
       NestlyToast.error(context, 'Greška pri spremanju');

@@ -2,50 +2,73 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
 
 class NestlyToast {
-  static void success(BuildContext context, String message) {
+  static void success(
+    BuildContext context,
+    String message, {
+    Color? accentColor,
+  }) {
+    final color = accentColor ?? AppColors.roseDark;
+
     _show(
       context,
       message: message,
       icon: Icons.check_circle_rounded,
       iconColor: Colors.white,
-      chipBg: AppColors.roseDark,
-      borderColor: AppColors.roseDark.withOpacity(.25),
+      chipBg: color,
+      borderColor: color.withOpacity(.25),
+      textColor: color,
     );
   }
 
-  static void info(BuildContext context, String message) {
+  static void info(BuildContext context, String message, {Color? accentColor}) {
+    final color = accentColor ?? AppColors.babyBlue;
+
     _show(
       context,
       message: message,
       icon: Icons.info_rounded,
       iconColor: Colors.white,
-      chipBg: AppColors.babyBlue,
-      borderColor: AppColors.babyBlue.withOpacity(.35),
+      chipBg: color,
+      borderColor: color.withOpacity(.35),
       textColor: AppColors.textPrimary,
     );
   }
 
-  static void warning(BuildContext context, String message) {
+  static void warning(
+    BuildContext context,
+    String message, {
+    Color? accentColor,
+    Color? textColor,
+  }) {
+    final bg = accentColor ?? Colors.orange;
+
     _show(
       context,
       message: message,
       icon: Icons.warning_amber_rounded,
       iconColor: Colors.white,
-      chipBg: Colors.orange,
-      borderColor: Colors.orange.withOpacity(.35),
-      textColor: Colors.orange.shade900,
+      chipBg: bg,
+      borderColor: bg.withOpacity(.35),
+      textColor: textColor ?? AppColors.textPrimary,
     );
   }
 
-  static void error(BuildContext context, String message) {
+  static void error(
+    BuildContext context,
+    String message, {
+    Color? accentColor,
+    Color? textColor,
+  }) {
+    final bg = accentColor ?? Colors.redAccent;
+
     _show(
       context,
       message: message,
       icon: Icons.error_rounded,
       iconColor: Colors.white,
-      chipBg: Colors.redAccent,
-      borderColor: Colors.redAccent.withOpacity(.35),
-      textColor: Colors.red.shade900,
+      chipBg: bg,
+      borderColor: bg.withOpacity(.35),
+      textColor: textColor ?? AppColors.textPrimary,
     );
   }
 
@@ -56,7 +79,7 @@ class NestlyToast {
     required Color iconColor,
     required Color chipBg,
     required Color borderColor,
-    Color? textColor,
+    required Color textColor,
   }) {
     final snackBar = SnackBar(
       elevation: 0,
@@ -99,10 +122,7 @@ class NestlyToast {
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(
-                  color: textColor ?? AppColors.roseDark,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
               ),
             ),
             GestureDetector(

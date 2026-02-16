@@ -43,7 +43,7 @@ class ApiQaService implements QaService {
   @override
   Future<List<Question>> fetchMyQuestions() async {
     final res = await ApiClient.get(
-      '/api/QaQuestion/my?AskedByUserId=$parentProfileId',
+      '/api/QaQuestion/my?AskedById=$parentProfileId',
     );
 
     if (res.statusCode != 200) {
@@ -60,13 +60,13 @@ class ApiQaService implements QaService {
         text: q['questionText'],
         createdAt: DateTime.parse(q['createdAt']),
         status: answered ? QuestionStatus.answered : QuestionStatus.pending,
-        answer: answered
+        answer: answered && q['latestAnswerText'] != null
             ? Answer(
-                text: (q['answerText'] ?? '').toString(),
-                createdAt: q['answerCreatedAt'] != null
-                    ? DateTime.parse(q['answerCreatedAt'])
-                    : DateTime.fromMillisecondsSinceEpoch(0),
-                responderName: q['answeredByName'] as String?,
+                text: q['latestAnswerText'],
+                createdAt: q['latestAnswerCreatedAt'] != null
+                    ? DateTime.parse(q['latestAnswerCreatedAt'])
+                    : DateTime.now(),
+                responderName: q['answeredByName'],
               )
             : null,
       );
@@ -233,7 +233,9 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.roseDark),
+      );
     }
 
     if (_error != null) {
@@ -286,7 +288,20 @@ class _QuestionCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (answered && question.answer != null)
-            Text(question.answer!.text)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  question.answer!.text,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Odgovorio: ${question.answer!.responderName ?? ''}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            )
           else
             const Text('Čeka odgovor'),
         ],

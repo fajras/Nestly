@@ -207,7 +207,11 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
         adviceText: _controller.text,
       );
 
-      NestlyToast.success(context, 'Savjet spremljen');
+      NestlyToast.success(
+        context,
+        'Savjet spremljen',
+        accentColor: AppColors.seed,
+      );
       widget.onSaved();
       setState(() => _editing = false);
     } catch (e) {

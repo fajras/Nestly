@@ -46,7 +46,14 @@ class NestlyCalendar extends StatelessWidget {
     return TableCalendar(
       focusedDay: focusedDay,
       firstDay: firstDay ?? DateTime.utc(2024, 1, 1),
-      lastDay: lastDay ?? DateTime.utc(2026, 12, 31),
+      lastDay:
+          lastDay ??
+          DateTime(
+            DateTime.now().year,
+            DateTime.now().month,
+            DateTime.now().day,
+          ),
+
       locale: 'bs_BA',
       calendarFormat: CalendarFormat.month,
 

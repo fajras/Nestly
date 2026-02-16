@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/screens/advice_center_screen.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_application_nestly/screens/baby_growth_screen.dart';
 import 'package:flutter_application_nestly/screens/baby_profile_create_screen.dart';
 import 'package:flutter_application_nestly/screens/baby_time_home_screen.dart';
 import 'package:flutter_application_nestly/screens/blog_module_screen.dart';
+import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
 import 'package:flutter_application_nestly/screens/qa_module_screen.dart';
 import 'package:flutter_application_nestly/screens/symptom_diary_screen.dart';
 import 'package:flutter_application_nestly/screens/therapy_module_mock.dart';
@@ -36,7 +38,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   bool _hasBaby = false;
   int? _babyId;
   String? _babyName;
-
+  String? _gender;
   @override
   void initState() {
     super.initState();
@@ -99,6 +101,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         _hasBaby = true;
         _babyId = data['id'];
         _babyName = data['babyName'];
+        _gender = data['gender'];
       } else {
         _hasBaby = false;
       }
@@ -149,6 +152,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         babyName: _babyName ?? 'Vaša beba',
         babyId: _babyId!,
         parentProfileId: widget.parentProfileId,
+        gender: _normalizeGender(_gender),
       ),
     );
   }
@@ -251,6 +255,31 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         ),
                       ),
                     ),
+                    _menu(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: 'Chat',
+                      onTap: () => _open(
+                        context,
+                        ChatHomeScreen(currentUserId: widget.parentProfileId),
+                      ),
+                    ),
+                    _menu(
+                      icon: Icons.logout_rounded,
+                      label: 'Odjavi se',
+                      onTap: () async {
+                        await AuthStorage.clear();
+
+                        if (!context.mounted) return;
+
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                          (_) => false,
+                        );
+                      },
+                    ),
+
                     const SizedBox(height: AppSpacing.xl),
                     _hasBaby
                         ? _GradientPinkCard(
@@ -393,7 +422,10 @@ class _GradientPinkCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.roseDark,
+              ),
             ],
           ),
         ),
@@ -419,4 +451,15 @@ class _BabyBornCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _GradientPinkCard(icon: icon, label: label, onTap: onTap);
   }
+}
+
+String _normalizeGender(String? value) {
+  if (value == null) return 'unknown';
+
+  final g = value.toLowerCase();
+
+  if (g == 'female') return 'female';
+  if (g == 'male') return 'male';
+
+  return 'unknown';
 }

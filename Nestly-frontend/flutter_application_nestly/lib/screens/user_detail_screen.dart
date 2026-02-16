@@ -226,8 +226,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
   List<DetailItem> _mapMeals(List data) {
     return data.map<DetailItem>((e) {
       return DetailItem(
-        title: e['foodType']['name'],
-        subtitle: e['triedAt'].toString().split('T').first,
+        title: e['foodName'] ?? '-',
+        subtitle: e['triedAt']?.toString().split('T').first ?? '-',
         meta: 'Ocjena: ${e['rating'] ?? '-'}',
       );
     }).toList();
@@ -235,11 +235,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
 
   List<DetailItem> _mapQuestions(List data) {
     return data.map<DetailItem>((e) {
+      final answered = e['isAnswered'] == true;
+
       return DetailItem(
-        title: e['questionText'],
-        subtitle: e['createdAt'].toString().split('T').first,
-        meta: e['isAnswered']
-            ? 'Odgovor: ${e['answeredByName'] ?? ''}'
+        title: e['questionText'] ?? '',
+        subtitle: e['createdAt']?.toString().split('T').first ?? '',
+        meta: answered
+            ? 'Odgovor: ${e['latestAnswerText'] ?? ''}'
             : 'Na čekanju',
       );
     }).toList();
@@ -419,7 +421,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                           : () => _loadDetails(
                               module: 'Pitanja',
                               path:
-                                  '/api/qaquestion/my?AskedByUserId=${_selectedUser!.id}',
+                                  '/api/qaquestion/my?AskedById=${_selectedUser!.id}',
                               mapper: _mapQuestions,
                             ),
                     ),

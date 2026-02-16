@@ -299,7 +299,7 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
       if (!mounted) return;
       widget.onSaved();
       Navigator.pop(context);
-      NestlyToast.success(context, 'Blog kreiran');
+      NestlyToast.success(context, 'Blog kreiran', accentColor: AppColors.seed);
     } catch (_) {
       if (!mounted) return;
       NestlyToast.error(context, 'Greška pri spremanju');

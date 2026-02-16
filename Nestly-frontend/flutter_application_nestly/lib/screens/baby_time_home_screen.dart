@@ -1,401 +1,327 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
 
-import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart'
-    show BabyGrowthTrackerScreen;
+import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart';
 import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
 import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
 import 'package:flutter_application_nestly/screens/diaper_log_calendar_screen.dart';
+import 'package:flutter_application_nestly/screens/feeding_calendar_screen.dart';
 import 'package:flutter_application_nestly/screens/health_tracking_screen.dart';
-import 'package:flutter_application_nestly/screens/meal_plan_screen.dart'
-    show MealRecommendationScreen;
-import 'package:flutter_application_nestly/screens/milestone_screen.dart'
-    show MilestoneScreen;
-import 'package:flutter_application_nestly/screens/sleep_log_screen.dart'
-    show SleepLogOverviewScreen;
+import 'package:flutter_application_nestly/screens/meal_plan_screen.dart';
+import 'package:flutter_application_nestly/screens/milestone_screen.dart';
+import 'package:flutter_application_nestly/screens/sleep_log_screen.dart';
 
 class BabyTimeHomeScreen extends StatelessWidget {
   final String babyName;
   final int babyId;
   final int parentProfileId;
+  final String gender;
 
   const BabyTimeHomeScreen({
     super.key,
     required this.babyName,
     required this.babyId,
     required this.parentProfileId,
+    required this.gender,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: _buildAppBar(context),
-      floatingActionButton: _buildFab(),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          children: [
-            _BabyHeaderBanner(babyName: babyName),
-            const SizedBox(height: 20),
-            Expanded(child: _buildMenuGrid(context)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /* ==================== APP BAR ==================== */
-
-  AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      title: Text(
-        'BabyTime',
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: AppColors.roseDark,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-
-  /* ==================== FAB ==================== */
-
-  Widget _buildFab() {
-    return FloatingActionButton.extended(
-      onPressed: () {},
-      backgroundColor: AppColors.roseDark,
-      foregroundColor: Colors.white,
-      icon: const Icon(Icons.add),
-      label: const Text(
-        'Dodaj bebu',
-        style: TextStyle(fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-
-  /* ==================== GRID ==================== */
-
-  Widget _buildMenuGrid(BuildContext context) {
-    return GridView.count(
-      padding: const EdgeInsets.only(bottom: 8),
-      physics: const BouncingScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 1.05,
-      crossAxisSpacing: 18,
-      mainAxisSpacing: 18,
-      children: [
-        _BabyMenuItem(
-          icon: Icons.show_chart_rounded,
-          label: 'Praćenje rasta',
-          color: AppColors.babyBlue,
-          onTap: () => _push(
-            context,
-            BabyGrowthTrackerScreen(babyId: babyId, babyName: babyName),
-          ),
-        ),
-        _BabyMenuItem(
-          icon: Icons.local_drink_rounded,
-          label: 'Dnevnik hranjenja',
-          color: AppColors.babyPink,
-          onTap: () {},
-        ),
-        _BabyMenuItem(
-          icon: Icons.nights_stay_rounded,
-          label: 'Dnevnik spavanja',
-          color: AppColors.babyBlue,
-          onTap: () => _push(
-            context,
-            SleepLogOverviewScreen(babyId: babyId, babyName: babyName),
-          ),
-        ),
-        _BabyMenuItem(
-          icon: Icons.restaurant_rounded,
-          label: 'Plan ishrane',
-          color: AppColors.babyPink,
-          onTap: () => _push(context, MealRecommendationScreen(babyId: babyId)),
-        ),
-        _BabyMenuItem(
-          icon: Icons.event_note_rounded,
-          label: 'Kalendar termina',
-          color: AppColors.babyBlue,
-          onTap: () => _push(
-            context,
-            CalendarEventScreen(
-              babyId: babyId,
-              babyName: babyName,
-              userId: parentProfileId,
-            ),
-          ),
-        ),
-        _BabyMenuItem(
-          icon: Icons.chat_bubble_outline_rounded,
-          label: 'Chat',
-          color: AppColors.babyPink,
-          onTap: () =>
-              _push(context, ChatHomeScreen(currentUserId: parentProfileId)),
-        ),
-
-        _BabyMenuItem(
-          icon: Icons.emoji_events_rounded,
-          label: 'Dostignuća',
-          color: AppColors.babyBlue,
-          onTap: () => _push(
-            context,
-            MilestoneScreen(babyId: babyId, babyName: babyName),
-          ),
-        ),
-        _BabyMenuItem(
-          icon: Icons.favorite_border_rounded,
-          label: 'Praćenje zdravlja',
-          color: AppColors.babyPink,
-          onTap: () => _push(
-            context,
-            HealthTrackingScreen(
-              babyId: babyId,
-              babyName: babyName,
-              userId: parentProfileId,
-            ),
-          ),
-        ),
-        _BabyMenuItem(
-          icon: Icons.favorite_border_rounded,
-          label: 'Praćenje pelena',
-          color: AppColors.babyPink,
-          onTap: () => _push(context, DiaperLogCalendarScreen(babyId: babyId)),
-        ),
-      ],
-    );
+  bool get _isGirl {
+    final g = gender.toLowerCase();
+    return g == 'female' || g == 'f';
   }
 
   void _push(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
-}
-
-/* ==================== HEADER ==================== */
-
-class _BabyHeaderBanner extends StatelessWidget {
-  final String babyName;
-
-  const _BabyHeaderBanner({required this.babyName});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.babyBlue.withOpacity(0.35),
-            AppColors.babyPink.withOpacity(0.35),
-          ],
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'BabyTime',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppColors.seed,
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 14,
-            left: 18,
-            child: Icon(
-              Icons.cloud_rounded,
-              size: 26,
-              color: Colors.white.withOpacity(0.85),
-            ),
-          ),
-          Positioned(
-            top: 20,
-            right: 24,
-            child: Icon(
-              Icons.star_rounded,
-              size: 22,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                _BabyAvatar(babyName: babyName),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        babyName,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Sve važne stvari o vašoj bebi na jednom mjestu.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _HeaderCard(babyName: babyName, isGirl: _isGirl),
+              const SizedBox(height: AppSpacing.xl),
+
+              _menu(
+                context,
+                AppColors.seed,
+                Icons.show_chart_rounded,
+                'Praćenje rasta',
+                () => _push(
+                  context,
+                  BabyGrowthTrackerScreen(babyId: babyId, babyName: babyName),
+                ),
+              ),
+
+              _menu(
+                context,
+                AppColors.roseDark,
+                Icons.restaurant_rounded,
+                'Plan ishrane',
+                () => _push(context, MealRecommendationScreen(babyId: babyId)),
+              ),
+
+              _menu(
+                context,
+                AppColors.seed,
+                Icons.local_drink_rounded,
+                'Dnevnik hranjenja',
+                () => _push(context, FeedingCalendarScreen(babyId: babyId)),
+              ),
+
+              _menu(
+                context,
+                AppColors.roseDark,
+                Icons.favorite_border_rounded,
+                'Praćenje zdravlja',
+                () => _push(
+                  context,
+                  HealthTrackingScreen(
+                    babyId: babyId,
+                    babyName: babyName,
+                    userId: parentProfileId,
                   ),
                 ),
+              ),
+
+              _menu(
+                context,
+                AppColors.seed,
+                Icons.nights_stay_rounded,
+                'Dnevnik spavanja',
+                () => _push(
+                  context,
+                  SleepLogOverviewScreen(babyId: babyId, babyName: babyName),
+                ),
+              ),
+
+              _menu(
+                context,
+                AppColors.roseDark,
+                Icons.baby_changing_station_rounded,
+                'Praćenje pelena',
+                () => _push(context, DiaperLogCalendarScreen(babyId: babyId)),
+              ),
+
+              _menu(
+                context,
+                AppColors.seed,
+                Icons.emoji_events_rounded,
+                'Dostignuća',
+                () => _push(
+                  context,
+                  MilestoneScreen(babyId: babyId, babyName: babyName),
+                ),
+              ),
+
+              _menu(
+                context,
+                AppColors.roseDark,
+                Icons.chat_bubble_outline_rounded,
+                'Chat',
+                () => _push(
+                  context,
+                  ChatHomeScreen(currentUserId: parentProfileId),
+                ),
+              ),
+
+              _menu(
+                context,
+                AppColors.seed,
+                Icons.event_note_rounded,
+                'Kalendar termina',
+                () => _push(
+                  context,
+                  CalendarEventScreen(
+                    babyId: babyId,
+                    babyName: babyName,
+                    userId: parentProfileId,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.xl),
+
+              _BackCard(onTap: () => Navigator.pop(context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menu(
+    BuildContext context,
+    Color color,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Ink(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Icon(icon, color: color, size: 28),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: color),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/* ==================== AVATAR ==================== */
-
-class _BabyAvatar extends StatelessWidget {
-  final String babyName;
-
-  const _BabyAvatar({required this.babyName});
-
-  String _initials() {
-    final trimmed = babyName.trim();
-    if (trimmed.isEmpty) return '👶';
-
-    final parts = trimmed.split(' ');
-    if (parts.length == 1) {
-      return parts.first.characters.first.toUpperCase();
-    }
-
-    return (parts[0].characters.first + parts[1].characters.first)
-        .toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 70,
-      height: 70,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(colors: [AppColors.babyPink, AppColors.seed]),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.babyPink.withOpacity(.35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          _initials(),
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
         ),
       ),
     );
   }
 }
 
-/* ==================== MENU ITEM ==================== */
+/* ================= HEADER ================= */
 
-class _BabyMenuItem extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
+class _HeaderCard extends StatelessWidget {
+  final String babyName;
+  final bool isGirl;
 
-  const _BabyMenuItem({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  State<_BabyMenuItem> createState() => _BabyMenuItemState();
-}
-
-class _BabyMenuItemState extends State<_BabyMenuItem>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-
-    _scale = Tween<double>(
-      begin: 0.97,
-      end: 1.02,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _HeaderCard({required this.babyName, required this.isGirl});
 
   @override
   Widget build(BuildContext context) {
-    final accent = widget.color;
+    final headerColor = isGirl ? AppColors.babyPink : AppColors.babyBlue;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: widget.onTap,
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
       child: Ink(
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: accent.withOpacity(0.45), width: 1.1),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withOpacity(0.10),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          gradient: LinearGradient(
+            colors: [headerColor.withOpacity(.18), AppColors.card],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Row(
             children: [
-              ScaleTransition(
-                scale: _scale,
-                child: Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent,
-                  ),
-                  child: Icon(widget.icon, size: 24, color: Colors.white),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: headerColor,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.child_care_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                widget.label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: accent,
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      babyName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: headerColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Sve važne stvari o vašoj bebi na jednom mjestu',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/* ================= BACK CARD ================= */
+
+class _BackCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _BackCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Ink(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: AppColors.roseDark.withOpacity(.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.roseDark,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Text(
+                  'Povratak u mamin svijet',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.roseDark,
+                  ),
                 ),
               ),
             ],

@@ -5,28 +5,49 @@ import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
-class Therapy {
+class MedicationIntakeLog {
+  final int intakeLogId;
+  final int planId;
+  final String medicineName;
+  final String dose;
+  final DateTime scheduledDate;
+  final Duration intakeTime;
+  final bool taken;
+
+  MedicationIntakeLog({
+    required this.intakeLogId,
+    required this.planId,
+    required this.medicineName,
+    required this.dose,
+    required this.scheduledDate,
+    required this.intakeTime,
+    required this.taken,
+  });
+}
+
+class TherapyPlan {
   final int id;
   final String name;
   final String dose;
   final DateTime start;
   final DateTime end;
+  final List<Duration> intakeTimes;
 
-  const Therapy({
+  const TherapyPlan({
     required this.id,
     required this.name,
     required this.dose,
     required this.start,
     required this.end,
+    required this.intakeTimes,
   });
 
-  bool contains(DateTime date) {
-    final d = DateTime(date.year, date.month, date.day);
+  bool isActiveOn(DateTime day) {
+    final d = DateTime(day.year, day.month, day.day);
     final s = DateTime(start.year, start.month, start.day);
     final e = DateTime(end.year, end.month, end.day);
 
-    return (d.isAtSameMomentAs(s) || d.isAfter(s)) &&
-        (d.isAtSameMomentAs(e) || d.isBefore(e));
+    return !d.isBefore(s) && !d.isAfter(e);
   }
 }
 
@@ -35,27 +56,82 @@ class Therapy {
 /// =============================================================
 
 class MedicationPlanApiService {
-  final int userId;
+  final int parentProfileId;
 
-  MedicationPlanApiService(this.userId);
+  MedicationPlanApiService(this.parentProfileId);
 
-  Future<List<Therapy>> fetchTherapies() async {
-    final res = await ApiClient.get('/api/MedicationPlan?UserId=$userId');
+  Future<List<TherapyPlan>> fetchPlans() async {
+    final res = await ApiClient.get(
+      '/api/MedicationPlan?ParentProfileId=$parentProfileId',
+    );
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load therapies');
     }
 
     final List data = jsonDecode(res.body);
+
     return data.map((e) {
-      return Therapy(
+      return TherapyPlan(
         id: e['id'],
         name: e['medicineName'],
         dose: e['dose'],
         start: DateTime.parse(e['startDate']),
         end: DateTime.parse(e['endDate']),
+        intakeTimes: ((e['intakeTimes'] ?? []) as List).map((t) {
+          final parts = t.toString().split(':');
+          return Duration(
+            hours: int.parse(parts[0]),
+            minutes: int.parse(parts[1]),
+          );
+        }).toList(),
       );
     }).toList();
+  }
+
+  Future<List<MedicationIntakeLog>> fetchLogsForDay(DateTime date) async {
+    final formattedDate =
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+
+    final res = await ApiClient.get(
+      '/api/MedicationPlan/day?parentProfileId=$parentProfileId&date=$formattedDate',
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load day logs');
+    }
+
+    final List data = jsonDecode(res.body);
+
+    return data.map((e) {
+      final parts = e['intakeTime'].toString().split(':');
+
+      return MedicationIntakeLog(
+        intakeLogId: e['intakeLogId'],
+        planId: e['planId'],
+        medicineName: e['medicineName'],
+        dose: e['dose'],
+        scheduledDate: DateTime.parse(e['scheduledDate']),
+        intakeTime: Duration(
+          hours: int.parse(parts[0]),
+          minutes: int.parse(parts[1]),
+        ),
+        taken: e['taken'],
+      );
+    }).toList();
+  }
+
+  Future<void> markTaken(int logId) async {
+    final res = await ApiClient.post(
+      '/api/MedicationPlan/mark-taken',
+      body: {'intakeLogId': logId},
+    );
+
+    if (res.statusCode != 204) {
+      throw Exception('Failed to mark as taken');
+    }
   }
 
   Future<void> create({
@@ -63,50 +139,27 @@ class MedicationPlanApiService {
     required String dose,
     required DateTime start,
     required DateTime end,
+    required List<TimeOfDay> times,
   }) async {
     final res = await ApiClient.post(
       '/api/MedicationPlan',
       body: {
-        'userId': userId,
+        'parentProfileId': parentProfileId,
         'medicineName': name,
         'dose': dose,
         'startDate': start.toIso8601String(),
         'endDate': end.toIso8601String(),
+        'intakeTimes': times
+            .map(
+              (t) =>
+                  '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00',
+            )
+            .toList(),
       },
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
       throw Exception('Failed to create therapy');
-    }
-  }
-
-  Future<void> update(
-    int id, {
-    String? name,
-    String? dose,
-    DateTime? start,
-    DateTime? end,
-  }) async {
-    final res = await ApiClient.patch(
-      '/api/MedicationPlan/$id',
-      body: {
-        if (name != null) 'medicineName': name,
-        if (dose != null) 'dose': dose,
-        if (start != null) 'startDate': start.toIso8601String(),
-        if (end != null) 'endDate': end.toIso8601String(),
-      },
-    );
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to update therapy');
-    }
-  }
-
-  Future<void> delete(int id) async {
-    final res = await ApiClient.delete('/api/MedicationPlan/$id');
-
-    if (res.statusCode != 204) {
-      throw Exception('Failed to delete therapy');
     }
   }
 }
@@ -129,29 +182,41 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  List<TherapyPlan> _plans = [];
+  List<MedicationIntakeLog> _dayLogs = [];
 
   bool _loading = true;
-  List<Therapy> _therapies = [];
 
   @override
   void initState() {
     super.initState();
     _service = MedicationPlanApiService(widget.parentProfileId);
-    _load();
+
+    final today = DateTime.now();
+    _selectedDay = DateTime(today.year, today.month, today.day);
+    _focusedDay = _selectedDay!;
+
+    _loadPlans();
   }
 
-  Future<void> _load() async {
+  Future<void> _loadLogsForDay(DateTime day) async {
+    try {
+      _dayLogs = await _service.fetchLogsForDay(day);
+      setState(() {});
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri učitavanju terapije');
+    }
+  }
+
+  Future<void> _loadPlans() async {
     setState(() => _loading = true);
     try {
-      _therapies = await _service.fetchTherapies();
+      _plans = await _service.fetchPlans();
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju terapija');
     }
     if (mounted) setState(() => _loading = false);
   }
-
-  List<Therapy> _forDay(DateTime day) =>
-      _therapies.where((t) => t.contains(day)).toList();
 
   DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -173,19 +238,34 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.roseDark),
+            )
           : Column(
               children: [
                 NestlyCalendar(
                   focusedDay: _focusedDay,
                   selectedDay: _selectedDay,
                   markerIcon: Icons.medication_rounded,
-                  eventLoader: (day) => _forDay(day),
-                  onDaySelected: (selected, focused) {
+                  lastDay: DateTime.utc(2100, 12, 31),
+                  eventLoader: (day) {
+                    final hasEvent = _plans.any((p) => p.isActiveOn(day));
+                    return hasEvent ? [1] : [];
+                  },
+
+                  onDaySelected: (selected, focused) async {
+                    final d = DateTime(
+                      selected.year,
+                      selected.month,
+                      selected.day,
+                    );
+
                     setState(() {
-                      _selectedDay = _dayOnly(selected);
-                      _focusedDay = _dayOnly(focused);
+                      _selectedDay = d;
+                      _focusedDay = d;
                     });
+
+                    await _loadLogsForDay(d);
                   },
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -198,31 +278,88 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
 
   Widget _buildDayDetails() {
     if (_selectedDay == null) {
-      return const Center(
-        child: Text(
-          'Odaberite dan u kalendaru.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-      );
+      return const Center(child: Text('Odaberite dan'));
     }
 
-    final list = _forDay(_selectedDay!);
-    if (list.isEmpty) {
-      return const Center(
-        child: Text(
-          'Nema terapije za odabrani dan.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-      );
+    if (_dayLogs.isEmpty) {
+      return const Center(child: Text('Nema terapije za ovaj dan'));
     }
 
-    return ListView(
+    return ListView.separated(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      children: list.map(_therapyCard).toList(),
+      itemCount: _dayLogs.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 14),
+      itemBuilder: (context, index) {
+        final log = _dayLogs[index];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: log.taken,
+                  activeColor: AppColors.roseDark,
+                  onChanged: log.taken
+                      ? null
+                      : (_) async {
+                          await _service.markTaken(log.intakeLogId);
+
+                          NestlyToast.success(
+                            context,
+                            'Terapija označena kao popijena',
+                          );
+
+                          await _loadLogsForDay(_selectedDay!);
+                        },
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        log.medicineName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: AppColors.roseDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Doza: ${log.dose}',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Vrijeme: ${_formatTime(log.intakeTime)}',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _therapyCard(Therapy t) {
+  Widget _therapyCard(TherapyPlan plan, Duration time) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
@@ -233,42 +370,28 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
         child: Row(
           children: [
             const Icon(Icons.local_pharmacy_rounded, color: AppColors.roseDark),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    t.name,
+                    plan.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       color: AppColors.roseDark,
                     ),
                   ),
                   Text(
-                    'Doza: ${t.dose}',
+                    'Doza: ${plan.dose}',
                     style: const TextStyle(color: AppColors.textSecondary),
                   ),
                   Text(
-                    '${_fmt(t.start)} – ${_fmt(t.end)}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
+                    'Vrijeme: ${_formatTime(time)}',
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (v) async {
-                if (v == 'delete') {
-                  await _service.delete(t.id);
-                  _load();
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'delete', child: Text('Obriši')),
-              ],
             ),
           ],
         ),
@@ -292,8 +415,10 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
                 builder: (_) => AddTherapyScreen(service: _service),
               ),
             );
-            _load();
+
+            _loadPlans();
           },
+
           child: const Text('Dodaj terapiju'),
         ),
       ),
@@ -324,10 +449,62 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
   DateTime? _start;
   DateTime? _end;
   bool _saving = false;
+  List<TimeOfDay> _times = [];
+  Future<void> _addTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.roseDark,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteColor: AppColors.roseDark.withOpacity(.15),
+              hourMinuteTextColor: AppColors.roseDark,
+              dayPeriodTextColor: AppColors.roseDark,
+
+              dialHandColor: AppColors.roseDark,
+              dialBackgroundColor: AppColors.babyPink.withOpacity(.2),
+
+              dialTextColor: MaterialStateColor.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                return AppColors.textPrimary;
+              }),
+
+              entryModeIconColor: AppColors.roseDark,
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.roseDark,
+                textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.roseDark,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() => _times.add(picked));
+    }
+  }
 
   Future<void> _save() async {
     if (_name.text.trim().isEmpty || _dose.text.trim().isEmpty) {
       NestlyToast.error(context, 'Popunite sva polja');
+      return;
+    }
+    if (_times.isEmpty) {
+      NestlyToast.error(context, 'Dodajte barem jedno vrijeme uzimanja');
       return;
     }
 
@@ -348,7 +525,9 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
         dose: _dose.text.trim(),
         start: _start!,
         end: _end!,
+        times: _times,
       );
+
       Navigator.pop(context);
       NestlyToast.success(context, 'Terapija dodana');
     } catch (_) {
@@ -465,6 +644,41 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Vrijeme uzimanja',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.roseDark,
+                ),
+              ),
+            ),
+
+            Wrap(
+              spacing: 8,
+              children: _times
+                  .map(
+                    (t) => Chip(
+                      label: Text(
+                        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}',
+                      ),
+                      onDeleted: () => setState(() => _times.remove(t)),
+                    ),
+                  )
+                  .toList(),
+            ),
+
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.roseDark,
+                textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              onPressed: _addTime,
+              child: const Text('Dodaj termin'),
+            ),
 
             const SizedBox(height: 16),
 
@@ -532,4 +746,10 @@ InputDecoration _decoration({required String label, required IconData icon}) {
     ),
     prefixIconColor: AppColors.roseDark,
   );
+}
+
+String _formatTime(Duration d) {
+  final h = d.inHours.toString().padLeft(2, '0');
+  final m = (d.inMinutes % 60).toString().padLeft(2, '0');
+  return '$h:$m';
 }

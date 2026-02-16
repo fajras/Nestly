@@ -240,7 +240,9 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
       ),
 
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.roseDark),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(

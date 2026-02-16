@@ -254,7 +254,11 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
       }
       BabyGrowthApiService._cache.remove(widget.babyId);
 
-      NestlyToast.success(context, 'Podaci su sačuvani');
+      NestlyToast.success(
+        context,
+        'Podaci su sačuvani',
+        accentColor: AppColors.seed,
+      );
     } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju');
     }
@@ -435,6 +439,8 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.seed,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.seed.withOpacity(.5),
+                  disabledForegroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),

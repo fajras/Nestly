@@ -63,7 +63,7 @@ class DiaperLogApiService {
           '${time.hour.toString().padLeft(2, '0')}:'
           '${time.minute.toString().padLeft(2, '0')}:00',
       'diaperState': state.toLowerCase(),
-      if (notes != null) 'notes': notes,
+      'notes': (notes == null || notes.trim().isEmpty) ? '' : notes.trim(),
     };
 
     final res = await ApiClient.post('/api/DiaperLog', body: body);
@@ -106,6 +106,43 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
     _focusedDay = _dayOnly(DateTime.now());
     _selectedDay = _focusedDay;
     _loadMonth(_focusedDay);
+  }
+
+  Widget _buildLogsForSelectedDay() {
+    if (_selectedDay == null) {
+      return const Text(
+        'Odaberite datum',
+        style: TextStyle(color: AppColors.textSecondary),
+      );
+    }
+
+    final logs = _forDay(_selectedDay!);
+
+    final label =
+        '${_selectedDay!.day.toString().padLeft(2, '0')}.'
+        '${_selectedDay!.month.toString().padLeft(2, '0')}.'
+        '${_selectedDay!.year}.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Zapisi za $label',
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.roseDark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (logs.isEmpty)
+          const Text(
+            'Nema zapisa za ovaj datum.',
+            style: TextStyle(color: AppColors.textSecondary),
+          )
+        else
+          Column(children: logs.map(_logTile).toList()),
+      ],
+    );
   }
 
   DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -153,7 +190,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
         date: _selectedDay!,
         time: _time,
         state: _state,
-        notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+        notes: _notesCtrl.text,
       );
 
       _notesCtrl.clear();
@@ -255,6 +292,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
 
             TextField(
               controller: _notesCtrl,
+              cursorColor: AppColors.roseDark,
               maxLines: 2,
               decoration: _fieldDecoration(
                 label: 'Napomena',
@@ -347,6 +385,8 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                       horizontal: AppSpacing.lg,
                     ),
                     children: [
+                      _buildLogsForSelectedDay(),
+                      const SizedBox(height: AppSpacing.lg),
                       _form(),
                       const SizedBox(height: AppSpacing.lg),
                     ],
@@ -356,4 +396,38 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
             ),
     );
   }
+}
+
+Widget _logTile(DiaperLog log) {
+  return Card(
+    margin: const EdgeInsets.only(bottom: 8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: [
+          const Icon(Icons.baby_changing_station, color: AppColors.roseDark),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  log.state,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                if (log.notes != null && log.notes!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(log.notes!),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

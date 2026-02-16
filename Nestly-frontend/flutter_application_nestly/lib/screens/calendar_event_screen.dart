@@ -238,7 +238,11 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       _timeOfDay = null;
 
       await _loadMonth(_focusedDay);
-      NestlyToast.success(context, 'Termin je uspješno sačuvan.');
+      NestlyToast.success(
+        context,
+        'Termin je uspješno sačuvan.',
+        accentColor: AppColors.seed,
+      );
     } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju termina.');
     }
@@ -299,6 +303,8 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       markerIcon: Icons.event_note_rounded,
 
       eventLoader: (day) => _eventsForDay(day),
+
+      lastDay: DateTime.now().add(const Duration(days: 365 * 5)),
 
       onDaySelected: (selected, focused) {
         setState(() {

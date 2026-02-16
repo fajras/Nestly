@@ -56,12 +56,8 @@ class QaAdminService {
     required int answeredById,
   }) async {
     final res = await ApiClient.post(
-      '/api/qaanswer',
-      body: {
-        'questionId': questionId,
-        'answerText': answerText,
-        'answeredById': answeredById,
-      },
+      '/api/QaQuestion/$questionId/answers',
+      body: {'answerText': answerText, 'answeredById': answeredById},
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
@@ -219,7 +215,11 @@ class _QuestionCardState extends State<_QuestionCard> {
         answeredById: 1,
       );
 
-      NestlyToast.success(context, 'Odgovor spremljen');
+      NestlyToast.success(
+        context,
+        'Odgovor spremljen',
+        accentColor: AppColors.seed,
+      );
       widget.onAnswered();
     } catch (e) {
       NestlyToast.error(context, 'Greška pri spremanju odgovora');

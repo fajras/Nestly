@@ -298,6 +298,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
             TextField(
               controller: _tempCtrl,
+              cursorColor: AppColors.roseDark,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -312,6 +313,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
             TextField(
               controller: _medCtrl,
+              cursorColor: AppColors.roseDark,
               decoration: _fieldDecoration(
                 label: 'Lijekovi',
                 icon: Icons.medical_services_rounded,
@@ -323,6 +325,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
             TextField(
               controller: _checkCtrl,
+              cursorColor: AppColors.roseDark,
               decoration: _fieldDecoration(
                 label: 'Pregledi',
                 icon: Icons.vaccines_rounded,
@@ -351,7 +354,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            AppColors.roseDark,
                           ),
                         ),
                       )
@@ -388,7 +391,11 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.roseDark),
+              ),
+            )
           : Column(
               children: [
                 NestlyCalendar(

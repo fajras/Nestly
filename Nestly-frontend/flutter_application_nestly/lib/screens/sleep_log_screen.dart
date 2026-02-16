@@ -9,8 +9,8 @@ class SleepLogEntry {
   final int id;
   final int babyId;
   final DateTime sleepDate;
-  final DateTime startTime;
-  final DateTime endTime;
+  final Duration startTime;
+  final Duration endTime;
   final String? notes;
 
   const SleepLogEntry({
@@ -23,29 +23,35 @@ class SleepLogEntry {
   });
 
   factory SleepLogEntry.fromJson(Map<String, dynamic> json) {
+    Duration parseTime(String value) {
+      final parts = value.split(':');
+      return Duration(hours: int.parse(parts[0]), minutes: int.parse(parts[1]));
+    }
+
     return SleepLogEntry(
-      id: json['id'] as int,
-      babyId: json['babyId'] as int,
+      id: json['id'],
+      babyId: json['babyId'],
       sleepDate: DateTime.parse(json['sleepDate']),
-      startTime: DateTime.parse(json['startTime']),
-      endTime: DateTime.parse(json['endTime']),
+      startTime: parseTime(json['startTime']),
+      endTime: parseTime(json['endTime']),
       notes: json['notes'],
     );
   }
 
   double get durationHours {
-    final adjustedEnd = endTime.isBefore(startTime)
-        ? endTime.add(const Duration(days: 1))
+    final end = endTime < startTime
+        ? endTime + const Duration(hours: 24)
         : endTime;
-    return adjustedEnd.difference(startTime).inMinutes / 60.0;
+
+    return (end - startTime).inMinutes / 60.0;
   }
 }
 
 class CreateSleepLogRequest {
   final int babyId;
   final DateTime sleepDate;
-  final DateTime startTime;
-  final DateTime endTime;
+  final String startTime;
+  final String endTime;
   final String? notes;
 
   const CreateSleepLogRequest({
@@ -59,8 +65,8 @@ class CreateSleepLogRequest {
   Map<String, dynamic> toJson() => {
     'babyId': babyId,
     'sleepDate': sleepDate.toIso8601String(),
-    'startTime': startTime.toIso8601String(),
-    'endTime': endTime.toIso8601String(),
+    'startTime': startTime,
+    'endTime': endTime,
     'notes': notes,
   };
 }
@@ -276,8 +282,10 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
             _selectedDate.month,
             _selectedDate.day,
           ),
-          startTime: start,
-          endTime: end,
+          startTime:
+              '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
+          endTime:
+              '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
         ),
       );
 
@@ -285,7 +293,11 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
       _endTime = null;
 
       await _load();
-      NestlyToast.success(context, 'Zapis spavanja sačuvan');
+      NestlyToast.success(
+        context,
+        'Zapis spavanja sačuvan',
+        accentColor: AppColors.seed,
+      );
     } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju');
     }

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
-using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
 {
@@ -15,12 +14,11 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<FeedingLog> Get(FeedingLogSearchObject? search)
+        public List<FeedingLogResponseDto> Get(FeedingLogSearchObject? search)
         {
             IQueryable<FeedingLog> q = _db.FeedingLogs
-                                          .Include(f => f.Baby)
-                                          .Include(f => f.FoodType)
-                                          .AsQueryable();
+                .Include(f => f.FoodType)
+                .AsQueryable();
 
             if (search?.BabyId is not null)
             {
@@ -37,18 +35,23 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.FeedDate <= search.DateTo.Value);
             }
 
-            return q.ToList();
+            return q
+                .OrderByDescending(x => x.FeedDate)
+                .ThenByDescending(x => x.FeedTime)
+                .Select(x => MapToDto(x))
+                .ToList();
         }
 
-        public FeedingLog? GetById(long id)
+        public FeedingLogResponseDto? GetById(long id)
         {
-            return _db.FeedingLogs
-                      .Include(f => f.Baby)
-                      .Include(f => f.FoodType)
-                      .FirstOrDefault(x => x.Id == id);
+            var entity = _db.FeedingLogs
+                .Include(f => f.FoodType)
+                .FirstOrDefault(x => x.Id == id);
+
+            return entity is null ? null : MapToDto(entity);
         }
 
-        public FeedingLog Create(CreateFeedingLogDto dto)
+        public FeedingLogResponseDto Create(CreateFeedingLogDto dto)
         {
             if (dto is null)
             {
@@ -60,8 +63,7 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
             }
 
-            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
-            if (!babyExists)
+            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
                 throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
             }
@@ -76,13 +78,10 @@ namespace Nestly.Services.Repository
                 throw new ArgumentException("AmountMl cannot be negative.", nameof(dto.AmountMl));
             }
 
-            if (dto.FoodTypeId.HasValue)
+            if (dto.FoodTypeId.HasValue &&
+                !_db.FoodTypes.Any(f => f.Id == dto.FoodTypeId.Value))
             {
-                var foodTypeExists = _db.FoodTypes.Any(f => f.Id == dto.FoodTypeId.Value);
-                if (!foodTypeExists)
-                {
-                    throw new ArgumentException("FoodType does not exist.", nameof(dto.FoodTypeId));
-                }
+                throw new ArgumentException("FoodType does not exist.", nameof(dto.FoodTypeId));
             }
 
             var entity = new FeedingLog
@@ -92,18 +91,23 @@ namespace Nestly.Services.Repository
                 FeedTime = dto.FeedTime,
                 AmountMl = dto.AmountMl,
                 FoodTypeId = dto.FoodTypeId,
-                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim()
+                Notes = string.IsNullOrWhiteSpace(dto.Notes)
+                    ? null
+                    : dto.Notes.Trim()
             };
 
             _db.FeedingLogs.Add(entity);
             _db.SaveChanges();
 
-            return entity;
+            return MapToDto(entity);
         }
 
-        public FeedingLog? Patch(long id, FeedingLogPatchDto patch)
+        public FeedingLogResponseDto? Patch(long id, FeedingLogPatchDto patch)
         {
-            var dbEntity = _db.FeedingLogs.FirstOrDefault(x => x.Id == id);
+            var dbEntity = _db.FeedingLogs
+                .Include(f => f.FoodType)
+                .FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
                 return null;
@@ -111,7 +115,7 @@ namespace Nestly.Services.Repository
 
             if (patch.FeedDate is not null)
             {
-                dbEntity.FeedDate = patch.FeedDate.Value;
+                dbEntity.FeedDate = patch.FeedDate.Value.Date;
             }
 
             if (patch.FeedTime is not null)
@@ -121,6 +125,11 @@ namespace Nestly.Services.Repository
 
             if (patch.AmountMl is not null)
             {
+                if (patch.AmountMl < 0)
+                {
+                    throw new ArgumentException("AmountMl cannot be negative.");
+                }
+
                 dbEntity.AmountMl = patch.AmountMl.Value;
             }
 
@@ -136,16 +145,20 @@ namespace Nestly.Services.Repository
 
             if (patch.Notes is not null)
             {
-                dbEntity.Notes = patch.Notes;
+                dbEntity.Notes = string.IsNullOrWhiteSpace(patch.Notes)
+                    ? null
+                    : patch.Notes.Trim();
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return MapToDto(dbEntity);
         }
 
         public bool Delete(long id)
         {
             var dbEntity = _db.FeedingLogs.FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
                 return false;
@@ -154,6 +167,21 @@ namespace Nestly.Services.Repository
             _db.FeedingLogs.Remove(dbEntity);
             _db.SaveChanges();
             return true;
+        }
+
+        private static FeedingLogResponseDto MapToDto(FeedingLog x)
+        {
+            return new FeedingLogResponseDto
+            {
+                Id = x.Id,
+                BabyId = x.BabyId,
+                FeedDate = x.FeedDate,
+                FeedTime = x.FeedTime,
+                AmountMl = x.AmountMl,
+                FoodTypeId = x.FoodTypeId,
+                FoodTypeName = x.FoodType != null ? x.FoodType.Name : null,
+                Notes = x.Notes
+            };
         }
     }
 }

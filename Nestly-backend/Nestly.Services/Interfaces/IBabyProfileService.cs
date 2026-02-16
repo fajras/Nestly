@@ -1,16 +1,14 @@
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
     public interface IBabyProfileService
     {
-        List<BabyProfile> Get(BabyProfileSearchObject? search);
-        BabyProfile? GetById(long id);
-        BabyProfile Create(CreateBabyProfileDto entity);
-        BabyProfile? Patch(long id, BabyProfilePatchDto patch);
+        IEnumerable<BabyProfileSummaryDto> Get(BabyProfileSearchObject? search);
+        BabyProfileSummaryDto? GetById(long id);
+        BabyProfileSummaryDto Create(CreateBabyProfileDto entity);
+        BabyProfileSummaryDto? Patch(long id, BabyProfilePatchDto patch);
         bool Delete(long id);
-        BabyProfile? GetLatestByParent(long parentProfileId);
-
+        BabyProfileSummaryDto? GetLatestByParent(long parentProfileId);
     }
 }

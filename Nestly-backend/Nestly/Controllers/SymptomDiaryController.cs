@@ -70,12 +70,15 @@ namespace Nestly_WebAPI.Controllers
             }
         }
 
+        [HttpDelete("{id:long}")]
+        public IActionResult Delete(long id)
+            => _service.Delete(id) ? NoContent() : NotFound();
+
         [HttpGet("marked-days")]
         public ActionResult<IEnumerable<DateTime>> GetMarkedDays(
-        [FromQuery] long parentProfileId)
+            [FromQuery] long parentProfileId)
         {
             return Ok(_service.GetMarkedDays(parentProfileId));
         }
-
     }
 }

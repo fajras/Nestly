@@ -35,27 +35,14 @@ namespace Nestly_WebAPI.Controllers
             try
             {
                 var updated = appUserService.Patch(id, patch);
-                if (updated is null)
-                {
-                    return NotFound();
-                }
-
-                var dto = new AppUserResultDto
-                {
-                    Id = updated.Id,
-                    Email = updated.Email,
-                    FirstName = updated.FirstName,
-                    LastName = updated.LastName,
-                    RoleId = updated.RoleId,
-                    IdentityUserId = updated.IdentityUserId
-                };
-                return Ok(dto);
+                return updated is null ? NotFound() : Ok(updated);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
+
 
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)

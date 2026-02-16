@@ -1,14 +1,10 @@
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 
-namespace Nestly.Services.Interfaces
+public interface ICalendarEventService
 {
-    public interface ICalendarEventService
-    {
-        List<CalendarEvent> Get(CalendarEventSearchObject? search);
-        CalendarEvent? GetById(long id);
-        CalendarEvent Create(CreateCalendarEventDto entity);
-        CalendarEvent? Patch(long id, CalendarEventPatchDto patch);
-        bool Delete(long id);
-    }
+    IEnumerable<CalendarEventResponseDto> Get(CalendarEventSearchObject? search);
+    CalendarEventResponseDto? GetById(long id);
+    CalendarEventResponseDto Create(CreateCalendarEventDto entity);
+    CalendarEventResponseDto? Patch(long id, CalendarEventPatchDto patch);
+    bool Delete(long id);
 }

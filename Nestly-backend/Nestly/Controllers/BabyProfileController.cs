@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -17,84 +16,44 @@ namespace Nestly_WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BabyProfile>> Get([FromQuery] BabyProfileSearchObject? search)
+        public ActionResult<IEnumerable<BabyProfileSummaryDto>> Get([FromQuery] BabyProfileSearchObject? search)
         {
-            var result = _service.Get(search);
-            return Ok(result);
+            return Ok(_service.Get(search));
         }
 
         [HttpGet("{id:long}")]
-        public ActionResult<BabyProfile> GetById([FromRoute] long id)
+        public ActionResult<BabyProfileSummaryDto> GetById(long id)
         {
-            var entity = _service.GetById(id);
-            if (entity is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(entity);
+            var result = _service.GetById(id);
+            return result is null ? NotFound() : Ok(result);
         }
 
         [HttpPost]
-        public ActionResult<BabyProfile> Create([FromBody] CreateBabyProfileDto request)
+        public ActionResult<BabyProfileSummaryDto> Create([FromBody] CreateBabyProfileDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PATCH api/BabyProfile/5
         [HttpPatch("{id:long}")]
-        public ActionResult<BabyProfile> Patch([FromRoute] long id, [FromBody] BabyProfilePatchDto patch)
+        public ActionResult<BabyProfileSummaryDto> Patch(long id, [FromBody] BabyProfilePatchDto patch)
         {
-            try
-            {
-                var updated = _service.Patch(id, patch);
-                if (updated is null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(updated);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var updated = _service.Patch(id, patch);
+            return updated is null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:long}")]
-        public IActionResult Delete([FromRoute] long id)
+        public IActionResult Delete(long id)
         {
-            var ok = _service.Delete(id);
-            if (!ok)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
+            return _service.Delete(id) ? NoContent() : NotFound();
         }
 
         [HttpGet("latest-by-parent/{parentProfileId:long}")]
-        public ActionResult<BabyProfileSummaryDto> GetLatestByParent([FromRoute] long parentProfileId)
+        public ActionResult<BabyProfileSummaryDto> GetLatestByParent(long parentProfileId)
         {
-            var entity = _service.GetLatestByParent(parentProfileId);
-            if (entity is null)
-            {
-                return NotFound();
-            }
-
-            var dto = new BabyProfileSummaryDto
-            {
-                Id = entity.Id,
-                BabyName = entity.BabyName,
-                Gender = entity.Gender,
-                BirthDate = entity.BirthDate
-            };
-
-            return Ok(dto);
+            var result = _service.GetLatestByParent(parentProfileId);
+            return result is null ? NotFound() : Ok(result);
         }
-
 
     }
 }
-

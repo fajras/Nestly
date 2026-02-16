@@ -7,7 +7,8 @@ namespace Nestly.Services.Interfaces
         SymptomDiaryResponseDto Create(CreateSymptomDiaryDto dto);
         IEnumerable<SymptomDiaryResponseDto> GetByParent(long parentProfileId);
         SymptomDiaryResponseDto? GetByDate(long parentProfileId, DateTime date);
-        IEnumerable<DateTime> GetMarkedDays(long parentProfileId);
         SymptomDiaryResponseDto? Patch(long id, SymptomDiaryPatchDto patch);
+        bool Delete(long id);
+        IEnumerable<DateTime> GetMarkedDays(long parentProfileId);
     }
 }

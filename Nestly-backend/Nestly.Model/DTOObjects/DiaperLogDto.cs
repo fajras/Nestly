@@ -24,4 +24,14 @@ namespace Nestly.Model.DTOObjects
         public DateTime? DateTo { get; set; }
         public string? DiaperState { get; set; }
     }
+    public class DiaperLogResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public DateTime ChangeDate { get; set; }
+        public TimeSpan ChangeTime { get; set; }
+        public string DiaperState { get; set; } = default!;
+        public string? Notes { get; set; }
+    }
+
 }

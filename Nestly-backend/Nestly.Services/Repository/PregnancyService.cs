@@ -2,7 +2,6 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
-using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
 {
@@ -11,11 +10,9 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public PregnancyService(NestlyDbContext db) => _db = db;
 
-        public List<Pregnancy> Get(PregnancySearchObject? search)
+        public List<PregnancyResponseDto> Get(PregnancySearchObject? search)
         {
-            IQueryable<Pregnancy> q = _db.Pregnancies
-                                          .Include(p => p.ParentProfile)
-                                          .AsQueryable();
+            IQueryable<Pregnancy> q = _db.Pregnancies.AsNoTracking();
 
             if (search?.UserId is not null)
             {
@@ -43,33 +40,31 @@ namespace Nestly.Services.Repository
             }
 
             return q
-            .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
-            .ThenByDescending(p => p.DueDate ?? DateTime.MinValue)
-            .ThenByDescending(p => p.Id)
-            .ToList();
+                .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
+                .ThenByDescending(p => p.DueDate ?? DateTime.MinValue)
+                .ThenByDescending(p => p.Id)
+                .Select(ToDto)
+                .ToList();
         }
 
-        public Pregnancy? GetById(long id)
+        public PregnancyResponseDto? GetById(long id)
         {
-            return _db.Pregnancies
-                      .Include(p => p.ParentProfile)
-                      .FirstOrDefault(p => p.Id == id);
+            var entity = _db.Pregnancies
+                .AsNoTracking()
+                .FirstOrDefault(p => p.Id == id);
+
+            return entity is null ? null : ToDto(entity);
         }
 
-        public Pregnancy Create(CreatePregnancyDto dto)
+
+        public PregnancyResponseDto Create(CreatePregnancyDto dto)
         {
             if (dto is null)
             {
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            if (dto.UserId <= 0)
-            {
-                throw new ArgumentException("UserId (ParentProfileId) is required.", nameof(dto.UserId));
-            }
-
-            bool parentExists = _db.ParentProfiles.Any(p => p.Id == dto.UserId);
-            if (!parentExists)
+            if (!_db.ParentProfiles.Any(p => p.Id == dto.UserId))
             {
                 throw new ArgumentException("Parent profile does not exist.", nameof(dto.UserId));
             }
@@ -88,39 +83,41 @@ namespace Nestly.Services.Repository
 
             _db.Pregnancies.Add(entity);
             _db.SaveChanges();
-            return entity;
+
+            return ToDto(entity);
         }
 
-        public Pregnancy? Patch(long id, PregnancyPatchDto patch)
+        public PregnancyResponseDto? Patch(long id, PregnancyPatchDto patch)
         {
-            var dbEntity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return null;
             }
 
-            if (patch.UserId is not null && patch.UserId.Value != dbEntity.ParentProfileId)
+            if (patch.UserId is not null && patch.UserId.Value != entity.ParentProfileId)
             {
-                if (!_db.AppUsers.Any(u => u.Id == patch.UserId.Value))
+                if (!_db.ParentProfiles.Any(p => p.Id == patch.UserId.Value))
                 {
-                    throw new ArgumentException("User does not exist.");
+                    throw new ArgumentException("Parent profile does not exist.");
                 }
 
-                dbEntity.ParentProfileId = patch.UserId.Value;
+                entity.ParentProfileId = patch.UserId.Value;
             }
 
             if (patch.LmpDate is not null)
             {
-                dbEntity.LmpDate = patch.LmpDate.Value;
+                entity.LmpDate = patch.LmpDate.Value;
             }
 
             if (patch.DueDate is not null)
             {
-                dbEntity.DueDate = patch.DueDate.Value;
+                entity.DueDate = patch.DueDate.Value;
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return ToDto(entity);
         }
 
         public bool Delete(long id)
@@ -202,5 +199,16 @@ namespace Nestly.Services.Repository
                 DaysRemaining = remaining
             };
         }
+
+        private static PregnancyResponseDto ToDto(Pregnancy p) => new()
+        {
+            Id = p.Id,
+            ParentProfileId = p.ParentProfileId,
+            LmpDate = p.LmpDate,
+            DueDate = p.DueDate,
+            CycleLengthDays = p.CycleLengthDays
+        };
     }
-}
+
+
+};

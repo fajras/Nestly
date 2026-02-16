@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
-using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
 {
@@ -13,25 +11,25 @@ namespace Nestly_WebAPI.Controllers
         public PregnancyController(IPregnancyService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<Pregnancy>> Get([FromQuery] PregnancySearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<IEnumerable<PregnancyResponseDto>> Get([FromQuery] PregnancySearchObject? search)
+    => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
-        public ActionResult<Pregnancy> GetById(long id)
+        public ActionResult<PregnancyResponseDto> GetById(long id)
         {
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
-        public ActionResult<Pregnancy> Create([FromBody] CreatePregnancyDto request)
+        public ActionResult<PregnancyResponseDto> Create([FromBody] CreatePregnancyDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<Pregnancy> Patch(long id, [FromBody] PregnancyPatchDto patch)
+        public ActionResult<PregnancyResponseDto> Patch(long id, [FromBody] PregnancyPatchDto patch)
         {
             try
             {
@@ -43,6 +41,7 @@ namespace Nestly_WebAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
 
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)

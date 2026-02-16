@@ -9,13 +9,17 @@ namespace Nestly.Services.Repository
     public class MealPlanService : IMealPlanService
     {
         private readonly NestlyDbContext _db;
-        public MealPlanService(NestlyDbContext db) => _db = db;
 
-        public List<MealPlan> Get(MealPlanSearchObject? search)
+        public MealPlanService(NestlyDbContext db)
+        {
+            _db = db;
+        }
+
+        public List<MealPlanResponseDto> Get(MealPlanSearchObject? search)
         {
             IQueryable<MealPlan> q = _db.MealPlans
-                                        .Include(x => x.Baby)
-                                        .Include(x => x.FoodType);
+                .Include(x => x.FoodType)
+                .AsQueryable();
 
             if (search?.BabyId is not null)
             {
@@ -29,41 +33,30 @@ namespace Nestly.Services.Repository
 
             if (search?.From is not null)
             {
-                q = q.Where(x => x.TriedAt >= search.From);
+                q = q.Where(x => x.TriedAt >= search.From.Value);
             }
 
             if (search?.To is not null)
             {
-                q = q.Where(x => x.TriedAt <= search.To);
+                q = q.Where(x => x.TriedAt <= search.To.Value);
             }
 
-            return q.OrderByDescending(x => x.TriedAt).ToList();
+            return q
+                .OrderByDescending(x => x.TriedAt)
+                .Select(MapToDto)
+                .ToList();
         }
 
-        public MealPlan? GetById(long id)
+        public MealPlanResponseDto? GetById(long id)
         {
-            return _db.MealPlans
-                      .Include(x => x.Baby)
-                      .Include(x => x.FoodType)
-                      .FirstOrDefault(x => x.Id == id);
+            var entity = _db.MealPlans
+                .Include(x => x.FoodType)
+                .FirstOrDefault(x => x.Id == id);
+
+            return entity is null ? null : MapToDto(entity);
         }
 
-        public CreateFetalDevelopmentWeekDto? GetByWeekNumber(int weekNumber)
-        {
-            return _db.FetalDevelopmentWeeks
-                .Where(f => f.WeekNumber == weekNumber)
-                .Select(f => new CreateFetalDevelopmentWeekDto
-                {
-                    WeekNumber = f.WeekNumber,
-                    ImageUrl = f.ImageUrl,
-                    BabyDevelopment = f.BabyDevelopment,
-                    MotherChanges = f.MotherChanges
-                })
-                .FirstOrDefault();
-        }
-
-
-        public MealPlan Create(CreateMealPlanDto dto)
+        public MealPlanResponseDto Create(CreateMealPlanDto dto)
         {
             if (dto is null)
             {
@@ -72,22 +65,22 @@ namespace Nestly.Services.Repository
 
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
+                throw new ArgumentException("BabyId is required.");
             }
 
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+                throw new ArgumentException("Baby does not exist.");
             }
 
             if (!_db.FoodTypes.Any(f => f.Id == dto.FoodTypeId))
             {
-                throw new ArgumentException("FoodType does not exist.", nameof(dto.FoodTypeId));
+                throw new ArgumentException("FoodType does not exist.");
             }
 
             if (dto.Rating is < 0 or > 5)
             {
-                throw new ArgumentException("Rating must be between 0 and 5.", nameof(dto.Rating));
+                throw new ArgumentException("Rating must be between 0 and 5.");
             }
 
             var entity = new MealPlan
@@ -100,13 +93,17 @@ namespace Nestly.Services.Repository
 
             _db.MealPlans.Add(entity);
             _db.SaveChanges();
-            return entity;
+
+            return MapToDto(entity);
         }
 
-        public MealPlan? Patch(long id, MealPlanPatchDto patch)
+        public MealPlanResponseDto? Patch(long id, MealPlanPatchDto patch)
         {
-            var dbEntity = _db.MealPlans.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.MealPlans
+                .Include(x => x.FoodType)
+                .FirstOrDefault(x => x.Id == id);
+
+            if (entity is null)
             {
                 return null;
             }
@@ -115,30 +112,31 @@ namespace Nestly.Services.Repository
             {
                 if (patch.Rating is < 0 or > 5)
                 {
-                    throw new ArgumentException("Rating must be between 0 and 5.", nameof(patch.Rating));
+                    throw new ArgumentException("Rating must be between 0 and 5.");
                 }
 
-                dbEntity.Rating = patch.Rating;
+                entity.Rating = patch.Rating;
             }
 
             if (patch.TriedAt is not null)
             {
-                dbEntity.TriedAt = patch.TriedAt.Value;
+                entity.TriedAt = patch.TriedAt.Value;
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return MapToDto(entity);
         }
 
         public bool Delete(long id)
         {
-            var dbEntity = _db.MealPlans.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.MealPlans.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return false;
             }
 
-            _db.MealPlans.Remove(dbEntity);
+            _db.MealPlans.Remove(entity);
             _db.SaveChanges();
             return true;
         }
@@ -146,7 +144,7 @@ namespace Nestly.Services.Repository
         public List<MealRecommendationDto> Get(MealRecommendationSearchObject? search)
         {
             IQueryable<MealRecommendation> q = _db.MealRecommendations
-                                                  .Include(x => x.FoodType);
+                .Include(x => x.FoodType);
 
             if (search?.WeekNumber is not null)
             {
@@ -169,9 +167,8 @@ namespace Nestly.Services.Repository
         public MealRecommendationDto? GetRecommendationById(long id)
         {
             var entity = _db.MealRecommendations
-                            .Include(x => x.FoodType)
-                            .OrderBy(x => x.WeekNumber)
-                            .FirstOrDefault(x => x.Id == id);
+                .Include(x => x.FoodType)
+                .FirstOrDefault(x => x.Id == id);
 
             if (entity is null)
             {
@@ -184,6 +181,19 @@ namespace Nestly.Services.Repository
                 WeekNumber = entity.WeekNumber,
                 FoodTypeId = entity.FoodTypeId,
                 FoodName = entity.FoodType.Name
+            };
+        }
+
+        private static MealPlanResponseDto MapToDto(MealPlan x)
+        {
+            return new MealPlanResponseDto
+            {
+                Id = x.Id,
+                BabyId = x.BabyId,
+                FoodTypeId = x.FoodTypeId,
+                FoodName = x.FoodType != null ? x.FoodType.Name : string.Empty,
+                Rating = x.Rating,
+                TriedAt = x.TriedAt
             };
         }
     }

@@ -38,4 +38,14 @@ namespace Nestly.Model.DTOObjects
     {
         public short? WeekNumber { get; set; }
     }
+    public class MealPlanResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public int FoodTypeId { get; set; }
+        public string FoodName { get; set; } = string.Empty;
+        public short? Rating { get; set; }
+        public DateTime TriedAt { get; set; }
+    }
+
 }

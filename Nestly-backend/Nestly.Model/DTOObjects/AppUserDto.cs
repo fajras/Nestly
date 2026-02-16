@@ -23,6 +23,8 @@ public class AppUserSearchObject
     public string? Email { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public long? RoleId { get; set; }
+
 }
 
 public class AppUserPatchDto
@@ -47,4 +49,5 @@ public class AppUserResultDto
     public int? BabyAgeMonths { get; set; }
     public int? PregnancyTrimester { get; set; }
 }
+
 

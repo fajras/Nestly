@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
-using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
 {
@@ -11,11 +10,9 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public MilestoneService(NestlyDbContext db) => _db = db;
 
-        public List<Milestone> Get(MilestoneSearchObject? search)
+        public List<MilestoneResponseDto> Get(MilestoneSearchObject? search)
         {
-            IQueryable<Milestone> q = _db.Milestones
-                                         .Include(x => x.Baby)
-                                         .AsQueryable();
+            IQueryable<Milestone> q = _db.Milestones.AsNoTracking();
 
             if (search?.BabyId is not null)
             {
@@ -37,88 +34,75 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.Title.Contains(search.Title));
             }
 
-            return q.OrderBy(x => x.AchievedDate).ToList();
+            return q
+                .OrderBy(x => x.AchievedDate)
+                .Select(ToDto)
+                .ToList();
         }
 
-        public Milestone? GetById(long id)
+        public MilestoneResponseDto? GetById(long id)
         {
-            return _db.Milestones
-                      .Include(x => x.Baby)
-                      .FirstOrDefault(x => x.Id == id);
+            var entity = _db.Milestones
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Id == id);
+
+            return entity is null ? null : ToDto(entity);
         }
 
-        public Milestone Create(CreateMilestoneDto dto)
+
+        public MilestoneResponseDto Create(CreateMilestoneDto dto)
         {
             if (dto is null)
             {
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            if (dto.BabyId <= 0)
-            {
-                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
-            }
-
-            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
-            if (!babyExists)
+            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
                 throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.Title))
-            {
-                throw new ArgumentException("Title is required.", nameof(dto.Title));
-            }
-
-            var title = dto.Title.Trim();
-            if (title.Length > 200)
-            {
-                throw new ArgumentException("Title must be at most 200 characters.", nameof(dto.Title));
-            }
-
-            if (dto.AchievedDate == default)
-            {
-                throw new ArgumentException("AchievedDate is required.", nameof(dto.AchievedDate));
             }
 
             var entity = new Milestone
             {
                 BabyId = dto.BabyId,
-                Title = title,
+                Title = dto.Title.Trim(),
                 AchievedDate = dto.AchievedDate,
-                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim()
+                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+                CreatedAt = DateTime.UtcNow
             };
 
             _db.Milestones.Add(entity);
             _db.SaveChanges();
-            return entity;
+
+            return ToDto(entity);
         }
 
-        public Milestone? Patch(long id, MilestonePatchDto patch)
+        public MilestoneResponseDto? Patch(long id, MilestonePatchDto patch)
         {
-            var dbEntity = _db.Milestones.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.Milestones.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return null;
             }
 
             if (patch.Title is not null)
             {
-                dbEntity.Title = patch.Title;
+                entity.Title = patch.Title.Trim();
             }
 
             if (patch.AchievedDate is not null)
             {
-                dbEntity.AchievedDate = patch.AchievedDate.Value;
+                entity.AchievedDate = patch.AchievedDate.Value;
             }
 
             if (patch.Notes is not null)
             {
-                dbEntity.Notes = patch.Notes;
+                entity.Notes = patch.Notes.Trim();
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return ToDto(entity);
         }
 
         public bool Delete(long id)
@@ -133,6 +117,16 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
-    }
 
+        private static MilestoneResponseDto ToDto(Milestone m) => new()
+        {
+            Id = m.Id,
+            BabyId = m.BabyId,
+            Title = m.Title,
+            AchievedDate = m.AchievedDate,
+            Notes = m.Notes,
+            CreatedAt = m.CreatedAt
+        };
+    }
 }
+

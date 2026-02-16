@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -10,38 +9,60 @@ namespace Nestly_WebAPI.Controllers
     public class WeeklyAdviceController : ControllerBase
     {
         private readonly IWeeklyAdviceService _service;
-        public WeeklyAdviceController(IWeeklyAdviceService service) => _service = service;
+
+        public WeeklyAdviceController(IWeeklyAdviceService service)
+        {
+            _service = service;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<WeeklyAdvice>> Get()
+        public ActionResult<IEnumerable<WeeklyAdviceResponseDto>> Get()
             => Ok(_service.Get());
 
         [HttpGet("{id:int}")]
-        public ActionResult<WeeklyAdvice> GetById(int id)
+        public ActionResult<WeeklyAdviceResponseDto> GetById(int id)
         {
-            var entity = _service.GetById(id);
-            return entity is null ? NotFound() : Ok(entity);
+            var dto = _service.GetById(id);
+            return dto is null ? NotFound() : Ok(dto);
         }
 
         [HttpGet("week/{weekNumber:int}")]
-        public ActionResult<GetWeeklyAdviceDto> GetByWeek(short weekNumber)
+        public ActionResult<WeeklyAdviceResponseDto> GetByWeek(short weekNumber)
         {
-            var entity = _service.GetByWeek(weekNumber);
-            return entity is null ? NotFound() : Ok(entity);
+            var dto = _service.GetByWeek(weekNumber);
+            return dto is null ? NotFound() : Ok(dto);
         }
 
         [HttpPost]
-        public ActionResult<WeeklyAdvice> Create([FromBody] CreateWeeklyAdviceDto request)
+        public ActionResult<WeeklyAdviceResponseDto> Create([FromBody] CreateWeeklyAdviceDto request)
         {
-            var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            try
+            {
+                var dto = _service.Create(request);
+                return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpPatch("{id:int}")]
-        public ActionResult<WeeklyAdvice> Patch(int id, [FromBody] WeeklyAdvicePatchDto patch)
+        public ActionResult<WeeklyAdviceResponseDto> Patch(int id, [FromBody] WeeklyAdvicePatchDto patch)
         {
-            var updated = _service.Patch(id, patch);
-            return updated is null ? NotFound() : Ok(updated);
+            try
+            {
+                var dto = _service.Patch(id, patch);
+                return dto is null ? NotFound() : Ok(dto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id:int}")]

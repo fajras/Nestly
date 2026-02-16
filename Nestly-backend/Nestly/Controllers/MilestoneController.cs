@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
-using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
 {
@@ -13,25 +11,25 @@ namespace Nestly_WebAPI.Controllers
         public MilestoneController(IMilestoneService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<Milestone>> Get([FromQuery] MilestoneSearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<IEnumerable<MilestoneResponseDto>> Get([FromQuery] MilestoneSearchObject? search)
+     => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
-        public ActionResult<Milestone> GetById(long id)
+        public ActionResult<MilestoneResponseDto> GetById(long id)
         {
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
-        public ActionResult<Milestone> Create([FromBody] CreateMilestoneDto request)
+        public ActionResult<MilestoneResponseDto> Create([FromBody] CreateMilestoneDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<Milestone> Patch(long id, [FromBody] MilestonePatchDto patch)
+        public ActionResult<MilestoneResponseDto> Patch(long id, [FromBody] MilestonePatchDto patch)
         {
             var updated = _service.Patch(id, patch);
             return updated is null ? NotFound() : Ok(updated);

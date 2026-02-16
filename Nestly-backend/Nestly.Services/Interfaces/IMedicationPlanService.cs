@@ -9,5 +9,8 @@ namespace Nestly.Services.Interfaces
         MedicationPlanResponseDto Create(CreateMedicationPlanDto dto);
         MedicationPlanResponseDto? Patch(long id, MedicationPlanPatchDto patch);
         bool Delete(long id);
+        IEnumerable<MedicationIntakeLogDto> GetLogsForDay(long parentProfileId, DateTime date);
+
+        void MarkAsTaken(long intakeLogId);
     }
 }

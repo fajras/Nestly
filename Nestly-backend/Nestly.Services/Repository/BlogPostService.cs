@@ -9,12 +9,15 @@ namespace Nestly.Services.Repository
     public class BlogPostService : IBlogPostService
     {
         private readonly NestlyDbContext _db;
-        public BlogPostService(NestlyDbContext db) => _db = db;
 
-        public List<BlogPost> Get(BlogPostSearchObject? search)
+        public BlogPostService(NestlyDbContext db)
+        {
+            _db = db;
+        }
+
+        public IEnumerable<BlogPostResponseDto> Get(BlogPostSearchObject? search)
         {
             IQueryable<BlogPost> q = _db.BlogPosts
-                                        .Include(p => p.Author)
                                         .Include(p => p.BlogPostCategories)
                                         .AsQueryable();
 
@@ -37,25 +40,28 @@ namespace Nestly.Services.Repository
             {
                 q = q.Where(p => p.CreatedAt <= search.CreatedTo.Value);
             }
-            if (search.CategoryId.HasValue)
+
+            if (search?.CategoryId is not null)
             {
-                var catId = search.CategoryId.Value;
                 q = q.Where(p => p.BlogPostCategories
-                    .Any(c => c.CategoryId == catId));
+                                 .Any(c => c.CategoryId == search.CategoryId));
             }
 
-            return q.OrderByDescending(p => p.CreatedAt).ToList();
+            return q.OrderByDescending(p => p.CreatedAt)
+                    .Select(MapToDto)
+                    .ToList();
         }
 
-        public BlogPost? GetById(long id)
+        public BlogPostResponseDto? GetById(long id)
         {
-            return _db.BlogPosts
-                      .Include(p => p.Author)
-                      .Include(p => p.BlogPostCategories)
-                      .FirstOrDefault(p => p.Id == id);
+            var post = _db.BlogPosts
+                          .Include(p => p.BlogPostCategories)
+                          .FirstOrDefault(p => p.Id == id);
+
+            return post is null ? null : MapToDto(post);
         }
 
-        public BlogPost Create(CreateBlogPostDto dto)
+        public BlogPostResponseDto Create(CreateBlogPostDto dto)
         {
             var post = new BlogPost
             {
@@ -68,7 +74,7 @@ namespace Nestly.Services.Repository
             _db.BlogPosts.Add(post);
             _db.SaveChanges();
 
-            if (dto.CategoryIds.Any())
+            if (dto.CategoryIds?.Any() == true)
             {
                 _db.BlogPostCategories.AddRange(
                     dto.CategoryIds.Select(cid => new BlogPostCategory
@@ -80,12 +86,10 @@ namespace Nestly.Services.Repository
                 _db.SaveChanges();
             }
 
-            return post;
+            return MapToDto(post);
         }
 
-
-
-        public BlogPost? Patch(long id, BlogPostPatchDto patch)
+        public BlogPostResponseDto? Patch(long id, BlogPostPatchDto patch)
         {
             var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
             if (post is null)
@@ -114,9 +118,9 @@ namespace Nestly.Services.Repository
             }
 
             post.UpdatedAt = DateTime.UtcNow;
-
             _db.SaveChanges();
-            return post;
+
+            return MapToDto(post);
         }
 
         public bool Delete(long id)
@@ -144,15 +148,26 @@ namespace Nestly.Services.Repository
                 .ToListAsync();
         }
 
-        public List<BlogPost> GetByCategoryId(int categoryId)
+        public IEnumerable<BlogPostResponseDto> GetByCategoryId(int categoryId)
         {
             return _db.BlogPosts
-                .Include(p => p.Author)
                 .Include(p => p.BlogPostCategories)
                 .Where(p => p.BlogPostCategories.Any(c => c.CategoryId == categoryId))
                 .OrderByDescending(p => p.CreatedAt)
+                .Select(MapToDto)
                 .ToList();
         }
 
+        private static BlogPostResponseDto MapToDto(BlogPost post)
+        {
+            return new BlogPostResponseDto
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Content = post.Content,
+                ImageUrl = post.ImageUrl,
+                AuthorId = post.AuthorId
+            };
+        }
     }
 }

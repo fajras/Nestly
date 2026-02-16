@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -10,28 +9,39 @@ namespace Nestly_WebAPI.Controllers
     public class BabyGrowthController : ControllerBase
     {
         private readonly IBabyGrowthService _service;
-        public BabyGrowthController(IBabyGrowthService service) => _service = service;
+
+        public BabyGrowthController(IBabyGrowthService service)
+        {
+            _service = service;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BabyGrowth>> Get([FromQuery] BabyGrowthSearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<IEnumerable<BabyGrowthResponseDto>> Get(
+            [FromQuery] BabyGrowthSearchObject? search)
+        {
+            var result = _service.Get(search);
+            return Ok(result);
+        }
 
         [HttpGet("{id:long}")]
-        public ActionResult<BabyGrowth> GetById(long id)
+        public ActionResult<BabyGrowthResponseDto> GetById(long id)
         {
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
-        public ActionResult<BabyGrowth> Create([FromBody] CreateBabyGrowthDto request)
+        public ActionResult<BabyGrowthResponseDto> Create(
+            [FromBody] CreateBabyGrowthDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<BabyGrowth> Patch(long id, [FromBody] BabyGrowthPatchDto patch)
+        public ActionResult<BabyGrowthResponseDto> Patch(
+            long id,
+            [FromBody] BabyGrowthPatchDto patch)
         {
             try
             {
@@ -46,6 +56,8 @@ namespace Nestly_WebAPI.Controllers
 
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
-            => _service.Delete(id) ? NoContent() : NotFound();
+        {
+            return _service.Delete(id) ? NoContent() : NotFound();
+        }
     }
 }

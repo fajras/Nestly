@@ -1,14 +1,10 @@
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 
-namespace Nestly.Services.Interfaces
+public interface IMilestoneService
 {
-    public interface IMilestoneService
-    {
-        List<Milestone> Get(MilestoneSearchObject? search);
-        Milestone? GetById(long id);
-        Milestone Create(CreateMilestoneDto entity);
-        Milestone? Patch(long id, MilestonePatchDto patch);
-        bool Delete(long id);
-    }
+    List<MilestoneResponseDto> Get(MilestoneSearchObject? search);
+    MilestoneResponseDto? GetById(long id);
+    MilestoneResponseDto Create(CreateMilestoneDto entity);
+    MilestoneResponseDto? Patch(long id, MilestonePatchDto patch);
+    bool Delete(long id);
 }

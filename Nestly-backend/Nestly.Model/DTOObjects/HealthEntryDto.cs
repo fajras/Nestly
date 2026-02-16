@@ -23,4 +23,14 @@ namespace Nestly.Model.DTOObjects
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
     }
+    public class HealthEntryResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public DateTime EntryDate { get; set; }
+        public decimal? TemperatureC { get; set; }
+        public string? Medicines { get; set; }
+        public string? DoctorVisit { get; set; }
+    }
+
 }

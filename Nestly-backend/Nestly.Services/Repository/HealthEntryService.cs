@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -9,13 +8,15 @@ namespace Nestly.Services.Repository
     public class HealthEntryService : IHealthEntryService
     {
         private readonly NestlyDbContext _db;
-        public HealthEntryService(NestlyDbContext db) => _db = db;
 
-        public List<HealthEntry> Get(HealthEntrySearchObject? search)
+        public HealthEntryService(NestlyDbContext db)
         {
-            IQueryable<HealthEntry> q = _db.HealthEntries
-                                           .Include(x => x.Baby)
-                                           .AsQueryable();
+            _db = db;
+        }
+
+        public List<HealthEntryResponseDto> Get(HealthEntrySearchObject? search)
+        {
+            IQueryable<HealthEntry> q = _db.HealthEntries.AsQueryable();
 
             if (search?.BabyId is not null)
             {
@@ -32,17 +33,21 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.EntryDate <= search.DateTo.Value);
             }
 
-            return q.OrderByDescending(x => x.EntryDate).ToList();
+            return q
+                .OrderByDescending(x => x.EntryDate)
+                .Select(MapToDto)
+                .ToList();
         }
 
-        public HealthEntry? GetById(long id)
+        public HealthEntryResponseDto? GetById(long id)
         {
-            return _db.HealthEntries
-                      .Include(x => x.Baby)
-                      .FirstOrDefault(x => x.Id == id);
+            var entity = _db.HealthEntries
+                .FirstOrDefault(x => x.Id == id);
+
+            return entity is null ? null : MapToDto(entity);
         }
 
-        public HealthEntry Create(CreateHealthEntryDto dto)
+        public HealthEntryResponseDto Create(CreateHealthEntryDto dto)
         {
             if (dto is null)
             {
@@ -51,18 +56,17 @@ namespace Nestly.Services.Repository
 
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
+                throw new ArgumentException("BabyId is required.");
             }
 
-            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
-            if (!babyExists)
+            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+                throw new ArgumentException("Baby does not exist.");
             }
 
             if (dto.EntryDate == default)
             {
-                throw new ArgumentException("EntryDate is required.", nameof(dto.EntryDate));
+                throw new ArgumentException("EntryDate is required.");
             }
 
             var entity = new HealthEntry
@@ -76,53 +80,67 @@ namespace Nestly.Services.Repository
 
             _db.HealthEntries.Add(entity);
             _db.SaveChanges();
-            return entity;
+
+            return MapToDto(entity);
         }
 
-        public HealthEntry? Patch(long id, HealthEntryPatchDto patch)
+        public HealthEntryResponseDto? Patch(long id, HealthEntryPatchDto patch)
         {
-            var dbEntity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return null;
             }
 
             if (patch.EntryDate is not null)
             {
-                dbEntity.EntryDate = patch.EntryDate.Value;
+                entity.EntryDate = patch.EntryDate.Value;
             }
 
             if (patch.TemperatureC is not null)
             {
-                dbEntity.TemperatureC = patch.TemperatureC.Value;
+                entity.TemperatureC = patch.TemperatureC.Value;
             }
 
             if (patch.Medicines is not null)
             {
-                dbEntity.Medicines = patch.Medicines;
+                entity.Medicines = patch.Medicines.Trim();
             }
 
             if (patch.DoctorVisit is not null)
             {
-                dbEntity.DoctorVisit = patch.DoctorVisit;
+                entity.DoctorVisit = patch.DoctorVisit.Trim();
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return MapToDto(entity);
         }
 
         public bool Delete(long id)
         {
-            var dbEntity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return false;
             }
 
-            _db.HealthEntries.Remove(dbEntity);
+            _db.HealthEntries.Remove(entity);
             _db.SaveChanges();
             return true;
         }
 
+        private static HealthEntryResponseDto MapToDto(HealthEntry x)
+        {
+            return new HealthEntryResponseDto
+            {
+                Id = x.Id,
+                BabyId = x.BabyId,
+                EntryDate = x.EntryDate,
+                TemperatureC = x.TemperatureC,
+                Medicines = x.Medicines,
+                DoctorVisit = x.DoctorVisit
+            };
+        }
     }
 }

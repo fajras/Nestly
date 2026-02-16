@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
-using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
 {
@@ -13,39 +11,37 @@ namespace Nestly_WebAPI.Controllers
         public CalendarEventController(ICalendarEventService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<CalendarEvent>> Get([FromQuery] CalendarEventSearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<IEnumerable<CalendarEventResponseDto>> Get([FromQuery] CalendarEventSearchObject? search)
+        {
+            return Ok(_service.Get(search));
+        }
 
         [HttpGet("{id:long}")]
-        public ActionResult<CalendarEvent> GetById(long id)
+        public ActionResult<CalendarEventResponseDto> GetById(long id)
         {
-            var entity = _service.GetById(id);
-            return entity is null ? NotFound() : Ok(entity);
+            var result = _service.GetById(id);
+            return result is null ? NotFound() : Ok(result);
         }
 
         [HttpPost]
-        public ActionResult<CalendarEvent> Create([FromBody] CreateCalendarEventDto request)
+        public ActionResult<CalendarEventResponseDto> Create([FromBody] CreateCalendarEventDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<CalendarEvent> Patch(long id, [FromBody] CalendarEventPatchDto patch)
+        public ActionResult<CalendarEventResponseDto> Patch(long id, [FromBody] CalendarEventPatchDto patch)
         {
-            try
-            {
-                var updated = _service.Patch(id, patch);
-                return updated is null ? NotFound() : Ok(updated);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var updated = _service.Patch(id, patch);
+            return updated is null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
-            => _service.Delete(id) ? NoContent() : NotFound();
+        {
+            return _service.Delete(id) ? NoContent() : NotFound();
+        }
+
     }
 }

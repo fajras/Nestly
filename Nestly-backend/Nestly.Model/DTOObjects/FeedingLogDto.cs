@@ -25,4 +25,16 @@ namespace Nestly.Model.DTOObjects
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
     }
+    public class FeedingLogResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public DateTime FeedDate { get; set; }
+        public TimeSpan FeedTime { get; set; }
+        public decimal? AmountMl { get; set; }
+        public int? FoodTypeId { get; set; }
+        public string? FoodTypeName { get; set; }
+        public string? Notes { get; set; }
+    }
+
 }

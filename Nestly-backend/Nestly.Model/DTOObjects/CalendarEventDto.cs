@@ -23,4 +23,14 @@ namespace Nestly.Model.DTOObjects
         public DateTime? From { get; set; }
         public string? Title { get; set; }
     }
+    public class CalendarEventResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public long? UserId { get; set; }
+        public string Title { get; set; } = default!;
+        public string? Description { get; set; }
+        public DateTime StartAt { get; set; }
+    }
+
 }

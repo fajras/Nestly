@@ -7,7 +7,7 @@ namespace Nestly.Services.Interfaces
     {
         List<SleepLog> Get(SleepLogSearchObject? search);
         SleepLog? GetById(long id);
-        SleepLog Create(CreateSleepLogDto entity);
+        SleepLog Create(CreateSleepLogDto dto);
         SleepLog? Patch(long id, SleepLogPatchDto patch);
         bool Delete(long id);
     }

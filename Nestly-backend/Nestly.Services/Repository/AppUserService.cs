@@ -42,6 +42,10 @@ namespace Nestly.Services.Repository
             {
                 q = q.Where(x => x.LastName.Contains(search.LastName));
             }
+            if (search?.RoleId.HasValue == true)
+            {
+                q = q.Where(x => x.RoleId == search.RoleId.Value);
+            }
 
             var rows = q.Select(x => new AppUserRow
             {
@@ -336,9 +340,15 @@ namespace Nestly.Services.Repository
             }
         }
 
-        public AppUser? Patch(long id, AppUserPatchDto patch)
+        public AppUserResultDto? Patch(long id, AppUserPatchDto patch)
         {
-            var u = _db.AppUsers.FirstOrDefault(x => x.Id == id);
+            var u = _db.AppUsers
+                .Include(x => x.ParentProfile)
+                .ThenInclude(p => p.Babies)
+                .Include(x => x.ParentProfile)
+                .ThenInclude(p => p.Pregnancies)
+                .FirstOrDefault(x => x.Id == id);
+
             if (u is null)
             {
                 return null;
@@ -370,8 +380,10 @@ namespace Nestly.Services.Repository
             }
 
             _db.SaveChanges();
-            return u;
+
+            return MapToResultDto(u);
         }
+
 
         public bool Delete(long id)
         {
@@ -434,5 +446,50 @@ namespace Nestly.Services.Repository
             public DateTime? LatestBabyBirthDate { get; set; }
             public DateTime? LatestPregnancyDueDate { get; set; }
         }
+
+
+        private AppUserResultDto MapToResultDto(AppUser u)
+        {
+            var dto = new AppUserResultDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                RoleId = u.RoleId,
+                IdentityUserId = u.IdentityUserId,
+                ParentStatus = "UNKNOWN",
+                BabyAgeMonths = null,
+                PregnancyTrimester = null
+            };
+
+            if (u.ParentProfile != null)
+            {
+                var latestBaby = u.ParentProfile.Babies?
+                    .OrderByDescending(b => b.BirthDate)
+                    .FirstOrDefault();
+
+                if (latestBaby != null)
+                {
+                    dto.ParentStatus = "PARENT";
+                    dto.BabyAgeMonths = CalculateBabyAgeInMonths(latestBaby.BirthDate);
+                    return dto;
+                }
+
+                var latestPregnancy = u.ParentProfile.Pregnancies?
+                    .Where(p => p.DueDate != null && p.DueDate > DateTime.UtcNow)
+                    .OrderByDescending(p => p.DueDate)
+                    .FirstOrDefault();
+
+                if (latestPregnancy?.DueDate != null)
+                {
+                    dto.ParentStatus = "PREGNANT";
+                    dto.PregnancyTrimester = CalculatePregnancyTrimester(latestPregnancy.DueDate.Value);
+                }
+            }
+
+            return dto;
+        }
+
     }
 }

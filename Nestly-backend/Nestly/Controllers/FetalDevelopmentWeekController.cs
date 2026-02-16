@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -10,35 +9,39 @@ namespace Nestly_WebAPI.Controllers
     public class FetalDevelopmentWeekController : ControllerBase
     {
         private readonly IFetalDevelopmentWeekService _service;
-        public FetalDevelopmentWeekController(IFetalDevelopmentWeekService service) => _service = service;
+
+        public FetalDevelopmentWeekController(IFetalDevelopmentWeekService service)
+        {
+            _service = service;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<FetalDevelopmentWeek>> Get()
+        public ActionResult<IEnumerable<FetalDevelopmentWeekResponseDto>> Get()
             => Ok(_service.Get());
 
         [HttpGet("{id:int}")]
-        public ActionResult<CreateFetalDevelopmentWeekDto> GetById(int id)
+        public ActionResult<FetalDevelopmentWeekResponseDto> GetById(int id)
         {
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpGet("week/{weekNumber:int}")]
-        public ActionResult<CreateFetalDevelopmentWeekDto> GetByWeekNumber(int weekNumber)
+        public ActionResult<FetalDevelopmentWeekResponseDto> GetByWeekNumber(int weekNumber)
         {
             var entity = _service.GetByWeekNumber(weekNumber);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
-        public ActionResult<FetalDevelopmentWeek> Create([FromBody] CreateFetalDevelopmentWeekDto request)
+        public ActionResult<FetalDevelopmentWeekResponseDto> Create([FromBody] CreateFetalDevelopmentWeekDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:int}")]
-        public ActionResult<FetalDevelopmentWeek> Patch(int id, [FromBody] FetalDevelopmentWeekPatchDto patch)
+        public ActionResult<FetalDevelopmentWeekResponseDto> Patch(int id, [FromBody] FetalDevelopmentWeekPatchDto patch)
         {
             var updated = _service.Patch(id, patch);
             return updated is null ? NotFound() : Ok(updated);

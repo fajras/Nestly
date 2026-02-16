@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 using Nestly.Services.Repository;
 
@@ -20,48 +19,30 @@ public class BlogPostController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<BlogPost>> Get([FromQuery] BlogPostSearchObject? search)
-        => Ok(_service.Get(search));
+    public ActionResult<IEnumerable<BlogPostResponseDto>> Get([FromQuery] BlogPostSearchObject? search)
+    {
+        return Ok(_service.Get(search));
+    }
 
     [HttpGet("{id:long}")]
     public ActionResult<BlogPostResponseDto> GetById(long id)
     {
-        var post = _service.GetById(id);
-        if (post == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(new BlogPostResponseDto
-        {
-            Id = post.Id,
-            Title = post.Title,
-            Content = post.Content,
-            ImageUrl = post.ImageUrl,
-            AuthorId = post.AuthorId
-        });
+        var result = _service.GetById(id);
+        return result is null ? NotFound() : Ok(result);
     }
 
-
     [HttpPost]
-    public ActionResult<BlogPost> Create([FromBody] CreateBlogPostDto request)
+    public ActionResult<BlogPostResponseDto> Create([FromBody] CreateBlogPostDto request)
     {
         var created = _service.Create(request);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPatch("{id:long}")]
-    public ActionResult<BlogPost> Patch(long id, [FromBody] BlogPostPatchDto patch)
+    public ActionResult<BlogPostResponseDto> Patch(long id, [FromBody] BlogPostPatchDto patch)
     {
-        try
-        {
-            var updated = _service.Patch(id, patch);
-            return updated is null ? NotFound() : Ok(updated);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var updated = _service.Patch(id, patch);
+        return updated is null ? NotFound() : Ok(updated);
     }
 
     [HttpDelete("{id:long}")]
@@ -82,13 +63,10 @@ public class BlogPostController : ControllerBase
         => Ok(await _service.GetAllAsync());
 
     [HttpGet("category/{categoryId:int}")]
-    public ActionResult<IEnumerable<BlogPost>> GetByCategoryId(int categoryId)
+    public ActionResult<IEnumerable<BlogPostResponseDto>> GetByCategoryId(int categoryId)
     {
         var posts = _service.GetByCategoryId(categoryId);
-        if (!posts.Any())
-        {
-            return NotFound();
-        }
-        return Ok(posts);
+        return posts.Any() ? Ok(posts) : NotFound();
     }
+
 }

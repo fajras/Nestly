@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -10,54 +9,69 @@ namespace Nestly_WebAPI.Controllers
     public class QaQuestionController : ControllerBase
     {
         private readonly IQaQuestionService _service;
-        public QaQuestionController(IQaQuestionService service) => _service = service;
 
-        // GET /api/qaquestion?...
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetAdminQuestions(
-         [FromQuery] QaQuestionSearchObject? search)
+        public QaQuestionController(IQaQuestionService service)
         {
-            var result = await _service.GetAllWithLatestAnswer(search);
+            _service = service;
+        }
+
+        // GET /api/qaquestion
+        // Admin pregled, moze filter, moze samo neodgovorena
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> Get(
+            [FromQuery] QaQuestionSearchObject? search,
+            CancellationToken ct)
+        {
+            var result = await _service.GetAllWithLatestAnswer(search, ct);
             return Ok(result);
         }
 
         // GET /api/qaquestion/{id}
         [HttpGet("{id:long}")]
-        public async Task<ActionResult<QaQuestion>> GetById(long id)
+        public async Task<ActionResult<QaQuestionDto>> GetById(long id, CancellationToken ct)
         {
-            var q = await _service.GetById(id);
-            return q is null ? NotFound() : Ok(q);
+            var dto = await _service.GetById(id, ct);
+            return dto is null ? NotFound() : Ok(dto);
         }
 
-        // GET /api/qaquestion/user/{userId}
-        [HttpGet("user/{userId:long}")]
-        public async Task<ActionResult<IEnumerable<QaQuestion>>> GetByUser(long userId)
+        // GET /api/qaquestion/user/{parentProfileId}
+        [HttpGet("user/{parentProfileId:long}")]
+        public async Task<ActionResult<IEnumerable<QaQuestionDto>>> GetByUser(long parentProfileId, CancellationToken ct)
         {
-            var result = await _service.GetByUserAsync(userId);
+            var result = await _service.GetByUserAsync(parentProfileId, ct);
+            return Ok(result);
+        }
 
-            if (result == null || !result.Any())
+        // GET /api/qaquestion/my?AskedById=123
+        [HttpGet("my")]
+        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetMy(
+            [FromQuery] QaQuestionSearchObject search,
+            CancellationToken ct)
+        {
+            if (search.AskedById is null || search.AskedById.Value <= 0)
             {
-                return NotFound(new { message = $"No questions found for user id {userId}." });
+                return BadRequest(new { message = "AskedById is required." });
             }
 
+            var result = await _service.GetWithLatestAnswerForUser(search, ct);
             return Ok(result);
         }
 
         // POST /api/qaquestion
         [HttpPost]
-        public async Task<ActionResult<QaQuestion>> Create([FromBody] CreateQaQuestionDto request)
+        public async Task<ActionResult<QaQuestionDto>> Create([FromBody] CreateQaQuestionDto request, CancellationToken ct)
         {
-            var created = await _service.Create(request);
+            var created = await _service.Create(request, ct);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         // PATCH /api/qaquestion/{id}
         [HttpPatch("{id:long}")]
-        public async Task<ActionResult<QaQuestion>> Patch(long id, [FromBody] QaQuestionPatchDto patch)
+        public async Task<ActionResult<QaQuestionDto>> Patch(long id, [FromBody] QaQuestionPatchDto patch, CancellationToken ct)
         {
             try
             {
-                var updated = await _service.Patch(id, patch);
+                var updated = await _service.Patch(id, patch, ct);
                 return updated is null ? NotFound() : Ok(updated);
             }
             catch (ArgumentException ex)
@@ -68,45 +82,36 @@ namespace Nestly_WebAPI.Controllers
 
         // DELETE /api/qaquestion/{id}
         [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Delete(long id)
-            => await _service.Delete(id) ? NoContent() : NotFound();
+        public async Task<IActionResult> Delete(long id, CancellationToken ct)
+        {
+            var ok = await _service.Delete(id, ct);
+            return ok ? NoContent() : NotFound();
+        }
+
+        // GET /api/qaquestion/{questionId}/answers
+        [HttpGet("{questionId:long}/answers")]
+        public async Task<ActionResult<IEnumerable<QaAnswerDto>>> GetAnswers(long questionId, CancellationToken ct)
+        {
+            var answers = await _service.GetAnswers(questionId, ct);
+            return Ok(answers);
+        }
 
         // POST /api/qaquestion/{questionId}/answers
         [HttpPost("{questionId:long}/answers")]
-        public async Task<ActionResult<QaAnswer>> CreateAnswer(long questionId, [FromBody] QaAnswer request)
+        public async Task<ActionResult<QaAnswerDto>> CreateAnswer(
+            long questionId,
+            [FromBody] CreateQaAnswerDto request,
+            CancellationToken ct)
         {
             try
             {
-                var created = await _service.CreateAnswer(questionId, request);
-                return CreatedAtAction(nameof(QaAnswerController.GetById),
-                    "QaAnswer", new { id = created.Id }, created);
+                var created = await _service.CreateAnswer(questionId, request, ct);
+                return CreatedAtAction(nameof(GetAnswers), new { questionId = questionId }, created);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
-
-        // GET /api/qaquestion/{questionId}/answers
-        [HttpGet("{questionId:long}/answers")]
-        public async Task<ActionResult<IEnumerable<QaAnswer>>> GetAnswers(long questionId)
-        {
-            var answers = await _service.GetAnswers(questionId);
-            return Ok(answers);
-        }
-
-        [HttpGet("my")]
-        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetMyQuestions(
-        [FromQuery] QaQuestionSearchObject search)
-        {
-            if (search.AskedByUserId is null)
-            {
-                return BadRequest("AskedByUserId is required");
-            }
-
-            var result = await _service.GetWithLatestAnswer(search);
-            return Ok(result);
-        }
-
     }
 }

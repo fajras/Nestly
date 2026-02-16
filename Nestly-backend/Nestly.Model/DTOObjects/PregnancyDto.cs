@@ -22,4 +22,21 @@ namespace Nestly.Model.DTOObjects
         public DateTime? DueFrom { get; set; }
         public DateTime? DueTo { get; set; }
     }
+    public class PregnancyStatusDto
+    {
+        public long ParentProfileId { get; set; }
+        public DateTime? LmpDate { get; set; }
+        public DateTime? DueDate { get; set; }
+        public int GestationalWeek { get; set; }
+        public int DaysRemaining { get; set; }
+    }
+    public class PregnancyResponseDto
+    {
+        public long Id { get; set; }
+        public long ParentProfileId { get; set; }
+        public DateTime? LmpDate { get; set; }
+        public DateTime? DueDate { get; set; }
+        public int? CycleLengthDays { get; set; }
+    }
+
 }

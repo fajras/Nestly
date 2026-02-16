@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
 namespace Nestly_WebAPI.Controllers
@@ -10,28 +9,32 @@ namespace Nestly_WebAPI.Controllers
     public class HealthEntryController : ControllerBase
     {
         private readonly IHealthEntryService _service;
-        public HealthEntryController(IHealthEntryService service) => _service = service;
+
+        public HealthEntryController(IHealthEntryService service)
+        {
+            _service = service;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<HealthEntry>> Get([FromQuery] HealthEntrySearchObject? search)
+        public ActionResult<IEnumerable<HealthEntryResponseDto>> Get([FromQuery] HealthEntrySearchObject? search)
             => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
-        public ActionResult<HealthEntry> GetById(long id)
+        public ActionResult<HealthEntryResponseDto> GetById(long id)
         {
             var entity = _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
-        public ActionResult<HealthEntry> Create([FromBody] CreateHealthEntryDto request)
+        public ActionResult<HealthEntryResponseDto> Create([FromBody] CreateHealthEntryDto request)
         {
             var created = _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<HealthEntry> Patch(long id, [FromBody] HealthEntryPatchDto patch)
+        public ActionResult<HealthEntryResponseDto> Patch(long id, [FromBody] HealthEntryPatchDto patch)
         {
             var updated = _service.Patch(id, patch);
             return updated is null ? NotFound() : Ok(updated);

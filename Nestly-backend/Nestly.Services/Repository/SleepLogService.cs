@@ -10,13 +10,14 @@ namespace Nestly.Services.Repository
     {
         private readonly NestlyDbContext _db;
 
-        public SleepLogService(NestlyDbContext db) => _db = db;
+        public SleepLogService(NestlyDbContext db)
+        {
+            _db = db;
+        }
 
         public List<SleepLog> Get(SleepLogSearchObject? search)
         {
-            IQueryable<SleepLog> q = _db.SleepLogs
-                                        .Include(x => x.Baby)
-                                        .AsQueryable();
+            IQueryable<SleepLog> q = _db.SleepLogs.AsNoTracking();
 
             if (search?.BabyId is not null)
             {
@@ -25,68 +26,53 @@ namespace Nestly.Services.Repository
 
             if (search?.DateFrom is not null)
             {
-                q = q.Where(x => x.SleepDate >= search.DateFrom.Value);
+                q = q.Where(x => x.SleepDate >= search.DateFrom.Value.Date);
             }
 
             if (search?.DateTo is not null)
             {
-                q = q.Where(x => x.SleepDate <= search.DateTo.Value);
+                q = q.Where(x => x.SleepDate <= search.DateTo.Value.Date);
             }
 
-            return q.OrderByDescending(x => x.SleepDate).ToList();
+            return q.OrderByDescending(x => x.SleepDate)
+                    .ThenByDescending(x => x.StartTime)
+                    .ToList();
         }
 
         public SleepLog? GetById(long id)
         {
-            return _db.SleepLogs
-                      .Include(x => x.Baby)
-                      .FirstOrDefault(x => x.Id == id);
+            return _db.SleepLogs.AsNoTracking()
+                                .FirstOrDefault(x => x.Id == id);
         }
 
         public SleepLog Create(CreateSleepLogDto dto)
         {
-            if (dto is null)
-            {
-                throw new ArgumentNullException(nameof(dto));
-            }
-
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
+                throw new ArgumentException("BabyId is required.");
             }
 
-            var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
-            if (!babyExists)
+            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+                throw new ArgumentException("Baby does not exist.");
             }
 
-            if (dto.SleepDate == default)
+            if (!TimeSpan.TryParse(dto.StartTime, out var start))
             {
-                throw new ArgumentException("SleepDate is required.", nameof(dto.SleepDate));
+                throw new ArgumentException("Invalid StartTime format. Use HH:mm");
             }
 
-            if (dto.StartTime == default)
+            if (!TimeSpan.TryParse(dto.EndTime, out var end))
             {
-                throw new ArgumentException("StartTime is required.", nameof(dto.StartTime));
-            }
-
-            if (dto.EndTime == default)
-            {
-                throw new ArgumentException("EndTime is required.", nameof(dto.EndTime));
-            }
-
-            if (dto.EndTime <= dto.StartTime)
-            {
-                throw new ArgumentException("EndTime must be after StartTime.", nameof(dto.EndTime));
+                throw new ArgumentException("Invalid EndTime format. Use HH:mm");
             }
 
             var entity = new SleepLog
             {
                 BabyId = dto.BabyId,
                 SleepDate = dto.SleepDate.Date,
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
+                StartTime = start,
+                EndTime = end
             };
 
             _db.SleepLogs.Add(entity);
@@ -97,44 +83,52 @@ namespace Nestly.Services.Repository
 
         public SleepLog? Patch(long id, SleepLogPatchDto patch)
         {
-            var dbEntity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return null;
             }
 
             if (patch.SleepDate is not null)
             {
-                dbEntity.SleepDate = patch.SleepDate.Value;
+                entity.SleepDate = patch.SleepDate.Value.Date;
             }
 
             if (patch.StartTime is not null)
             {
-                dbEntity.StartTime = patch.StartTime.Value;
+                if (!TimeSpan.TryParse(patch.StartTime, out var start))
+                {
+                    throw new ArgumentException("Invalid StartTime format. Use HH:mm");
+                }
+
+                entity.StartTime = start;
             }
 
             if (patch.EndTime is not null)
             {
-                dbEntity.EndTime = patch.EndTime.Value;
+                if (!TimeSpan.TryParse(patch.EndTime, out var end))
+                {
+                    throw new ArgumentException("Invalid EndTime format. Use HH:mm");
+                }
+
+                entity.EndTime = end;
             }
 
             _db.SaveChanges();
-            return dbEntity;
+            return entity;
         }
 
         public bool Delete(long id)
         {
-            var dbEntity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return false;
             }
 
-            _db.SleepLogs.Remove(dbEntity);
+            _db.SleepLogs.Remove(entity);
             _db.SaveChanges();
             return true;
         }
     }
-
-
 }

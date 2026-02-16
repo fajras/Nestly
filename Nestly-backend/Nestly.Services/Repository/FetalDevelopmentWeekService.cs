@@ -8,43 +8,37 @@ namespace Nestly.Services.Repository
     public class FetalDevelopmentWeekService : IFetalDevelopmentWeekService
     {
         private readonly NestlyDbContext _db;
-        public FetalDevelopmentWeekService(NestlyDbContext db) => _db = db;
 
-        public List<FetalDevelopmentWeek> Get()
+        public FetalDevelopmentWeekService(NestlyDbContext db)
         {
-
-            return _db.FetalDevelopmentWeeks.ToList();
+            _db = db;
         }
 
-        public CreateFetalDevelopmentWeekDto? GetById(int id)
+        public List<FetalDevelopmentWeekResponseDto> Get()
         {
             return _db.FetalDevelopmentWeeks
-                .Where(f => f.Id == id)
-                .Select(f => new CreateFetalDevelopmentWeekDto
-                {
-                    WeekNumber = f.WeekNumber,
-                    ImageUrl = f.ImageUrl,
-                    BabyDevelopment = f.BabyDevelopment,
-                    MotherChanges = f.MotherChanges
-                })
-                .FirstOrDefault();
+                .OrderBy(x => x.WeekNumber)
+                .Select(MapToDto)
+                .ToList();
         }
 
-        public CreateFetalDevelopmentWeekDto? GetByWeekNumber(int weekNumber)
+        public FetalDevelopmentWeekResponseDto? GetById(int id)
         {
-            return _db.FetalDevelopmentWeeks
-                .Where(f => f.WeekNumber == weekNumber)
-                .Select(f => new CreateFetalDevelopmentWeekDto
-                {
-                    WeekNumber = f.WeekNumber,
-                    ImageUrl = f.ImageUrl,
-                    BabyDevelopment = f.BabyDevelopment,
-                    MotherChanges = f.MotherChanges
-                })
-                .FirstOrDefault();
+            var entity = _db.FetalDevelopmentWeeks
+                .FirstOrDefault(x => x.Id == id);
+
+            return entity is null ? null : MapToDto(entity);
         }
 
-        public FetalDevelopmentWeek Create(CreateFetalDevelopmentWeekDto dto)
+        public FetalDevelopmentWeekResponseDto? GetByWeekNumber(int weekNumber)
+        {
+            var entity = _db.FetalDevelopmentWeeks
+                .FirstOrDefault(x => x.WeekNumber == weekNumber);
+
+            return entity is null ? null : MapToDto(entity);
+        }
+
+        public FetalDevelopmentWeekResponseDto Create(CreateFetalDevelopmentWeekDto dto)
         {
             if (dto is null)
             {
@@ -53,11 +47,10 @@ namespace Nestly.Services.Repository
 
             if (dto.WeekNumber <= 0)
             {
-                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+                throw new ArgumentException("WeekNumber must be greater than 0.");
             }
 
-            bool exists = _db.FetalDevelopmentWeeks.Any(x => x.WeekNumber == dto.WeekNumber);
-            if (exists)
+            if (_db.FetalDevelopmentWeeks.Any(x => x.WeekNumber == dto.WeekNumber))
             {
                 throw new InvalidOperationException($"Week {dto.WeekNumber} already exists.");
             }
@@ -65,60 +58,73 @@ namespace Nestly.Services.Repository
             var entity = new FetalDevelopmentWeek
             {
                 WeekNumber = dto.WeekNumber,
-                ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim(),
-                BabyDevelopment = string.IsNullOrWhiteSpace(dto.BabyDevelopment) ? null : dto.BabyDevelopment.Trim(),
-                MotherChanges = string.IsNullOrWhiteSpace(dto.MotherChanges) ? null : dto.MotherChanges.Trim()
+                ImageUrl = dto.ImageUrl?.Trim(),
+                BabyDevelopment = dto.BabyDevelopment?.Trim(),
+                MotherChanges = dto.MotherChanges?.Trim()
             };
 
             _db.FetalDevelopmentWeeks.Add(entity);
             _db.SaveChanges();
 
-            return entity;
+            return MapToDto(entity);
         }
 
-        public FetalDevelopmentWeek? Patch(int id, FetalDevelopmentWeekPatchDto patch)
+        public FetalDevelopmentWeekResponseDto? Patch(int id, FetalDevelopmentWeekPatchDto patch)
         {
-            var dbEntity = _db.FetalDevelopmentWeeks.FirstOrDefault(f => f.Id == id);
-            if (dbEntity is null)
+            var entity = _db.FetalDevelopmentWeeks.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return null;
             }
 
             if (patch.WeekNumber is not null)
             {
-                dbEntity.WeekNumber = patch.WeekNumber.Value;
+                entity.WeekNumber = patch.WeekNumber.Value;
             }
 
             if (patch.ImageUrl is not null)
             {
-                dbEntity.ImageUrl = patch.ImageUrl;
+                entity.ImageUrl = patch.ImageUrl.Trim();
             }
 
             if (patch.BabyDevelopment is not null)
             {
-                dbEntity.BabyDevelopment = patch.BabyDevelopment;
+                entity.BabyDevelopment = patch.BabyDevelopment.Trim();
             }
 
             if (patch.MotherChanges is not null)
             {
-                dbEntity.MotherChanges = patch.MotherChanges;
+                entity.MotherChanges = patch.MotherChanges.Trim();
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return MapToDto(entity);
         }
 
         public bool Delete(int id)
         {
-            var dbEntity = _db.FetalDevelopmentWeeks.FirstOrDefault(f => f.Id == id);
-            if (dbEntity is null)
+            var entity = _db.FetalDevelopmentWeeks.FirstOrDefault(x => x.Id == id);
+            if (entity is null)
             {
                 return false;
             }
 
-            _db.FetalDevelopmentWeeks.Remove(dbEntity);
+            _db.FetalDevelopmentWeeks.Remove(entity);
             _db.SaveChanges();
             return true;
+        }
+
+        private static FetalDevelopmentWeekResponseDto MapToDto(FetalDevelopmentWeek x)
+        {
+            return new FetalDevelopmentWeekResponseDto
+            {
+                Id = x.Id,
+                WeekNumber = x.WeekNumber,
+                ImageUrl = x.ImageUrl,
+                BabyDevelopment = x.BabyDevelopment,
+                MotherChanges = x.MotherChanges
+            };
         }
     }
 }

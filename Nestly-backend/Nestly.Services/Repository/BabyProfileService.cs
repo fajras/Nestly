@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -15,11 +14,9 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<BabyProfile> Get(BabyProfileSearchObject? search)
+        public IEnumerable<BabyProfileSummaryDto> Get(BabyProfileSearchObject? search)
         {
-            IQueryable<BabyProfile> q = _db.BabyProfiles
-                                           .Include(x => x.ParentProfile)
-                                           .AsQueryable();
+            IQueryable<BabyProfile> q = _db.BabyProfiles.AsQueryable();
 
             if (search?.UserId is not null)
             {
@@ -28,14 +25,12 @@ namespace Nestly.Services.Repository
 
             if (!string.IsNullOrWhiteSpace(search?.BabyName))
             {
-                var name = search.BabyName.Trim();
-                q = q.Where(x => x.BabyName.Contains(name));
+                q = q.Where(x => x.BabyName.Contains(search.BabyName.Trim()));
             }
 
             if (!string.IsNullOrWhiteSpace(search?.Gender))
             {
-                var g = search.Gender.Trim();
-                q = q.Where(x => x.Gender == g);
+                q = q.Where(x => x.Gender == search.Gender.Trim());
             }
 
             if (search?.BirthDateFrom is not null)
@@ -48,17 +43,16 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.BirthDate <= search.BirthDateTo.Value.Date);
             }
 
-            return q.ToList();
+            return q.Select(MapToDto).ToList();
         }
 
-        public BabyProfile? GetById(long id)
+        public BabyProfileSummaryDto? GetById(long id)
         {
-            return _db.BabyProfiles
-                      .Include(x => x.ParentProfile)
-                      .FirstOrDefault(x => x.Id == id);
+            var entity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
+            return entity is null ? null : MapToDto(entity);
         }
 
-        public BabyProfile Create(CreateBabyProfileDto dto)
+        public BabyProfileSummaryDto Create(CreateBabyProfileDto dto)
         {
             if (dto is null)
             {
@@ -67,33 +61,33 @@ namespace Nestly.Services.Repository
 
             if (dto.ParentProfileId <= 0)
             {
-                throw new ArgumentException("ParentProfileId is required.", nameof(dto.ParentProfileId));
+                throw new ArgumentException("ParentProfileId is required.");
             }
 
             if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
             {
-                throw new ArgumentException("Parent profile does not exist.", nameof(dto.ParentProfileId));
+                throw new ArgumentException("Parent profile does not exist.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.BabyName))
             {
-                throw new ArgumentException("BabyName is required.", nameof(dto.BabyName));
+                throw new ArgumentException("BabyName is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Gender))
             {
-                throw new ArgumentException("Gender is required.", nameof(dto.Gender));
+                throw new ArgumentException("Gender is required.");
             }
 
             if (dto.BirthDate == default)
             {
-                throw new ArgumentException("BirthDate is required.", nameof(dto.BirthDate));
+                throw new ArgumentException("BirthDate is required.");
             }
 
             if (dto.PregnancyId.HasValue &&
                 !_db.Pregnancies.Any(x => x.Id == dto.PregnancyId.Value))
             {
-                throw new ArgumentException("Pregnancy does not exist.", nameof(dto.PregnancyId));
+                throw new ArgumentException("Pregnancy does not exist.");
             }
 
             var entity = new BabyProfile
@@ -108,10 +102,10 @@ namespace Nestly.Services.Repository
             _db.BabyProfiles.Add(entity);
             _db.SaveChanges();
 
-            return entity;
+            return MapToDto(entity);
         }
 
-        public BabyProfile? Patch(long id, BabyProfilePatchDto patch)
+        public BabyProfileSummaryDto? Patch(long id, BabyProfilePatchDto patch)
         {
             var dbEntity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
             if (dbEntity is null)
@@ -135,7 +129,8 @@ namespace Nestly.Services.Repository
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return MapToDto(dbEntity);
         }
 
         public bool Delete(long id)
@@ -150,15 +145,26 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
-        public BabyProfile? GetLatestByParent(long parentProfileId)
+
+        public BabyProfileSummaryDto? GetLatestByParent(long parentProfileId)
         {
-            return _db.BabyProfiles
-                      .Where(x => x.ParentProfileId == parentProfileId)
-                      .OrderByDescending(x => x.BirthDate)
-                      .FirstOrDefault();
+            var entity = _db.BabyProfiles
+                            .Where(x => x.ParentProfileId == parentProfileId)
+                            .OrderByDescending(x => x.BirthDate)
+                            .FirstOrDefault();
+
+            return entity is null ? null : MapToDto(entity);
         }
 
-
+        private static BabyProfileSummaryDto MapToDto(BabyProfile entity)
+        {
+            return new BabyProfileSummaryDto
+            {
+                Id = entity.Id,
+                BabyName = entity.BabyName,
+                Gender = entity.Gender,
+                BirthDate = entity.BirthDate
+            };
+        }
     }
 }
-

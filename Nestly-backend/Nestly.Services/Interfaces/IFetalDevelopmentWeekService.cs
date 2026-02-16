@@ -1,15 +1,14 @@
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
     public interface IFetalDevelopmentWeekService
     {
-        List<FetalDevelopmentWeek> Get();
-        CreateFetalDevelopmentWeekDto? GetById(int id);
-        CreateFetalDevelopmentWeekDto GetByWeekNumber(int weekNumber);
-        FetalDevelopmentWeek Create(CreateFetalDevelopmentWeekDto entity);
-        FetalDevelopmentWeek? Patch(int id, FetalDevelopmentWeekPatchDto patch);
+        List<FetalDevelopmentWeekResponseDto> Get();
+        FetalDevelopmentWeekResponseDto? GetById(int id);
+        FetalDevelopmentWeekResponseDto? GetByWeekNumber(int weekNumber);
+        FetalDevelopmentWeekResponseDto Create(CreateFetalDevelopmentWeekDto entity);
+        FetalDevelopmentWeekResponseDto? Patch(int id, FetalDevelopmentWeekPatchDto patch);
         bool Delete(int id);
     }
 }

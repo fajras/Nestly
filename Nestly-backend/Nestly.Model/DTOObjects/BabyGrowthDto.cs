@@ -1,5 +1,14 @@
 ﻿namespace Nestly.Model.DTOObjects
 {
+    public class BabyGrowthResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public short WeekNumber { get; set; }
+        public decimal? WeightKg { get; set; }
+        public decimal? HeightCm { get; set; }
+        public decimal? HeadCircumferenceCm { get; set; }
+    }
     public class BabyGrowthPatchDto
     {
         public short? WeekNumber { get; set; }

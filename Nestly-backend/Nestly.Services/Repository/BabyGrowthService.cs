@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Nestly.Model.DTOObjects;
+﻿using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
@@ -9,13 +8,15 @@ namespace Nestly.Services.Repository
     public class BabyGrowthService : IBabyGrowthService
     {
         private readonly NestlyDbContext _db;
-        public BabyGrowthService(NestlyDbContext db) => _db = db;
 
-        public List<BabyGrowth> Get(BabyGrowthSearchObject? search)
+        public BabyGrowthService(NestlyDbContext db)
         {
-            IQueryable<BabyGrowth> q = _db.BabyGrowths
-                                          .Include(x => x.Baby)
-                                          .AsQueryable();
+            _db = db;
+        }
+
+        public IEnumerable<BabyGrowthResponseDto> Get(BabyGrowthSearchObject? search)
+        {
+            IQueryable<BabyGrowth> q = _db.BabyGrowths.AsQueryable();
 
             if (search?.BabyId is not null)
             {
@@ -37,16 +38,20 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.WeekNumber <= search.WeekTo.Value);
             }
 
-            return q.OrderBy(x => x.WeekNumber).ToList();
+            return q.OrderBy(x => x.WeekNumber)
+                    .Select(MapToDto)
+                    .ToList();
         }
 
-        public BabyGrowth? GetById(long id)
+        public BabyGrowthResponseDto? GetById(long id)
         {
-            return _db.BabyGrowths
-                      .Include(x => x.Baby)
-                      .FirstOrDefault(x => x.Id == id);
+            var entity = _db.BabyGrowths
+                            .FirstOrDefault(x => x.Id == id);
+
+            return entity is null ? null : MapToDto(entity);
         }
-        public BabyGrowth Create(CreateBabyGrowthDto dto)
+
+        public BabyGrowthResponseDto Create(CreateBabyGrowthDto dto)
         {
             if (dto is null)
             {
@@ -55,23 +60,26 @@ namespace Nestly.Services.Repository
 
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
+                throw new ArgumentException("BabyId is required.");
             }
 
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+                throw new ArgumentException("Baby does not exist.");
             }
 
             if (dto.WeekNumber <= 0)
             {
-                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+                throw new ArgumentException("WeekNumber must be > 0.");
             }
 
-            bool exists = _db.BabyGrowths.Any(g => g.BabyId == dto.BabyId && g.WeekNumber == dto.WeekNumber);
+            bool exists = _db.BabyGrowths
+                .Any(g => g.BabyId == dto.BabyId && g.WeekNumber == dto.WeekNumber);
+
             if (exists)
             {
-                throw new InvalidOperationException($"Growth entry for baby {dto.BabyId} and week {dto.WeekNumber} already exists.");
+                throw new InvalidOperationException(
+                    $"Growth entry for baby {dto.BabyId} and week {dto.WeekNumber} already exists.");
             }
 
             var entity = new BabyGrowth
@@ -86,10 +94,10 @@ namespace Nestly.Services.Repository
             _db.BabyGrowths.Add(entity);
             _db.SaveChanges();
 
-            return entity;
+            return MapToDto(entity);
         }
 
-        public BabyGrowth? Patch(long id, BabyGrowthPatchDto patch)
+        public BabyGrowthResponseDto? Patch(long id, BabyGrowthPatchDto patch)
         {
             var dbEntity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
             if (dbEntity is null)
@@ -123,7 +131,8 @@ namespace Nestly.Services.Repository
             }
 
             _db.SaveChanges();
-            return dbEntity;
+
+            return MapToDto(dbEntity);
         }
 
         public bool Delete(long id)
@@ -138,7 +147,18 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
+
+        private static BabyGrowthResponseDto MapToDto(BabyGrowth entity)
+        {
+            return new BabyGrowthResponseDto
+            {
+                Id = entity.Id,
+                BabyId = entity.BabyId,
+                WeekNumber = entity.WeekNumber,
+                WeightKg = entity.WeightKg,
+                HeightCm = entity.HeightCm,
+                HeadCircumferenceCm = entity.HeadCircumferenceCm
+            };
+        }
     }
-
-
 }

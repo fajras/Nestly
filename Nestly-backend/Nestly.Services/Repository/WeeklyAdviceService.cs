@@ -1,4 +1,5 @@
-﻿using Nestly.Model.DTOObjects;
+﻿using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
@@ -8,47 +9,59 @@ namespace Nestly.Services.Repository
     public class WeeklyAdviceService : IWeeklyAdviceService
     {
         private readonly NestlyDbContext _db;
-        public WeeklyAdviceService(NestlyDbContext db) => _db = db;
 
-        public List<WeeklyAdvice> Get()
+        public WeeklyAdviceService(NestlyDbContext db)
         {
-            return _db.WeeklyAdvices.ToList();
+            _db = db;
         }
 
-        public WeeklyAdvice? GetById(int id)
-            => _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
-
-        public GetWeeklyAdviceDto GetByWeek(int week)
+        private static WeeklyAdviceResponseDto ToDto(WeeklyAdvice w) => new()
         {
-            var entity = _db.WeeklyAdvices.FirstOrDefault(w => w.WeekNumber == week);
+            Id = w.Id,
+            WeekNumber = w.WeekNumber,
+            AdviceText = w.AdviceText
+        };
 
-            return new GetWeeklyAdviceDto
-            {
-                AdviceText = entity.AdviceText,
-                WeekNumber = entity.WeekNumber
-            };
+        public IEnumerable<WeeklyAdviceResponseDto> Get()
+        {
+            return _db.WeeklyAdvices
+                .AsNoTracking()
+                .OrderBy(w => w.WeekNumber)
+                .Select(ToDto)
+                .ToList();
         }
 
-
-        public WeeklyAdvice Create(CreateWeeklyAdviceDto dto)
+        public WeeklyAdviceResponseDto? GetById(int id)
         {
-            if (dto is null)
-            {
-                throw new ArgumentNullException(nameof(dto));
-            }
+            var entity = _db.WeeklyAdvices
+                .AsNoTracking()
+                .FirstOrDefault(w => w.Id == id);
 
+            return entity is null ? null : ToDto(entity);
+        }
+
+        public WeeklyAdviceResponseDto? GetByWeek(short weekNumber)
+        {
+            var entity = _db.WeeklyAdvices
+                .AsNoTracking()
+                .FirstOrDefault(w => w.WeekNumber == weekNumber);
+
+            return entity is null ? null : ToDto(entity);
+        }
+
+        public WeeklyAdviceResponseDto Create(CreateWeeklyAdviceDto dto)
+        {
             if (dto.WeekNumber <= 0)
             {
-                throw new ArgumentException("WeekNumber must be > 0.", nameof(dto.WeekNumber));
+                throw new ArgumentException("WeekNumber must be greater than 0.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.AdviceText))
             {
-                throw new ArgumentException("AdviceText is required.", nameof(dto.AdviceText));
+                throw new ArgumentException("AdviceText is required.");
             }
 
-            bool exists = _db.WeeklyAdvices.Any(x => x.WeekNumber == dto.WeekNumber);
-            if (exists)
+            if (_db.WeeklyAdvices.Any(w => w.WeekNumber == dto.WeekNumber))
             {
                 throw new InvalidOperationException($"Advice for week {dto.WeekNumber} already exists.");
             }
@@ -61,40 +74,60 @@ namespace Nestly.Services.Repository
 
             _db.WeeklyAdvices.Add(entity);
             _db.SaveChanges();
-            return entity;
+
+            return ToDto(entity);
         }
 
-        public WeeklyAdvice? Patch(int id, WeeklyAdvicePatchDto patch)
+        public WeeklyAdviceResponseDto? Patch(int id, WeeklyAdvicePatchDto patch)
         {
-            var dbEntity = _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
-            if (dbEntity is null)
+            var entity = _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
+            if (entity is null)
             {
                 return null;
             }
 
-            if (patch.WeekNumber is not null)
+            if (patch.WeekNumber.HasValue)
             {
-                dbEntity.WeekNumber = patch.WeekNumber.Value;
+                if (patch.WeekNumber <= 0)
+                {
+                    throw new ArgumentException("WeekNumber must be greater than 0.");
+                }
+
+                bool exists = _db.WeeklyAdvices.Any(w =>
+                    w.WeekNumber == patch.WeekNumber &&
+                    w.Id != id);
+
+                if (exists)
+                {
+                    throw new InvalidOperationException("Another advice with this week already exists.");
+                }
+
+                entity.WeekNumber = patch.WeekNumber.Value;
             }
 
             if (patch.AdviceText is not null)
             {
-                dbEntity.AdviceText = patch.AdviceText;
+                if (string.IsNullOrWhiteSpace(patch.AdviceText))
+                {
+                    throw new ArgumentException("AdviceText cannot be empty.");
+                }
+
+                entity.AdviceText = patch.AdviceText.Trim();
             }
 
             _db.SaveChanges();
-            return dbEntity;
+            return ToDto(entity);
         }
 
         public bool Delete(int id)
         {
-            var dbEntity = _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
-            if (dbEntity is null)
+            var entity = _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
+            if (entity is null)
             {
                 return false;
             }
 
-            _db.WeeklyAdvices.Remove(dbEntity);
+            _db.WeeklyAdvices.Remove(entity);
             _db.SaveChanges();
             return true;
         }

@@ -63,7 +63,6 @@ namespace Nestly_WebAPI.Controllers
                 Role = string.Join(",", roles),
                 token = jwtToken,
 
-                // realno je AppUserId, ali ostavljamo ime
                 parentProfileId = appUser.Id,
 
                 UserName = identityUser.UserName

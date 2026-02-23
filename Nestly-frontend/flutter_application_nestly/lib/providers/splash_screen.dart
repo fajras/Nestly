@@ -19,6 +19,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _bootstrap() async {
+    if (forceLoginOnStart) {
+      await AuthStorage.clear();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
+    }
     final token = await AuthStorage.getToken();
     final role = await AuthStorage.getRole();
     final parentId = await AuthStorage.getParentProfileId();

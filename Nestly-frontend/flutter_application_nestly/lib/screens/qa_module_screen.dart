@@ -33,12 +33,43 @@ class Question {
 abstract class QaService {
   Future<List<Question>> fetchMyQuestions();
   Future<Question> createQuestion(String text);
+  Future<Question> updateQuestion(int id, String text);
+  Future<void> deleteQuestion(int id);
 }
 
 class ApiQaService implements QaService {
   final int parentProfileId;
 
   ApiQaService({required this.parentProfileId});
+  @override
+  Future<Question> updateQuestion(int id, String text) async {
+    final res = await ApiClient.patch(
+      '/api/QaQuestion/$id',
+      body: {'questionText': text},
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Greška pri izmjeni pitanja.');
+    }
+
+    final jsonRes = jsonDecode(res.body);
+
+    return Question(
+      id: jsonRes['id'],
+      text: jsonRes['questionText'],
+      createdAt: DateTime.parse(jsonRes['createdAt']),
+      status: QuestionStatus.pending,
+    );
+  }
+
+  @override
+  Future<void> deleteQuestion(int id) async {
+    final res = await ApiClient.delete('/api/QaQuestion/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Greška pri brisanju pitanja.');
+    }
+  }
 
   @override
   Future<List<Question>> fetchMyQuestions() async {
@@ -103,6 +134,32 @@ class InMemoryQaService implements QaService {
   Future<List<Question>> fetchMyQuestions() async {
     await Future.delayed(const Duration(milliseconds: 200));
     return _data.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  @override
+  Future<Question> updateQuestion(int id, String text) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    final index = _data.indexWhere((q) => q.id == id);
+    if (index == -1) {
+      throw Exception('Pitanje nije pronađeno.');
+    }
+
+    final updated = Question(
+      id: _data[index].id,
+      text: text,
+      createdAt: _data[index].createdAt,
+      status: QuestionStatus.pending,
+    );
+
+    _data[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> deleteQuestion(int id) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+    _data.removeWhere((q) => q.id == id);
   }
 
   @override
@@ -191,7 +248,7 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
         title: Text(
           'Moja pitanja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -249,14 +306,25 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.xl),
       itemCount: _items.length,
-      itemBuilder: (_, i) => _QuestionCard(question: _items[i]),
+      itemBuilder: (_, i) => _QuestionCard(
+        question: _items[i],
+        service: _service,
+        onRefresh: _load,
+      ),
     );
   }
 }
 
 class _QuestionCard extends StatelessWidget {
-  const _QuestionCard({required this.question});
+  const _QuestionCard({
+    required this.question,
+    required this.service,
+    required this.onRefresh,
+  });
+
   final Question question;
+  final QaService service;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -279,12 +347,35 @@ class _QuestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            question.text,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.roseDark,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  question.text,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.roseDark,
+                  ),
+                ),
+              ),
+              if (!answered)
+                Row(
+                  children: [
+                    _ActionIconButton(
+                      icon: Icons.edit_rounded,
+                      color: AppColors.roseDark,
+                      onTap: () => _showEditDialog(context),
+                    ),
+                    const SizedBox(width: 8),
+                    _ActionIconButton(
+                      icon: Icons.delete_outline_rounded,
+                      color: Colors.red.shade400,
+                      onTap: () => _confirmDelete(context),
+                    ),
+                  ],
+                ),
+            ],
           ),
           const SizedBox(height: 8),
           if (answered && question.answer != null)
@@ -305,6 +396,165 @@ class _QuestionCard extends StatelessWidget {
           else
             const Text('Čeka odgovor'),
         ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final controller = TextEditingController(text: question.text);
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Uredi pitanje',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.roseDark,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                TextFormField(
+                  controller: controller,
+                  cursorColor: AppColors.roseDark,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: 'Vaše pitanje',
+                    filled: true,
+                    fillColor: AppColors.babyPink.withOpacity(.15),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      borderSide: const BorderSide(
+                        color: AppColors.roseDark,
+                        width: 1.6,
+                      ),
+                    ),
+                    floatingLabelStyle: const TextStyle(
+                      color: AppColors.roseDark,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Unesite pitanje';
+                    }
+                    if (v.trim().length < 8) {
+                      return 'Pitanje je prekratko';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.roseDark,
+                          side: const BorderSide(color: AppColors.roseDark),
+                        ),
+                        child: const Text('Odustani'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          await service.updateQuestion(
+                            question.id,
+                            controller.text.trim(),
+                          );
+
+                          Navigator.pop(context);
+                          onRefresh();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.roseDark,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Sačuvaj'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obriši pitanje?'),
+        content: const Text('Ova radnja se ne može poništiti.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await service.deleteQuestion(question.id);
+
+              Navigator.pop(context);
+              onRefresh();
+            },
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionIconButton extends StatelessWidget {
+  const _ActionIconButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Ink(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, size: 18, color: color),
       ),
     );
   }
@@ -351,7 +601,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
         title: Text(
           'Postavi pitanje',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -365,6 +615,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
             children: [
               TextFormField(
                 controller: _controller,
+                cursorColor: AppColors.roseDark,
                 maxLines: 5,
                 decoration: _decoration(
                   label: 'Vaše pitanje',

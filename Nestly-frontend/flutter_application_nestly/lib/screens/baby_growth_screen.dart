@@ -164,7 +164,7 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen>
         title: Text(
           'Sedmica $_currentWeek',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -357,7 +357,7 @@ class _InfoCard extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.roseDark,
                   ),
                 ),

@@ -45,3 +45,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/nestly_logo.png
+    - assets/images/nestly_logo_seed.png

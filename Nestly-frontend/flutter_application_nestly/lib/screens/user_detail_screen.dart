@@ -4,15 +4,10 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
-import 'package:flutter_application_nestly/main.dart';
-
-/// =======================
-/// SERVICE
-/// =======================
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
-    final res = await ApiClient.get('/AppUser');
+    final res = await ApiClient.get('/AppUser?RoleId=1');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load users');
@@ -48,10 +43,6 @@ class MedicationPlanRow {
     );
   }
 }
-
-/// =======================
-/// SCREEN
-/// =======================
 
 class UserDetailsScreen extends StatefulWidget {
   final AppUserRow? user;
@@ -266,9 +257,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
 
     return Row(
       children: [
-        /// =======================
-        /// LEFT SIDE
-        /// =======================
         Expanded(
           flex: 5,
           child: Padding(
@@ -278,12 +266,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
               children: [
                 const Text(
                   'Pregled korisnice',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
                 ),
 
                 const SizedBox(height: AppSpacing.lg),
 
-                /// USER HEADER
                 if (_selectedUser != null)
                   Card(
                     child: Padding(
@@ -533,7 +520,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                                 d.title,
                                 style: const TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                               const SizedBox(height: 6),

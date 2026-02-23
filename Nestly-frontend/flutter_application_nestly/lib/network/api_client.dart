@@ -19,8 +19,6 @@ class ApiClient {
 
   static Future<http.Response> get(String path) async {
     final token = await AuthStorage.getToken();
-    print("GET $path");
-    print("TOKEN: $token");
 
     return http.get(Uri.parse('$_baseUrl$path'), headers: _headers(token));
   }

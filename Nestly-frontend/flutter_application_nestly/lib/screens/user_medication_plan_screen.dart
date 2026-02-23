@@ -54,7 +54,6 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// HEADER
             Row(
               children: [
                 IconButton(
@@ -64,7 +63,7 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
                 const SizedBox(width: 8),
                 const Text(
                   'Terapija',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                 ),
               ],
             ),

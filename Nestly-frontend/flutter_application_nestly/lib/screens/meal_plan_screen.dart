@@ -27,10 +27,6 @@ class MealRecommendation {
   }
 }
 
-/// =============================================================
-/// API SERVICE
-/// =============================================================
-
 class MealPlanApiService {
   final int babyId;
 
@@ -211,7 +207,7 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
         title: Text(
           'Plan ishrane',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),

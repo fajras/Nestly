@@ -7,10 +7,6 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
-/// =======================
-/// MODELS
-/// =======================
-
 class BlogPostRow {
   final int id;
   final String title;
@@ -48,10 +44,6 @@ class BlogCategoryRow {
   }
 }
 
-/// =======================
-/// SERVICE
-/// =======================
-
 class BlogAdminService {
   Future<List<BlogPostRow>> getBlogs() async {
     final res = await ApiClient.get('/api/blogpost');
@@ -78,6 +70,9 @@ class BlogAdminService {
   Future<int> createBlogWithoutImage({
     required String title,
     required String content,
+    required int phase,
+    int? weekFrom,
+    int? weekTo,
     required List<int> categoryIds,
   }) async {
     final res = await ApiClient.post(
@@ -86,6 +81,9 @@ class BlogAdminService {
         'title': title,
         'content': content,
         'authorId': 1,
+        'phase': phase,
+        'weekFrom': weekFrom,
+        'weekTo': weekTo,
         'categoryIds': categoryIds,
       },
     );
@@ -113,10 +111,6 @@ class BlogAdminService {
     }
   }
 }
-
-/// =======================
-/// MAIN SCREEN
-/// =======================
 
 class DoctorAdminBlogScreen extends StatefulWidget {
   const DoctorAdminBlogScreen({super.key});
@@ -172,7 +166,7 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
       children: [
         const Text(
           'Blog',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.lg),
         Align(
@@ -228,10 +222,6 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
   }
 }
 
-/// =======================
-/// EDITOR SHEET
-/// =======================
-
 class _BlogEditorSheet extends StatefulWidget {
   final VoidCallback onSaved;
 
@@ -245,6 +235,9 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
   final _title = TextEditingController();
   final _content = TextEditingController();
   final _service = BlogAdminService();
+  int _phase = 1; // 1 = BellyTime, 2 = BabyTime
+  final _weekFrom = TextEditingController();
+  final _weekTo = TextEditingController();
 
   File? _image;
   List<BlogCategoryRow> _categories = [];
@@ -257,6 +250,15 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
   void initState() {
     super.initState();
     _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _content.dispose();
+    _weekFrom.dispose();
+    _weekTo.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCategories() async {
@@ -282,6 +284,25 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
       NestlyToast.error(context, 'Naslov i sadržaj su obavezni');
       return;
     }
+    final wf = _weekFrom.text.trim().isEmpty
+        ? null
+        : int.tryParse(_weekFrom.text);
+    final wt = _weekTo.text.trim().isEmpty ? null : int.tryParse(_weekTo.text);
+
+    if ((_weekFrom.text.trim().isNotEmpty && wf == null) ||
+        (_weekTo.text.trim().isNotEmpty && wt == null)) {
+      NestlyToast.error(context, 'Week polja moraju biti broj');
+      return;
+    }
+    if (_selectedCategoryIds.isEmpty) {
+      NestlyToast.error(context, 'Odaberite barem jednu kategoriju');
+      return;
+    }
+
+    if (wf != null && wt != null && wf > wt) {
+      NestlyToast.error(context, 'Week From ne smije biti veći od Week To');
+      return;
+    }
 
     setState(() => _saving = true);
 
@@ -289,8 +310,13 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
       final blogId = await _service.createBlogWithoutImage(
         title: _title.text,
         content: _content.text,
+
+        phase: _phase,
+        weekFrom: wf,
+        weekTo: wt,
         categoryIds: _selectedCategoryIds.toList(),
       );
+
       await Future.delayed(const Duration(milliseconds: 400));
       if (_image != null) {
         await _service.uploadBlogImage(blogId: blogId, file: _image!);
@@ -325,7 +351,7 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
                 children: [
                   const Text(
                     'Novi blog članak',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   GestureDetector(
@@ -378,6 +404,38 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
                       );
                     }).toList(),
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  const Text('Faza'),
+                  DropdownButtonFormField<int>(
+                    value: _phase,
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text('BellyTime')),
+                      DropdownMenuItem(value: 2, child: Text('BabyTime')),
+                    ],
+                    onChanged: (v) => setState(() => _phase = v ?? 1),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  TextField(
+                    controller: _weekFrom,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Week From (opcionalno)',
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  TextField(
+                    controller: _weekTo,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Week To (opcionalno)',
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
                   Row(
                     children: [

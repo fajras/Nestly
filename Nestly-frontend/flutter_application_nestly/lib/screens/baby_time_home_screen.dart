@@ -37,18 +37,6 @@ class BabyTimeHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'BabyTime',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppColors.seed,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -259,7 +247,7 @@ class _HeaderCard extends StatelessWidget {
                     Text(
                       babyName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: headerColor,
                       ),
                     ),
@@ -319,7 +307,7 @@ class _BackCard extends StatelessWidget {
                 child: Text(
                   'Povratak u mamin svijet',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.roseDark,
                   ),
                 ),

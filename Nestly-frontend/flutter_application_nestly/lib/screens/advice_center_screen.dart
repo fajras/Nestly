@@ -9,46 +9,42 @@ String snippet(String text, {int max = 200}) {
   return text.substring(0, max).trimRight() + '...';
 }
 
-class FetalWeekDto {
-  final String babyDevelopment;
-  final String motherChanges;
-  final String? imageUrl;
+class WeeklyAdviceDto {
+  final int id;
   final int weekNumber;
+  final String adviceText;
 
-  FetalWeekDto({
-    required this.babyDevelopment,
-    required this.motherChanges,
+  WeeklyAdviceDto({
+    required this.id,
     required this.weekNumber,
-    this.imageUrl,
+    required this.adviceText,
   });
 
-  factory FetalWeekDto.fromJson(Map<String, dynamic> json) {
-    String _s(dynamic v) => (v ?? '').toString();
-
-    return FetalWeekDto(
-      babyDevelopment: _s(json['babyDevelopment'] ?? json['BabyDevelopment']),
-      motherChanges: _s(json['motherChanges'] ?? json['MotherChanges']),
-      imageUrl: (json['imageUrl'] ?? json['ImageUrl'])?.toString(),
-      weekNumber: (json['weekNumber'] ?? json['WeekNumber'] ?? 0) as int,
+  factory WeeklyAdviceDto.fromJson(Map<String, dynamic> json) {
+    return WeeklyAdviceDto(
+      id: json['id'] ?? json['Id'] ?? 0,
+      weekNumber: json['weekNumber'] ?? json['WeekNumber'] ?? 0,
+      adviceText: (json['adviceText'] ?? json['AdviceText'] ?? '').toString(),
     );
   }
 }
 
-class FetalApi {
-  Future<FetalWeekDto> getByWeek(int week) async {
+class WeeklyAdviceApi {
+  Future<WeeklyAdviceDto> getByWeek(int week) async {
     final res = await ApiClient.get(
-      '/api/FetalDevelopmentWeek/week/$week',
+      '/api/WeeklyAdvice/week/$week',
     ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode == 404) {
-      throw Exception('Nema podataka za sedmicu $week.');
+      throw Exception('Nema savjeta za sedmicu $week.');
     }
+
     if (res.statusCode != 200) {
       throw Exception('Greška (${res.statusCode})');
     }
 
     final map = jsonDecode(res.body) as Map<String, dynamic>;
-    return FetalWeekDto.fromJson(map);
+    return WeeklyAdviceDto.fromJson(map);
   }
 }
 
@@ -60,12 +56,11 @@ class AdviceCenterScreen extends StatefulWidget {
 }
 
 class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
-  final FetalApi _fetalApi = FetalApi();
-
   late final List<int> _weeks;
   late int _currentWeek;
 
-  late Future<FetalWeekDto> _featuredFuture;
+  final WeeklyAdviceApi _api = WeeklyAdviceApi();
+  late Future<WeeklyAdviceDto> _featuredFuture;
 
   @override
   void initState() {
@@ -73,14 +68,14 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
     _weeks = List<int>.generate(40, (i) => i + 1);
     _currentWeek = widget.gestationalWeek.clamp(1, 40);
 
-    _featuredFuture = _fetalApi.getByWeek(_currentWeek);
+    _featuredFuture = _api.getByWeek(_currentWeek);
   }
 
   Future<void> _refresh() async {
     final week = widget.gestationalWeek.clamp(1, 40);
     setState(() {
       _currentWeek = week;
-      _featuredFuture = _fetalApi.getByWeek(week);
+      _featuredFuture = _api.getByWeek(_currentWeek);
     });
     await _featuredFuture;
   }
@@ -110,7 +105,7 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
         title: Text(
           'Savjetni centar',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -128,7 +123,7 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FutureBuilder<FetalWeekDto>(
+                  FutureBuilder<WeeklyAdviceDto>(
                     future: _featuredFuture,
                     builder: (context, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
@@ -152,12 +147,7 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
                       }
 
                       final dto = snap.data!;
-                      final summary = snippet(
-                        dto.babyDevelopment.isNotEmpty
-                            ? dto.babyDevelopment
-                            : dto.motherChanges,
-                        max: 220,
-                      );
+                      final summary = snippet(dto.adviceText, max: 500);
 
                       return _FeaturedAdviceCard(
                         week: dto.weekNumber,
@@ -238,7 +228,7 @@ class WeekTile extends StatelessWidget {
             child: Text(
               'Trenutna',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.roseDark,
                 letterSpacing: .2,
               ),
@@ -262,7 +252,7 @@ class WeekTile extends StatelessWidget {
               child: Text(
                 'Sedmica $week',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.roseDark,
                 ),
               ),
@@ -317,7 +307,7 @@ class _FeaturedAdviceCard extends StatelessWidget {
                     Text(
                       'Savjeti za sedmicu $week',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.roseDark,
                       ),
                     ),
@@ -367,7 +357,7 @@ class AdviceDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final api = FetalApi();
+    final api = WeeklyAdviceApi();
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -384,13 +374,13 @@ class AdviceDetailScreen extends StatelessWidget {
         title: Text(
           'Sedmica $week',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
         centerTitle: true,
       ),
-      body: FutureBuilder<FetalWeekDto>(
+      body: FutureBuilder<WeeklyAdviceDto>(
         future: api.getByWeek(week),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -422,15 +412,9 @@ class AdviceDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _SectionCardSingle(
-                      title: 'Razvoj bebe',
-                      text: dto.babyDevelopment,
-                      icon: Icons.child_care_rounded,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SectionCardSingle(
-                      title: 'Promjene kod majke',
-                      text: dto.motherChanges,
-                      icon: Icons.pregnant_woman_rounded,
+                      title: 'Savjeti za sedmicu ${dto.weekNumber}',
+                      text: dto.adviceText,
+                      icon: Icons.auto_awesome_rounded,
                     ),
                   ],
                 ),
@@ -474,7 +458,7 @@ class _SectionCardSingle extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.roseDark,
                   ),
                 ),

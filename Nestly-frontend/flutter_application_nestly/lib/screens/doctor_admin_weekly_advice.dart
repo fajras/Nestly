@@ -126,7 +126,7 @@ class _DoctorAdminWeeklyAdviceScreenState
       children: [
         const Text(
           'Sedmični savjeti',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
 
         const SizedBox(height: AppSpacing.xl),
@@ -231,7 +231,7 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
           children: [
             Text(
               'Sedmica ${widget.advice.weekNumber}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
 
             const SizedBox(height: AppSpacing.md),

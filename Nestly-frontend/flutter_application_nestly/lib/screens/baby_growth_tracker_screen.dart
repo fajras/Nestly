@@ -6,8 +6,8 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
 import 'package:flutter_application_nestly/network/api_client.dart'
     show ApiClient;
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter/services.dart';
 
-/* ==================== MODELS ==================== */
 class BabyGrowthEntry {
   final int id;
   final int babyId;
@@ -152,11 +152,37 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   final _headCtrl = TextEditingController();
-
+  int? _touchedWeek;
   List<BabyGrowthEntry> _entries = [];
   BabyGrowthEntry? _selected;
   bool _isNewEntry = false;
   bool _isLoading = true;
+  void _selectWeek(int week) {
+    final entry = _entries.firstWhere(
+      (e) => e.weekNumber == week,
+      orElse: () => _entries.last,
+    );
+
+    setState(() {
+      _selected = entry;
+      _isNewEntry = false;
+      _touchedWeek = week;
+    });
+
+    _fillForm();
+  }
+
+  void _cancelEdit() {
+    final last = _entries.isNotEmpty ? _entries.last : null;
+
+    setState(() {
+      _selected = last;
+      _isNewEntry = false;
+      _touchedWeek = null;
+    });
+
+    _fillForm();
+  }
 
   @override
   void initState() {
@@ -189,12 +215,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
 
   int get _maxWeek => _entries.isEmpty ? 1 : _entries.last.weekNumber;
 
-  bool get _canEdit =>
-      _isNewEntry ||
-      (_selected != null &&
-          _entries.isNotEmpty &&
-          _selected!.id == _entries.last.id);
-
+  bool get _canEdit => _selected != null;
   void _fillForm() {
     if (_selected == null) return;
     _weightCtrl.text = _selected!.weightKg?.toStringAsFixed(1) ?? '';
@@ -222,6 +243,15 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
     final weight = double.tryParse(_weightCtrl.text);
     final height = double.tryParse(_heightCtrl.text);
     final head = double.tryParse(_headCtrl.text);
+
+    if (weight == null || height == null || head == null) {
+      NestlyToast.warning(
+        context,
+        'Unesite sve vrijednosti i koristite samo brojeve.',
+        accentColor: AppColors.seed,
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -284,7 +314,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
         title: Text(
           'Praćenje rasta',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
         ),
@@ -301,9 +331,11 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                   Row(
                     children: [
                       Text(
-                        'Sedmica $selectedWeek',
+                        _isNewEntry
+                            ? 'Nova sedmica $selectedWeek'
+                            : 'Sedmica $selectedWeek',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.seed,
                         ),
                       ),
@@ -326,8 +358,6 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
     );
   }
 
-  /* ==================== UI ==================== */
-
   Widget _buildChartCard() {
     return Card(
       shape: RoundedRectangleBorder(
@@ -335,63 +365,160 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: SizedBox(
-          height: 240,
-          child: _entries.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Još nema podataka.\nDodajte prvi unos.',
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              : LineChart(
-                  LineChartData(
-                    minX: 1,
-                    maxX: _maxWeek.toDouble(),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: _entries
-                            .where((e) => e.weightKg != null)
-                            .map(
-                              (e) =>
-                                  FlSpot(e.weekNumber.toDouble(), e.weightKg!),
-                            )
-                            .toList(),
-                        color: AppColors.babyBlue,
-                        isCurved: true,
-                        barWidth: 3,
+        child: Column(
+          children: [
+            SizedBox(
+              height: 240,
+              child: _entries.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Još nema podataka.\nDodajte prvi unos.',
+                        textAlign: TextAlign.center,
                       ),
-                      LineChartBarData(
-                        spots: _entries
-                            .where((e) => e.heightCm != null)
-                            .map(
-                              (e) =>
-                                  FlSpot(e.weekNumber.toDouble(), e.heightCm!),
-                            )
-                            .toList(),
-                        color: AppColors.seed,
-                        isCurved: true,
-                        barWidth: 3,
+                    )
+                  : LineChart(
+                      LineChartData(
+                        minX: 1,
+                        maxX: _maxWeek.toDouble(),
+                        lineTouchData: LineTouchData(
+                          touchCallback: (event, response) {
+                            if (response == null ||
+                                response.lineBarSpots == null)
+                              return;
+
+                            final spot = response.lineBarSpots!.first;
+                            final week = spot.x.toInt();
+                            _selectWeek(week);
+                          },
+                        ),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: _entries
+                                .where((e) => e.weightKg != null)
+                                .map(
+                                  (e) => FlSpot(
+                                    e.weekNumber.toDouble(),
+                                    e.weightKg!,
+                                  ),
+                                )
+                                .toList(),
+                            color: AppColors.babyBlue,
+                            isCurved: true,
+                            barWidth: 3,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) {
+                                final isSelected =
+                                    spot.x.toInt() == _touchedWeek;
+                                return FlDotCirclePainter(
+                                  radius: isSelected ? 6 : 3,
+                                  color: isSelected
+                                      ? Colors.red
+                                      : barData.color!,
+                                  strokeWidth: isSelected ? 2 : 0,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                          ),
+
+                          LineChartBarData(
+                            spots: _entries
+                                .where((e) => e.heightCm != null)
+                                .map(
+                                  (e) => FlSpot(
+                                    e.weekNumber.toDouble(),
+                                    e.heightCm!,
+                                  ),
+                                )
+                                .toList(),
+                            color: AppColors.seed,
+                            isCurved: true,
+                            barWidth: 3,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) {
+                                final isSelected =
+                                    spot.x.toInt() == _touchedWeek;
+                                return FlDotCirclePainter(
+                                  radius: isSelected ? 6 : 3,
+                                  color: isSelected
+                                      ? Colors.red
+                                      : barData.color!,
+                                  strokeWidth: isSelected ? 2 : 0,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                          ),
+
+                          LineChartBarData(
+                            spots: _entries
+                                .where((e) => e.headCircumferenceCm != null)
+                                .map(
+                                  (e) => FlSpot(
+                                    e.weekNumber.toDouble(),
+                                    e.headCircumferenceCm!,
+                                  ),
+                                )
+                                .toList(),
+                            color: AppColors.babyPink,
+                            isCurved: true,
+                            barWidth: 3,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) {
+                                final isSelected =
+                                    spot.x.toInt() == _touchedWeek;
+                                return FlDotCirclePainter(
+                                  radius: isSelected ? 6 : 3,
+                                  color: isSelected
+                                      ? Colors.red
+                                      : barData.color!,
+                                  strokeWidth: isSelected ? 2 : 0,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      LineChartBarData(
-                        spots: _entries
-                            .where((e) => e.headCircumferenceCm != null)
-                            .map(
-                              (e) => FlSpot(
-                                e.weekNumber.toDouble(),
-                                e.headCircumferenceCm!,
-                              ),
-                            )
-                            .toList(),
-                        color: AppColors.babyPink,
-                        isCurved: true,
-                        barWidth: 3,
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+            ),
+            const SizedBox(height: 12),
+            _buildLegend(),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLegend() {
+    Widget item(Color color, String text) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      );
+    }
+
+    return Wrap(
+      spacing: 20,
+      children: [
+        item(AppColors.babyBlue, 'Težina (kg)'),
+        item(AppColors.seed, 'Dužina (cm)'),
+        item(AppColors.babyPink, 'Obim glave (cm)'),
+      ],
     );
   }
 
@@ -417,18 +544,36 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
             TextField(
               controller: _weightCtrl,
               enabled: _canEdit,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
               decoration: deco('Težina', 'kg'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _heightCtrl,
               enabled: _canEdit,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
               decoration: deco('Dužina', 'cm'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _headCtrl,
               enabled: _canEdit,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
               decoration: deco('Obim glave', 'cm'),
             ),
             const SizedBox(height: 16),
@@ -452,6 +597,25 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                 ),
               ),
             ),
+            if (!_isNewEntry &&
+                _selected != null &&
+                _selected!.id != _entries.last.id) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _cancelEdit,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.seed,
+                    side: const BorderSide(color: AppColors.seed),
+                  ),
+                  child: const Text(
+                    'Odustani',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

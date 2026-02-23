@@ -45,6 +45,16 @@ namespace Nestly_WebAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [HttpDelete("{id:long}")]
+        public IActionResult Delete(long id)
+        {
+            var deleted = _service.Delete(id);
+            if (!deleted)
+            {
+                return NotFound();
+            }
+            return NoContent();
+        }
 
     }
 }

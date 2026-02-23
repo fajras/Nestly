@@ -54,10 +54,6 @@ class CreateMilestoneRequest {
   };
 }
 
-/// =============================================================
-/// SERVICE
-/// =============================================================
-
 class MilestoneApiService {
   Future<List<MilestoneEntry>> getForBaby(int babyId) async {
     final res = await ApiClient.get('/api/Milestone?BabyId=$babyId');
@@ -74,6 +70,35 @@ class MilestoneApiService {
     return list;
   }
 
+  Future<MilestoneEntry> update({
+    required int id,
+    required String title,
+    required DateTime achievedDate,
+    String? notes,
+  }) async {
+    final body = {
+      'title': title,
+      'achievedDate': achievedDate.toIso8601String(),
+      'notes': notes,
+    };
+
+    final res = await ApiClient.patch('/api/Milestone/$id', body: body);
+
+    if (res.statusCode != 200) {
+      throw Exception('Update failed');
+    }
+
+    return MilestoneEntry.fromJson(jsonDecode(res.body));
+  }
+
+  Future<void> delete(int id) async {
+    final res = await ApiClient.delete('/api/Milestone/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Delete failed');
+    }
+  }
+
   Future<MilestoneEntry> create(CreateMilestoneRequest request) async {
     final res = await ApiClient.post('/api/Milestone', body: request.toJson());
 
@@ -84,10 +109,6 @@ class MilestoneApiService {
     return MilestoneEntry.fromJson(jsonDecode(res.body));
   }
 }
-
-/// =============================================================
-/// SCREEN
-/// =============================================================
 
 class MilestoneScreen extends StatefulWidget {
   final int babyId;
@@ -105,7 +126,7 @@ class MilestoneScreen extends StatefulWidget {
 
 class _MilestoneScreenState extends State<MilestoneScreen> {
   final _service = MilestoneApiService();
-
+  MilestoneEntry? _editingItem;
   bool _loading = true;
   bool _saving = false;
 
@@ -157,38 +178,99 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
   }
 
   Future<void> _save() async {
-    if (_saving || _titleCtrl.text.trim().isEmpty) return;
+    if (_saving) return;
+
+    if (_titleCtrl.text.trim().isEmpty) {
+      NestlyToast.info(context, 'Naziv je obavezan');
+      return;
+    }
 
     setState(() => _saving = true);
 
     try {
-      final created = await _service.create(
-        CreateMilestoneRequest(
-          babyId: widget.babyId,
+      if (_editingItem == null) {
+        final created = await _service.create(
+          CreateMilestoneRequest(
+            babyId: widget.babyId,
+            title: _titleCtrl.text.trim(),
+            achievedDate: _selectedDate,
+            notes: _notesCtrl.text.trim().isEmpty
+                ? null
+                : _notesCtrl.text.trim(),
+          ),
+        );
+
+        _items.add(created);
+      } else {
+        final updated = await _service.update(
+          id: _editingItem!.id,
           title: _titleCtrl.text.trim(),
           achievedDate: _selectedDate,
           notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-        ),
-      );
+        );
 
-      setState(() {
-        _items.add(created);
-        _items.sort((a, b) => a.achievedDate.compareTo(b.achievedDate));
-        _titleCtrl.clear();
-        _notesCtrl.clear();
-        _selectedDate = DateTime.now();
-        _syncDate();
-        _saving = false;
-      });
+        final index = _items.indexWhere((e) => e.id == _editingItem!.id);
+
+        _items[index] = updated;
+      }
+
+      _items.sort((a, b) => a.achievedDate.compareTo(b.achievedDate));
+
+      _cancelEdit();
 
       NestlyToast.success(
         context,
-        'Dostignuće je sačuvano',
+        _editingItem == null
+            ? 'Dostignuće je sačuvano'
+            : 'Dostignuće je ažurirano',
         accentColor: AppColors.seed,
       );
     } catch (_) {
-      setState(() => _saving = false);
       NestlyToast.error(context, 'Greška pri spremanju');
+    }
+
+    setState(() => _saving = false);
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      _editingItem = null;
+      _titleCtrl.clear();
+      _notesCtrl.clear();
+      _selectedDate = DateTime.now();
+      _syncDate();
+    });
+  }
+
+  Future<void> _confirmDelete(MilestoneEntry item) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obrisati dostignuće?'),
+        content: const Text('Ova akcija je nepovratna.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _service.delete(item.id);
+      setState(() {
+        _items.removeWhere((e) => e.id == item.id);
+      });
+      NestlyToast.success(context, 'Dostignuće obrisano');
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri brisanju');
     }
   }
 
@@ -203,7 +285,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
         title: Text(
           'Dostignuća',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
         ),
@@ -230,8 +312,6 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
             ),
     );
   }
-
-  /// ================= UI =================
 
   Widget _buildListCard() {
     if (_items.isEmpty) {
@@ -261,9 +341,30 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             subtitle: e.notes != null ? Text(e.notes!) : null,
-            trailing: Text(
-              _formatDate(e.achievedDate),
-              style: const TextStyle(color: AppColors.seed),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _formatDate(e.achievedDate),
+                  style: const TextStyle(color: AppColors.seed),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.seed),
+                  onPressed: () {
+                    setState(() {
+                      _editingItem = e;
+                      _titleCtrl.text = e.title;
+                      _notesCtrl.text = e.notes ?? '';
+                      _selectedDate = e.achievedDate;
+                      _syncDate();
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _confirmDelete(e),
+                ),
+              ],
             ),
           );
         }).toList(),
@@ -304,7 +405,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
             TextField(
               controller: _notesCtrl,
               maxLines: 3,
-              decoration: deco('Bilješka'),
+              decoration: deco('Bilješka (opcionalno)'),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -321,12 +422,29 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
                 ),
                 child: _saving
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Sačuvaj',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                    : Text(
+                        _editingItem == null ? 'Sačuvaj' : 'Spremi promjene',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
               ),
             ),
+            if (_editingItem != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _cancelEdit,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.seed,
+                    side: const BorderSide(color: AppColors.seed),
+                  ),
+                  child: const Text(
+                    'Odustani',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

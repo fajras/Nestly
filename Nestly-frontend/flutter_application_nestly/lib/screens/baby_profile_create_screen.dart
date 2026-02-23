@@ -164,7 +164,7 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
         title: Text(
           'Unesite podatke o bebi',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),

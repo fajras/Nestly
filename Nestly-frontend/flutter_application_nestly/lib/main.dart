@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_dashboard_screen.dart';
-import 'package:flutter_application_nestly/screens/splash_screen.dart';
+import 'package:flutter_application_nestly/providers/splash_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -33,6 +33,8 @@ class AppColors {
   static const textSecondary = Color(0xFF475569);
   static const roseDark = Color.fromARGB(255, 168, 40, 89);
 }
+
+const bool forceLoginOnStart = true;
 
 class AppRadius {
   static const xl = 24.0;
@@ -298,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.roseDark,
                                     ),
                               ),
@@ -440,35 +442,28 @@ class _LogoHeader extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 104,
-          height: 104,
+          width: 200,
+          height: 200,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color.fromARGB(0, 255, 255, 255),
             borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
           ),
           alignment: Alignment.center,
 
-          child: const Icon(
-            Icons.child_care_rounded,
-            size: 56,
-            color: AppColors.roseDark,
+          child: Image.asset(
+            'assets/images/nestly_logo.png',
+            fit: BoxFit.contain,
           ),
         ),
 
         const SizedBox(height: AppSpacing.lg),
 
         Text(
-          'Dobrodošli u Nestly',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          'Dobrodošli',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.roseDark,
+          ),
         ),
 
         const SizedBox(height: AppSpacing.sm),

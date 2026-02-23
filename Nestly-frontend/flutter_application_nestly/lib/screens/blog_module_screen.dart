@@ -10,8 +10,6 @@ String _snippet(String text, {int max = 140}) {
   return '${text.substring(0, max).trimRight()}...';
 }
 
-/* ================= DTOs ================= */
-
 class BlogCategory {
   final int id;
   final String name;
@@ -83,10 +81,14 @@ class _BlogScreenState extends State<BlogScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _selectedCategoryId = null;
     });
 
     try {
-      final results = await Future.wait([fetchCategories(), fetchPosts()]);
+      final results = await Future.wait([
+        fetchCategories(),
+        fetchRecommended(take: 10),
+      ]);
 
       if (!mounted) return;
 
@@ -110,18 +112,43 @@ class _BlogScreenState extends State<BlogScreen> {
       _loading = true;
     });
 
+    if (id == null) {
+      final rec = await fetchRecommended(take: 10);
+
+      if (!mounted) return;
+
+      setState(() {
+        _posts = rec;
+        _loading = false;
+      });
+
+      return;
+    }
+
     final posts = await fetchPosts(categoryId: id);
+
     if (!mounted) return;
+
     setState(() {
       _posts = posts;
       _loading = false;
     });
   }
 
-  void _openDetail(BlogPostDto post) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => BlogPostDetailScreen(post: post)));
+  Future<void> _openDetail(BlogPostDto post) async {
+    try {
+      final fullPost = await fetchPostById(post.id);
+
+      if (!mounted) return;
+
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => BlogPostDetailScreen(post: fullPost)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Greška pri učitavanju članka')),
+      );
+    }
   }
 
   @override
@@ -135,7 +162,7 @@ class _BlogScreenState extends State<BlogScreen> {
         title: Text(
           'Blog',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -147,9 +174,8 @@ class _BlogScreenState extends State<BlogScreen> {
         child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.xl),
-          itemCount: _posts.length + 2,
+          itemCount: _posts.length + 3,
           itemBuilder: (context, index) {
-            // 0 – filter bar
             if (index == 0) {
               return _CategoryFilterBar(
                 categories: _categories,
@@ -158,7 +184,6 @@ class _BlogScreenState extends State<BlogScreen> {
               );
             }
 
-            // 1 – loading / error / empty state
             if (index == 1) {
               if (_loading) {
                 return const Padding(
@@ -398,7 +423,7 @@ class _PostText extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -448,13 +473,40 @@ Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
 
 /* ================= BLOG DETAIL ================= */
 
-class BlogPostDetailScreen extends StatelessWidget {
+class BlogPostDetailScreen extends StatefulWidget {
   final BlogPostDto post;
 
   const BlogPostDetailScreen({super.key, required this.post});
 
   @override
+  State<BlogPostDetailScreen> createState() => _BlogPostDetailScreenState();
+}
+
+class _BlogPostDetailScreenState extends State<BlogPostDetailScreen> {
+  late DateTime _openedAt;
+  @override
+  void initState() {
+    super.initState();
+    _openedAt = DateTime.now();
+  }
+
+  @override
+  void dispose() {
+    final seconds = DateTime.now().difference(_openedAt).inSeconds;
+
+    logBlogInteraction(
+      postId: widget.post.id,
+      eventType: 1,
+      spentSeconds: seconds,
+    );
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -466,7 +518,7 @@ class BlogPostDetailScreen extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -474,55 +526,71 @@ class BlogPostDetailScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                    child: CachedNetworkImage(
-                      imageUrl: post.imageUrl!,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(
-                        height: 220,
-                        color: AppColors.babyBlue.withOpacity(.15),
-                      ),
-                      errorWidget: (_, __, ___) => Container(
-                        height: 220,
-                        color: AppColors.babyPink.withOpacity(.15),
-                        child: const Icon(
-                          Icons.article_rounded,
-                          size: 48,
-                          color: AppColors.roseDark,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  post.title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.roseDark,
-                  ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                child: CachedNetworkImage(
+                  imageUrl: post.imageUrl!,
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  post.content,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                    height: 1.6,
-                  ),
-                ),
-              ],
+              ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              post.title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.roseDark,
+              ),
             ),
-          ),
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              post.content,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(height: 1.6),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+Future<List<BlogPostDto>> fetchRecommended({int take = 5}) async {
+  final res = await ApiClient.get('/api/recommendations/blog?take=$take');
+
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load recommendations');
+  }
+
+  final List data = jsonDecode(res.body);
+  return data.map((e) => BlogPostDto.fromJson(e)).toList();
+}
+
+Future<void> logBlogInteraction({
+  required int postId,
+  required int eventType,
+  required int spentSeconds,
+}) async {
+  await ApiClient.post(
+    '/api/recommendations/log',
+    body: {
+      "postId": postId,
+      "eventType": eventType,
+      "spentSeconds": spentSeconds,
+    },
+  );
+}
+
+Future<BlogPostDto> fetchPostById(int id) async {
+  final res = await ApiClient.get('/api/BlogPost/$id');
+
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load post');
+  }
+
+  return BlogPostDto.fromJson(jsonDecode(res.body));
 }

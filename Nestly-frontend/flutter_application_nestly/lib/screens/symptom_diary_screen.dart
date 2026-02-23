@@ -33,10 +33,6 @@ class SymptomDiaryEntry {
   }
 }
 
-/// =============================================================
-/// SERVICE
-/// =============================================================
-
 class SymptomDiaryApiService {
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -116,10 +112,6 @@ class SymptomDiaryApiService {
   };
 }
 
-/// =============================================================
-/// SCREEN
-/// =============================================================
-
 class SymptomDiaryScreen extends StatefulWidget {
   const SymptomDiaryScreen({super.key, required this.parentProfileId});
 
@@ -191,7 +183,17 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
   Future<void> _save() async {
     if (!_canEdit) {
-      NestlyToast.warning(context, 'Izmjene su moguće samo za zadnjih 7 dana');
+      NestlyToast.warning(context, 'Izmjene su moguće samo za zadnjih 7 dana.');
+      return;
+    }
+
+    final hasEmpty = _values.values.any((v) => v == 0);
+
+    if (hasEmpty) {
+      NestlyToast.warning(
+        context,
+        'Sva polja su obavezna. Odaberite intenzitet za svaki simptom.',
+      );
       return;
     }
 
@@ -232,7 +234,7 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
         title: Text(
           'Dnevnik simptoma',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -291,10 +293,6 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     );
   }
 }
-
-/// =============================================================
-/// UI HELPERS
-/// =============================================================
 
 class _SymptomsCard extends StatelessWidget {
   const _SymptomsCard({
@@ -420,7 +418,14 @@ class _SaveButton extends StatelessWidget {
       width: 120,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          foregroundColor: AppColors.roseDark,
+          backgroundColor: AppColors.roseDark,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.roseDark.withOpacity(.4),
+          disabledForegroundColor: Colors.white70,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
         onPressed: enabled ? onTap : null,

@@ -86,6 +86,36 @@ class CalendarEventApiService {
     return data.map((e) => CalendarEventEntry.fromJson(e)).toList();
   }
 
+  Future<CalendarEventEntry> update({
+    required int id,
+    required String title,
+    String? description,
+    required DateTime startAt,
+  }) async {
+    final res = await ApiClient.patch(
+      '/api/CalendarEvent/$id',
+      body: {
+        'title': title,
+        'description': description,
+        'startAt': startAt.toIso8601String(),
+      },
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Update failed');
+    }
+
+    return CalendarEventEntry.fromJson(jsonDecode(res.body));
+  }
+
+  Future<void> delete(int id) async {
+    final res = await ApiClient.delete('/api/CalendarEvent/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Delete failed');
+    }
+  }
+
   Future<CalendarEventEntry> create({
     required CreateCalendarEventRequest request,
   }) async {
@@ -101,12 +131,6 @@ class CalendarEventApiService {
     return CalendarEventEntry.fromJson(jsonDecode(resp.body));
   }
 }
-
-/*
-|--------------------------------------------------------------------------
-| SCREEN
-|--------------------------------------------------------------------------
-*/
 
 class CalendarEventScreen extends StatefulWidget {
   final int babyId;
@@ -129,7 +153,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
 
   bool _loading = true;
   bool _saving = false;
-
+  CalendarEventEntry? _editingEvent;
   final Map<DateTime, List<CalendarEventEntry>> _eventsByDay = {};
 
   DateTime _focusedDay = DateTime.now();
@@ -203,8 +227,10 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
   }
 
   Future<void> _saveEvent() async {
+    if (_saving) return;
+
     if (_titleCtrl.text.trim().isEmpty) {
-      NestlyToast.info(context, 'Unesite naziv termina.');
+      NestlyToast.info(context, 'Naziv termina je obavezan.');
       return;
     }
 
@@ -221,26 +247,37 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
     );
 
     try {
-      await _service.create(
-        request: CreateCalendarEventRequest(
-          babyId: widget.babyId,
-          userId: widget.userId,
+      if (_editingEvent == null) {
+        await _service.create(
+          request: CreateCalendarEventRequest(
+            babyId: widget.babyId,
+            userId: widget.userId,
+            title: _titleCtrl.text.trim(),
+            description: _descriptionCtrl.text.trim().isEmpty
+                ? null
+                : _descriptionCtrl.text.trim(),
+            startAt: startAt,
+          ),
+        );
+      } else {
+        await _service.update(
+          id: _editingEvent!.id,
           title: _titleCtrl.text.trim(),
           description: _descriptionCtrl.text.trim().isEmpty
               ? null
               : _descriptionCtrl.text.trim(),
           startAt: startAt,
-        ),
-      );
+        );
+      }
 
-      _titleCtrl.clear();
-      _descriptionCtrl.clear();
-      _timeOfDay = null;
-
+      _cancelEdit();
       await _loadMonth(_focusedDay);
+
       NestlyToast.success(
         context,
-        'Termin je uspješno sačuvan.',
+        _editingEvent == null
+            ? 'Termin je uspješno sačuvan.'
+            : 'Termin je ažuriran.',
         accentColor: AppColors.seed,
       );
     } catch (_) {
@@ -248,6 +285,49 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
     }
 
     if (mounted) setState(() => _saving = false);
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      _editingEvent = null;
+      _titleCtrl.clear();
+      _descriptionCtrl.clear();
+      _timeOfDay = null;
+    });
+  }
+
+  Future<void> _confirmDelete(CalendarEventEntry ev) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obrisati termin?'),
+        content: const Text('Ova akcija je nepovratna.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _service.delete(ev.id);
+      await _loadMonth(_focusedDay);
+      NestlyToast.success(
+        context,
+        'Termin obrisan.',
+        accentColor: AppColors.seed,
+      );
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri brisanju.');
+    }
   }
 
   @override
@@ -261,7 +341,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         title: Text(
           'Kalendar termina',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
         ),
@@ -380,6 +460,25 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
                 ],
               ),
             ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: AppColors.seed),
+              onPressed: () {
+                setState(() {
+                  _editingEvent = ev;
+                  _titleCtrl.text = ev.title;
+                  _descriptionCtrl.text = ev.description ?? '';
+                  _selectedDay = _dateOnly(ev.startAt);
+                  _timeOfDay = TimeOfDay(
+                    hour: ev.startAt.hour,
+                    minute: ev.startAt.minute,
+                  );
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _confirmDelete(ev),
+            ),
           ],
         ),
       ),
@@ -409,8 +508,8 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Novi termin',
+            Text(
+              _editingEvent == null ? 'Novi termin' : 'Uređivanje termina',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 color: AppColors.seed,
@@ -457,12 +556,31 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
 
                 child: _saving
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Sačuvaj termin',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                    : Text(
+                        _editingEvent == null
+                            ? 'Sačuvaj termin'
+                            : 'Spremi promjene',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
               ),
             ),
+            if (_editingEvent != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _cancelEdit,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.seed,
+                    side: const BorderSide(color: AppColors.seed),
+                  ),
+                  child: const Text(
+                    'Odustani',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

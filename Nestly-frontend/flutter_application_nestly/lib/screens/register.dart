@@ -21,7 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-
+  DateTime? _lmpDate;
+  final _cycleCtrl = TextEditingController();
   DateTime? _dob;
   DateTime? _dueDate;
   String? _gender;
@@ -34,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _cycleCtrl.dispose();
     _emailCtrl.dispose();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
@@ -76,8 +78,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
       helpText: title,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.roseDark,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: AppColors.roseDark),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
-    if (picked != null) onPicked(picked);
+
+    if (picked != null) {
+      onPicked(picked);
+    }
   }
 
   String? _required(String? v, String msg) =>
@@ -89,6 +109,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return ok ? null : 'Email nije ispravan';
   }
 
+  String? _validateUsername(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Unesite korisničko ime';
+    if (v.trim().length < 4)
+      return 'Korisničko ime mora imati najmanje 4 znaka';
+    return null;
+  }
+
+  String? _validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'Unesite lozinku';
+    if (v.length < 8) return 'Lozinka mora imati najmanje 8 znakova';
+    if (!RegExp(r'[A-Z]').hasMatch(v)) {
+      return 'Lozinka mora sadržavati veliko slovo';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(v)) {
+      return 'Lozinka mora sadržavati broj';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Unesite broj telefona';
+    if (!RegExp(r'^[0-9+ ]+$').hasMatch(v.trim())) {
+      return 'Telefon nije ispravan';
+    }
+    return null;
+  }
+
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -97,16 +144,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final age = DateTime.now().year - _dob!.year;
+    if (age < 13) {
+      NestlyToast.error(context, 'Morate imati najmanje 13 godina');
+      return;
+    }
+
     if (_gender == null) {
       NestlyToast.info(context, 'Odaberite spol');
       return;
     }
-
     if (_isPregnant && _dueDate == null) {
       NestlyToast.info(context, 'Odaberite termin poroda');
       return;
     }
-
+    if (_isPregnant && _lmpDate == null) {
+      NestlyToast.info(context, 'Odaberite datum posljednje menstruacije');
+      return;
+    }
     setState(() => _loading = true);
 
     try {
@@ -123,7 +178,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           "username": _usernameCtrl.text.trim(),
           "password": _passwordCtrl.text,
           "roleId": 1,
+
+          "lmpDate": _isPregnant ? _lmpDate?.toIso8601String() : null,
           "dueDate": _isPregnant ? _dueDate?.toIso8601String() : null,
+          "cycleLengthDays": _isPregnant ? int.tryParse(_cycleCtrl.text) : null,
         }),
       );
 
@@ -142,196 +200,263 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
-        title: Text(
-          'Registracija',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: AppColors.roseDark,
-          ),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: AppColors.roseDark,
+          selectionColor: AppColors.roseDark,
+          selectionHandleColor: AppColors.roseDark,
         ),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.xl),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: AppColors.roseDark),
+          title: Text(
+            'Registracija',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.roseDark,
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _emailCtrl,
-                    decoration: _decoration(
-                      label: 'Email',
-                      icon: Icons.email_rounded,
+          centerTitle: true,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailCtrl,
+                      decoration: _decoration(
+                        label: 'Email',
+                        icon: Icons.email_rounded,
+                      ),
+                      validator: _validateEmail,
                     ),
-                    validator: _validateEmail,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  TextFormField(
-                    controller: _firstNameCtrl,
-                    decoration: _decoration(
-                      label: 'Ime',
-                      icon: Icons.person_rounded,
+                    TextFormField(
+                      controller: _firstNameCtrl,
+                      decoration: _decoration(
+                        label: 'Ime',
+                        icon: Icons.person_rounded,
+                      ),
+                      validator: (v) => _required(v, 'Unesite ime'),
                     ),
-                    validator: (v) => _required(v, 'Unesite ime'),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  TextFormField(
-                    controller: _lastNameCtrl,
-                    decoration: _decoration(
-                      label: 'Prezime',
-                      icon: Icons.person_outline,
+                    TextFormField(
+                      controller: _lastNameCtrl,
+                      decoration: _decoration(
+                        label: 'Prezime',
+                        icon: Icons.person_outline,
+                      ),
+                      validator: (v) => _required(v, 'Unesite prezime'),
                     ),
-                    validator: (v) => _required(v, 'Unesite prezime'),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  TextFormField(
-                    controller: _phoneCtrl,
-                    decoration: _decoration(
-                      label: 'Telefon',
-                      icon: Icons.phone,
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      validator: _validatePhone,
+                      decoration: _decoration(
+                        label: 'Telefon',
+                        icon: Icons.phone,
+                      ),
+                      keyboardType: TextInputType.phone,
                     ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  TextFormField(
-                    controller: _usernameCtrl,
-                    decoration: _decoration(
-                      label: 'Korisničko ime',
-                      icon: Icons.account_circle_rounded,
+                    TextFormField(
+                      controller: _usernameCtrl,
+                      decoration: _decoration(
+                        label: 'Korisničko ime',
+                        icon: Icons.account_circle_rounded,
+                      ),
+                      validator: _validateUsername,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  TextFormField(
-                    controller: _passwordCtrl,
-                    obscureText: _obscure,
-                    decoration:
-                        _decoration(
-                          label: 'Lozinka',
-                          icon: Icons.lock_rounded,
-                        ).copyWith(
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                    TextFormField(
+                      controller: _passwordCtrl,
+                      obscureText: _obscure,
+                      validator: _validatePassword,
+                      decoration:
+                          _decoration(
+                            label: 'Lozinka',
+                            icon: Icons.lock_rounded,
+                          ).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
                             ),
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
                           ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    DropdownButtonFormField<String>(
+                      value: _gender,
+                      decoration: _decoration(
+                        label: 'Spol',
+                        icon: Icons.wc_rounded,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'female',
+                          child: Text('Ženski'),
                         ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  DropdownButtonFormField<String>(
-                    value: _gender,
-                    decoration: _decoration(
-                      label: 'Spol',
-                      icon: Icons.wc_rounded,
+                        DropdownMenuItem(value: 'male', child: Text('Muški')),
+                      ],
+                      onChanged: (v) => setState(() => _gender = v),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'female', child: Text('Ženski')),
-                      DropdownMenuItem(value: 'male', child: Text('Muški')),
-                    ],
-                    onChanged: (v) => setState(() => _gender = v),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    tileColor: AppColors.babyPink.withOpacity(.15),
-                    title: Text(
-                      _dob == null
-                          ? 'Datum rođenja'
-                          : '${_dob!.day}.${_dob!.month}.${_dob!.year}',
-                    ),
-                    trailing: const Icon(Icons.calendar_today),
-                    onTap: () => _pickDate(
-                      initial: DateTime.now(),
-                      title: 'Datum rođenja',
-                      onPicked: (d) => setState(() => _dob = d),
-                    ),
-                  ),
-
-                  SwitchListTile(
-                    title: const Text('Trenutno sam trudna'),
-                    value: _isPregnant,
-                    activeColor: AppColors.roseDark,
-                    onChanged: (v) => setState(() => _isPregnant = v),
-                  ),
-
-                  if (_isPregnant)
                     ListTile(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                       tileColor: AppColors.babyPink.withOpacity(.15),
                       title: Text(
-                        _dueDate == null
-                            ? 'Termin poroda'
-                            : '${_dueDate!.day}.${_dueDate!.month}.${_dueDate!.year}',
+                        _dob == null
+                            ? 'Datum rođenja'
+                            : '${_dob!.day}.${_dob!.month}.${_dob!.year}',
                       ),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: () => _pickDate(
                         initial: DateTime.now(),
-                        title: 'Termin poroda',
-                        onPicked: (d) => setState(() => _dueDate = d),
+                        title: 'Datum rođenja',
+                        onPicked: (d) => setState(() => _dob = d),
                       ),
                     ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                    SwitchListTile(
+                      title: const Text(
+                        'Očekujem bebu',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: const Text(
+                        'Uključite ako želite pratiti trudnoću',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      value: _isPregnant,
+                      activeColor: AppColors.roseDark,
+                      onChanged: (v) => setState(() => _isPregnant = v),
+                    ),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _onSubmit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.roseDark,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    if (_isPregnant)
+                      ListTile(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.lg),
                         ),
+                        tileColor: AppColors.babyPink.withOpacity(.15),
+                        title: Text(
+                          _dueDate == null
+                              ? 'Termin poroda'
+                              : '${_dueDate!.day}.${_dueDate!.month}.${_dueDate!.year}',
+                        ),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () => _pickDate(
+                          initial: DateTime.now(),
+                          title: 'Termin poroda',
+                          onPicked: (d) => setState(() => _dueDate = d),
+                        ),
                       ),
-                      child: _loading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+
+                    const SizedBox(height: AppSpacing.lg),
+                    if (_isPregnant) ...[
+                      const SizedBox(height: AppSpacing.md),
+
+                      ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                        ),
+                        tileColor: AppColors.babyPink.withOpacity(.15),
+                        title: Text(
+                          _lmpDate == null
+                              ? 'Datum posljednje menstruacije'
+                              : '${_lmpDate!.day}.${_lmpDate!.month}.${_lmpDate!.year}',
+                        ),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () => _pickDate(
+                          initial: DateTime.now(),
+                          title: 'Datum posljednje menstruacije',
+                          onPicked: (d) => setState(() => _lmpDate = d),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
+
+                      TextFormField(
+                        controller: _cycleCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: _decoration(
+                          label: 'Dužina ciklusa (dani)',
+                          icon: Icons.repeat,
+                        ),
+                        validator: (v) {
+                          if (_isPregnant && (v == null || v.trim().isEmpty)) {
+                            return 'Unesite dužinu ciklusa';
+                          }
+                          if (v != null && v.isNotEmpty) {
+                            final n = int.tryParse(v);
+                            if (n == null || n < 20 || n > 40) {
+                              return 'Ciklus mora biti između 20 i 40 dana';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : _onSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.roseDark,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                          ),
+                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Kreiraj nalog',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
                                 ),
                               ),
-                            )
-                          : const Text(
-                              'Kreiraj nalog',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

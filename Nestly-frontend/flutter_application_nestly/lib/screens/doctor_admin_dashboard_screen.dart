@@ -12,7 +12,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
-    final res = await ApiClient.get('/AppUser');
+    final res = await ApiClient.get('/AppUser?RoleId=1');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load users');
@@ -112,15 +112,16 @@ class _Sidebar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
-            children: const [
-              Icon(Icons.medical_services_rounded, color: AppColors.seed),
-              SizedBox(width: 12),
-              Text(
-                'Nestly Admin',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/images/nestly_logo_seed.png',
+                width: 150,
+                height: 150,
+                fit: BoxFit.contain,
               ),
-            ],
+            ),
           ),
 
           const SizedBox(height: AppSpacing.xl),
@@ -310,7 +311,7 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
       children: [
         const Text(
           'Admin upravljačka ploča',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
 
         const SizedBox(height: AppSpacing.xl),
@@ -392,11 +393,6 @@ class _UsersTable extends StatelessWidget {
 
         return InkWell(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => UserDetailsScreen(user: u)),
-            );
-          },
           child: Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -407,7 +403,6 @@ class _UsersTable extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
-                  /// AVATAR
                   CircleAvatar(
                     radius: 26,
                     backgroundColor: AppColors.seed.withOpacity(.15),
@@ -416,7 +411,7 @@ class _UsersTable extends StatelessWidget {
                           ? u.firstName[0].toUpperCase()
                           : '?',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.seed,
                       ),
                     ),
@@ -424,7 +419,6 @@ class _UsersTable extends StatelessWidget {
 
                   const SizedBox(width: AppSpacing.lg),
 
-                  /// MAIN INFO
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +459,6 @@ class _UsersTable extends StatelessWidget {
                     ),
                   ),
 
-                  /// RIGHT INFO
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -577,7 +570,7 @@ class _StatCard extends StatelessWidget {
                     value,
                     style: const TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

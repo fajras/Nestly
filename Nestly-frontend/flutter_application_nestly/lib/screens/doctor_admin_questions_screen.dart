@@ -132,7 +132,7 @@ class _DoctorAdminQuestionsScreenState
       children: [
         const Text(
           'Pitanja korisnica',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
 
         const SizedBox(height: AppSpacing.xl),
@@ -328,7 +328,7 @@ class _StatCard extends StatelessWidget {
                   value,
                   style: const TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],

@@ -8,21 +8,46 @@ import 'package:flutter_application_nestly/main.dart';
 class DiaperLog {
   final int id;
   final DateTime date;
+  final Duration time;
   final String state;
   final String? notes;
 
   DiaperLog({
     required this.id,
     required this.date,
+    required this.time,
     required this.state,
     this.notes,
   });
 
   factory DiaperLog.fromJson(Map<String, dynamic> json) {
+    final timeParts = json['changeTime'].toString().split(':');
+
+    final rawState = json['diaperState']?.toString().toLowerCase();
+
+    String formattedState;
+    switch (rawState) {
+      case 'mokra':
+        formattedState = 'Mokra';
+        break;
+      case 'stolica':
+        formattedState = 'Stolica';
+        break;
+      case 'kombinovano':
+        formattedState = 'Kombinovano';
+        break;
+      default:
+        formattedState = 'Mokra';
+    }
+
     return DiaperLog(
       id: json['id'],
       date: DateTime.parse(json['changeDate']),
-      state: json['diaperState'],
+      time: Duration(
+        hours: int.parse(timeParts[0]),
+        minutes: int.parse(timeParts[1]),
+      ),
+      state: formattedState,
       notes: json['notes'],
     );
   }
@@ -32,6 +57,35 @@ class DiaperLogApiService {
   final int babyId;
 
   DiaperLogApiService(this.babyId);
+  Future<void> update({
+    required int id,
+    required DateTime date,
+    required TimeOfDay time,
+    required String state,
+    String? notes,
+  }) async {
+    final body = {
+      'changeDate': date.toIso8601String(),
+      'changeTime':
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00',
+      'diaperState': state.toLowerCase(),
+      'notes': notes ?? '',
+    };
+
+    final res = await ApiClient.patch('/api/DiaperLog/$id', body: body);
+
+    if (res.statusCode != 200) {
+      throw Exception('Update failed');
+    }
+  }
+
+  Future<void> delete(int id) async {
+    final res = await ApiClient.delete('/api/DiaperLog/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Delete failed');
+    }
+  }
 
   Future<List<DiaperLog>> getForRange({
     required DateTime from,
@@ -87,7 +141,7 @@ class DiaperLogCalendarScreen extends StatefulWidget {
 class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
   late final DiaperLogApiService _service;
   final _notesCtrl = TextEditingController();
-
+  DiaperLog? _editingLog;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
@@ -98,6 +152,19 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
 
   TimeOfDay _time = TimeOfDay.now();
   String _state = 'Mokra';
+  bool _validate() {
+    if (_selectedDay == null) {
+      NestlyToast.info(context, 'Odaberite dan');
+      return false;
+    }
+
+    if (_state.isEmpty) {
+      NestlyToast.info(context, 'Odaberite stanje');
+      return false;
+    }
+
+    return true;
+  }
 
   @override
   void initState() {
@@ -178,30 +245,48 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
   List<DiaperLog> _forDay(DateTime d) => _logsByDay[_dayOnly(d)] ?? const [];
 
   Future<void> _save() async {
-    if (_selectedDay == null) {
-      NestlyToast.info(context, 'Odaberite dan');
-      return;
-    }
+    if (!_validate()) return;
 
     setState(() => _saving = true);
 
     try {
-      await _service.create(
-        date: _selectedDay!,
-        time: _time,
-        state: _state,
-        notes: _notesCtrl.text,
-      );
+      if (_editingLog == null) {
+        await _service.create(
+          date: _selectedDay!,
+          time: _time,
+          state: _state,
+          notes: _notesCtrl.text,
+        );
 
-      _notesCtrl.clear();
+        NestlyToast.success(context, 'Zapis sačuvan');
+      } else {
+        await _service.update(
+          id: _editingLog!.id,
+          date: _selectedDay!,
+          time: _time,
+          state: _state,
+          notes: _notesCtrl.text,
+        );
 
+        NestlyToast.success(context, 'Zapis ažuriran');
+      }
+
+      _cancelEdit();
       await _loadMonth(_focusedDay);
-      NestlyToast.success(context, 'Zapis sačuvan');
     } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju');
     }
 
     if (mounted) setState(() => _saving = false);
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      _editingLog = null;
+      _notesCtrl.clear();
+      _state = 'Mokra';
+      _time = TimeOfDay.now();
+    });
   }
 
   InputDecoration _fieldDecoration({
@@ -240,9 +325,9 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Novi zapis pelena',
+              _editingLog == null ? 'Novi zapis pelena' : 'Uređivanje zapisa',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.roseDark,
               ),
             ),
@@ -257,6 +342,23 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                   final t = await showTimePicker(
                     context: context,
                     initialTime: _time,
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: AppColors.roseDark,
+                            onPrimary: Colors.white,
+                            onSurface: AppColors.roseDark,
+                          ),
+                          timePickerTheme: const TimePickerThemeData(
+                            hourMinuteTextColor: AppColors.roseDark,
+                            dialHandColor: AppColors.roseDark,
+                            dialTextColor: AppColors.roseDark,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
                   );
                   if (t != null) setState(() => _time = t);
                 },
@@ -269,8 +371,6 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                 ),
               ),
             ),
-
-            const SizedBox(height: AppSpacing.md),
 
             DropdownButtonFormField<String>(
               value: _state,
@@ -295,7 +395,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
               cursorColor: AppColors.roseDark,
               maxLines: 2,
               decoration: _fieldDecoration(
-                label: 'Napomena',
+                label: 'Napomena (opcionalno)',
                 icon: Icons.notes_rounded,
               ),
             ),
@@ -314,6 +414,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
                 ),
+
                 child: _saving
                     ? const SizedBox(
                         width: 18,
@@ -325,19 +426,67 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                           ),
                         ),
                       )
-                    : const Text(
-                        'Sačuvaj',
-                        style: TextStyle(
+                    : Text(
+                        _editingLog == null ? 'Sačuvaj' : 'Spremi promjene',
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
                       ),
               ),
             ),
+            if (_editingLog != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _cancelEdit,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.roseDark,
+                    side: const BorderSide(color: AppColors.roseDark),
+                  ),
+                  child: const Text(
+                    'Odustani',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(DiaperLog log) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obrisati zapis?'),
+        content: const Text('Ova akcija je nepovratna.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _service.delete(log.id);
+      await _loadMonth(_focusedDay);
+      NestlyToast.success(context, 'Zapis obrisan');
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri brisanju');
+    }
   }
 
   @override
@@ -351,7 +500,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
         title: Text(
           'Praćenje pelena',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -396,38 +545,60 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
             ),
     );
   }
-}
 
-Widget _logTile(DiaperLog log) {
-  return Card(
-    margin: const EdgeInsets.only(bottom: 8),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        children: [
-          const Icon(Icons.baby_changing_station, color: AppColors.roseDark),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  log.state,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                if (log.notes != null && log.notes!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(log.notes!),
-                  ),
-              ],
-            ),
-          ),
-        ],
+  Widget _logTile(DiaperLog log) {
+    final timeStr =
+        '${log.time.inHours.toString().padLeft(2, '0')}:${(log.time.inMinutes % 60).toString().padLeft(2, '0')}';
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
-    ),
-  );
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            const Icon(Icons.baby_changing_station, color: AppColors.roseDark),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$timeStr  •  ${log.state}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  if (log.notes != null && log.notes!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(log.notes!),
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: AppColors.roseDark),
+              onPressed: () {
+                setState(() {
+                  _editingLog = log;
+                  _selectedDay = _dayOnly(log.date);
+                  _time = TimeOfDay(
+                    hour: log.time.inHours,
+                    minute: log.time.inMinutes % 60,
+                  );
+                  _state = log.state;
+                  _notesCtrl.text = log.notes ?? '';
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _confirmDelete(log),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

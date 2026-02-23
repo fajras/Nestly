@@ -51,14 +51,31 @@ class TherapyPlan {
   }
 }
 
-/// =============================================================
-/// API SERVICE
-/// =============================================================
-
 class MedicationPlanApiService {
   final int parentProfileId;
 
   MedicationPlanApiService(this.parentProfileId);
+  Future<void> update({
+    required int id,
+    required String name,
+    required String dose,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final res = await ApiClient.patch(
+      '/api/MedicationPlan/$id',
+      body: {
+        'medicineName': name,
+        'dose': dose,
+        'startDate': start.toIso8601String(),
+        'endDate': end.toIso8601String(),
+      },
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to update therapy');
+    }
+  }
 
   Future<List<TherapyPlan>> fetchPlans() async {
     final res = await ApiClient.get(
@@ -162,11 +179,15 @@ class MedicationPlanApiService {
       throw Exception('Failed to create therapy');
     }
   }
-}
 
-/// =============================================================
-/// SCREEN
-/// =============================================================
+  Future<void> deletePlan(int planId) async {
+    final res = await ApiClient.delete('/api/MedicationPlan/$planId');
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Delete therapy failed (${res.statusCode})');
+    }
+  }
+}
 
 class TherapyCalendarScreen extends StatefulWidget {
   const TherapyCalendarScreen({super.key, required this.parentProfileId});
@@ -179,7 +200,7 @@ class TherapyCalendarScreen extends StatefulWidget {
 
 class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
   late final MedicationPlanApiService _service;
-
+  bool _showAllPlans = false;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<TherapyPlan> _plans = [];
@@ -231,7 +252,7 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
         title: Text(
           'Terapija',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -269,11 +290,144 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
                   },
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Expanded(child: _buildDayDetails()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _showAllPlans = false);
+                        },
+                        child: Text(
+                          'Dnevni prikaz',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: !_showAllPlans
+                                ? AppColors.roseDark
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _showAllPlans = true);
+                        },
+                        child: Text(
+                          'Sve terapije',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: _showAllPlans
+                                ? AppColors.roseDark
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: _showAllPlans
+                      ? _buildAllPlansList()
+                      : _buildDayDetails(),
+                ),
               ],
             ),
       bottomNavigationBar: _buildAddButton(),
     );
+  }
+
+  Widget _buildAllPlansList() {
+    if (_plans.isEmpty) {
+      return const Center(child: Text('Nema dodanih terapija'));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      itemCount: _plans.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final plan = _plans[index];
+
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+          child: ListTile(
+            leading: const Icon(
+              Icons.local_pharmacy_rounded,
+              color: AppColors.roseDark,
+            ),
+            title: Text(
+              plan.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.roseDark,
+              ),
+            ),
+            subtitle: Text('Period: ${_fmt(plan.start)} - ${_fmt(plan.end)}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.roseDark),
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => AddTherapyScreen(
+                          service: _service,
+                          existingPlan: plan,
+                        ),
+                      ),
+                    );
+                    _loadPlans();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _confirmDelete(plan),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(TherapyPlan plan) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obrisati terapiju?'),
+        content: Text(
+          'Da li ste sigurni da želite obrisati terapiju "${plan.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _service.deletePlan(plan.id);
+
+      NestlyToast.success(context, 'Terapija uspješno obrisana');
+
+      await _loadPlans();
+    } catch (_) {
+      NestlyToast.error(context, 'Brisanje terapije nije uspjelo');
+    }
   }
 
   Widget _buildDayDetails() {
@@ -333,7 +487,7 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
                       Text(
                         log.medicineName,
                         style: const TextStyle(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           fontSize: 16,
                           color: AppColors.roseDark,
                         ),
@@ -378,7 +532,7 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
                   Text(
                     plan.name,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.roseDark,
                     ),
                   ),
@@ -431,13 +585,11 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
       '${d.year}.';
 }
 
-/// =============================================================
-/// ADD / EDIT SCREEN
-/// =============================================================
-
 class AddTherapyScreen extends StatefulWidget {
-  const AddTherapyScreen({super.key, required this.service});
+  const AddTherapyScreen({super.key, required this.service, this.existingPlan});
+
   final MedicationPlanApiService service;
+  final TherapyPlan? existingPlan;
 
   @override
   State<AddTherapyScreen> createState() => _AddTherapyScreenState();
@@ -503,6 +655,7 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
       NestlyToast.error(context, 'Popunite sva polja');
       return;
     }
+
     if (_times.isEmpty) {
       NestlyToast.error(context, 'Dodajte barem jedno vrijeme uzimanja');
       return;
@@ -519,20 +672,35 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
     }
 
     setState(() => _saving = true);
+
     try {
-      await widget.service.create(
-        name: _name.text.trim(),
-        dose: _dose.text.trim(),
-        start: _start!,
-        end: _end!,
-        times: _times,
-      );
+      if (widget.existingPlan == null) {
+        await widget.service.create(
+          name: _name.text.trim(),
+          dose: _dose.text.trim(),
+          start: _start!,
+          end: _end!,
+          times: _times,
+        );
+
+        NestlyToast.success(context, 'Terapija dodana');
+      } else {
+        await widget.service.update(
+          id: widget.existingPlan!.id,
+          name: _name.text.trim(),
+          dose: _dose.text.trim(),
+          start: _start!,
+          end: _end!,
+        );
+
+        NestlyToast.success(context, 'Terapija ažurirana');
+      }
 
       Navigator.pop(context);
-      NestlyToast.success(context, 'Terapija dodana');
     } catch (_) {
-      NestlyToast.error(context, 'Greška');
+      NestlyToast.error(context, 'Greška pri spremanju');
     }
+
     if (mounted) setState(() => _saving = false);
   }
 
@@ -567,6 +735,22 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    if (widget.existingPlan != null) {
+      final p = widget.existingPlan!;
+      _name.text = p.name;
+      _dose.text = p.dose;
+      _start = p.start;
+      _end = p.end;
+      _times = p.intakeTimes
+          .map((d) => TimeOfDay(hour: d.inHours, minute: d.inMinutes % 60))
+          .toList();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -575,9 +759,9 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.roseDark),
         title: Text(
-          'Dodaj terapiju',
+          widget.existingPlan == null ? 'Dodaj terapiju' : 'Uredi terapiju',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -592,12 +776,14 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
                 label: 'Naziv terapije',
                 icon: Icons.medication_rounded,
               ),
+              cursorColor: AppColors.roseDark,
             ),
             const SizedBox(height: AppSpacing.md),
 
             TextField(
               controller: _dose,
               decoration: _decoration(label: 'Doza', icon: Icons.scale_rounded),
+              cursorColor: AppColors.roseDark,
             ),
             const SizedBox(height: AppSpacing.md),
 
@@ -710,7 +896,11 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
                           ),
                         ),
                       )
-                    : const Text('Sačuvaj'),
+                    : Text(
+                        widget.existingPlan == null
+                            ? 'Sačuvaj'
+                            : 'Sačuvaj izmjene',
+                      ),
               ),
             ),
           ],

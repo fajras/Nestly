@@ -5,10 +5,6 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'chat_screen.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 
-/// =============================================================
-/// MODELS
-/// =============================================================
-
 class ChatConversation {
   final int conversationId;
   final int otherUserId;
@@ -78,16 +74,9 @@ class AppUserFull {
   }
 }
 
-/// =============================================================
-/// API SERVICE
-/// =============================================================
-
 class ChatHomeApiService {
   Future<List<ChatConversation>> getMyConversations() async {
     final res = await ApiClient.get('/api/chat/conversations');
-
-    print('CONV STATUS: ${res.statusCode}');
-    print('CONV BODY: ${res.body}');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load conversations');
@@ -98,7 +87,7 @@ class ChatHomeApiService {
   }
 
   Future<List<AppUserFull>> getAllUsers() async {
-    final res = await ApiClient.get('/AppUser?roleId=1'); // parent role
+    final res = await ApiClient.get('/AppUser?roleId=1');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load users');
@@ -108,10 +97,6 @@ class ChatHomeApiService {
     return data.map((e) => AppUserFull.fromJson(e)).toList();
   }
 }
-
-/// =============================================================
-/// SCREEN
-/// =============================================================
 
 class ChatHomeScreen extends StatefulWidget {
   final int currentUserId;
@@ -166,7 +151,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         title: Text(
           'Chat',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -197,7 +182,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       child: Text(
         text,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           color: AppColors.roseDark,
         ),
       ),
@@ -238,7 +223,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           c.babyAgeMonths,
           c.pregnancyTrimester,
         ),
-        onTap: () => _openChat(c.conversationId, c.otherUserId, c.firstName),
+        onTap: () => _openChatSmart(c.otherUserId, c.firstName),
       );
     }).toList();
   }
@@ -257,7 +242,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       return _tile(
         name: '${u.firstName} ${u.lastName}',
         subtitle: 'Roditelj',
-        onTap: () => _openChat(0, u.id, u.firstName),
+        onTap: () => _openChatSmart(u.id, u.firstName),
       );
     }).toList();
   }
@@ -314,7 +299,15 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     return 'Roditelj';
   }
 
-  void _openChat(int conversationId, int otherUserId, String name) {
+  void _openChatSmart(int otherUserId, String name) {
+    final existing = _conversations
+        .where((c) => c.otherUserId == otherUserId)
+        .toList();
+
+    final conversationId = existing.isNotEmpty
+        ? existing.first.conversationId
+        : 0;
+
     Navigator.push(
       context,
       MaterialPageRoute(

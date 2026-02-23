@@ -4,10 +4,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-
-/// =============================================================
-/// MODEL
-/// =============================================================
+import 'package:flutter/services.dart';
 
 class FeedingLog {
   final int id;
@@ -52,14 +49,32 @@ class FeedingLog {
   }
 }
 
-/// =============================================================
-/// API SERVICE
-/// =============================================================
-
 class FeedingLogApiService {
   final int babyId;
 
   FeedingLogApiService(this.babyId);
+  Future<void> update({
+    required int id,
+    required DateTime date,
+    required Duration time,
+    required double amountMl,
+    String? notes,
+  }) async {
+    final res = await ApiClient.patch(
+      '/api/FeedingLog/$id',
+      body: {
+        'feedDate': date.toIso8601String(),
+        'feedTime':
+            '${time.inHours.toString().padLeft(2, '0')}:${(time.inMinutes % 60).toString().padLeft(2, '0')}:00',
+        'amountMl': amountMl,
+        'notes': notes,
+      },
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Update failed');
+    }
+  }
 
   Future<List<FeedingLog>> fetch() async {
     final res = await ApiClient.get('/api/FeedingLog?BabyId=$babyId');
@@ -100,15 +115,11 @@ class FeedingLogApiService {
   Future<void> delete(int id) async {
     final res = await ApiClient.delete('/api/FeedingLog/$id');
 
-    if (res.statusCode != 204) {
-      throw Exception('Delete failed');
+    if (res.statusCode != 200 && res.statusCode != 204) {
+      throw Exception('Delete failed (${res.statusCode})');
     }
   }
 }
-
-/// =============================================================
-/// MAIN SCREEN
-/// =============================================================
 
 class FeedingCalendarScreen extends StatefulWidget {
   const FeedingCalendarScreen({super.key, required this.babyId});
@@ -159,7 +170,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
         title: Text(
           'Dnevnik hranjenja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
         ),
@@ -226,7 +237,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
-            const Icon(Icons.baby_changing_station, color: AppColors.seed),
+            const Icon(Icons.restaurant_rounded, color: AppColors.seed),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -235,7 +246,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                   Text(
                     _formatTime(log.feedTime),
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.seed,
                     ),
                   ),
@@ -247,10 +258,62 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
               ),
             ),
             IconButton(
+              icon: const Icon(Icons.edit, color: AppColors.seed),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AddFeedingLogScreen(
+                      service: _service,
+                      initialDate: log.feedDate,
+                      existingLog: log,
+                    ),
+                  ),
+                );
+                _load();
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () async {
-                await _service.delete(log.id);
-                _load();
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Obrisati unos?'),
+                    content: const Text(
+                      'Da li ste sigurni da želite obrisati ovaj unos?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Odustani'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text(
+                          'Obriši',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm != true) return;
+
+                try {
+                  await _service.delete(log.id);
+
+                  NestlyToast.success(
+                    context,
+                    'Unos uspješno obrisan',
+                    accentColor: AppColors.seed,
+                  );
+
+                  _load();
+                } catch (e) {
+                  NestlyToast.error(context, 'Brisanje nije uspjelo');
+                }
               },
             ),
           ],
@@ -298,19 +361,17 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
   }
 }
 
-/// =============================================================
-/// ADD SCREEN
-/// =============================================================
-
 class AddFeedingLogScreen extends StatefulWidget {
   const AddFeedingLogScreen({
     super.key,
     required this.service,
     required this.initialDate,
+    this.existingLog,
   });
 
   final FeedingLogApiService service;
   final DateTime initialDate;
+  final FeedingLog? existingLog;
 
   @override
   State<AddFeedingLogScreen> createState() => _AddFeedingLogScreenState();
@@ -318,6 +379,7 @@ class AddFeedingLogScreen extends StatefulWidget {
 
 class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
   late DateTime _date;
+  final _formKey = GlobalKey<FormState>();
   Duration _time = Duration(
     hours: DateTime.now().hour,
     minutes: DateTime.now().minute,
@@ -330,11 +392,20 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
   @override
   void initState() {
     super.initState();
-    _date = DateTime(
-      widget.initialDate.year,
-      widget.initialDate.month,
-      widget.initialDate.day,
-    );
+
+    if (widget.existingLog != null) {
+      final log = widget.existingLog!;
+      _date = log.feedDate;
+      _time = log.feedTime;
+      _amount.text = log.amountMl?.toString() ?? '';
+      _notes.text = log.notes ?? '';
+    } else {
+      _date = DateTime(
+        widget.initialDate.year,
+        widget.initialDate.month,
+        widget.initialDate.day,
+      );
+    }
   }
 
   Future<void> _pickTime() async {
@@ -351,19 +422,47 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
   }
 
   Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final amount = double.tryParse(_amount.text);
+    if (amount == null) {
+      NestlyToast.error(context, 'Unesite validnu količinu');
+      return;
+    }
+
     setState(() => _saving = true);
+
     try {
-      await widget.service.create(
-        date: _date,
-        time: _time,
-        amountMl: double.tryParse(_amount.text),
-        notes: _notes.text,
-      );
+      if (widget.existingLog == null) {
+        await widget.service.create(
+          date: _date,
+          time: _time,
+          amountMl: amount,
+          notes: _notes.text,
+        );
+
+        NestlyToast.success(context, 'Unos dodan', accentColor: AppColors.seed);
+      } else {
+        await widget.service.update(
+          id: widget.existingLog!.id,
+          date: _date,
+          time: _time,
+          amountMl: amount,
+          notes: _notes.text,
+        );
+
+        NestlyToast.success(
+          context,
+          'Unos ažuriran',
+          accentColor: AppColors.seed,
+        );
+      }
+
       Navigator.pop(context);
-      NestlyToast.success(context, 'Unos dodan', accentColor: AppColors.seed);
     } catch (_) {
       NestlyToast.error(context, 'Greška');
     }
+
     if (mounted) setState(() => _saving = false);
   }
 
@@ -376,9 +475,9 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.seed),
         title: Text(
-          'Dodaj unos',
+          widget.existingLog == null ? 'Dodaj unos' : 'Uredi unos',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
         ),
@@ -387,71 +486,94 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
 
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            InkWell(
-              onTap: _pickTime,
-              child: InputDecorator(
-                decoration: _decoration(label: 'Vrijeme', icon: Icons.schedule),
-                child: Text(_formatTime(_time)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amount,
-              keyboardType: TextInputType.number,
-              decoration: _decoration(
-                label: 'Količina (ml/g)',
-                icon: Icons.scale,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _notes,
-              decoration: _decoration(label: 'Napomena', icon: Icons.note),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 52,
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.seed,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              InkWell(
+                onTap: _pickTime,
+                child: InputDecorator(
+                  decoration: _decoration(
+                    label: 'Vrijeme',
+                    icon: Icons.schedule,
                   ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
+                  child: Text(_formatTime(_time)),
                 ),
-                child: _saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Text('Sačuvaj'),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _amount,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
+                decoration: _decoration(
+                  label: 'Količina (ml/g)',
+                  icon: Icons.scale,
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Unesite količinu';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Dozvoljeni su samo brojevi';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _notes,
+                decoration: _decoration(
+                  label: 'Napomena (opcionalno)',
+                  icon: Icons.note,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 52,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _saving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.seed,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          widget.existingLog == null
+                              ? 'Sačuvaj'
+                              : 'Sačuvaj izmjene',
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-/// =============================================================
-/// HELPERS
-/// =============================================================
 
 String _formatTime(Duration d) {
   final h = d.inHours.toString().padLeft(2, '0');

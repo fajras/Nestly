@@ -30,8 +30,6 @@ class NestlyCalendar extends StatelessWidget {
   final DateTime? lastDay;
   final IconData? markerIcon;
 
-  /// 🎨 opcionalna boja
-  /// ako se ne pošalje → koristi roseDark
   final Color? accentColor;
 
   bool _isSameDay(DateTime? a, DateTime b) {
@@ -86,11 +84,18 @@ class NestlyCalendar extends StatelessWidget {
         markerBuilder: (context, day, events) {
           if (events.isEmpty) return null;
 
+          final isSelected = _isSameDay(selectedDay, day);
+          final iconColor = isSelected ? Colors.white : color;
+
           return Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(markerIcon ?? Icons.circle, size: 14, color: color),
+              child: Icon(
+                markerIcon ?? Icons.circle,
+                size: 14,
+                color: iconColor,
+              ),
             ),
           );
         },

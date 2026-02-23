@@ -13,10 +13,6 @@ import 'package:flutter_application_nestly/screens/qa_module_screen.dart';
 import 'package:flutter_application_nestly/screens/symptom_diary_screen.dart';
 import 'package:flutter_application_nestly/screens/therapy_module_mock.dart';
 
-/// =============================================================
-/// SCREEN
-/// =============================================================
-
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key, required this.parentProfileId});
 
@@ -45,10 +41,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     _loadPregnancyStatus();
     _loadBabyStatus();
   }
-
-  /// -------------------------------------------------------------
-  /// API CALLS
-  /// -------------------------------------------------------------
 
   Future<void> _loadPregnancyStatus() async {
     setState(() {
@@ -113,10 +105,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
   }
 
-  /// -------------------------------------------------------------
-  /// COMPUTED VALUES
-  /// -------------------------------------------------------------
-
   int get _week => (_gestationalWeek ?? 1).clamp(1, 40);
 
   double get _progress {
@@ -137,10 +125,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     return 'Termin je prošao';
   }
 
-  /// -------------------------------------------------------------
-  /// NAVIGATION
-  /// -------------------------------------------------------------
-
   void _open(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
@@ -157,26 +141,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     );
   }
 
-  /// -------------------------------------------------------------
-  /// UI
-  /// -------------------------------------------------------------
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'BellyTime',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppColors.roseDark,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onHorizontalDragEnd: (details) {
@@ -317,10 +284,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   );
 }
 
-/// =============================================================
-/// REUSABLE WIDGETS
-/// =============================================================
-
 class _HeaderSimple extends StatelessWidget {
   const _HeaderSimple({
     required this.title,
@@ -353,7 +316,7 @@ class _HeaderSimple extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.roseDark,
                     ),
                   ),

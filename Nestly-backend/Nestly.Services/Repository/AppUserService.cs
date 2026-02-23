@@ -64,12 +64,12 @@ namespace Nestly.Services.Repository
                     : null,
 
                 LatestPregnancyDueDate = x.ParentProfile != null
-                    ? x.ParentProfile.Pregnancies
-                        .Where(p => p.DueDate != null && p.DueDate > nowUtc)
-                        .OrderByDescending(p => p.DueDate)
-                        .Select(p => p.DueDate)
-                        .FirstOrDefault()
-                    : null
+                ? x.ParentProfile.Pregnancies
+                    .OrderByDescending(p => p.DueDate ?? p.LmpDate)
+                    .Select(p => p.DueDate)
+                    .FirstOrDefault()
+                : null
+
             }).ToList();
 
             return rows.Select(r =>

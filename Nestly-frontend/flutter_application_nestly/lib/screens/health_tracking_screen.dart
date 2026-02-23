@@ -5,10 +5,6 @@ import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
-/// =============================================================
-/// MODELS
-/// =============================================================
-
 class HealthEntry {
   final int id;
   final int babyId;
@@ -64,10 +60,6 @@ class CreateHealthEntryRequest {
   };
 }
 
-/// =============================================================
-/// API SERVICE
-/// =============================================================
-
 class HealthEntryApiService {
   Future<List<HealthEntry>> getForBabyInRange({
     required int babyId,
@@ -89,6 +81,22 @@ class HealthEntryApiService {
     return data.map((e) => HealthEntry.fromJson(e)).toList();
   }
 
+  Future<void> patch(int id, Map<String, dynamic> body) async {
+    final res = await ApiClient.patch('/api/HealthEntry/$id', body: body);
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to update');
+    }
+  }
+
+  Future<void> delete(int id) async {
+    final res = await ApiClient.delete('/api/HealthEntry/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete');
+    }
+  }
+
   Future<void> create({required CreateHealthEntryRequest request}) async {
     final res = await ApiClient.post(
       '/api/HealthEntry',
@@ -100,10 +108,6 @@ class HealthEntryApiService {
     }
   }
 }
-
-/// =============================================================
-/// SCREEN
-/// =============================================================
 
 class HealthTrackingScreen extends StatefulWidget {
   final int babyId;
@@ -126,7 +130,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-
+  HealthEntry? _editingEntry;
   bool _loading = true;
   bool _saving = false;
 
@@ -156,6 +160,114 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   }
 
   DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  String _fmt(DateTime d) {
+    return '${d.day.toString().padLeft(2, '0')}.'
+        '${d.month.toString().padLeft(2, '0')}.'
+        '${d.year}.';
+  }
+
+  Future<void> _deleteEntry(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obrisati zapis?'),
+        content: const Text('Da li ste sigurni?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _service.delete(id);
+      await _loadMonth(_focusedDay);
+      NestlyToast.success(context, 'Zapis obrisan.');
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri brisanju.');
+    }
+  }
+
+  List<Widget> _buildEntriesForSelectedDay() {
+    if (_selectedDay == null) return [];
+
+    final entries = _forDay(_selectedDay!);
+
+    if (entries.isEmpty) {
+      return [
+        const Text(
+          'Nema zapisa za ovaj dan.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      ];
+    }
+
+    return entries.map((e) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _fmt(e.entryDate),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.roseDark,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.roseDark),
+                  onPressed: () {
+                    setState(() {
+                      _editingEntry = e;
+                      _selectedDay = _dayOnly(e.entryDate);
+                      _tempCtrl.text = e.temperatureC?.toString() ?? '';
+                      _medCtrl.text = e.medicines ?? '';
+                      _checkCtrl.text = e.doctorVisit ?? '';
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteEntry(e.id),
+                ),
+              ],
+            ),
+            if (e.temperatureC != null)
+              Text('Temperatura: ${e.temperatureC} °C'),
+            if (e.medicines != null) Text('Lijekovi: ${e.medicines}'),
+            if (e.doctorVisit != null) Text('Pregled: ${e.doctorVisit}'),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
   DateTime _monthStart(DateTime d) => DateTime(d.year, d.month, 1);
   DateTime _monthEnd(DateTime d) =>
       DateTime(d.year, d.month + 1, 0, 23, 59, 59);
@@ -199,10 +311,12 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         return;
       }
     }
+
     if (temp != null && (temp < 30 || temp > 45)) {
       NestlyToast.info(context, 'Temperatura nije realna.');
       return;
     }
+
     if (temp == null &&
         _medCtrl.text.trim().isEmpty &&
         _checkCtrl.text.trim().isEmpty) {
@@ -213,25 +327,45 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     setState(() => _saving = true);
 
     try {
-      await _service.create(
-        request: CreateHealthEntryRequest(
-          babyId: widget.babyId,
-          entryDate: _selectedDay!,
-          temperatureC: temp,
-          medicines: _medCtrl.text.trim().isEmpty ? null : _medCtrl.text.trim(),
-          doctorVisit: _checkCtrl.text.trim().isEmpty
-              ? null
-              : _checkCtrl.text.trim(),
-        ),
-      );
+      if (_editingEntry == null) {
+        // CREATE
+        await _service.create(
+          request: CreateHealthEntryRequest(
+            babyId: widget.babyId,
+            entryDate: _selectedDay!,
+            temperatureC: temp,
+            medicines: _medCtrl.text.trim().isEmpty
+                ? null
+                : _medCtrl.text.trim(),
+            doctorVisit: _checkCtrl.text.trim().isEmpty
+                ? null
+                : _checkCtrl.text.trim(),
+          ),
+        );
+
+        NestlyToast.success(context, 'Zapis sačuvan.');
+      } else {
+        final patchBody = <String, dynamic>{};
+
+        if (temp != null) patchBody['temperatureC'] = temp;
+        if (_medCtrl.text.trim().isNotEmpty) {
+          patchBody['medicines'] = _medCtrl.text.trim();
+        }
+        if (_checkCtrl.text.trim().isNotEmpty) {
+          patchBody['doctorVisit'] = _checkCtrl.text.trim();
+        }
+
+        await _service.patch(_editingEntry!.id, patchBody);
+
+        NestlyToast.success(context, 'Zapis ažuriran.');
+      }
 
       _tempCtrl.clear();
       _medCtrl.clear();
       _checkCtrl.clear();
+      _editingEntry = null;
 
       await _loadMonth(_focusedDay);
-
-      NestlyToast.success(context, 'Zapis sačuvan.');
     } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju.');
     } finally {
@@ -287,9 +421,11 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Novi zapis zdravlja',
+              _editingEntry == null
+                  ? 'Novi zapis zdravlja'
+                  : 'Uređivanje zapisa zdravlja',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.roseDark,
               ),
             ),
@@ -358,8 +494,8 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                           ),
                         ),
                       )
-                    : const Text(
-                        'Sačuvaj',
+                    : Text(
+                        _editingEntry == null ? 'Sačuvaj' : 'Sačuvaj izmjene',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
@@ -367,6 +503,30 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                       ),
               ),
             ),
+            if (_editingEntry != null) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _editingEntry = null;
+                      _tempCtrl.clear();
+                      _medCtrl.clear();
+                      _checkCtrl.clear();
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.roseDark,
+                    side: const BorderSide(color: AppColors.roseDark),
+                  ),
+                  child: const Text(
+                    'Odustani uređivanje',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -384,7 +544,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         title: Text(
           'Praćenje zdravlja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),
@@ -420,6 +580,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                     children: [
                       _form(),
                       const SizedBox(height: AppSpacing.lg),
+                      ..._buildEntriesForSelectedDay(),
                     ],
                   ),
                 ),

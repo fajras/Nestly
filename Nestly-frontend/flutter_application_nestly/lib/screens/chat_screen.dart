@@ -32,7 +32,7 @@ class ChatMessage {
       id: json['id'],
       senderId: json['senderId'],
       content: json['content'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.tryParse(json['createdAt']) ?? DateTime.now(),
     );
   }
 }
@@ -72,6 +72,7 @@ class ChatApiService {
     }
 
     final List data = jsonDecode(res.body);
+
     return data.map((e) => ChatMessage.fromJson(e)).toList();
   }
 
@@ -130,11 +131,17 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
+    print('CHAT SCREEN conversationId: ${widget.conversationId}');
+
     try {
       if (widget.conversationId != 0) {
         final list = await _api.getMessages(widget.conversationId);
         if (!mounted) return;
-        _messages.addAll(list);
+
+        setState(() {
+          _messages.clear();
+          _messages.addAll(list);
+        });
       }
     } catch (_) {
       if (!mounted) return;
@@ -167,7 +174,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final raw = args.first;
       if (raw is! Map) return;
 
-      final data = Map<String, dynamic>.from(raw as Map);
+      final data = Map<String, dynamic>.from(raw);
       final msg = ChatRealtimeMessage.fromJson(data);
 
       if (msg.conversationId != widget.conversationId) return;
@@ -244,7 +251,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(
           widget.otherUserName,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.roseDark,
           ),
         ),

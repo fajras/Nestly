@@ -98,6 +98,34 @@ class SleepLogApiService {
     return raw.map((e) => SleepLogEntry.fromJson(e)).toList();
   }
 
+  Future<void> update({
+    required int id,
+    required DateTime sleepDate,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final res = await ApiClient.patch(
+      '/api/SleepLog/$id',
+      body: {
+        'sleepDate': sleepDate.toIso8601String(),
+        'startTime': startTime,
+        'endTime': endTime,
+      },
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Update failed');
+    }
+  }
+
+  Future<void> delete(int id) async {
+    final res = await ApiClient.delete('/api/SleepLog/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Delete failed');
+    }
+  }
+
   Future<void> create({required CreateSleepLogRequest request}) async {
     final res = await ApiClient.post('/api/SleepLog', body: request.toJson());
 
@@ -106,10 +134,6 @@ class SleepLogApiService {
     }
   }
 }
-
-/// =======================
-/// SCREEN
-/// =======================
 
 class SleepLogOverviewScreen extends StatefulWidget {
   final int babyId;
@@ -130,12 +154,21 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
 
   bool _loading = true;
   bool _saving = false;
-
+  List<SleepLogEntry> _entries = [];
+  SleepLogEntry? _editingEntry;
   List<SleepDaySummary> _last7Days = const [];
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+  void _cancelEdit() {
+    setState(() {
+      _editingEntry = null;
+      _startTime = null;
+      _endTime = null;
+      _selectedDate = DateTime.now();
+    });
+  }
 
   @override
   void initState() {
@@ -148,10 +181,11 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
       final entries = await _service.getLast7Days(babyId: widget.babyId);
 
       setState(() {
+        _entries = entries;
         _last7Days = _buildSummary(entries);
         _loading = false;
       });
-    } catch (e) {
+    } catch (_) {
       setState(() => _loading = false);
       NestlyToast.error(context, 'Greška pri učitavanju');
     }
@@ -247,6 +281,13 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
     return '${diff.inHours} h ${(diff.inMinutes % 60).toString().padLeft(2, '0')} min';
   }
 
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _save() async {
     if (_startTime == null || _endTime == null) {
       NestlyToast.info(context, 'Unesite početak i kraj');
@@ -255,49 +296,47 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
 
     setState(() => _saving = true);
 
-    final start = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _startTime!.hour,
-      _startTime!.minute,
-    );
+    final startStr =
+        '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}:00';
 
-    var end = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _endTime!.hour,
-      _endTime!.minute,
-    );
-
-    if (end.isBefore(start)) end = end.add(const Duration(days: 1));
-
+    final endStr =
+        '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}:00';
     try {
-      await _service.create(
-        request: CreateSleepLogRequest(
-          babyId: widget.babyId,
-          sleepDate: DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day,
+      if (_editingEntry == null) {
+        await _service.create(
+          request: CreateSleepLogRequest(
+            babyId: widget.babyId,
+            sleepDate: _selectedDate,
+            startTime: startStr,
+            endTime: endStr,
           ),
-          startTime:
-              '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
-          endTime:
-              '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
-        ),
-      );
+        );
 
+        NestlyToast.success(
+          context,
+          'Zapis sačuvan',
+          accentColor: AppColors.seed,
+        );
+      } else {
+        await _service.update(
+          id: _editingEntry!.id,
+          sleepDate: _selectedDate,
+          startTime: startStr,
+          endTime: endStr,
+        );
+
+        NestlyToast.success(
+          context,
+          'Zapis ažuriran',
+          accentColor: AppColors.seed,
+        );
+      }
+
+      _editingEntry = null;
       _startTime = null;
       _endTime = null;
 
       await _load();
-      NestlyToast.success(
-        context,
-        'Zapis spavanja sačuvan',
-        accentColor: AppColors.seed,
-      );
     } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju');
     }
@@ -321,7 +360,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
         title: Text(
           'Dnevnik spavanja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.seed,
           ),
         ),
@@ -336,10 +375,101 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                   _buildChartCard(),
                   const SizedBox(height: AppSpacing.lg),
                   _buildFormCard(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildEntriesList(),
                 ],
               ),
             ),
     );
+  }
+
+  Widget _buildEntriesList() {
+    if (_entries.isEmpty) {
+      return const SizedBox();
+    }
+
+    return Column(
+      children: _entries.map((e) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+          child: ListTile(
+            title: Text(
+              '${e.sleepDate.day}.${e.sleepDate.month}.',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.seed,
+              ),
+            ),
+            subtitle: Text(
+              '${_formatDuration(e.startTime)} - ${_formatDuration(e.endTime)}',
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.seed),
+                  onPressed: () {
+                    setState(() {
+                      _editingEntry = e;
+                      _selectedDate = e.sleepDate;
+                      _startTime = TimeOfDay(
+                        hour: e.startTime.inHours,
+                        minute: e.startTime.inMinutes % 60,
+                      );
+                      _endTime = TimeOfDay(
+                        hour: e.endTime.inHours,
+                        minute: e.endTime.inMinutes % 60,
+                      );
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _confirmDelete(e),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _confirmDelete(SleepLogEntry entry) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Obrisati zapis?'),
+        content: const Text('Da li ste sigurni?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _service.delete(entry.id);
+      await _load();
+      NestlyToast.success(
+        context,
+        'Zapis obrisan',
+        accentColor: AppColors.seed,
+      );
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri brisanju');
+    }
   }
 
   Widget _buildChartCard() {
@@ -495,28 +625,56 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
               child: Text(_durationLabel),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.seed,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
+            Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _saving ? null : _save,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.seed,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                      ),
+                    ),
+                    child: _saving
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          )
+                        : Text(
+                            _editingEntry == null
+                                ? 'Sačuvaj'
+                                : 'Sačuvaj izmjene',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                   ),
                 ),
-                child: _saving
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      )
-                    : const Text(
-                        'Sačuvaj',
+
+                if (_editingEntry != null) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: _saving ? null : _cancelEdit,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.seed,
+                        side: const BorderSide(color: AppColors.seed),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                        ),
+                      ),
+                      child: const Text(
+                        'Odustani',
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
-              ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),

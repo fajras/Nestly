@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nestly.Model.DTOObjects;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -16,7 +17,9 @@ namespace Nestly.Model.Entity
         public long? AuthorId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-
+        public UserPhase Phase { get; set; }
+        public int? WeekFrom { get; set; }
+        public int? WeekTo { get; set; }
         public DoctorProfile Author { get; set; }
         public ICollection<BlogPostCategory> BlogPostCategories { get; set; } = new List<BlogPostCategory>();
     }

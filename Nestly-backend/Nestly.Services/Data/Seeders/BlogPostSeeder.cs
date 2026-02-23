@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 
 namespace Nestly.Services.Data.Seeders
@@ -26,7 +27,10 @@ namespace Nestly.Services.Data.Seeders
                         "Rano prepoznavanje simptoma omogućava pravovremenu brigu o ishrani, suplementima i zdravlju mame i bebe.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage1.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-25)
+                    CreatedAt = DateTime.UtcNow.AddDays(-25),
+                    Phase = UserPhase.BellyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -46,7 +50,10 @@ namespace Nestly.Services.Data.Seeders
                         "Ovaj prvi korak postavlja temelje povjerenja između vas i vašeg doktora, što je od velikog značaja za cijeli period trudnoće.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage2.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-22)
+                    CreatedAt = DateTime.UtcNow.AddDays(-22),
+                    Phase = UserPhase.BellyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -66,7 +73,10 @@ namespace Nestly.Services.Data.Seeders
                         "Njega kože novorođenčeta je jednostavna kada se vodi računa o čistoći, blagim preparatima i izbjegavanju nepotrebnih proizvoda.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage3.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-20)
+                    CreatedAt = DateTime.UtcNow.AddDays(-20),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 1,
+                    WeekTo = 16
                 },
                 new BlogPost
                 {
@@ -86,7 +96,10 @@ namespace Nestly.Services.Data.Seeders
                         "Roditeljima je važno znati da kolike nisu odraz njihove greške niti loše brige o bebi.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage4.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-19)
+                    CreatedAt = DateTime.UtcNow.AddDays(-19),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -106,7 +119,10 @@ namespace Nestly.Services.Data.Seeders
                         "Male promjene u prehrani već u prvom tromjesečju dugoročno doprinose zdravlju i mame i bebe.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage5.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-17)
+                    CreatedAt = DateTime.UtcNow.AddDays(-17),
+                    Phase = UserPhase.BellyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -126,7 +142,10 @@ namespace Nestly.Services.Data.Seeders
                         "Briga o vlastitoj ishrani je ujedno i briga o kvalitetu vremena koje provodite sa svojom bebom.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage6.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-15)
+                    CreatedAt = DateTime.UtcNow.AddDays(-15),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -146,7 +165,10 @@ namespace Nestly.Services.Data.Seeders
                         "Dajte sebi vremena da se prilagodite novoj ulozi i budite nježni prema sebi.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage7.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-13)
+                    CreatedAt = DateTime.UtcNow.AddDays(-13),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -165,7 +187,10 @@ namespace Nestly.Services.Data.Seeders
                         "Uloga partnera nije samo pomoć, već ravnopravan dio roditeljskog tima koji čuva dobrobit cijele porodice.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage8.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-10)
+                    CreatedAt = DateTime.UtcNow.AddDays(-10),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -185,7 +210,10 @@ namespace Nestly.Services.Data.Seeders
                         "Svaka majka zaslužuje podršku u ovom osjetljivom periodu, bez osude.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage9.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-8)
+                    CreatedAt = DateTime.UtcNow.AddDays(-8),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 1,
+                    WeekTo = 12
                 },
                 new BlogPost
                 {
@@ -205,7 +233,10 @@ namespace Nestly.Services.Data.Seeders
                         "Briga o mentalnom zdravlju u trudnoći jednako je važna kao i briga o fizičkom zdravlju.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage10.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-6)
+                    CreatedAt = DateTime.UtcNow.AddDays(-6),
+                    Phase = UserPhase.BellyTime,
+                    WeekFrom = 13,
+                    WeekTo = 27
                 },
                 new BlogPost
                 {
@@ -225,7 +256,10 @@ namespace Nestly.Services.Data.Seeders
                         "Uz strpljenje i sigurnu okolinu, beba će do ovog koraka doći u svoje vrijeme.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage11.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-4)
+                    CreatedAt = DateTime.UtcNow.AddDays(-4),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 13,
+                    WeekTo = 24
                 },
                 new BlogPost
                 {
@@ -245,7 +279,10 @@ namespace Nestly.Services.Data.Seeders
                         "Roditeljska blizina, strpljenje i igra ključni su saveznici u razvoju govora.",
                     ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage12.png",
                     AuthorId = 1,
-                    CreatedAt = DateTime.UtcNow.AddDays(-2)
+                    CreatedAt = DateTime.UtcNow.AddDays(-2),
+                    Phase = UserPhase.BabyTime,
+                    WeekFrom = 13,
+                    WeekTo = 24
                 }
             );
         }

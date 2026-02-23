@@ -49,6 +49,8 @@ builder.Services.AddScoped<ISymptomDiaryService, SymptomDiaryService>();
 builder.Services.AddScoped<IChatNotifier, ChatNotifier>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<IBlogRecommendationService, BlogRecommendationService>();
+
 builder.Services.AddSignalR();
 builder.Services.AddIdentityCore<IdentityUser>()
     .AddRoles<IdentityRole>()

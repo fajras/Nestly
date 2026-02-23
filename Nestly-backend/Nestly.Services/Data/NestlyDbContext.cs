@@ -32,23 +32,18 @@ namespace Nestly.Services.Data
         public DbSet<MealRecommendation> MealRecommendations { get; set; }
         public DbSet<SleepLog> SleepLogs { get; set; }
         public DbSet<Milestone> Milestones { get; set; }
-
+        public DbSet<BlogPostInteraction> BlogPostInteractions { get; set; }
         public DbSet<FetalDevelopmentWeek> FetalDevelopmentWeeks { get; set; }
         public DbSet<FoodType> FoodTypes { get; set; }
         public DbSet<WeeklyAdvice> WeeklyAdvices { get; set; }
         public DbSet<SymptomDiary> SymptomDiaries { get; set; }
-
         public DbSet<MedicationPlan> MedicationPlans { get; set; }
         public DbSet<MedicationScheduleTime> MedicationScheduleTimes { get; set; }
         public DbSet<MedicationIntakeLog> MedicationIntakeLogs { get; set; }
-
         public DbSet<Pregnancy> Pregnancies { get; set; }
-
         public DbSet<QaQuestion> QaQuestions { get; set; }
         public DbSet<QaAnswer> QaAnswers { get; set; }
-
-
-
+        public DbSet<RecommendationModelState> RecommendationModelStates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -314,6 +309,9 @@ namespace Nestly.Services.Data
                  .HasForeignKey(x => x.CategoryId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
+            model.Entity<BlogPostInteraction>()
+            .HasIndex(x => new { x.UserId, x.PostId });
+
         }
 
 

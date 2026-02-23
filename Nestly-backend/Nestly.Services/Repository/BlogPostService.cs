@@ -68,7 +68,10 @@ namespace Nestly.Services.Repository
                 Title = dto.Title.Trim(),
                 Content = dto.Content,
                 AuthorId = dto.AuthorId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Phase = (UserPhase)dto.Phase,
+                WeekFrom = dto.WeekFrom,
+                WeekTo = dto.WeekTo
             };
 
             _db.BlogPosts.Add(post);
@@ -166,7 +169,10 @@ namespace Nestly.Services.Repository
                 Title = post.Title,
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
-                AuthorId = post.AuthorId
+                AuthorId = post.AuthorId,
+                Phase = post.Phase,
+                WeekFrom = post.WeekFrom,
+                WeekTo = post.WeekTo
             };
         }
     }

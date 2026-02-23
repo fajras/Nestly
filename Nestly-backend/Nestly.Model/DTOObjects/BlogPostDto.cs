@@ -16,6 +16,9 @@ namespace Nestly.Model.DTOObjects
         public string? Content { get; set; }
         public string? ImageUrl { get; set; }
         public long? AuthorId { get; set; }
+        public UserPhase Phase { get; set; }
+        public int? WeekFrom { get; set; }
+        public int? WeekTo { get; set; }
     }
 
     public class BlogPostSearchObject
@@ -31,6 +34,10 @@ namespace Nestly.Model.DTOObjects
         public string Title { get; set; } = default!;
         public string Content { get; set; } = default!;
         public long? AuthorId { get; set; }
+        public int Phase { get; set; }
+        public int? WeekFrom { get; set; }
+        public int? WeekTo { get; set; }
+
         public List<int> CategoryIds { get; set; }
     }
     public class BlogCategoryDto

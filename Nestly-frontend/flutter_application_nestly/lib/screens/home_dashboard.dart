@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
+import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/advice_center_screen.dart';
 import 'package:flutter_application_nestly/screens/baby_growth_screen.dart';
 import 'package:flutter_application_nestly/screens/baby_profile_create_screen.dart';
 import 'package:flutter_application_nestly/screens/baby_time_home_screen.dart';
 import 'package:flutter_application_nestly/screens/blog_module_screen.dart';
 import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
+import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/qa_module_screen.dart';
 import 'package:flutter_application_nestly/screens/symptom_diary_screen.dart';
 import 'package:flutter_application_nestly/screens/therapy_module_mock.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key, required this.parentProfileId});
@@ -27,9 +31,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   DateTime? _lmpDate;
   DateTime? _dueDate;
 
+  bool _loadingNotifications = false;
   bool _loading = true;
   bool _error = false;
-
+  final NotificationSignalRService _signalRService =
+      NotificationSignalRService();
   bool _checkingBaby = false;
   bool _hasBaby = false;
   int? _babyId;
@@ -40,6 +46,33 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     super.initState();
     _loadPregnancyStatus();
     _loadBabyStatus();
+    notificationState.loadUnreadCount();
+    _initSignalR();
+  }
+
+  @override
+  void dispose() {
+    _signalRService.disconnect();
+    super.dispose();
+  }
+
+  Future<void> _initSignalR() async {
+    try {
+      final token = await AuthStorage.getToken();
+      if (token == null) return;
+
+      final decoded = JwtDecoder.decode(token);
+      final userId =
+          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+
+      await _signalRService.connect(
+        userId.toString(),
+        token,
+        onNotification: () {
+          notificationState.increment();
+        },
+      );
+    } catch (_) {}
   }
 
   Future<void> _loadPregnancyStatus() async {
@@ -144,6 +177,62 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_rounded),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+
+                  notificationState.loadUnreadCount();
+                },
+              ),
+              AnimatedBuilder(
+                animation: notificationState,
+                builder: (_, __) {
+                  final count = notificationState.unreadCount;
+
+                  if (count == 0) return const SizedBox();
+
+                  return Positioned(
+                    right: 10,
+                    top: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: AppColors.roseDark,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        count > 9 ? '9+' : count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onHorizontalDragEnd: (details) {
@@ -234,6 +323,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                       icon: Icons.logout_rounded,
                       label: 'Odjavi se',
                       onTap: () async {
+                        await _signalRService.disconnect();
+                        notificationState.reset();
                         await AuthStorage.clear();
 
                         if (!context.mounted) return;
@@ -394,25 +485,6 @@ class _GradientPinkCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _BabyBornCard extends StatelessWidget {
-  const _BabyBornCard({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return _GradientPinkCard(icon: icon, label: label, onTap: onTap);
   }
 }
 

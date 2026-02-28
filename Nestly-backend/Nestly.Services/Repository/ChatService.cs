@@ -1,25 +1,21 @@
 ﻿using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
+using Nestly.Services.Messaging;
 
 namespace Nestly.Services.Repository
 {
     public class ChatService : IChatService
     {
         private readonly IChatRepository _chatRepository;
-        private readonly IChatNotifier _chatNotifier;
-
+        private readonly RabbitMqPublisher _publisher;
         public ChatService(
-            IChatRepository chatRepository,
-            IChatNotifier chatNotifier)
+      IChatRepository chatRepository,
+      RabbitMqPublisher publisher)
         {
             _chatRepository = chatRepository;
-            _chatNotifier = chatNotifier;
+            _publisher = publisher;
         }
-
-        /* =============================================================
-         * SEND MESSAGE
-         * ============================================================= */
 
         public async Task SendMessage(long senderId, SendMessageRequest request)
         {
@@ -46,15 +42,14 @@ namespace Nestly.Services.Repository
                 CreatedAt = message.CreatedAt
             };
 
-            await _chatNotifier.NotifyUser(
-                request.ReceiverUserId,
-                realtimeMessage
-            );
-        }
 
-        /* =============================================================
-         * GET USER CHATS (WITH CONTEXT)
-         * ============================================================= */
+            _publisher.Publish(new NotificationEvent
+            {
+                UserId = request.ReceiverUserId,
+                Title = "Nova poruka",
+                Message = $"Imate novu poruku od korisnika."
+            });
+        }
 
         public Task<List<ChatConversationResponse>> GetUserChats(long userId)
         {
@@ -122,10 +117,6 @@ namespace Nestly.Services.Repository
             return Task.FromResult(result);
         }
 
-        /* =============================================================
-         * GET MESSAGES
-         * ============================================================= */
-
         public Task<List<ChatMessageResponse>> GetMessages(long conversationId, long userId)
         {
             var conversation = _chatRepository.GetConversationById(conversationId);
@@ -148,9 +139,6 @@ namespace Nestly.Services.Repository
             return Task.FromResult(result);
         }
 
-        /* =============================================================
-         * HELPERS
-         * ============================================================= */
 
         private static int CalculateBabyAgeInMonths(DateTime birthDate)
         {

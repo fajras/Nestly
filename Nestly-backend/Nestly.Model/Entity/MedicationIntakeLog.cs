@@ -21,5 +21,6 @@ namespace Nestly.Model.Entity
         public DateTime? TakenAt { get; set; }
 
         public MedicationPlan Plan { get; set; } = default!;
+        public bool ReminderSent { get; set; } = false;
     }
 }

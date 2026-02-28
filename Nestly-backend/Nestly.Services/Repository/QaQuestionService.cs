@@ -1,19 +1,20 @@
-﻿// FILE: Nestly.Services/Repository/QaQuestionService.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
+using Nestly.Services.Messaging;
 
 namespace Nestly.Services.Repository
 {
     public class QaQuestionService : IQaQuestionService
     {
         private readonly NestlyDbContext _db;
-
-        public QaQuestionService(NestlyDbContext db)
+        private readonly RabbitMqPublisher _publisher;
+        public QaQuestionService(NestlyDbContext db, RabbitMqPublisher publisher)
         {
             _db = db;
+            _publisher = publisher;
         }
 
         public async Task<List<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(
@@ -143,6 +144,19 @@ namespace Nestly.Services.Repository
             await _db.QaQuestions.AddAsync(entity, ct);
             await _db.SaveChangesAsync(ct);
 
+            var doctorUserIds = await _db.DoctorProfiles
+                .Select(d => d.UserId)
+                .ToListAsync(ct);
+
+            foreach (var doctorUserId in doctorUserIds)
+            {
+                _publisher.Publish(new NotificationEvent
+                {
+                    UserId = doctorUserId,
+                    Title = "Novo pitanje",
+                    Message = "Postavljeno je novo pitanje od strane roditelja."
+                });
+            }
             return new QaQuestionDto
             {
                 Id = entity.Id,
@@ -293,6 +307,20 @@ namespace Nestly.Services.Repository
             await _db.QaAnswers.AddAsync(entity, ct);
             await _db.SaveChangesAsync(ct);
 
+            var parentUserId = await _db.QaQuestions
+                .Where(q => q.Id == questionId)
+                .Select(q => q.AskedBy.UserId)
+                .FirstOrDefaultAsync(ct);
+
+            if (parentUserId > 0)
+            {
+                _publisher.Publish(new NotificationEvent
+                {
+                    UserId = parentUserId,
+                    Title = "Odgovor na vaše pitanje",
+                    Message = "Doktor je odgovorio na vaše pitanje."
+                });
+            }
             var answeredByName = await _db.QaAnswers
                 .AsNoTracking()
                 .Where(a => a.Id == entity.Id)

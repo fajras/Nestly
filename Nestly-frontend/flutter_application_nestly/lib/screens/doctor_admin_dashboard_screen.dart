@@ -4,9 +4,12 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'dart:convert';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
+import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
+import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/admin_blog_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_questions_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_weekly_advice.dart';
+import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/user_detail_screen.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 
@@ -45,16 +48,32 @@ class DoctorAdminDashboardScreen extends StatefulWidget {
 class _DoctorAdminDashboardScreenState
     extends State<DoctorAdminDashboardScreen> {
   int _selectedIndex = 0;
-
+  final NotificationSignalRService _signalRService =
+      NotificationSignalRService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        iconTheme: const IconThemeData(color: AppColors.seed),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_rounded),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Row(
         children: [
           _Sidebar(
             selectedIndex: _selectedIndex,
             onSelect: (i) => setState(() => _selectedIndex = i),
+            onLogout: _handleLogout,
           ),
 
           Expanded(
@@ -65,6 +84,19 @@ class _DoctorAdminDashboardScreenState
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _handleLogout() async {
+    await _signalRService.disconnect();
+    notificationState.reset();
+    await AuthStorage.clear();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
     );
   }
 
@@ -89,8 +121,12 @@ class _DoctorAdminDashboardScreenState
 class _Sidebar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
-
-  const _Sidebar({required this.selectedIndex, required this.onSelect});
+  final VoidCallback onLogout;
+  const _Sidebar({
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -165,15 +201,7 @@ class _Sidebar extends StatelessWidget {
           const Spacer(),
 
           TextButton.icon(
-            onPressed: () async {
-              await AuthStorage.clear();
-              if (!context.mounted) return;
-
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (_) => false,
-              );
-            },
+            onPressed: onLogout,
             icon: const Icon(Icons.logout_rounded),
             label: const Text('Odjava'),
           ),
@@ -439,36 +467,29 @@ class _UsersTable extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            _InfoChip(
-                              icon: Icons.badge_outlined,
-                              label: u.roleLabel,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 100),
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                _InfoChip(
+                                  icon: Icons.family_restroom,
+                                  label: u.parentStatus == 'PREGNANT'
+                                      ? 'Trudnica'
+                                      : 'Roditelj',
+                                  color: u.parentStatus == 'PREGNANT'
+                                      ? AppColors.babyPink
+                                      : AppColors.babyBlue,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 6),
-                            _InfoChip(
-                              icon: Icons.family_restroom,
-                              label: u.parentStatus,
-                              color: u.parentStatus == 'PREGNANT'
-                                  ? AppColors.babyPink
-                                  : AppColors.babyBlue,
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _RightInfo(
-                        icon: Icons.pregnant_woman,
-                        text: u.pregnancyInfo,
-                      ),
-                      const SizedBox(height: 4),
-                      _RightInfo(icon: Icons.child_friendly, text: u.babyInfo),
-                    ],
                   ),
                 ],
               ),
@@ -505,27 +526,6 @@ class _InfoChip extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _RightInfo extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _RightInfo({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-        ),
-      ],
     );
   }
 }

@@ -32,7 +32,7 @@ dependencies:
   http: ^1.2.1
   table_calendar: ^3.0.9
   fl_chart: ^0.69.0
-
+  jwt_decoder: ^2.0.1
   intl: ^0.20.2
 
   flutter_localizations:

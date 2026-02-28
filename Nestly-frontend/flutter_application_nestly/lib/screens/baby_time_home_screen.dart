@@ -1,5 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/auth/auth_storage.dart';
+import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
+import 'package:flutter_application_nestly/providers/notification_state.dart';
+import 'package:flutter_application_nestly/screens/notifications_screen.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart';
 import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
@@ -11,7 +18,7 @@ import 'package:flutter_application_nestly/screens/meal_plan_screen.dart';
 import 'package:flutter_application_nestly/screens/milestone_screen.dart';
 import 'package:flutter_application_nestly/screens/sleep_log_screen.dart';
 
-class BabyTimeHomeScreen extends StatelessWidget {
+class BabyTimeHomeScreen extends StatefulWidget {
   final String babyName;
   final int babyId;
   final int parentProfileId;
@@ -24,9 +31,50 @@ class BabyTimeHomeScreen extends StatelessWidget {
     required this.parentProfileId,
     required this.gender,
   });
+
+  @override
+  State<BabyTimeHomeScreen> createState() => _BabyTimeHomeScreenState();
+}
+
+class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
+  final NotificationSignalRService _signalRService =
+      NotificationSignalRService();
+
   bool get _isGirl {
-    final g = gender.toLowerCase();
+    final g = widget.gender.toLowerCase();
     return g == 'female' || g == 'f';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    notificationState.loadUnreadCount();
+    _initSignalR();
+  }
+
+  @override
+  void dispose() {
+    _signalRService.disconnect();
+    super.dispose();
+  }
+
+  Future<void> _initSignalR() async {
+    try {
+      final token = await AuthStorage.getToken();
+      if (token == null) return;
+
+      final decoded = JwtDecoder.decode(token);
+      final userId =
+          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+
+      await _signalRService.connect(
+        userId.toString(),
+        token,
+        onNotification: () {
+          notificationState.increment();
+        },
+      );
+    } catch (_) {}
   }
 
   void _push(BuildContext context, Widget screen) {
@@ -37,115 +85,180 @@ class BabyTimeHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_rounded),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+
+                  notificationState.loadUnreadCount();
+                },
+              ),
+              AnimatedBuilder(
+                animation: notificationState,
+                builder: (_, __) {
+                  final count = notificationState.unreadCount;
+
+                  if (count == 0) return const SizedBox();
+
+                  return Positioned(
+                    right: 10,
+                    top: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: AppColors.roseDark,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        count > 9 ? '9+' : count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _HeaderCard(babyName: babyName, isGirl: _isGirl),
+              _HeaderCard(babyName: widget.babyName, isGirl: _isGirl),
               const SizedBox(height: AppSpacing.xl),
 
               _menu(
-                context,
                 AppColors.seed,
                 Icons.show_chart_rounded,
                 'Praćenje rasta',
                 () => _push(
                   context,
-                  BabyGrowthTrackerScreen(babyId: babyId, babyName: babyName),
+                  BabyGrowthTrackerScreen(
+                    babyId: widget.babyId,
+                    babyName: widget.babyName,
+                  ),
                 ),
               ),
 
               _menu(
-                context,
                 AppColors.roseDark,
                 Icons.restaurant_rounded,
                 'Plan ishrane',
-                () => _push(context, MealRecommendationScreen(babyId: babyId)),
+                () => _push(
+                  context,
+                  MealRecommendationScreen(babyId: widget.babyId),
+                ),
               ),
 
               _menu(
-                context,
                 AppColors.seed,
                 Icons.local_drink_rounded,
                 'Dnevnik hranjenja',
-                () => _push(context, FeedingCalendarScreen(babyId: babyId)),
+                () => _push(
+                  context,
+                  FeedingCalendarScreen(babyId: widget.babyId),
+                ),
               ),
 
               _menu(
-                context,
                 AppColors.roseDark,
                 Icons.favorite_border_rounded,
                 'Praćenje zdravlja',
                 () => _push(
                   context,
                   HealthTrackingScreen(
-                    babyId: babyId,
-                    babyName: babyName,
-                    userId: parentProfileId,
+                    babyId: widget.babyId,
+                    babyName: widget.babyName,
+                    userId: widget.parentProfileId,
                   ),
                 ),
               ),
 
               _menu(
-                context,
                 AppColors.seed,
                 Icons.nights_stay_rounded,
                 'Dnevnik spavanja',
                 () => _push(
                   context,
-                  SleepLogOverviewScreen(babyId: babyId, babyName: babyName),
+                  SleepLogOverviewScreen(
+                    babyId: widget.babyId,
+                    babyName: widget.babyName,
+                  ),
                 ),
               ),
 
               _menu(
-                context,
                 AppColors.roseDark,
                 Icons.baby_changing_station_rounded,
                 'Praćenje pelena',
-                () => _push(context, DiaperLogCalendarScreen(babyId: babyId)),
+                () => _push(
+                  context,
+                  DiaperLogCalendarScreen(babyId: widget.babyId),
+                ),
               ),
 
               _menu(
-                context,
                 AppColors.seed,
                 Icons.emoji_events_rounded,
                 'Dostignuća',
                 () => _push(
                   context,
-                  MilestoneScreen(babyId: babyId, babyName: babyName),
+                  MilestoneScreen(
+                    babyId: widget.babyId,
+                    babyName: widget.babyName,
+                  ),
                 ),
               ),
 
               _menu(
-                context,
                 AppColors.roseDark,
                 Icons.chat_bubble_outline_rounded,
                 'Chat',
                 () => _push(
                   context,
-                  ChatHomeScreen(currentUserId: parentProfileId),
+                  ChatHomeScreen(currentUserId: widget.parentProfileId),
                 ),
               ),
 
               _menu(
-                context,
                 AppColors.seed,
                 Icons.event_note_rounded,
                 'Kalendar termina',
                 () => _push(
                   context,
                   CalendarEventScreen(
-                    babyId: babyId,
-                    babyName: babyName,
-                    userId: parentProfileId,
+                    babyId: widget.babyId,
+                    babyName: widget.babyName,
+                    userId: widget.parentProfileId,
                   ),
                 ),
               ),
 
               const SizedBox(height: AppSpacing.xl),
-
               _BackCard(onTap: () => Navigator.pop(context)),
             ],
           ),
@@ -154,13 +267,7 @@ class BabyTimeHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _menu(
-    BuildContext context,
-    Color color,
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-  ) {
+  Widget _menu(Color color, IconData icon, String label, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Card(
@@ -195,8 +302,6 @@ class BabyTimeHomeScreen extends StatelessWidget {
     );
   }
 }
-
-/* ================= HEADER ================= */
 
 class _HeaderCard extends StatelessWidget {
   final String babyName;
@@ -268,8 +373,6 @@ class _HeaderCard extends StatelessWidget {
     );
   }
 }
-
-/* ================= BACK CARD ================= */
 
 class _BackCard extends StatelessWidget {
   final VoidCallback onTap;

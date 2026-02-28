@@ -288,6 +288,25 @@ namespace Nestly.Services.Repository
                 if (roleNameUpper == "PARENT" && !_db.ParentProfiles.Any(p => p.UserId == user.Id))
                 {
                     var (normLmp, normDue) = NormalizePregnancyDates(dto.LmpDate, dto.DueDate);
+                    if (normLmp.HasValue && normDue.HasValue)
+                    {
+                        var diff = (normDue.Value - normLmp.Value).TotalDays;
+
+                        if (diff < 240 || diff > 300)
+                        {
+                            throw new ArgumentException("LMP and DueDate must be approximately 280 days apart.");
+                        }
+
+                        if (normLmp.Value > DateTime.UtcNow)
+                        {
+                            throw new ArgumentException("LMP cannot be in the future.");
+                        }
+
+                        if (normDue.Value < DateTime.UtcNow.AddDays(-7))
+                        {
+                            throw new ArgumentException("DueDate cannot be in the past.");
+                        }
+                    }
 
                     var parentProfile = new ParentProfile
                     {

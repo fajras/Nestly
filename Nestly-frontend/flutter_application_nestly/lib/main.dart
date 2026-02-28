@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_dashboard_screen.dart';
 import 'package:flutter_application_nestly/providers/splash_screen.dart';
 import 'package:http/http.dart' as http;
@@ -11,7 +12,9 @@ import 'package:flutter_application_nestly/screens/register.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
@@ -118,6 +121,7 @@ class NestlyApp extends StatelessWidget {
       navigatorObservers: [routeObserver],
       debugShowCheckedModeBanner: false,
       title: 'Nestly',
+      navigatorKey: navigatorKey,
       theme: buildTheme(),
 
       locale: const Locale('bs', 'BA'),
@@ -144,7 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _pwCtrl = TextEditingController();
-
+  final NotificationSignalRService _notificationService =
+      NotificationSignalRService();
   bool _obscure = true;
   bool _loading = false;
 
@@ -213,27 +218,33 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = jsonDecode(response.body);
 
-        final token = data['token'] as String?;
-        final role = data['role'] as String?;
-        final parentProfileId = data['parentProfileId'] as int?;
-        await AuthStorage.saveLogin(
-          token: token,
-          role: role,
-          parentProfileId: parentProfileId,
-        );
+        final token = data['token'];
+        final role = data['role'];
+        final parentProfileId = data['parentProfileId'];
+
         if (token == null || role == null) {
           NestlyToast.error(context, 'Neispravan odgovor sa servera');
           return;
         }
 
-        if (role.toUpperCase() == 'PARENT') {
-          if (parentProfileId == null) {
-            NestlyToast.error(context, 'Nedostaje parent profil');
-            return;
-          }
+        final decoded = JwtDecoder.decode(token);
+        final appUserId =
+            decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
 
+        if (appUserId == null) {
+          NestlyToast.error(context, 'JWT ne sadrži user ID');
+          return;
+        }
+
+        await AuthStorage.saveLogin(
+          token: token,
+          role: role,
+          parentProfileId: parentProfileId,
+        );
+
+        if (role.toUpperCase() == 'PARENT') {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) =>
@@ -244,13 +255,12 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => DoctorAdminDashboardScreen()),
           );
-        } else {
-          NestlyToast.error(context, 'Nepoznata korisnička rola');
         }
       } else {
         NestlyToast.error(context, 'Pogrešan email ili lozinka');
       }
-    } catch (_) {
+    } catch (e) {
+      print("LOGIN ERROR: $e");
       NestlyToast.error(context, 'Server nedostupan');
     } finally {
       if (mounted) setState(() => _loading = false);

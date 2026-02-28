@@ -99,6 +99,7 @@ public class CalendarEventService : ICalendarEventService
         if (patch.StartAt is not null)
         {
             ev.StartAt = patch.StartAt.Value;
+            ev.Reminder24hSent = false;
         }
 
         _db.SaveChanges();

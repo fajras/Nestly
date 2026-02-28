@@ -14,8 +14,9 @@ namespace Nestly.Model.Entity
         [ForeignKey(nameof(ParentProfile))]
         public long? UserId { get; set; }
         public string Title { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public DateTime StartAt { get; set; }
+        public bool Reminder24hSent { get; set; } = false;
         [JsonIgnore]
         public BabyProfile BabyProfile { get; set; }
         [JsonIgnore]

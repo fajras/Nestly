@@ -1,18 +1,19 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
-
+using Nestly.Services.Messaging;
 namespace Nestly.Services.Repository
 {
     public class BlogPostService : IBlogPostService
     {
         private readonly NestlyDbContext _db;
-
-        public BlogPostService(NestlyDbContext db)
+        private readonly RabbitMqPublisher _publisher;
+        public BlogPostService(NestlyDbContext db, RabbitMqPublisher publisher)
         {
             _db = db;
+            _publisher = publisher;
         }
 
         public IEnumerable<BlogPostResponseDto> Get(BlogPostSearchObject? search)
@@ -88,7 +89,20 @@ namespace Nestly.Services.Repository
                 );
                 _db.SaveChanges();
             }
+            var parentIds = _db.AppUsers
+                .Where(u => u.ParentProfile != null)
+                .Select(u => u.Id)
+                .ToList();
 
+            foreach (var parentId in parentIds)
+            {
+                _publisher.Publish(new NotificationEvent
+                {
+                    UserId = parentId,
+                    Title = "Novi blog članak",
+                    Message = $"Objavljen je novi članak: {post.Title}"
+                });
+            }
             return MapToDto(post);
         }
 

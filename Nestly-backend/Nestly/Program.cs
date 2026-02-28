@@ -6,8 +6,10 @@ using Microsoft.OpenApi.Models;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
+using Nestly.Services.Messaging;
 using Nestly.Services.Repository;
 using Nestly_WebAPI.Hubs;
+using NotificationHub = Nestly.Services.Messaging.NotificationHub;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -50,6 +52,12 @@ builder.Services.AddScoped<IChatNotifier, ChatNotifier>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IBlogRecommendationService, BlogRecommendationService>();
+builder.Services.AddSingleton<RabbitMqPublisher>();
+builder.Services.AddHostedService<RabbitMqConsumer>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddHostedService<CalendarReminderService>();
+builder.Services.AddHostedService<DailyParentReminderService>();
+builder.Services.AddHostedService<MedicationReminderService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddIdentityCore<IdentityUser>()
@@ -89,7 +97,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
             var path = context.HttpContext.Request.Path;
 
             if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/hubs/chat"))
+    (path.StartsWithSegments("/hubs/chat") ||
+     path.StartsWithSegments("/hubs/notifications")))
             {
                 context.Token = accessToken;
             }
@@ -197,7 +206,25 @@ app.UseCors("DevCors");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
 
+//    try
+//    {
+//        var nestlyDb = services.GetRequiredService<NestlyDbContext>();
+//        var authDb = services.GetRequiredService<AuthDbContext>();
+
+//        nestlyDb.Database.Migrate();
+//        authDb.Database.Migrate();
+//    }
+//    catch (Exception ex)
+//    {
+//        Console.WriteLine("Migration error: " + ex.Message);
+//        throw;
+//    }
+//}
 app.Run();
 

@@ -44,7 +44,7 @@ namespace Nestly.Services.Data
         public DbSet<QaQuestion> QaQuestions { get; set; }
         public DbSet<QaAnswer> QaAnswers { get; set; }
         public DbSet<RecommendationModelState> RecommendationModelStates { get; set; }
-
+        public DbSet<Notification> Notifications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

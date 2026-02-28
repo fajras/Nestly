@@ -13,34 +13,27 @@ namespace Nestly.Services.Messaging
         {
             _scopeFactory = scopeFactory;
         }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                var now = DateTime.UtcNow;
+
+                var nextRun = now.Date.AddHours(12);
+
+                if (now >= nextRun)
+                {
+                    nextRun = nextRun.AddDays(1);
+                }
+
+                var delay = nextRun - now;
+
+                await Task.Delay(delay, stoppingToken);
+
                 await SendDailyReminder(stoppingToken);
             }
         }
-        //protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        //{
-        //    while (!stoppingToken.IsCancellationRequested)
-        //    {
-        //        var now = DateTime.UtcNow;
-
-        //        var nextRun = now.Date.AddHours(12);
-
-        //        if (now >= nextRun)
-        //        {
-        //            nextRun = nextRun.AddDays(1);
-        //        }
-
-        //        var delay = nextRun - now;
-
-        //        await Task.Delay(delay, stoppingToken);
-
-        //        await SendDailyReminder(stoppingToken);
-        //    }
-        //}
 
         private async Task SendDailyReminder(CancellationToken ct)
         {

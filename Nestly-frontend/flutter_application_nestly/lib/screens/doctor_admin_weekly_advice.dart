@@ -4,10 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
-/// =======================
-/// MODEL
-/// =======================
-
 class WeeklyAdviceRow {
   final int id;
   final int weekNumber;
@@ -28,9 +24,6 @@ class WeeklyAdviceRow {
   }
 }
 
-/// =======================
-/// SERVICE
-/// =======================
 class WeeklyAdviceAdminService {
   Future<List<WeeklyAdviceRow>> getAll() async {
     final res = await ApiClient.get('/api/weeklyadvice');
@@ -57,10 +50,6 @@ class WeeklyAdviceAdminService {
     }
   }
 }
-
-/// =======================
-/// SCREEN
-/// =======================
 
 class DoctorAdminWeeklyAdviceScreen extends StatefulWidget {
   const DoctorAdminWeeklyAdviceScreen({super.key});
@@ -170,10 +159,6 @@ class _DoctorAdminWeeklyAdviceScreenState
   }
 }
 
-/// =======================
-/// CARD
-/// =======================
-
 class _WeeklyAdviceCard extends StatefulWidget {
   final WeeklyAdviceRow advice;
   final VoidCallback onSaved;
@@ -197,21 +182,29 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
   }
 
   Future<void> _save() async {
-    if (_controller.text.trim().isEmpty) return;
+    final text = _controller.text.trim();
+
+    if (text.isEmpty) {
+      NestlyToast.error(context, 'Savjet ne može biti prazan');
+      return;
+    }
+
+    if (text.length < 10) {
+      NestlyToast.error(context, 'Savjet je prekratak');
+      return;
+    }
 
     setState(() => _saving = true);
 
     try {
-      await _service.updateAdvice(
-        id: widget.advice.id,
-        adviceText: _controller.text,
-      );
+      await _service.updateAdvice(id: widget.advice.id, adviceText: text);
 
       NestlyToast.success(
         context,
         'Savjet spremljen',
         accentColor: AppColors.seed,
       );
+
       widget.onSaved();
       setState(() => _editing = false);
     } catch (e) {

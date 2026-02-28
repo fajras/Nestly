@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 
@@ -30,8 +29,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscure = true;
   bool _loading = false;
-
-  static const _baseUrl = 'http://10.0.2.2:5167';
 
   @override
   void dispose() {
@@ -100,6 +97,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  String _translateBackendError(String message) {
+    if (message.contains("Email already exists")) {
+      return "Email već postoji.";
+    }
+
+    if (message.contains("Role not found")) {
+      return "Uloga ne postoji.";
+    }
+
+    if (message.contains("Email is required")) {
+      return "Email je obavezan.";
+    }
+
+    if (message.contains("Username is required")) {
+      return "Korisničko ime je obavezno.";
+    }
+
+    if (message.contains("Password is required")) {
+      return "Lozinka je obavezna.";
+    }
+
+    if (message.contains("FirstName is required")) {
+      return "Ime je obavezno.";
+    }
+
+    if (message.contains("LastName is required")) {
+      return "Prezime je obavezno.";
+    }
+
+    if (message.contains("PhoneNumber is required")) {
+      return "Telefon je obavezan.";
+    }
+
+    if (message.contains("Gender is required")) {
+      return "Spol je obavezan.";
+    }
+
+    if (message.contains("Failed to create Identity user")) {
+      return "Korisnik nije mogao biti kreiran. Provjerite lozinku.";
+    }
+
+    if (message.contains("Passwords must")) {
+      return "Lozinka ne ispunjava sigurnosne uslove.";
+    }
+
+    if (message.contains("LMP")) {
+      return "Datum posljednje menstruacije nije ispravan.";
+    }
+
+    if (message.contains("DueDate")) {
+      return "Termin poroda nije ispravan.";
+    }
+
+    return message;
+  }
+
   String? _required(String? v, String msg) =>
       v == null || v.trim().isEmpty ? msg : null;
 
@@ -149,7 +202,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       NestlyToast.error(context, 'Morate imati najmanje 13 godina');
       return;
     }
+    if (_isPregnant && _lmpDate != null && _dueDate != null) {
+      final diff = _dueDate!.difference(_lmpDate!).inDays;
 
+      if (diff < 240 || diff > 300) {
+        NestlyToast.error(
+          context,
+          'Termin poroda mora biti oko 9 mjeseci nakon LMP.',
+        );
+        return;
+      }
+
+      if (_lmpDate!.isAfter(DateTime.now())) {
+        NestlyToast.error(
+          context,
+          'Datum posljednje menstruacije ne može biti u budućnosti.',
+        );
+        return;
+      }
+
+      if (_dueDate!.isBefore(
+        DateTime.now().subtract(const Duration(days: 7)),
+      )) {
+        NestlyToast.error(context, 'Termin poroda ne može biti u prošlosti.');
+        return;
+      }
+    }
     if (_gender == null) {
       NestlyToast.info(context, 'Odaberite spol');
       return;
@@ -165,31 +243,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loading = true);
 
     try {
-      final res = await http.post(
-        Uri.parse('$_baseUrl/AppUser'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final res = await ApiClient.post(
+        '/AppUser',
+        body: {
           "email": _emailCtrl.text.trim(),
           "firstName": _firstNameCtrl.text.trim(),
           "lastName": _lastNameCtrl.text.trim(),
           "phoneNumber": _phoneCtrl.text.trim(),
-          "dateOfBirth": _dob!.toIso8601String(),
+          "dateOfBirth": _dob!.toUtc().toIso8601String(),
           "gender": _gender,
           "username": _usernameCtrl.text.trim(),
           "password": _passwordCtrl.text,
           "roleId": 1,
-
-          "lmpDate": _isPregnant ? _lmpDate?.toIso8601String() : null,
-          "dueDate": _isPregnant ? _dueDate?.toIso8601String() : null,
-          "cycleLengthDays": _isPregnant ? int.tryParse(_cycleCtrl.text) : null,
-        }),
+          "lmpDate": _isPregnant ? _lmpDate?.toUtc().toIso8601String() : null,
+          "dueDate": _isPregnant ? _dueDate?.toUtc().toIso8601String() : null,
+          "cycleLengthDays": _isPregnant
+              ? int.tryParse(_cycleCtrl.text) ?? 0
+              : 0,
+        },
       );
 
       if (res.statusCode == 201) {
         NestlyToast.success(context, 'Registracija uspješna 🎉');
         if (mounted) Navigator.pop(context);
       } else {
-        NestlyToast.error(context, 'Greška pri registraciji');
+        String message = 'Greška pri registraciji';
+
+        try {
+          final body = jsonDecode(res.body);
+
+          if (body is Map && body.containsKey('message')) {
+            message = body['message'];
+          } else if (body is Map && body.containsKey('title')) {
+            message = body['title'];
+          } else {
+            message = res.body;
+          }
+        } catch (_) {
+          message = res.body;
+        }
+
+        message = _translateBackendError(message);
+        NestlyToast.error(context, message);
       }
     } catch (_) {
       NestlyToast.error(context, 'Server nedostupan');

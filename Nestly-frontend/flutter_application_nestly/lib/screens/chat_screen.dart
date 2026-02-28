@@ -1,18 +1,10 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
-import 'package:http/http.dart' as http;
 import 'package:signalr_netcore/signalr_client.dart';
-
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
-
-/// =============================================================
-/// MODELS
-/// =============================================================
 
 class ChatMessage {
   final int id;
@@ -60,9 +52,6 @@ class ChatRealtimeMessage {
   }
 }
 
-/// =============================================================
-/// API SERVICE
-/// =============================================================
 class ChatApiService {
   Future<List<ChatMessage>> getMessages(int conversationId) async {
     final res = await ApiClient.get('/api/chat/messages/$conversationId');
@@ -90,10 +79,6 @@ class ChatApiService {
     }
   }
 }
-
-/// =============================================================
-/// SCREEN
-/// =============================================================
 
 class ChatScreen extends StatefulWidget {
   final int currentUserId;
@@ -131,8 +116,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
-    print('CHAT SCREEN conversationId: ${widget.conversationId}');
-
     try {
       if (widget.conversationId != 0) {
         final list = await _api.getMessages(widget.conversationId);
@@ -309,6 +292,8 @@ class _ChatScreenState extends State<ChatScreen> {
               child: TextField(
                 controller: _msgCtrl,
                 cursorColor: AppColors.roseDark,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
                   hintText: 'Napiši poruku...',
                   filled: true,

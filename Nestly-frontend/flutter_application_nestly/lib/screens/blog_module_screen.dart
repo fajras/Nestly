@@ -54,8 +54,6 @@ class BlogPostDto {
   }
 }
 
-/* ================= BLOG SCREEN ================= */
-
 class BlogScreen extends StatefulWidget {
   const BlogScreen({super.key, required this.parentProfileId});
   final int parentProfileId;
@@ -217,11 +215,9 @@ class _BlogScreenState extends State<BlogScreen> {
                 );
               }
 
-              // ako ima postova, ništa se ne crta na index 1
               return const SizedBox.shrink();
             }
 
-            // odavde kreću postovi
             final postIndex = index - 2;
 
             if (postIndex < 0 || postIndex >= _posts.length) {
@@ -245,8 +241,6 @@ class _BlogScreenState extends State<BlogScreen> {
     );
   }
 }
-
-/* ================= CATEGORY FILTER ================= */
 
 class _CategoryFilterBar extends StatelessWidget {
   final List<BlogCategory> categories;
@@ -323,8 +317,6 @@ class _CategoryChip extends StatelessWidget {
     );
   }
 }
-
-/* ================= BLOG CARD ================= */
 
 class _BlogPostCard extends StatelessWidget {
   final BlogPostDto post;
@@ -441,7 +433,6 @@ class _PostText extends StatelessWidget {
     );
   }
 }
-/* ================= API ================= */
 
 Future<List<BlogCategory>> fetchCategories() async {
   final res = await ApiClient.get('/api/BlogPost/category');
@@ -470,8 +461,6 @@ Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
       ? body.map((e) => BlogPostDto.fromJson(e)).toList()
       : const [];
 }
-
-/* ================= BLOG DETAIL ================= */
 
 class BlogPostDetailScreen extends StatefulWidget {
   final BlogPostDto post;

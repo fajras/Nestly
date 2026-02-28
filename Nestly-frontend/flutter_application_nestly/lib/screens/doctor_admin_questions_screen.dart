@@ -4,10 +4,6 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 
-/// =======================
-/// MODELI
-/// =======================
-
 class QaQuestionRow {
   final int id;
   final String questionText;
@@ -31,9 +27,6 @@ class QaQuestionRow {
   }
 }
 
-/// =======================
-/// SERVICE
-/// =======================
 class QaAdminService {
   Future<List<QaQuestionRow>> getUnansweredQuestions() async {
     final res = await ApiClient.get('/api/qaquestion');
@@ -65,10 +58,6 @@ class QaAdminService {
     }
   }
 }
-
-/// =======================
-/// SCREEN
-/// =======================
 
 class DoctorAdminQuestionsScreen extends StatefulWidget {
   const DoctorAdminQuestionsScreen({super.key});
@@ -182,10 +171,6 @@ class _DoctorAdminQuestionsScreenState
   }
 }
 
-/// =======================
-/// QUESTION CARD
-/// =======================
-
 class _QuestionCard extends StatefulWidget {
   final QaQuestionRow question;
 
@@ -204,14 +189,24 @@ class _QuestionCardState extends State<_QuestionCard> {
   final _service = QaAdminService();
 
   Future<void> _save() async {
-    if (_controller.text.trim().isEmpty) return;
+    final text = _controller.text.trim();
+
+    if (text.isEmpty) {
+      NestlyToast.error(context, 'Odgovor ne može biti prazan');
+      return;
+    }
+
+    if (text.length < 5) {
+      NestlyToast.error(context, 'Odgovor je prekratak');
+      return;
+    }
 
     setState(() => _saving = true);
 
     try {
       await _service.answerQuestion(
         questionId: widget.question.id,
-        answerText: _controller.text,
+        answerText: text,
         answeredById: 1,
       );
 
@@ -220,6 +215,8 @@ class _QuestionCardState extends State<_QuestionCard> {
         'Odgovor spremljen',
         accentColor: AppColors.seed,
       );
+
+      _controller.clear();
       widget.onAnswered();
     } catch (e) {
       NestlyToast.error(context, 'Greška pri spremanju odgovora');
@@ -284,10 +281,6 @@ class _QuestionCardState extends State<_QuestionCard> {
     );
   }
 }
-
-/// =======================
-/// STAT CARD
-/// =======================
 
 class _StatCard extends StatelessWidget {
   final String title;

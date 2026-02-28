@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
@@ -36,8 +37,6 @@ class BabyProfileApiService {
   }
 }
 
-/* ==================== SCREEN ==================== */
-
 class BabyProfileCreateScreen extends StatefulWidget {
   const BabyProfileCreateScreen({
     super.key,
@@ -73,8 +72,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
     _weightCtrl.dispose();
     super.dispose();
   }
-
-  /* ==================== HELPERS ==================== */
 
   String _formatDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}.'
@@ -144,8 +141,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
       if (mounted) setState(() => _saving = false);
     }
   }
-
-  /* ==================== UI ==================== */
 
   @override
   Widget build(BuildContext context) {
@@ -258,10 +253,23 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}'),
+                          ),
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Visina',
                           suffixText: 'cm',
                         ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          final value = double.tryParse(v.replaceAll(',', '.'));
+                          if (value == null || value <= 0) {
+                            return 'Unesite pozitivnu vrijednost';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: AppSpacing.lg),
 
@@ -270,10 +278,23 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}'),
+                          ),
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Težina',
                           suffixText: 'kg',
                         ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          final value = double.tryParse(v.replaceAll(',', '.'));
+                          if (value == null || value <= 0) {
+                            return 'Unesite pozitivnu vrijednost';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: AppSpacing.xl),
 
@@ -317,8 +338,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
     );
   }
 }
-
-/* ==================== GENDER CHIP ==================== */
 
 class _GenderChip extends StatelessWidget {
   const _GenderChip({

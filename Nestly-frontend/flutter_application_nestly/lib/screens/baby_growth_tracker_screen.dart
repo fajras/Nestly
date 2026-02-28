@@ -129,8 +129,6 @@ class BabyGrowthApiService {
   }
 }
 
-/* ==================== SCREEN ==================== */
-
 class BabyGrowthTrackerScreen extends StatefulWidget {
   final int babyId;
   final String babyName;

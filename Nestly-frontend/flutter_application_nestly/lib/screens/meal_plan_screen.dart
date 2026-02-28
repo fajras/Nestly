@@ -92,10 +92,6 @@ class MealPlanApiService {
   }
 }
 
-/// =============================================================
-/// SCREEN
-/// =============================================================
-
 class MealRecommendationScreen extends StatefulWidget {
   const MealRecommendationScreen({super.key, required this.babyId});
 
@@ -232,11 +228,9 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
               onPressed: !_saving && hasChanges ? _saveChanges : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.roseDark,
-                foregroundColor: Colors.white, // 👈 KLJUČNO
+                foregroundColor: Colors.white,
                 disabledBackgroundColor: AppColors.roseDark.withOpacity(0.35),
-                disabledForegroundColor: Colors.white.withOpacity(
-                  0.8,
-                ), // 👈 da i disabled ostane bijel
+                disabledForegroundColor: Colors.white.withOpacity(0.8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.lg),
                 ),
@@ -359,10 +353,6 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
     );
   }
 }
-
-/// =============================================================
-/// UI COMPONENTS
-/// =============================================================
 
 class _WeekHeader extends StatelessWidget {
   const _WeekHeader({required this.weekNumber});

@@ -139,7 +139,10 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
       setState(() => _blogs = data);
     } catch (_) {
       if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri učitavanju blogova');
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Greška pri učitavanju blogova',
+      );
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -235,7 +238,7 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
   final _title = TextEditingController();
   final _content = TextEditingController();
   final _service = BlogAdminService();
-  int _phase = 1; // 1 = BellyTime, 2 = BabyTime
+  int _phase = 1;
   final _weekFrom = TextEditingController();
   final _weekTo = TextEditingController();
 
@@ -280,27 +283,76 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
   }
 
   Future<void> _save() async {
-    if (_title.text.isEmpty || _content.text.isEmpty) {
-      NestlyToast.error(context, 'Naslov i sadržaj su obavezni');
-      return;
-    }
-    final wf = _weekFrom.text.trim().isEmpty
-        ? null
-        : int.tryParse(_weekFrom.text);
-    final wt = _weekTo.text.trim().isEmpty ? null : int.tryParse(_weekTo.text);
+    final title = _title.text.trim();
+    final content = _content.text.trim();
+    final weekFromText = _weekFrom.text.trim();
+    final weekToText = _weekTo.text.trim();
 
-    if ((_weekFrom.text.trim().isNotEmpty && wf == null) ||
-        (_weekTo.text.trim().isNotEmpty && wt == null)) {
-      NestlyToast.error(context, 'Week polja moraju biti broj');
+    if (title.isEmpty ||
+        content.isEmpty ||
+        weekFromText.isEmpty ||
+        weekToText.isEmpty) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Sva polja moraju biti popunjena',
+      );
       return;
     }
+
+    if (title.length < 5) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Naslov je prekratak',
+      );
+      return;
+    }
+
+    if (content.length < 20) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Sadržaj mora imati barem 20 karaktera',
+      );
+      return;
+    }
+
+    final wf = int.tryParse(weekFromText);
+    final wt = int.tryParse(weekToText);
+
+    if (wf == null || wt == null) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Sedmice moraju biti broj',
+      );
+      return;
+    }
+    if (_image == null) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Slika je obavezna',
+      );
+      return;
+    }
+    if (wf <= 0 || wt <= 0) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Sedmice moraju biti veće od nule',
+      );
+      return;
+    }
+
+    if (wf > wt) {
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Početna sedmica ne može biti veća od završne',
+      );
+      return;
+    }
+
     if (_selectedCategoryIds.isEmpty) {
-      NestlyToast.error(context, 'Odaberite barem jednu kategoriju');
-      return;
-    }
-
-    if (wf != null && wt != null && wf > wt) {
-      NestlyToast.error(context, 'Week From ne smije biti veći od Week To');
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Odaberite barem jednu kategoriju',
+      );
       return;
     }
 
@@ -308,27 +360,35 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
 
     try {
       final blogId = await _service.createBlogWithoutImage(
-        title: _title.text,
-        content: _content.text,
-
+        title: title,
+        content: content,
         phase: _phase,
         weekFrom: wf,
         weekTo: wt,
         categoryIds: _selectedCategoryIds.toList(),
       );
 
-      await Future.delayed(const Duration(milliseconds: 400));
       if (_image != null) {
         await _service.uploadBlogImage(blogId: blogId, file: _image!);
       }
 
       if (!mounted) return;
+
       widget.onSaved();
       Navigator.pop(context);
-      NestlyToast.success(context, 'Blog kreiran', accentColor: AppColors.seed);
+
+      NestlyToast.success(
+        Navigator.of(context, rootNavigator: true).context,
+        'Blog uspješno kreiran',
+        accentColor: AppColors.seed,
+      );
     } catch (_) {
       if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri spremanju');
+
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Greška pri spremanju',
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -336,129 +396,157 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * .78,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Novi blog članak',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 160,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: AppColors.seed.withOpacity(.1),
-                        image: _image != null
-                            ? DecorationImage(
-                                image: FileImage(_image!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      minChildSize: 0.7,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Column(
+                    children: const [
+                      Text(
+                        'Novi blog članak',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      child: _image == null
-                          ? const Center(
-                              child: Icon(Icons.add_photo_alternate, size: 48),
+                      SizedBox(height: 4),
+                      Text(
+                        'Kreirajte edukativni sadržaj za korisnice',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: AppColors.seed.withOpacity(.1),
+                      image: _image != null
+                          ? DecorationImage(
+                              image: FileImage(_image!),
+                              fit: BoxFit.cover,
                             )
                           : null,
                     ),
+                    child: _image == null
+                        ? const Center(
+                            child: Icon(Icons.add_photo_alternate, size: 48),
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  TextField(
-                    controller: _title,
-                    decoration: const InputDecoration(labelText: 'Naslov'),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: _content,
-                    maxLines: 6,
-                    decoration: const InputDecoration(labelText: 'Sadržaj'),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Wrap(
-                    spacing: 8,
-                    children: _categories.map((c) {
-                      final selected = _selectedCategoryIds.contains(c.id);
-                      return FilterChip(
-                        label: Text(c.name),
-                        selected: selected,
-                        onSelected: (v) {
-                          setState(() {
-                            v
-                                ? _selectedCategoryIds.add(c.id)
-                                : _selectedCategoryIds.remove(c.id);
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextField(
+                  controller: _title,
+                  decoration: const InputDecoration(labelText: 'Naslov'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _content,
+                  maxLines: 6,
+                  decoration: const InputDecoration(labelText: 'Sadržaj'),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Wrap(
+                  spacing: 8,
+                  children: _categories.map((c) {
+                    final selected = _selectedCategoryIds.contains(c.id);
+                    return FilterChip(
+                      label: Text(c.name),
+                      selected: selected,
+                      onSelected: (v) {
+                        setState(() {
+                          v
+                              ? _selectedCategoryIds.add(c.id)
+                              : _selectedCategoryIds.remove(c.id);
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: AppSpacing.lg),
 
-                  const Text('Faza'),
-                  DropdownButtonFormField<int>(
-                    value: _phase,
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('BellyTime')),
-                      DropdownMenuItem(value: 2, child: Text('BabyTime')),
-                    ],
-                    onChanged: (v) => setState(() => _phase = v ?? 1),
+                const Text(
+                  'Period',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+
+                DropdownButtonFormField<int>(
+                  value: _phase,
+                  decoration: const InputDecoration(),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('Trudnoća')),
+                    DropdownMenuItem(value: 2, child: Text('Njega bebe')),
+                  ],
+                  onChanged: (v) => setState(() => _phase = v ?? 1),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                TextField(
+                  controller: _weekFrom,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Od sedmice (opcionalno)',
                   ),
+                ),
 
-                  const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
 
-                  TextField(
-                    controller: _weekFrom,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Week From (opcionalno)',
-                    ),
+                TextField(
+                  controller: _weekTo,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Do sedmice (opcionalno)',
                   ),
+                ),
 
-                  const SizedBox(height: AppSpacing.md),
-
-                  TextField(
-                    controller: _weekTo,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Week To (opcionalno)',
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Otkaži'),
-                        ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Otkaži'),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _saving ? null : _save,
-                          child: _saving
-                              ? const CircularProgressIndicator(strokeWidth: 2)
-                              : const Text('Spremi'),
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saving ? null : _save,
+                        child: _saving
+                            ? const CircularProgressIndicator(strokeWidth: 2)
+                            : const Text('Spremi'),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
+        );
+      },
     );
   }
 }

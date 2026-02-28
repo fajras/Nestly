@@ -84,8 +84,6 @@ class FetalApi {
   }
 }
 
-/* ==================== SCREEN ==================== */
-
 class BabyGrowthScreen extends StatefulWidget {
   const BabyGrowthScreen({super.key, required this.week});
 
@@ -114,7 +112,6 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen>
     _currentWeek = widget.week.clamp(1, _maxWeeks);
     _futureWeek = _api.getByWeek(_currentWeek);
 
-    // Warm up cache in background
     _api.prefetchAround(_currentWeek);
   }
 
@@ -323,8 +320,6 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen>
     );
   }
 }
-
-/* ==================== INFO CARD ==================== */
 
 class _InfoCard extends StatelessWidget {
   const _InfoCard({

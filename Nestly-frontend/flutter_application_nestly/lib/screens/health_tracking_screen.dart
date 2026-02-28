@@ -328,7 +328,6 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
     try {
       if (_editingEntry == null) {
-        // CREATE
         await _service.create(
           request: CreateHealthEntryRequest(
             babyId: widget.babyId,

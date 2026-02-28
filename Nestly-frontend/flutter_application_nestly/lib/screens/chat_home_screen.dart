@@ -299,7 +299,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     return 'Roditelj';
   }
 
-  void _openChatSmart(int otherUserId, String name) {
+  void _openChatSmart(int otherUserId, String name) async {
     final existing = _conversations
         .where((c) => c.otherUserId == otherUserId)
         .toList();
@@ -308,7 +308,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         ? existing.first.conversationId
         : 0;
 
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ChatScreen(
@@ -319,5 +319,10 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         ),
       ),
     );
+
+    if (mounted) {
+      setState(() => _loading = true);
+      await _load();
+    }
   }
 }

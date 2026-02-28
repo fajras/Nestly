@@ -81,66 +81,73 @@ class NestlyToast {
     required Color borderColor,
     required Color textColor,
   }) {
-    final snackBar = SnackBar(
-      elevation: 0,
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      duration: const Duration(seconds: 2),
-      content: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(.06),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+    final overlay = navigatorKey.currentState?.overlay;
+
+    if (overlay == null) return;
+
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 40,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: chipBg,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: chipBg.withOpacity(.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: chipBg,
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
-              child: Icon(icon, size: 20, color: iconColor),
+                  child: Icon(icon, size: 20, color: iconColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => entry.remove(),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-              child: const Icon(
-                Icons.close_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(snackBar);
+    overlay.insert(entry);
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (entry.mounted) entry.remove();
+    });
   }
 }

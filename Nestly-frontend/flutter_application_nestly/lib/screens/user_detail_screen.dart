@@ -110,7 +110,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
       setState(() {
         _users = users;
         _filtered = users;
-        _selectedUser = null; // BITNO: ne biraj automatski prvu
+        _selectedUser = null;
       });
     } catch (_) {
       if (!mounted) return;
@@ -310,7 +310,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                     ),
                   ),
 
-                /// MODULE CARDS
                 GridView.count(
                   crossAxisCount: 4,
                   shrinkWrap: true,
@@ -417,7 +416,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
 
                 const SizedBox(height: AppSpacing.lg),
 
-                /// SEARCH
                 TextField(
                   onChanged: _onSearch,
                   decoration: const InputDecoration(
@@ -428,7 +426,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
 
                 const SizedBox(height: AppSpacing.lg),
 
-                /// USERS LIST
                 Expanded(
                   child: ListView.separated(
                     itemCount: _filtered.length,
@@ -482,10 +479,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
             ),
           ),
         ),
-
-        /// =======================
-        /// RIGHT SIDE
-        /// =======================
         Expanded(
           flex: 4,
           child: Container(
@@ -563,10 +556,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
     );
   }
 }
-
-/// =======================
-/// MODULE CARD
-/// =======================
 
 class _ModuleCard extends StatelessWidget {
   final IconData icon;

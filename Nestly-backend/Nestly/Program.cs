@@ -48,7 +48,6 @@ builder.Services.AddScoped<IWeeklyAdviceService, WeeklyAdviceService>();
 builder.Services.AddScoped<IQaQuestionService, QaQuestionService>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ISymptomDiaryService, SymptomDiaryService>();
-builder.Services.AddScoped<IChatNotifier, ChatNotifier>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IBlogRecommendationService, BlogRecommendationService>();

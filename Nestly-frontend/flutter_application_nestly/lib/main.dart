@@ -260,7 +260,6 @@ class _LoginScreenState extends State<LoginScreen> {
         NestlyToast.error(context, 'Pogrešan email ili lozinka');
       }
     } catch (e) {
-      print("LOGIN ERROR: $e");
       NestlyToast.error(context, 'Server nedostupan');
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -55,7 +55,7 @@ namespace Nestly.Services.Repository
                 LastName = x.LastName,
                 RoleId = x.RoleId,
                 IdentityUserId = x.IdentityUserId,
-
+                ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
                 LatestBabyBirthDate = x.ParentProfile != null
                     ? x.ParentProfile.Babies
                         .OrderByDescending(b => b.BirthDate)
@@ -84,7 +84,8 @@ namespace Nestly.Services.Repository
                     IdentityUserId = r.IdentityUserId,
                     ParentStatus = "UNKNOWN",
                     BabyAgeMonths = null,
-                    PregnancyTrimester = null
+                    PregnancyTrimester = null,
+                    ParentProfileId = r.ParentProfileId
                 };
 
                 if (r.LatestBabyBirthDate.HasValue)
@@ -189,83 +190,88 @@ namespace Nestly.Services.Repository
 
         public AppUserResultDto Create(CreateAppUserDto dto)
         {
-            if (dto is null)
+            if (dto == null)
             {
                 throw new ArgumentNullException(nameof(dto));
             }
 
             if (string.IsNullOrWhiteSpace(dto.Email))
             {
-                throw new ArgumentException("Email is required.", nameof(dto.Email));
+                throw new ArgumentException("Email is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Username))
             {
-                throw new ArgumentException("Username is required.", nameof(dto.Username));
+                throw new ArgumentException("Username is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Password))
             {
-                throw new ArgumentException("Password is required.", nameof(dto.Password));
+                throw new ArgumentException("Password is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.FirstName))
             {
-                throw new ArgumentException("FirstName is required.", nameof(dto.FirstName));
+                throw new ArgumentException("FirstName is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.LastName))
             {
-                throw new ArgumentException("LastName is required.", nameof(dto.LastName));
+                throw new ArgumentException("LastName is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
             {
-                throw new ArgumentException("PhoneNumber is required.", nameof(dto.PhoneNumber));
+                throw new ArgumentException("PhoneNumber is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Gender))
             {
-                throw new ArgumentException("Gender is required.", nameof(dto.Gender));
+                throw new ArgumentException("Gender is required.");
             }
 
             if (_db.AppUsers.Any(u => u.Email == dto.Email))
             {
-                throw new ArgumentException("Email already exists in domain.", nameof(dto.Email));
+                throw new ArgumentException("Email already exists.");
             }
 
             var role = _db.Roles.FirstOrDefault(r => r.Id == dto.RoleId)
-                ?? throw new ArgumentException("Role not found.", nameof(dto.RoleId));
+                ?? throw new ArgumentException("Role not found.");
 
-            var identityRoleName = role.Name;
-
-            if (!_roleManager.RoleExistsAsync(identityRoleName).GetAwaiter().GetResult())
+            if (!_roleManager.RoleExistsAsync(role.Name!).GetAwaiter().GetResult())
             {
-                throw new ArgumentException($"Identity role '{identityRoleName}' does not exist. Seed it in AuthDbContext.");
+                throw new ArgumentException($"Identity role '{role.Name}' does not exist.");
             }
 
             var identityUser = new IdentityUser
             {
-                UserName = dto.Username,
-                Email = dto.Email,
+                UserName = dto.Username.Trim(),
+                Email = dto.Email.Trim(),
                 EmailConfirmed = true
             };
 
-            var createResult = _userManager.CreateAsync(identityUser, dto.Password).GetAwaiter().GetResult();
-            if (!createResult.Succeeded)
+            var identityResult = _userManager.CreateAsync(identityUser, dto.Password)
+                .GetAwaiter().GetResult();
+
+            if (!identityResult.Succeeded)
             {
-                var msg = string.Join("; ", createResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
-                throw new InvalidOperationException($"Failed to create Identity user: {msg}");
+                var msg = string.Join("; ", identityResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Identity creation failed: {msg}");
             }
 
-            var roleResult = _userManager.AddToRoleAsync(identityUser, identityRoleName).GetAwaiter().GetResult();
+            var roleResult = _userManager.AddToRoleAsync(identityUser, role.Name!)
+                .GetAwaiter().GetResult();
+
             if (!roleResult.Succeeded)
             {
-                var msg = string.Join("; ", roleResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
-                throw new InvalidOperationException($"Failed to add role '{identityRoleName}' to user: {msg}");
+                var msg = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Role assignment failed: {msg}");
             }
 
+            long? parentProfileId = null;
+
             using var tx = _db.Database.BeginTransaction();
+
             try
             {
                 var user = new AppUser
@@ -283,31 +289,8 @@ namespace Nestly.Services.Repository
                 _db.AppUsers.Add(user);
                 _db.SaveChanges();
 
-                var roleNameUpper = role.Name.ToUpperInvariant();
-
-                if (roleNameUpper == "PARENT" && !_db.ParentProfiles.Any(p => p.UserId == user.Id))
+                if (role.Id == 1)
                 {
-                    var (normLmp, normDue) = NormalizePregnancyDates(dto.LmpDate, dto.DueDate);
-                    if (normLmp.HasValue && normDue.HasValue)
-                    {
-                        var diff = (normDue.Value - normLmp.Value).TotalDays;
-
-                        if (diff < 240 || diff > 300)
-                        {
-                            throw new ArgumentException("LMP and DueDate must be approximately 280 days apart.");
-                        }
-
-                        if (normLmp.Value > DateTime.UtcNow)
-                        {
-                            throw new ArgumentException("LMP cannot be in the future.");
-                        }
-
-                        if (normDue.Value < DateTime.UtcNow.AddDays(-7))
-                        {
-                            throw new ArgumentException("DueDate cannot be in the past.");
-                        }
-                    }
-
                     var parentProfile = new ParentProfile
                     {
                         UserId = user.Id
@@ -316,9 +299,13 @@ namespace Nestly.Services.Repository
                     _db.ParentProfiles.Add(parentProfile);
                     _db.SaveChanges();
 
+                    parentProfileId = parentProfile.Id;
+
+                    var (normLmp, normDue) = NormalizePregnancyDates(dto.LmpDate, dto.DueDate);
+
                     if (normLmp.HasValue || normDue.HasValue)
                     {
-                        var preg = new Pregnancy
+                        var pregnancy = new Pregnancy
                         {
                             ParentProfileId = parentProfile.Id,
                             LmpDate = normLmp,
@@ -326,13 +313,20 @@ namespace Nestly.Services.Repository
                             CycleLengthDays = dto.CycleLengthDays
                         };
 
-                        _db.Pregnancies.Add(preg);
+                        _db.Pregnancies.Add(pregnancy);
                         _db.SaveChanges();
                     }
                 }
-                else if (roleNameUpper == "DOCTOR" && !_db.DoctorProfiles.Any(d => d.UserId == user.Id))
+
+                // 4️⃣ Ako je doktor
+                if (role.Id == 2)
                 {
-                    _db.DoctorProfiles.Add(new DoctorProfile { UserId = user.Id });
+                    var doctorProfile = new DoctorProfile
+                    {
+                        UserId = user.Id
+                    };
+
+                    _db.DoctorProfiles.Add(doctorProfile);
                     _db.SaveChanges();
                 }
 
@@ -346,15 +340,16 @@ namespace Nestly.Services.Repository
                     LastName = user.LastName,
                     RoleId = user.RoleId,
                     IdentityUserId = user.IdentityUserId,
-                    ParentStatus = "UNKNOWN",
+                    ParentStatus = role.Id == 1 ? "PARENT" : "UNKNOWN",
                     BabyAgeMonths = null,
-                    PregnancyTrimester = null
+                    PregnancyTrimester = null,
+                    ParentProfileId = parentProfileId
                 };
             }
             catch
             {
                 tx.Rollback();
-                _ = _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
+                _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
                 throw;
             }
         }
@@ -461,7 +456,7 @@ namespace Nestly.Services.Repository
             public string? LastName { get; set; }
             public long? RoleId { get; set; }
             public string IdentityUserId { get; set; } = default!;
-
+            public long? ParentProfileId { get; set; }
             public DateTime? LatestBabyBirthDate { get; set; }
             public DateTime? LatestPregnancyDueDate { get; set; }
         }
@@ -490,7 +485,7 @@ namespace Nestly.Services.Repository
 
                 if (latestBaby != null)
                 {
-                    dto.ParentStatus = "PARENT";
+                    dto.ParentStatus = "Parent";
                     dto.BabyAgeMonths = CalculateBabyAgeInMonths(latestBaby.BirthDate);
                     return dto;
                 }

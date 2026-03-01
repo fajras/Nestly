@@ -126,7 +126,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
         birthWeightKg: _parseDouble(_weightCtrl.text),
         pregnancyId: widget.pregnancyId,
       );
-
       if (!mounted) return;
 
       NestlyToast.success(context, 'Profil bebe je uspješno spremljen.');

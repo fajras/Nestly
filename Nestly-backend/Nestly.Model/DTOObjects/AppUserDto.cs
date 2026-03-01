@@ -48,6 +48,7 @@ public class AppUserResultDto
     public string ParentStatus { get; set; }
     public int? BabyAgeMonths { get; set; }
     public int? PregnancyTrimester { get; set; }
+    public long? ParentProfileId { get; set; }
 }
 
 

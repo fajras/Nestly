@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Nestly/Dockerfile
+    container_name: nestly-api
+    ports:
+      - "5167:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__db1: ${DB_CONN}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      AzureBlob__ConnectionString: ${AZURE_BLOB_CONN}
+      AzureBlob__ContainerName: ${AZURE_BLOB_CONTAINER}
+      RabbitMQ__Host: ${RABBIT_HOST}
+      RabbitMQ__User: ${RABBIT_USER}
+      RabbitMQ__Password: ${RABBIT_PASS}
+      RabbitMQ__Queue: ${RABBIT_QUEUE}
+    depends_on:
+      - sqlserver
+      - rabbitmq
+
+  worker:
+    build:
+      context: .
+      dockerfile: Nestly.Worker/Dockerfile
+    container_name: nestly-worker
+    environment:
+      ConnectionStrings__db1: ${DB_CONN}
+      RabbitMQ__Host: ${RABBIT_HOST}
+      RabbitMQ__User: ${RABBIT_USER}
+      RabbitMQ__Password: ${RABBIT_PASS}
+      RabbitMQ__Queue: ${RABBIT_QUEUE}
+    depends_on:
+      - sqlserver
+      - rabbitmq
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: nestly-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "1433:1433"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: nestly-rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"

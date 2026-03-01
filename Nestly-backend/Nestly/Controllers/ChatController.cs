@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using System.Security.Claims;
 
-namespace Nestly_WebAPI.Controllers
+namespace Nestly.WebAPI.Controllers
 {
     [Authorize]
     [ApiController]

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
 
-namespace Nestly_WebAPI.Controllers
+namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

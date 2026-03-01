@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Nestly.Services.Interfaces;
-namespace Nestly_WebAPI.Controllers
+namespace Nestly.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

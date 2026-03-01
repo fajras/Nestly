@@ -123,16 +123,19 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        _hasBaby = true;
-        _babyId = data['id'];
-        _babyName = data['babyName'];
-        _gender = data['gender'];
+
+        setState(() {
+          _hasBaby = true;
+          _babyId = data['id'];
+          _babyName = data['babyName'];
+          _gender = data['gender'];
+        });
       } else {
-        _hasBaby = false;
+        setState(() => _hasBaby = false);
       }
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      _hasBaby = false;
+      setState(() => _hasBaby = false);
     } finally {
       if (mounted) setState(() => _checkingBaby = false);
     }
@@ -348,12 +351,18 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         : _GradientPinkCard(
                             icon: Icons.favorite_rounded,
                             label: 'Beba je rođena',
-                            onTap: () => _open(
-                              context,
-                              BabyProfileCreateScreen(
-                                parentProfileId: widget.parentProfileId,
-                              ),
-                            ),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BabyProfileCreateScreen(
+                                    parentProfileId: widget.parentProfileId,
+                                  ),
+                                ),
+                              );
+
+                              await _loadBabyStatus();
+                            },
                           ),
                   ],
                 ),

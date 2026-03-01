@@ -3,7 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Interfaces;
 
-namespace Nestly_WebAPI.Controllers
+namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

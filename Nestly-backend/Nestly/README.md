@@ -1,4 +1,4 @@
-# Nestly WebAPI - AppUser CRUD Operations
+# Nestly.WebAPI - AppUser CRUD Operations
 
 This API provides full CRUD (Create, Read, Update, Delete) operations for AppUser entities.
 

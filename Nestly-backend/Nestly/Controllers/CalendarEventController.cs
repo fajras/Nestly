@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 
-namespace Nestly_WebAPI.Controllers
+namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

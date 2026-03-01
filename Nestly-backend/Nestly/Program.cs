@@ -8,7 +8,7 @@ using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
 using Nestly.Services.Messaging;
 using Nestly.Services.Repository;
-using Nestly_WebAPI.Hubs;
+using Nestly.WebAPI.Hubs;
 using NotificationHub = Nestly.Services.Messaging.NotificationHub;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,7 +52,6 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IBlogRecommendationService, BlogRecommendationService>();
 builder.Services.AddSingleton<RabbitMqPublisher>();
-builder.Services.AddHostedService<RabbitMqConsumer>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<CalendarReminderService>();
 builder.Services.AddHostedService<DailyParentReminderService>();
@@ -109,36 +108,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<AzureBlobService>();
 
-
-//builder.Services.AddSwaggerGen(c =>
-//{
-
-
-//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-//    {
-//        Description = "Enter the JWT token here in the format: Bearer {token}",
-//        Name = "Authorization",
-//        In = ParameterLocation.Header,
-//        Type = SecuritySchemeType.Http,
-//        Scheme = "Bearer"
-//    });
-
-//    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-//    {
-//        {
-//            new OpenApiSecurityScheme
-//            {
-//                Reference = new OpenApiReference
-//                {
-//                    Type = ReferenceType.SecurityScheme,
-//                    Id = "Bearer"
-//                }
-//            },
-//            new string[] { }
-//        }
-//    });
-//});
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", p => p
@@ -147,10 +116,8 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod());
 });
 
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -207,23 +174,23 @@ app.UseAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
 
-//    try
-//    {
-//        var nestlyDb = services.GetRequiredService<NestlyDbContext>();
-//        var authDb = services.GetRequiredService<AuthDbContext>();
+    try
+    {
+        var nestlyDb = services.GetRequiredService<NestlyDbContext>();
+        var authDb = services.GetRequiredService<AuthDbContext>();
 
-//        nestlyDb.Database.Migrate();
-//        authDb.Database.Migrate();
-//    }
-//    catch (Exception ex)
-//    {
-//        Console.WriteLine("Migration error: " + ex.Message);
-//        throw;
-//    }
-//}
+        nestlyDb.Database.Migrate();
+        authDb.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Migration error: " + ex.Message);
+        throw;
+    }
+}
 app.Run();
 

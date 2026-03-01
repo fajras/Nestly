@@ -438,7 +438,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                 decimal: true,
               ),
               decoration: _fieldDecoration(
-                label: 'Temperatura',
+                label: 'Temperatura (opcionalno)',
                 icon: Icons.thermostat_rounded,
                 hint: '36.8 °C',
               ),
@@ -450,7 +450,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
               controller: _medCtrl,
               cursorColor: AppColors.roseDark,
               decoration: _fieldDecoration(
-                label: 'Lijekovi',
+                label: 'Lijekovi (opcionalno)',
                 icon: Icons.medical_services_rounded,
                 hint: 'npr. Paracetamol 5 ml',
               ),
@@ -462,7 +462,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
               controller: _checkCtrl,
               cursorColor: AppColors.roseDark,
               decoration: _fieldDecoration(
-                label: 'Pregledi',
+                label: 'Pregledi (opcionalno)',
                 icon: Icons.vaccines_rounded,
                 hint: 'npr. Kontrola kod pedijatra',
               ),

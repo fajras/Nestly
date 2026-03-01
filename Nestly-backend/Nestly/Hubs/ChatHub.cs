@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
-namespace Nestly_WebAPI.Hubs
+namespace Nestly.WebAPI.Hubs
 {
     [Authorize]
     public class ChatHub : Hub

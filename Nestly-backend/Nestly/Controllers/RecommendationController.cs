@@ -4,7 +4,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
 using System.Security.Claims;
 
-namespace Nestly_WebAPI.Controllers
+namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/recommendations")]

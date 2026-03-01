@@ -260,7 +260,7 @@ class _CategoryFilterBar extends StatelessWidget {
       child: Row(
         children: [
           _CategoryChip(
-            label: 'Sve',
+            label: 'Preporučeno',
             selected: selectedId == null,
             onTap: () => onSelected(null),
           ),

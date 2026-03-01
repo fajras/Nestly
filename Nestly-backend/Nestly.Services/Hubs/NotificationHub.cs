@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace Nestly_WebAPI.Hubs
+namespace Nestly.WebAPI.Hubs
 {
     public class NotificationHub : Hub
     {

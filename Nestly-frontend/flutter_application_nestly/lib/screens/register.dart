@@ -25,7 +25,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   DateTime? _dob;
   DateTime? _dueDate;
   String? _gender;
-  bool _isPregnant = false;
 
   bool _obscure = true;
   bool _loading = false;
@@ -191,55 +190,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    if (_dob == null) {
-      NestlyToast.info(context, 'Odaberite datum rođenja');
-      return;
-    }
-
-    final age = DateTime.now().year - _dob!.year;
-    if (age < 13) {
-      NestlyToast.error(context, 'Morate imati najmanje 13 godina');
-      return;
-    }
-    if (_isPregnant && _lmpDate != null && _dueDate != null) {
-      final diff = _dueDate!.difference(_lmpDate!).inDays;
-
-      if (diff < 240 || diff > 300) {
-        NestlyToast.error(
-          context,
-          'Termin poroda mora biti oko 9 mjeseci nakon LMP.',
-        );
-        return;
-      }
-
-      if (_lmpDate!.isAfter(DateTime.now())) {
-        NestlyToast.error(
-          context,
-          'Datum posljednje menstruacije ne može biti u budućnosti.',
-        );
-        return;
-      }
-
-      if (_dueDate!.isBefore(
-        DateTime.now().subtract(const Duration(days: 7)),
-      )) {
-        NestlyToast.error(context, 'Termin poroda ne može biti u prošlosti.');
-        return;
-      }
-    }
-    if (_gender == null) {
-      NestlyToast.info(context, 'Odaberite spol');
-      return;
-    }
-    if (_isPregnant && _dueDate == null) {
-      NestlyToast.info(context, 'Odaberite termin poroda');
-      return;
-    }
-    if (_isPregnant && _lmpDate == null) {
-      NestlyToast.info(context, 'Odaberite datum posljednje menstruacije');
-      return;
-    }
     setState(() => _loading = true);
 
     try {
@@ -255,11 +205,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           "username": _usernameCtrl.text.trim(),
           "password": _passwordCtrl.text,
           "roleId": 1,
-          "lmpDate": _isPregnant ? _lmpDate?.toUtc().toIso8601String() : null,
-          "dueDate": _isPregnant ? _dueDate?.toUtc().toIso8601String() : null,
-          "cycleLengthDays": _isPregnant
-              ? int.tryParse(_cycleCtrl.text) ?? 0
-              : 0,
+          "lmpDate": _lmpDate!.toUtc().toIso8601String(),
+          "dueDate": _dueDate!.toUtc().toIso8601String(),
+          "cycleLengthDays": int.parse(_cycleCtrl.text),
         },
       );
 
@@ -417,105 +365,194 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         DropdownMenuItem(value: 'male', child: Text('Muški')),
                       ],
                       onChanged: (v) => setState(() => _gender = v),
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Odaberite spol';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                      ),
-                      tileColor: AppColors.babyPink.withOpacity(.15),
-                      title: Text(
-                        _dob == null
-                            ? 'Datum rođenja'
-                            : '${_dob!.day}.${_dob!.month}.${_dob!.year}',
-                      ),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () => _pickDate(
-                        initial: DateTime.now(),
-                        title: 'Datum rođenja',
-                        onPicked: (d) => setState(() => _dob = d),
+                    FormField<DateTime>(
+                      validator: (value) {
+                        if (_dob == null) {
+                          return 'Odaberite datum rođenja';
+                        }
+                        final age = DateTime.now().year - _dob!.year;
+                        if (age < 13) {
+                          return 'Morate imati najmanje 13 godina';
+                        }
+                        return null;
+                      },
+                      builder: (state) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                            ),
+                            tileColor: AppColors.babyPink.withOpacity(.15),
+                            title: Text(
+                              _dob == null
+                                  ? 'Datum rođenja'
+                                  : '${_dob!.day}.${_dob!.month}.${_dob!.year}',
+                            ),
+                            trailing: const Icon(Icons.calendar_today),
+                            onTap: () => _pickDate(
+                              initial: DateTime.now(),
+                              title: 'Datum rođenja',
+                              onPicked: (d) {
+                                setState(() => _dob = d);
+                                state.didChange(d);
+                              },
+                            ),
+                          ),
+                          if (state.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12, top: 6),
+                              child: Text(
+                                state.errorText!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
 
-                    SwitchListTile(
-                      title: const Text(
-                        'Očekujem bebu',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                    const SizedBox(height: AppSpacing.md),
+
+                    FormField<DateTime>(
+                      validator: (value) {
+                        if (_dueDate == null) {
+                          return 'Odaberite termin poroda';
+                        }
+                        if (_dueDate!.isBefore(
+                          DateTime.now().subtract(const Duration(days: 7)),
+                        )) {
+                          return 'Termin poroda ne može biti u prošlosti';
+                        }
+                        return null;
+                      },
+                      builder: (state) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                            ),
+                            tileColor: AppColors.babyPink.withOpacity(.15),
+                            title: Text(
+                              _dueDate == null
+                                  ? 'Termin poroda'
+                                  : '${_dueDate!.day}.${_dueDate!.month}.${_dueDate!.year}',
+                            ),
+                            trailing: const Icon(Icons.calendar_today),
+                            onTap: () => _pickDate(
+                              initial: DateTime.now(),
+                              title: 'Termin poroda',
+                              onPicked: (d) {
+                                setState(() => _dueDate = d);
+                                state.didChange(d);
+                              },
+                            ),
+                          ),
+                          if (state.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12, top: 6),
+                              child: Text(
+                                state.errorText!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      subtitle: const Text(
-                        'Uključite ako želite pratiti trudnoću',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      value: _isPregnant,
-                      activeColor: AppColors.roseDark,
-                      onChanged: (v) => setState(() => _isPregnant = v),
                     ),
 
-                    if (_isPregnant)
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                        ),
-                        tileColor: AppColors.babyPink.withOpacity(.15),
-                        title: Text(
-                          _dueDate == null
-                              ? 'Termin poroda'
-                              : '${_dueDate!.day}.${_dueDate!.month}.${_dueDate!.year}',
-                        ),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () => _pickDate(
-                          initial: DateTime.now(),
-                          title: 'Termin poroda',
-                          onPicked: (d) => setState(() => _dueDate = d),
-                        ),
-                      ),
+                    const SizedBox(height: AppSpacing.md),
 
-                    const SizedBox(height: AppSpacing.lg),
-                    if (_isPregnant) ...[
-                      const SizedBox(height: AppSpacing.md),
-
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                        ),
-                        tileColor: AppColors.babyPink.withOpacity(.15),
-                        title: Text(
-                          _lmpDate == null
-                              ? 'Datum posljednje menstruacije'
-                              : '${_lmpDate!.day}.${_lmpDate!.month}.${_lmpDate!.year}',
-                        ),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () => _pickDate(
-                          initial: DateTime.now(),
-                          title: 'Datum posljednje menstruacije',
-                          onPicked: (d) => setState(() => _lmpDate = d),
-                        ),
-                      ),
-
-                      const SizedBox(height: AppSpacing.md),
-
-                      TextFormField(
-                        controller: _cycleCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: _decoration(
-                          label: 'Dužina ciklusa (dani)',
-                          icon: Icons.repeat,
-                        ),
-                        validator: (v) {
-                          if (_isPregnant && (v == null || v.trim().isEmpty)) {
-                            return 'Unesite dužinu ciklusa';
+                    FormField<DateTime>(
+                      validator: (value) {
+                        if (_lmpDate == null) {
+                          return 'Odaberite datum posljednje menstruacije';
+                        }
+                        if (_lmpDate!.isAfter(DateTime.now())) {
+                          return 'Datum ne može biti u budućnosti';
+                        }
+                        if (_dueDate != null) {
+                          final diff = _dueDate!.difference(_lmpDate!).inDays;
+                          if (diff < 240 || diff > 300) {
+                            return 'Razmak mora biti oko 9 mjeseci';
                           }
-                          if (v != null && v.isNotEmpty) {
-                            final n = int.tryParse(v);
-                            if (n == null || n < 20 || n > 40) {
-                              return 'Ciklus mora biti između 20 i 40 dana';
-                            }
-                          }
-                          return null;
-                        },
+                        }
+                        return null;
+                      },
+                      builder: (state) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                            ),
+                            tileColor: AppColors.babyPink.withOpacity(.15),
+                            title: Text(
+                              _lmpDate == null
+                                  ? 'Datum posljednje menstruacije'
+                                  : '${_lmpDate!.day}.${_lmpDate!.month}.${_lmpDate!.year}',
+                            ),
+                            trailing: const Icon(Icons.calendar_today),
+                            onTap: () => _pickDate(
+                              initial: DateTime.now(),
+                              title: 'Datum posljednje menstruacije',
+                              onPicked: (d) {
+                                setState(() => _lmpDate = d);
+                                state.didChange(d);
+                              },
+                            ),
+                          ),
+                          if (state.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12, top: 6),
+                              child: Text(
+                                state.errorText!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
+                    ),
+
+                    const SizedBox(height: AppSpacing.md),
+
+                    TextFormField(
+                      controller: _cycleCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: _decoration(
+                        label: 'Dužina ciklusa (dani)',
+                        icon: Icons.repeat,
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Unesite dužinu ciklusa';
+                        }
+
+                        final n = int.tryParse(v);
+                        if (n == null || n < 20 || n > 40) {
+                          return 'Ciklus mora biti između 20 i 40 dana';
+                        }
+
+                        return null;
+                      },
+                    ),
 
                     const SizedBox(height: AppSpacing.md),
                     SizedBox(

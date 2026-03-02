@@ -49,9 +49,14 @@ cd Nestly-backend
 ```
 
 3. Pokrenuti Docker servise:
-
 ```bash
-docker-compose up --build
+docker-compose down
+```
+```bash
+docker-compose build --no-cache
+```
+```bash
+docker-compose up -d
 ```
 
 Ovom komandom se pokreću:

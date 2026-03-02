@@ -49,6 +49,18 @@ cd Nestly-backend
 ```
 
 3. Pokrenuti Docker servise:
+U Nestly-backend folderu prije pokretanja projekta provjeriti da li postoje već aktivni Docker kontejneri:
+```bash
+docker ps -a
+```
+Ukoliko postoje drugi projekti, potrebno ih je zaustaviti prije pokretanja Nestly projekta sa sljedeće dvije komande:
+```bash
+docker stop <container_name>
+```
+```bash
+docker rm <container_name>
+```
+Za potpuno čisto pokretanje izvršiti u Nestly-backend folderu:
 ```bash
 docker-compose down
 ```
@@ -67,6 +79,10 @@ Ovom komandom se pokreću:
 - Nestly Worker servis
 
 Sačekati da se svi servisi uspješno pokrenu.
+```bash
+docker ps
+```
+Svi Nestly servisi trebaju biti u statusu Up.
 
 4. Provjera backend-a:
 

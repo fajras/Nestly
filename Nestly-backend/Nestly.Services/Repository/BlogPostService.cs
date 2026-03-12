@@ -142,6 +142,10 @@ namespace Nestly.Services.Repository
 
         public bool Delete(long id)
         {
+            if (id <= 12)
+            {
+                return false;
+            }
             var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
             if (post is null)
             {
@@ -152,19 +156,6 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
-
-        public async Task<List<BlogCategoryDto>> GetAllAsync()
-        {
-            return await _db.BlogCategories
-                .AsNoTracking()
-                .Select(c => new BlogCategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                })
-                .ToListAsync();
-        }
-
         public IEnumerable<BlogPostResponseDto> GetByCategoryId(int categoryId)
         {
             return _db.BlogPosts
@@ -186,7 +177,10 @@ namespace Nestly.Services.Repository
                 AuthorId = post.AuthorId,
                 Phase = post.Phase,
                 WeekFrom = post.WeekFrom,
-                WeekTo = post.WeekTo
+                WeekTo = post.WeekTo,
+                CategoryIds = post.BlogPostCategories
+            .Select(c => c.CategoryId)
+            .ToList()
             };
         }
     }

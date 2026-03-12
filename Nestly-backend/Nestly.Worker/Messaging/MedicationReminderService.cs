@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Data;
+using Nestly.Services.Messaging;
 
-namespace Nestly.Services.Messaging
+namespace Nestly.Worker.Messaging
 {
     public class MedicationReminderService : BackgroundService
     {
@@ -17,10 +16,25 @@ namespace Nestly.Services.Messaging
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
-                await CheckMedicationReminders(stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                try
+                {
+                    await CheckMedicationReminders(stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"MedicationReminderService error: {ex.Message}");
+                }
+
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                }
+                catch (TaskCanceledException)
+                {
+                }
             }
         }
 
@@ -30,19 +44,25 @@ namespace Nestly.Services.Messaging
             var db = scope.ServiceProvider.GetRequiredService<NestlyDbContext>();
             var publisher = scope.ServiceProvider.GetRequiredService<RabbitMqPublisher>();
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             var logs = await db.MedicationIntakeLogs
-    .Include(l => l.Plan)
-        .ThenInclude(p => p.ParentProfile)
-    .Where(l =>
-        !l.Taken &&
-        !l.ReminderSent &&
-        l.ScheduledDate == now.Date)
-    .ToListAsync(ct);
+                .Include(l => l.Plan)
+                    .ThenInclude(p => p.ParentProfile)
+                .Where(l =>
+                    !l.Taken &&
+                    !l.ReminderSent &&
+                    l.ScheduledDate >= now.Date &&
+                    l.ScheduledDate < now.Date.AddDays(1))
+                .ToListAsync(ct);
 
             foreach (var log in logs)
             {
+                if (log.Plan?.ParentProfile == null)
+                {
+                    continue;
+                }
+
                 var intakeDateTime = log.ScheduledDate
                     .Add(log.IntakeTime);
 

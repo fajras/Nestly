@@ -283,24 +283,27 @@ namespace Nestly.Services.Repository
             {
                 throw new ArgumentException("Question not found.", nameof(questionId));
             }
+            long? doctorProfileId = null;
 
             if (dto.AnsweredById.HasValue)
             {
-                var doctorExists = await _db.DoctorProfiles
+                var doctorProfile = await _db.DoctorProfiles
                     .AsNoTracking()
-                    .AnyAsync(d => d.Id == dto.AnsweredById.Value, ct);
+                    .FirstOrDefaultAsync(d => d.UserId == dto.AnsweredById.Value, ct);
 
-                if (!doctorExists)
+                if (doctorProfile == null)
                 {
-                    throw new ArgumentException("AnsweredById (DoctorProfile) does not exist.", nameof(dto.AnsweredById));
+                    throw new ArgumentException("Doctor profile for this user does not exist.", nameof(dto.AnsweredById));
                 }
+
+                doctorProfileId = doctorProfile.Id;
             }
 
             var entity = new QaAnswer
             {
                 QuestionId = questionId,
                 AnswerText = dto.AnswerText.Trim(),
-                AnsweredById = dto.AnsweredById,
+                AnsweredById = doctorProfileId,
                 CreatedAt = DateTime.UtcNow
             };
 

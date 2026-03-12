@@ -31,8 +31,8 @@ namespace Nestly.Worker.Messaging
                         Password = _config["RabbitMQ:Password"]
                     };
 
-                    using var connection = factory.CreateConnection();
-                    using var channel = connection.CreateModel();
+                    var connection = factory.CreateConnection();
+                    var channel = connection.CreateModel();
 
                     channel.QueueDeclare(
                         queue: _config["RabbitMQ:Queue"],
@@ -40,6 +40,8 @@ namespace Nestly.Worker.Messaging
                         exclusive: false,
                         autoDelete: false,
                         arguments: null);
+
+                    channel.BasicQos(0, 1, false);
 
                     var consumer = new EventingBasicConsumer(channel);
 
@@ -59,8 +61,7 @@ namespace Nestly.Worker.Messaging
                             }
 
                             using var scope = _scopeFactory.CreateScope();
-                            var db = scope.ServiceProvider
-                                          .GetRequiredService<NestlyDbContext>();
+                            var db = scope.ServiceProvider.GetRequiredService<NestlyDbContext>();
 
                             var notification = new Notification
                             {
@@ -71,6 +72,8 @@ namespace Nestly.Worker.Messaging
 
                             db.Notifications.Add(notification);
                             await db.SaveChangesAsync();
+
+                            channel.BasicAck(ea.DeliveryTag, false);
                         }
                         catch (Exception ex)
                         {
@@ -80,7 +83,7 @@ namespace Nestly.Worker.Messaging
 
                     channel.BasicConsume(
                         queue: _config["RabbitMQ:Queue"],
-                        autoAck: true,
+                        autoAck: false,
                         consumer: consumer);
 
                     Console.WriteLine("Worker connected to RabbitMQ and listening...");

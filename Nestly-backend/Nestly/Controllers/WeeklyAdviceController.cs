@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WeeklyAdviceController : ControllerBase
     {
         private readonly IWeeklyAdviceService _service;

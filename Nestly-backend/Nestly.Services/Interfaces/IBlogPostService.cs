@@ -10,7 +10,6 @@ namespace Nestly.Services.Interfaces
         BlogPostResponseDto? Patch(long id, BlogPostPatchDto patch);
         bool Delete(long id);
 
-        Task<List<BlogCategoryDto>> GetAllAsync();
         IEnumerable<BlogPostResponseDto> GetByCategoryId(int categoryId);
     }
 }

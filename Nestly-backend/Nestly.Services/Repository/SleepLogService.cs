@@ -15,7 +15,20 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<SleepLog> Get(SleepLogSearchObject? search)
+        private static SleepLogResponseDto MapToDto(SleepLog entity)
+        {
+            return new SleepLogResponseDto
+            {
+                Id = entity.Id,
+                BabyId = entity.BabyId,
+                SleepDate = entity.SleepDate,
+                StartTime = entity.StartTime.ToString(@"hh\:mm"),
+                EndTime = entity.EndTime.ToString(@"hh\:mm"),
+                DurationMinutes = entity.DurationMinutes
+            };
+        }
+
+        public List<SleepLogResponseDto> Get(SleepLogSearchObject? search)
         {
             IQueryable<SleepLog> q = _db.SleepLogs.AsNoTracking();
 
@@ -36,22 +49,21 @@ namespace Nestly.Services.Repository
 
             return q.OrderByDescending(x => x.SleepDate)
                     .ThenByDescending(x => x.StartTime)
+                    .Select(x => MapToDto(x))
                     .ToList();
         }
 
-        public SleepLog? GetById(long id)
+        public SleepLogResponseDto? GetById(long id)
         {
-            return _db.SleepLogs.AsNoTracking()
-                                .FirstOrDefault(x => x.Id == id);
+            var entity = _db.SleepLogs
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Id == id);
+
+            return entity == null ? null : MapToDto(entity);
         }
 
-        public SleepLog Create(CreateSleepLogDto dto)
+        public SleepLogResponseDto Create(CreateSleepLogDto dto)
         {
-            if (dto.BabyId <= 0)
-            {
-                throw new ArgumentException("BabyId is required.");
-            }
-
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
                 throw new ArgumentException("Baby does not exist.");
@@ -59,12 +71,12 @@ namespace Nestly.Services.Repository
 
             if (!TimeSpan.TryParse(dto.StartTime, out var start))
             {
-                throw new ArgumentException("Invalid StartTime format. Use HH:mm");
+                throw new ArgumentException("Invalid StartTime format.");
             }
 
             if (!TimeSpan.TryParse(dto.EndTime, out var end))
             {
-                throw new ArgumentException("Invalid EndTime format. Use HH:mm");
+                throw new ArgumentException("Invalid EndTime format.");
             }
 
             var entity = new SleepLog
@@ -78,13 +90,13 @@ namespace Nestly.Services.Repository
             _db.SleepLogs.Add(entity);
             _db.SaveChanges();
 
-            return entity;
+            return MapToDto(entity);
         }
 
-        public SleepLog? Patch(long id, SleepLogPatchDto patch)
+        public SleepLogResponseDto? Patch(long id, SleepLogPatchDto patch)
         {
             var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
-            if (entity is null)
+            if (entity == null)
             {
                 return null;
             }
@@ -98,7 +110,7 @@ namespace Nestly.Services.Repository
             {
                 if (!TimeSpan.TryParse(patch.StartTime, out var start))
                 {
-                    throw new ArgumentException("Invalid StartTime format. Use HH:mm");
+                    throw new ArgumentException("Invalid StartTime format");
                 }
 
                 entity.StartTime = start;
@@ -108,20 +120,20 @@ namespace Nestly.Services.Repository
             {
                 if (!TimeSpan.TryParse(patch.EndTime, out var end))
                 {
-                    throw new ArgumentException("Invalid EndTime format. Use HH:mm");
+                    throw new ArgumentException("Invalid EndTime format");
                 }
 
                 entity.EndTime = end;
             }
 
             _db.SaveChanges();
-            return entity;
+            return MapToDto(entity);
         }
 
         public bool Delete(long id)
         {
             var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
-            if (entity is null)
+            if (entity == null)
             {
                 return false;
             }

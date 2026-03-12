@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class AppUserController : ControllerBase
     {
         protected readonly IAppUserService appUserService;
@@ -22,6 +24,7 @@ namespace Nestly.WebAPI.Controllers
             => appUserService.GetById(id) is { } dto ? Ok(dto) : NotFound();
 
         [HttpPost]
+        [AllowAnonymous]
         public ActionResult<AppUserResultDto> Create([FromBody] CreateAppUserDto request)
         {
             var dto = appUserService.Create(request);

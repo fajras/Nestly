@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class QaQuestionController : ControllerBase
     {
         private readonly IQaQuestionService _service;
@@ -15,8 +17,6 @@ namespace Nestly.WebAPI.Controllers
             _service = service;
         }
 
-        // GET /api/qaquestion
-        // Admin pregled, moze filter, moze samo neodgovorena
         [HttpGet]
         public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> Get(
             [FromQuery] QaQuestionSearchObject? search,
@@ -26,7 +26,6 @@ namespace Nestly.WebAPI.Controllers
             return Ok(result);
         }
 
-        // GET /api/qaquestion/{id}
         [HttpGet("{id:long}")]
         public async Task<ActionResult<QaQuestionDto>> GetById(long id, CancellationToken ct)
         {
@@ -34,7 +33,6 @@ namespace Nestly.WebAPI.Controllers
             return dto is null ? NotFound() : Ok(dto);
         }
 
-        // GET /api/qaquestion/user/{parentProfileId}
         [HttpGet("user/{parentProfileId:long}")]
         public async Task<ActionResult<IEnumerable<QaQuestionDto>>> GetByUser(long parentProfileId, CancellationToken ct)
         {
@@ -42,7 +40,6 @@ namespace Nestly.WebAPI.Controllers
             return Ok(result);
         }
 
-        // GET /api/qaquestion/my?AskedById=123
         [HttpGet("my")]
         public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetMy(
             [FromQuery] QaQuestionSearchObject search,
@@ -57,7 +54,6 @@ namespace Nestly.WebAPI.Controllers
             return Ok(result);
         }
 
-        // POST /api/qaquestion
         [HttpPost]
         public async Task<ActionResult<QaQuestionDto>> Create([FromBody] CreateQaQuestionDto request, CancellationToken ct)
         {
@@ -65,7 +61,6 @@ namespace Nestly.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PATCH /api/qaquestion/{id}
         [HttpPatch("{id:long}")]
         public async Task<ActionResult<QaQuestionDto>> Patch(long id, [FromBody] QaQuestionPatchDto patch, CancellationToken ct)
         {
@@ -80,7 +75,6 @@ namespace Nestly.WebAPI.Controllers
             }
         }
 
-        // DELETE /api/qaquestion/{id}
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id, CancellationToken ct)
         {
@@ -88,7 +82,6 @@ namespace Nestly.WebAPI.Controllers
             return ok ? NoContent() : NotFound();
         }
 
-        // GET /api/qaquestion/{questionId}/answers
         [HttpGet("{questionId:long}/answers")]
         public async Task<ActionResult<IEnumerable<QaAnswerDto>>> GetAnswers(long questionId, CancellationToken ct)
         {
@@ -96,7 +89,6 @@ namespace Nestly.WebAPI.Controllers
             return Ok(answers);
         }
 
-        // POST /api/qaquestion/{questionId}/answers
         [HttpPost("{questionId:long}/answers")]
         public async Task<ActionResult<QaAnswerDto>> CreateAnswer(
             long questionId,

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 
@@ -5,6 +6,7 @@ namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PregnancyController : ControllerBase
     {
         private readonly IPregnancyService _service;

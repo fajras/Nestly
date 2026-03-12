@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace Nestly.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MealPlanController : ControllerBase
     {
         private readonly IMealPlanService _service;
@@ -17,7 +19,7 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpGet]
         public ActionResult<IEnumerable<MealPlanResponseDto>> Get([FromQuery] MealPlanSearchObject? search)
-            => Ok(_service.Get(search));
+            => Ok(_service.GetMealPlans(search));
 
         [HttpGet("{id:long}")]
         public ActionResult<MealPlanResponseDto> GetById(long id)
@@ -47,13 +49,39 @@ namespace Nestly.WebAPI.Controllers
         [HttpGet("Recommendation")]
         public ActionResult<IEnumerable<MealRecommendationDto>> GetRecommendation(
             [FromQuery] MealRecommendationSearchObject? search)
-            => Ok(_service.Get(search));
+            => Ok(_service.GetMealRecommendations(search));
 
         [HttpGet("Recommendation/{id:long}")]
         public ActionResult<MealRecommendationDto> GetRecommendationById(long id)
         {
             var item = _service.GetRecommendationById(id);
             return item is null ? NotFound() : Ok(item);
+        }
+        [HttpGet("Recommendation/AvailableFoodTypes")]
+        public ActionResult<IEnumerable<FoodTypeDto>> GetFoodTypesWithoutRecommendation()
+        {
+            return Ok(_service.GetFoodTypesWithoutRecommendation());
+        }
+        [HttpPost("Recommendation")]
+        public ActionResult<MealRecommendationDto> CreateRecommendation(
+            [FromBody] CreateMealRecommendationDto request)
+        {
+            var result = _service.CreateRecommendation(request);
+            return Ok(result);
+        }
+        [HttpPatch("Recommendation/{id:long}")]
+        public ActionResult<MealRecommendationDto> UpdateRecommendation(
+    long id,
+    [FromBody] CreateMealRecommendationDto request)
+        {
+            var result = _service.UpdateRecommendation(id, request);
+            return result is null ? NotFound() : Ok(result);
+        }
+
+        [HttpDelete("Recommendation/{id:long}")]
+        public IActionResult DeleteRecommendation(long id)
+        {
+            return _service.DeleteRecommendation(id) ? NoContent() : NotFound();
         }
     }
 }

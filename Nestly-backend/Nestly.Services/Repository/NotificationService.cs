@@ -21,9 +21,10 @@ namespace Nestly.Services.Repository
                 .ToListAsync();
         }
 
-        public async Task<bool> MarkAsReadAsync(int notificationId)
+        public async Task<bool> MarkAsReadAsync(int notificationId, int userId)
         {
-            var notification = await _db.Notifications.FindAsync(notificationId);
+            var notification = await _db.Notifications
+                .FirstOrDefaultAsync(x => x.Id == notificationId && x.UserId == userId);
 
             if (notification == null)
             {
@@ -31,6 +32,7 @@ namespace Nestly.Services.Repository
             }
 
             notification.IsRead = true;
+
             await _db.SaveChangesAsync();
 
             return true;
@@ -39,6 +41,19 @@ namespace Nestly.Services.Repository
         {
             return await _db.Notifications
                 .CountAsync(n => n.UserId == userId && !n.IsRead);
+        }
+        public async Task MarkAllAsReadAsync(int userId)
+        {
+            var notifications = await _db.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var notification in notifications)
+            {
+                notification.IsRead = true;
+            }
+
+            await _db.SaveChangesAsync();
         }
     }
 }

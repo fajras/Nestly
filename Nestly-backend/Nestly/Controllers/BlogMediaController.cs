@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Nestly.Services.Data;
 using Nestly.Services.Repository;
 
 [ApiController]
 [Route("api/blogmedia")]
+[Authorize]
 public class BlogMediaController : ControllerBase
 {
     private readonly AzureBlobService _blob;

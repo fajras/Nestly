@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Data;
-namespace Nestly.Services.Messaging
+using Nestly.Services.Messaging;
+namespace Nestly.Worker.Messaging
 {
     public class DailyParentReminderService : BackgroundService
     {
@@ -16,22 +15,30 @@ namespace Nestly.Services.Messaging
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
-                var now = DateTime.UtcNow;
-
-                var nextRun = now.Date.AddHours(12);
-
-                if (now >= nextRun)
+                try
                 {
-                    nextRun = nextRun.AddDays(1);
+                    var now = DateTime.UtcNow;
+                    var nextRun = now.Date.AddHours(12);
+
+                    if (now >= nextRun)
+                    {
+                        nextRun = nextRun.AddDays(1);
+                    }
+
+                    var delay = nextRun - now;
+
+                    await Task.Delay(delay, stoppingToken);
+
+                    await SendDailyReminder(stoppingToken);
                 }
-
-                var delay = nextRun - now;
-
-                await Task.Delay(delay, stoppingToken);
-
-                await SendDailyReminder(stoppingToken);
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"DailyParentReminderService error: {ex.Message}");
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                }
             }
         }
 

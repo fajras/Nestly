@@ -24,4 +24,16 @@ namespace Nestly.Model.DTOObjects
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
     }
+
+    public class SleepLogResponseDto
+    {
+        public long Id { get; set; }
+        public long BabyId { get; set; }
+        public DateTime SleepDate { get; set; }
+
+        public string StartTime { get; set; } = default!;
+        public string EndTime { get; set; } = default!;
+
+        public int DurationMinutes { get; set; }
+    }
 }

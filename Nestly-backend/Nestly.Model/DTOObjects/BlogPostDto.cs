@@ -19,6 +19,7 @@ namespace Nestly.Model.DTOObjects
         public UserPhase Phase { get; set; }
         public int? WeekFrom { get; set; }
         public int? WeekTo { get; set; }
+        public List<int> CategoryIds { get; set; } = new();
     }
 
     public class BlogPostSearchObject
@@ -39,11 +40,6 @@ namespace Nestly.Model.DTOObjects
         public int? WeekTo { get; set; }
 
         public List<int> CategoryIds { get; set; }
-    }
-    public class BlogCategoryDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = default!;
     }
 
 }

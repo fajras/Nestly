@@ -15,7 +15,7 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<MealPlanResponseDto> Get(MealPlanSearchObject? search)
+        public List<MealPlanResponseDto> GetMealPlans(MealPlanSearchObject? search)
         {
             IQueryable<MealPlan> q = _db.MealPlans
                 .Include(x => x.FoodType)
@@ -93,6 +93,9 @@ namespace Nestly.Services.Repository
 
             _db.MealPlans.Add(entity);
             _db.SaveChanges();
+            var created = _db.MealPlans
+            .Include(x => x.FoodType)
+            .First(x => x.Id == entity.Id);
 
             return MapToDto(entity);
         }
@@ -141,7 +144,7 @@ namespace Nestly.Services.Repository
             return true;
         }
 
-        public List<MealRecommendationDto> Get(MealRecommendationSearchObject? search)
+        public List<MealRecommendationDto> GetMealRecommendations(MealRecommendationSearchObject? search)
         {
             IQueryable<MealRecommendation> q = _db.MealRecommendations
                 .Include(x => x.FoodType);
@@ -191,10 +194,111 @@ namespace Nestly.Services.Repository
                 Id = x.Id,
                 BabyId = x.BabyId,
                 FoodTypeId = x.FoodTypeId,
-                FoodName = x.FoodType != null ? x.FoodType.Name : string.Empty,
+                FoodName = x.FoodType!.Name,
                 Rating = x.Rating,
                 TriedAt = x.TriedAt
             };
+        }
+
+        public List<FoodTypeDto> GetFoodTypesWithoutRecommendation()
+        {
+            var recommendedIds = _db.MealRecommendations
+                .Select(x => x.FoodTypeId)
+                .Distinct();
+
+            return _db.FoodTypes
+                .Where(x => !recommendedIds.Contains(x.Id))
+                .Select(x => new FoodTypeDto
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .OrderBy(x => x.Name)
+                .ToList();
+        }
+        public MealRecommendationDto CreateRecommendation(CreateMealRecommendationDto dto)
+        {
+            if (!_db.FoodTypes.Any(x => x.Id == dto.FoodTypeId))
+            {
+                throw new ArgumentException("Food type does not exist.");
+            }
+
+            var entity = new MealRecommendation
+            {
+                WeekNumber = dto.WeekNumber,
+                FoodTypeId = dto.FoodTypeId
+            };
+
+            _db.MealRecommendations.Add(entity);
+            _db.SaveChanges();
+
+            var created = _db.MealRecommendations
+                .Include(x => x.FoodType)
+                .First(x => x.Id == entity.Id);
+
+            return new MealRecommendationDto
+            {
+                Id = created.Id,
+                WeekNumber = created.WeekNumber,
+                FoodTypeId = created.FoodTypeId,
+                FoodName = created.FoodType.Name
+            };
+        }
+        public MealRecommendationDto? UpdateRecommendation(long id, CreateMealRecommendationDto dto)
+        {
+            var entity = _db.MealRecommendations
+                .Include(x => x.FoodType)
+                .FirstOrDefault(x => x.Id == id);
+
+            if (entity == null)
+            {
+                return null;
+            }
+
+            if (!_db.FoodTypes.Any(x => x.Id == dto.FoodTypeId))
+            {
+                throw new ArgumentException("Food type does not exist.");
+            }
+
+            var existing = _db.MealRecommendations
+                .FirstOrDefault(x => x.FoodTypeId == dto.FoodTypeId && x.Id != id);
+
+            if (existing != null)
+            {
+                _db.MealRecommendations.Remove(existing);
+            }
+
+            entity.WeekNumber = dto.WeekNumber;
+            entity.FoodTypeId = dto.FoodTypeId;
+
+            _db.SaveChanges();
+
+            var updated = _db.MealRecommendations
+                .Include(x => x.FoodType)
+                .First(x => x.Id == id);
+
+            return new MealRecommendationDto
+            {
+                Id = updated.Id,
+                WeekNumber = updated.WeekNumber,
+                FoodTypeId = updated.FoodTypeId,
+                FoodName = updated.FoodType.Name
+            };
+        }
+
+        public bool DeleteRecommendation(long id)
+        {
+            var entity = _db.MealRecommendations.FirstOrDefault(x => x.Id == id);
+
+            if (entity == null)
+            {
+                return false;
+            }
+
+            _db.MealRecommendations.Remove(entity);
+            _db.SaveChanges();
+
+            return true;
         }
     }
 }

@@ -1,14 +1,13 @@
 using Nestly.Model.DTOObjects;
-using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
     public interface ISleepLogService
     {
-        List<SleepLog> Get(SleepLogSearchObject? search);
-        SleepLog? GetById(long id);
-        SleepLog Create(CreateSleepLogDto dto);
-        SleepLog? Patch(long id, SleepLogPatchDto patch);
+        List<SleepLogResponseDto> Get(SleepLogSearchObject? search);
+        SleepLogResponseDto? GetById(long id);
+        SleepLogResponseDto Create(CreateSleepLogDto dto);
+        SleepLogResponseDto? Patch(long id, SleepLogPatchDto patch);
         bool Delete(long id);
     }
 }

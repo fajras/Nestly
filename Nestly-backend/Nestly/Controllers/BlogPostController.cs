@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -5,6 +6,7 @@ using Nestly.Services.Repository;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BlogPostController : ControllerBase
 {
     private readonly IBlogPostService _service;
@@ -57,10 +59,6 @@ public class BlogPostController : ControllerBase
         await _blob.DeleteBlogImageAsync(id);
         return NoContent();
     }
-
-    [HttpGet("category")]
-    public async Task<IActionResult> GetAll()
-        => Ok(await _service.GetAllAsync());
 
     [HttpGet("category/{categoryId:int}")]
     public ActionResult<IEnumerable<BlogPostResponseDto>> GetByCategoryId(int categoryId)

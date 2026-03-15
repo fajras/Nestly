@@ -1,13 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
-import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart';
 import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
 import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
@@ -74,10 +71,13 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           notificationState.increment();
         },
       );
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('SignalR init failed.');
+    }
   }
 
   void _push(BuildContext context, Widget screen) {
+    if (!mounted) return;
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
@@ -110,7 +110,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                 builder: (_, __) {
                   final count = notificationState.unreadCount;
 
-                  if (count == 0) return const SizedBox();
+                  if (count == 0) return const SizedBox.shrink();
 
                   return Positioned(
                     right: 10,

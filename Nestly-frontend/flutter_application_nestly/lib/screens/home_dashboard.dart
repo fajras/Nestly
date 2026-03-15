@@ -14,7 +14,7 @@ import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/qa_module_screen.dart';
 import 'package:flutter_application_nestly/screens/symptom_diary_screen.dart';
-import 'package:flutter_application_nestly/screens/therapy_module_mock.dart';
+import 'package:flutter_application_nestly/screens/therapy_module_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
@@ -31,7 +31,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   DateTime? _lmpDate;
   DateTime? _dueDate;
 
-  bool _loadingNotifications = false;
   bool _loading = true;
   bool _error = false;
   final NotificationSignalRService _signalRService =
@@ -72,7 +71,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           notificationState.increment();
         },
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('SignalR error: $e');
+    }
   }
 
   Future<void> _loadPregnancyStatus() async {
@@ -91,21 +92,24 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
 
-        _gestationalWeek = data['gestationalWeek'];
-        _daysRemaining = data['daysRemaining'];
+        setState(() {
+          _gestationalWeek = data['gestationalWeek'];
+          _daysRemaining = data['daysRemaining'];
 
-        _lmpDate = data['lmpDate'] != null
-            ? DateTime.parse(data['lmpDate'])
-            : null;
-        _dueDate = data['dueDate'] != null
-            ? DateTime.parse(data['dueDate'])
-            : null;
+          _lmpDate = data['lmpDate'] != null
+              ? DateTime.parse(data['lmpDate'])
+              : null;
+
+          _dueDate = data['dueDate'] != null
+              ? DateTime.parse(data['dueDate'])
+              : null;
+        });
       } else {
-        _error = true;
+        setState(() => _error = true);
       }
     } catch (_) {
       if (!mounted) return;
-      _error = true;
+      setState(() => _error = true);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -133,7 +137,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       } else {
         setState(() => _hasBaby = false);
       }
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _hasBaby = false);
     } finally {
@@ -166,6 +170,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   void _openBabyTime() {
+    if (_babyId == null) return;
+
     _open(
       context,
       BabyTimeHomeScreen(
@@ -241,7 +247,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         onHorizontalDragEnd: (details) {
           if (details.primaryVelocity != null &&
               details.primaryVelocity! < -300) {
-            if (_checkingBaby) return;
+            if (_checkingBaby || !_hasBaby) return;
             _openBabyTime();
           }
         },

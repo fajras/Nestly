@@ -156,13 +156,11 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   bool _isNewEntry = false;
   bool _isLoading = true;
   void _selectWeek(int week) {
-    final entry = _entries.firstWhere(
-      (e) => e.weekNumber == week,
-      orElse: () => _entries.last,
-    );
+    final matches = _entries.where((e) => e.weekNumber == week).toList();
+    if (matches.isEmpty) return;
 
     setState(() {
-      _selected = entry;
+      _selected = matches.first;
       _isNewEntry = false;
       _touchedWeek = week;
     });
@@ -171,12 +169,12 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   }
 
   void _cancelEdit() {
-    final last = _entries.isNotEmpty ? _entries.last : null;
+    final entry = _entries.isNotEmpty ? _entries.last : null;
 
     setState(() {
-      _selected = last;
+      _selected = entry;
       _isNewEntry = false;
-      _touchedWeek = null;
+      _touchedWeek = entry?.weekNumber;
     });
 
     _fillForm();
@@ -199,19 +197,26 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   Future<void> _loadData() async {
     try {
       final list = await _service.getForBaby(babyId: widget.babyId);
+      if (!mounted) return;
+      _touchedWeek = list.isNotEmpty ? list.last.weekNumber : null;
       setState(() {
         _entries = list;
         _selected = list.isNotEmpty ? list.last : null;
         _isLoading = false;
       });
+
       _fillForm();
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
+
       setState(() => _isLoading = false);
       NestlyToast.error(context, 'Greška pri učitavanju podataka');
     }
   }
 
-  int get _maxWeek => _entries.isEmpty ? 1 : _entries.last.weekNumber;
+  int get _maxWeek => _entries.isEmpty
+      ? 1
+      : _entries.map((e) => e.weekNumber).reduce((a, b) => a > b ? a : b);
 
   bool get _canEdit => _selected != null;
   void _fillForm() {
@@ -242,10 +247,28 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
     final height = double.tryParse(_heightCtrl.text);
     final head = double.tryParse(_headCtrl.text);
 
-    if (weight == null || height == null || head == null) {
+    if (weight == null || weight <= 0 || weight > 50) {
       NestlyToast.warning(
         context,
-        'Unesite sve vrijednosti i koristite samo brojeve.',
+        'Unesite ispravnu težinu.',
+        accentColor: AppColors.seed,
+      );
+      return;
+    }
+
+    if (height == null || height <= 0 || height > 150) {
+      NestlyToast.warning(
+        context,
+        'Unesite ispravnu dužinu.',
+        accentColor: AppColors.seed,
+      );
+      return;
+    }
+
+    if (head == null || head <= 0 || head > 100) {
+      NestlyToast.warning(
+        context,
+        'Unesite ispravan obim glave.',
         accentColor: AppColors.seed,
       );
       return;
@@ -264,9 +287,14 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
             headCircumferenceCm: head,
           ),
         );
+
+        if (!mounted) return;
+
         _entries.add(created);
+        _entries.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
         _selected = created;
         _isNewEntry = false;
+        _touchedWeek = created.weekNumber;
       } else {
         final updated = await _service.patch(
           id: _selected!.id,
@@ -276,10 +304,16 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
             headCircumferenceCm: head,
           ),
         );
+
+        if (!mounted) return;
+
         final idx = _entries.indexWhere((e) => e.id == updated.id);
         if (idx != -1) _entries[idx] = updated;
+        _entries.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
         _selected = updated;
+        _touchedWeek = updated.weekNumber;
       }
+
       BabyGrowthApiService._cache.remove(widget.babyId);
 
       NestlyToast.success(
@@ -288,10 +322,13 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
         accentColor: AppColors.seed,
       );
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri spremanju');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-
-    setState(() => _isLoading = false);
   }
 
   @override
@@ -339,7 +376,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                       ),
                       const Spacer(),
                       TextButton.icon(
-                        onPressed: _startNewWeek,
+                        onPressed: _isLoading ? null : _startNewWeek,
                         icon: const Icon(Icons.add_circle_outline),
                         label: const Text('Nova sedmica'),
                         style: TextButton.styleFrom(
@@ -377,15 +414,15 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                   : LineChart(
                       LineChartData(
                         minX: 1,
-                        maxX: _maxWeek.toDouble(),
+                        maxX: (_maxWeek - 1).toDouble(),
                         lineTouchData: LineTouchData(
                           touchCallback: (event, response) {
-                            if (response == null ||
-                                response.lineBarSpots == null)
+                            if (response?.lineBarSpots == null ||
+                                response!.lineBarSpots!.isEmpty)
                               return;
 
                             final spot = response.lineBarSpots!.first;
-                            final week = spot.x.toInt();
+                            final week = spot.x.toInt() + 1;
                             _selectWeek(week);
                           },
                         ),
@@ -395,7 +432,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                                 .where((e) => e.weightKg != null)
                                 .map(
                                   (e) => FlSpot(
-                                    e.weekNumber.toDouble(),
+                                    (e.weekNumber - 1).toDouble(),
                                     e.weightKg!,
                                   ),
                                 )
@@ -425,7 +462,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                                 .where((e) => e.heightCm != null)
                                 .map(
                                   (e) => FlSpot(
-                                    e.weekNumber.toDouble(),
+                                    (e.weekNumber - 1).toDouble(),
                                     e.heightCm!,
                                   ),
                                 )
@@ -455,7 +492,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                                 .where((e) => e.headCircumferenceCm != null)
                                 .map(
                                   (e) => FlSpot(
-                                    e.weekNumber.toDouble(),
+                                    (e.weekNumber - 1).toDouble(),
                                     e.headCircumferenceCm!,
                                   ),
                                 )
@@ -546,7 +583,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                 decimal: true,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$')),
               ],
               decoration: deco('Težina', 'kg'),
             ),
@@ -558,7 +595,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                 decimal: true,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$')),
               ],
               decoration: deco('Dužina', 'cm'),
             ),
@@ -570,7 +607,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                 decimal: true,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$')),
               ],
               decoration: deco('Obim glave', 'cm'),
             ),

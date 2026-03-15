@@ -119,19 +119,21 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       if (widget.conversationId != 0) {
         final list = await _api.getMessages(widget.conversationId);
+
         if (!mounted) return;
 
         setState(() {
-          _messages.clear();
-          _messages.addAll(list);
+          _messages
+            ..clear()
+            ..addAll(list);
         });
       }
     } catch (_) {
       if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju poruka');
-    }
+    } finally {
+      if (!mounted) return;
 
-    if (mounted) {
       setState(() => _loading = false);
       _scrollToBottom();
     }
@@ -177,7 +179,12 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
     });
 
-    await _hub!.start();
+    try {
+      await _hub!.start();
+    } catch (_) {
+      if (!mounted) return;
+      NestlyToast.error(context, 'Greška pri povezivanju na chat');
+    }
   }
 
   Future<void> _send() async {

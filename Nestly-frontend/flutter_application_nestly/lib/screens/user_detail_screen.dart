@@ -4,17 +4,134 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
+import 'package:flutter_application_nestly/providers/admin_pdf_service.dart';
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
-    final res = await ApiClient.get('/AppUser?RoleId=1');
+    try {
+      final res = await ApiClient.get('/AppUser?RoleId=1');
+
+      if (res.statusCode != 200) {
+        throw Exception("Failed to load users.");
+      }
+
+      final List data = jsonDecode(res.body);
+      return data.map((e) => AppUserRow.fromJson(e)).toList();
+    } catch (_) {
+      throw Exception("Unable to retrieve users.");
+    }
+  }
+
+  Future<List> getFeedingLogs(int babyId) async {
+    final res = await ApiClient.get('/api/feedinglog?BabyId=$babyId');
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to load users');
+      throw Exception('Failed to load feeding logs');
     }
 
-    final List data = jsonDecode(res.body);
-    return data.map((e) => AppUserRow.fromJson(e)).toList();
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getMilestones(int babyId) async {
+    final res = await ApiClient.get('/api/milestone?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load milestones');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getCalendarEvents(int babyId) async {
+    final res = await ApiClient.get('/api/calendarevent?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load calendar events');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getMedication(int parentProfileId) async {
+    final res = await ApiClient.get(
+      '/api/medicationplan?ParentProfileId=$parentProfileId',
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load medication');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getSymptoms(int userId) async {
+    final res = await ApiClient.get('/api/symptomdiary/parent/$userId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load symptoms');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getMeals(int babyId) async {
+    final res = await ApiClient.get('/api/mealplan?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load meals');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getHealth(int babyId) async {
+    final res = await ApiClient.get('/api/HealthEntry?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load health entries');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getDiapers(int babyId) async {
+    final res = await ApiClient.get('/api/diaperlog?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load diapers');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getSleep(int babyId) async {
+    final res = await ApiClient.get('/api/sleeplog?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load sleep logs');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getGrowth(int babyId) async {
+    final res = await ApiClient.get('/api/babygrowth?BabyId=$babyId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load growth');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  Future<List> getQuestions(int userId) async {
+    final res = await ApiClient.get('/api/qaquestion/my?AskedById=$userId');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load questions');
+    }
+
+    return jsonDecode(res.body);
   }
 }
 
@@ -60,8 +177,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
   List<AppUserRow> _filtered = [];
   List<DetailItem> _details = [];
   bool _loadingDetails = false;
-  String _activeModule = '';
-
+  final _pdfService = AdminPdfService();
   AppUserRow? _selectedUser;
   bool _loading = true;
 
@@ -96,7 +212,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
     setState(() {
       _selectedUser = null;
       _details.clear();
-      _activeModule = '';
       _loadingDetails = false;
       _filtered = _users;
     });
@@ -114,7 +229,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
       });
     } catch (_) {
       if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri učitavanju korisnica');
+      NestlyToast.error(
+        context,
+        'Trenutno nije moguće učitati korisnice. Pokušajte ponovo.',
+      );
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -123,7 +241,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
 
   Future<void> _loadDetails({
     required String module,
-    required String path,
+    required Future<List> Function() request,
     required List<DetailItem> Function(List data) mapper,
   }) async {
     if (_selectedUser == null) {
@@ -135,20 +253,15 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
     }
 
     setState(() {
-      _activeModule = module;
       _loadingDetails = true;
       _details.clear();
     });
 
     try {
-      final res = await ApiClient.get(path);
-      if (!mounted) return;
-
-      if (res.statusCode != 200) throw Exception();
-
-      final List data = jsonDecode(res.body);
+      final data = await request();
 
       if (!mounted) return;
+
       setState(() {
         _details = mapper(data);
       });
@@ -163,11 +276,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
 
   List<DetailItem> _mapMedication(List data) {
     return data.map<DetailItem>((e) {
+      final start = e['startDate']?.toString().split('T').first ?? '-';
+      final end = e['endDate']?.toString().split('T').first ?? '-';
+
       return DetailItem(
-        title: e['medicineName'],
-        subtitle:
-            '${e['startDate'].toString().split('T').first} – ${e['endDate'].toString().split('T').first}',
-        meta: e['dose'],
+        title: e['medicineName'] ?? '-',
+        subtitle: '$start – $end',
+        meta: 'Doza: ${e['dose'] ?? '-'}',
       );
     }).toList();
   }
@@ -239,7 +354,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
   }
 
   void _onSearch(String value) {
-    final q = value.toLowerCase();
+    final q = value.trim().toLowerCase();
+    if (q.isEmpty) {
+      setState(() => _filtered = _users);
+      return;
+    }
     setState(() {
       _filtered = _users.where((u) {
         return u.firstName.toLowerCase().contains(q) ||
@@ -318,102 +437,231 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                   childAspectRatio: 1.3,
                   children: [
                     _ModuleCard(
+                      icon: Icons.restaurant,
+                      label: 'Hrana',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Hrana',
+                              request: () =>
+                                  _service.getMeals(_selectedUser!.id),
+                              mapper: _mapMeals,
+                            ),
+                    ),
+                    _ModuleCard(
+                      icon: Icons.health_and_safety,
+                      label: 'Zdravlje',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Zdravlje',
+                              request: () =>
+                                  _service.getHealth(_selectedUser!.id),
+                              mapper: _mapHealth,
+                            ),
+                    ),
+                    _ModuleCard(
+                      icon: Icons.baby_changing_station,
+                      label: 'Pelene',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Pelene',
+                              request: () =>
+                                  _service.getDiapers(_selectedUser!.id),
+                              mapper: _mapDiapers,
+                            ),
+                    ),
+                    _ModuleCard(
+                      icon: Icons.bedtime,
+                      label: 'San bebe',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'San bebe',
+                              request: () =>
+                                  _service.getSleep(_selectedUser!.id),
+                              mapper: _mapSleep,
+                            ),
+                    ),
+                    _ModuleCard(
+                      icon: Icons.monitor_weight,
+                      label: 'Rast bebe',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Rast bebe',
+                              request: () =>
+                                  _service.getGrowth(_selectedUser!.id),
+                              mapper: _mapGrowth,
+                            ),
+                    ),
+
+                    _ModuleCard(
+                      icon: Icons.baby_changing_station_outlined,
+                      label: 'Hranjenje',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Hranjenje',
+                              request: () =>
+                                  _service.getFeedingLogs(_selectedUser!.id),
+                              mapper: _mapFeeding,
+                            ),
+                    ),
+
+                    _ModuleCard(
+                      icon: Icons.flag,
+                      label: 'Dostignuća',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Milestones',
+                              request: () =>
+                                  _service.getMilestones(_selectedUser!.id),
+                              mapper: _mapMilestones,
+                            ),
+                    ),
+
+                    _ModuleCard(
+                      icon: Icons.event,
+                      label: 'Događaji',
+                      onTap: _selectedUser == null
+                          ? null
+                          : () => _loadDetails(
+                              module: 'Događaji',
+                              request: () =>
+                                  _service.getCalendarEvents(_selectedUser!.id),
+                              mapper: _mapCalendar,
+                            ),
+                    ),
+                    _ModuleCard(
                       icon: Icons.medication,
                       label: 'Terapija',
                       onTap: _selectedUser == null
                           ? null
                           : () => _loadDetails(
                               module: 'Terapija',
-                              path:
-                                  '/api/medicationplan?UserId=${_selectedUser!.id}',
+                              request: () =>
+                                  _service.getMedication(_selectedUser!.id),
                               mapper: _mapMedication,
                             ),
                     ),
                     _ModuleCard(
-                      icon: Icons.medication,
+                      icon: Icons.sick,
                       label: 'Simptomi',
                       onTap: _selectedUser == null
                           ? null
                           : () => _loadDetails(
                               module: 'Simptomi',
-                              path:
-                                  '/api/symptomdiary/parent/${_selectedUser!.id}',
+                              request: () =>
+                                  _service.getSymptoms(_selectedUser!.id),
                               mapper: _mapSymptoms,
                             ),
                     ),
                     _ModuleCard(
-                      icon: Icons.medication,
-                      label: 'Hrana',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Hrana',
-                              path: '/api/mealplan?BabyId=${_selectedUser!.id}',
-                              mapper: _mapMeals,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.medication,
-                      label: 'Zdravlje',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Zdravlje',
-                              path:
-                                  '/api/medicationplan?UserId=${_selectedUser!.id}',
-                              mapper: _mapMedication,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.medication,
-                      label: 'Pelene',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Pelene',
-                              path:
-                                  '/api/diaperlog?BabyId=${_selectedUser!.id}',
-                              mapper: _mapDiapers,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.medication,
-                      label: 'San bebe',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'San bebe',
-                              path: '/api/sleeplog?BabyId=${_selectedUser!.id}',
-                              mapper: _mapSleep,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.medication,
-                      label: 'Rast bebe',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Rast bebe',
-                              path:
-                                  '/api/babygrowth?BabyId=${_selectedUser!.id}',
-                              mapper: _mapGrowth,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.medication,
+                      icon: Icons.question_answer,
                       label: 'Pitanja',
                       onTap: _selectedUser == null
                           ? null
                           : () => _loadDetails(
                               module: 'Pitanja',
-                              path:
-                                  '/api/qaquestion/my?AskedById=${_selectedUser!.id}',
+                              request: () =>
+                                  _service.getQuestions(_selectedUser!.id),
                               mapper: _mapQuestions,
                             ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
 
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text("PDF Mama"),
+                      onPressed: _selectedUser == null
+                          ? null
+                          : () async {
+                              final therapy = await _service.getMedication(
+                                _selectedUser!.id,
+                              );
+                              final symptoms = await _service.getSymptoms(
+                                _selectedUser!.id,
+                              );
+                              final questions = await _service.getQuestions(
+                                _selectedUser!.id,
+                              );
+
+                              final file = await _pdfService.generateMotherPdf(
+                                userName: _selectedUser!.fullName,
+                                therapy: _mapMedication(therapy),
+                                symptoms: _mapSymptoms(symptoms),
+                                questions: _mapQuestions(questions),
+                              );
+
+                              NestlyToast.success(
+                                context,
+                                "PDF je uspješno generisan.",
+                                accentColor: AppColors.seed,
+                              );
+                            },
+                    ),
+
+                    const SizedBox(width: 10),
+
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text("PDF Beba"),
+                      onPressed: _selectedUser == null
+                          ? null
+                          : () async {
+                              final meals = await _service.getMeals(
+                                _selectedUser!.id,
+                              );
+                              final health = await _service.getHealth(
+                                _selectedUser!.id,
+                              );
+                              final diapers = await _service.getDiapers(
+                                _selectedUser!.id,
+                              );
+                              final sleep = await _service.getSleep(
+                                _selectedUser!.id,
+                              );
+                              final growth = await _service.getGrowth(
+                                _selectedUser!.id,
+                              );
+                              final feeding = await _service.getFeedingLogs(
+                                _selectedUser!.id,
+                              );
+                              final milestones = await _service.getMilestones(
+                                _selectedUser!.id,
+                              );
+                              final calendar = await _service.getCalendarEvents(
+                                _selectedUser!.id,
+                              );
+
+                              final file = await _pdfService.generateBabyPdf(
+                                userName: _selectedUser!.fullName,
+                                meals: _mapMeals(meals),
+                                health: _mapHealth(health),
+                                diapers: _mapDiapers(diapers),
+                                sleep: _mapSleep(sleep),
+                                growth: _mapGrowth(growth),
+                                feeding: _mapFeeding(feeding),
+                                milestones: _mapMilestones(milestones),
+                                calendar: _mapCalendar(calendar),
+                              );
+
+                              NestlyToast.success(
+                                context,
+                                "PDF generisan: ${file.path}",
+                                accentColor: AppColors.seed,
+                              );
+                            },
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.lg),
 
                 TextField(
@@ -594,4 +842,51 @@ class DetailItem {
   final String meta;
 
   DetailItem({required this.title, required this.subtitle, required this.meta});
+}
+
+List<DetailItem> _mapHealth(List data) {
+  return data.map<DetailItem>((e) {
+    return DetailItem(
+      title: e['entryDate'].toString().split('T').first,
+      subtitle: 'Temperatura: ${e['temperatureC'] ?? '-'} °C',
+      meta:
+          'Lijekovi: ${e['medicines'] ?? '-'}  |  Posjeta doktoru: ${e['doctorVisit'] ?? '-'}',
+    );
+  }).toList();
+}
+
+List<DetailItem> _mapFeeding(List data) {
+  return data.map<DetailItem>((e) {
+    final date = e['feedDate']?.toString().split('T').first ?? '-';
+
+    return DetailItem(
+      title: date,
+      subtitle: '${e['foodTypeName'] ?? '-'} u ${e['feedTime']}',
+      meta: 'Količina: ${e['amountMl'] ?? '-'} ml',
+    );
+  }).toList();
+}
+
+List<DetailItem> _mapMilestones(List data) {
+  return data.map<DetailItem>((e) {
+    final date = e['achievedDate']?.toString().split('T').first ?? '-';
+
+    return DetailItem(
+      title: e['title'] ?? '-',
+      subtitle: 'Postignuto: $date',
+      meta: e['notes'] ?? '',
+    );
+  }).toList();
+}
+
+List<DetailItem> _mapCalendar(List data) {
+  return data.map<DetailItem>((e) {
+    final date = e['startAt']?.toString().split('T').first ?? '-';
+
+    return DetailItem(
+      title: e['title'] ?? '-',
+      subtitle: date,
+      meta: e['description'] ?? '',
+    );
+  }).toList();
 }

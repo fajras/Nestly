@@ -73,7 +73,7 @@ class MedicationPlanApiService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to update therapy');
+      throw Exception('Failed to update medication plan');
     }
   }
 
@@ -83,7 +83,7 @@ class MedicationPlanApiService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to load therapies');
+      throw Exception('Failed to fetch medication plan');
     }
 
     final List data = jsonDecode(res.body);
@@ -117,7 +117,7 @@ class MedicationPlanApiService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to load day logs');
+      throw Exception('Failed to load medication plans');
     }
 
     final List data = jsonDecode(res.body);
@@ -147,7 +147,7 @@ class MedicationPlanApiService {
     );
 
     if (res.statusCode != 204) {
-      throw Exception('Failed to mark as taken');
+      throw Exception('Failed to mark taken');
     }
   }
 
@@ -176,7 +176,7 @@ class MedicationPlanApiService {
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to create therapy');
+      throw Exception('Failed to create medication plan');
     }
   }
 
@@ -184,7 +184,7 @@ class MedicationPlanApiService {
     final res = await ApiClient.delete('/api/MedicationPlan/$planId');
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Delete therapy failed (${res.statusCode})');
+      throw Exception('Failed to delete medication plan');
     }
   }
 }
@@ -222,8 +222,11 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
 
   Future<void> _loadLogsForDay(DateTime day) async {
     try {
-      _dayLogs = await _service.fetchLogsForDay(day);
-      setState(() {});
+      final logs = await _service.fetchLogsForDay(day);
+      if (!mounted) return;
+      setState(() {
+        _dayLogs = logs;
+      });
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju terapije');
     }
@@ -231,15 +234,21 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
 
   Future<void> _loadPlans() async {
     setState(() => _loading = true);
+
     try {
-      _plans = await _service.fetchPlans();
+      final plans = await _service.fetchPlans();
+
+      if (!mounted) return;
+
+      _plans = plans;
+
+      await _loadLogsForDay(_selectedDay!);
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju terapija');
     }
+
     if (mounted) setState(() => _loading = false);
   }
-
-  DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
   Widget build(BuildContext context) {
@@ -469,14 +478,21 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
                   onChanged: log.taken
                       ? null
                       : (_) async {
-                          await _service.markTaken(log.intakeLogId);
+                          try {
+                            await _service.markTaken(log.intakeLogId);
 
-                          NestlyToast.success(
-                            context,
-                            'Terapija označena kao popijena',
-                          );
+                            NestlyToast.success(
+                              context,
+                              'Terapija označena kao popijena',
+                            );
 
-                          await _loadLogsForDay(_selectedDay!);
+                            await _loadLogsForDay(_selectedDay!);
+                          } catch (_) {
+                            NestlyToast.error(
+                              context,
+                              'Greška pri označavanju terapije',
+                            );
+                          }
                         },
                 ),
                 const SizedBox(width: 10),
@@ -510,46 +526,6 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _therapyCard(TherapyPlan plan, Duration time) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            const Icon(Icons.local_pharmacy_rounded, color: AppColors.roseDark),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    plan.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.roseDark,
-                    ),
-                  ),
-                  Text(
-                    'Doza: ${plan.dose}',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
-                  Text(
-                    'Vrijeme: ${_formatTime(time)}',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -646,7 +622,9 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
     );
 
     if (picked != null) {
-      setState(() => _times.add(picked));
+      if (!_times.contains(picked)) {
+        setState(() => _times.add(picked));
+      }
     }
   }
 
@@ -766,7 +744,7 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
           ),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [

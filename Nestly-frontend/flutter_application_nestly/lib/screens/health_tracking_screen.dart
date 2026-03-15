@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
@@ -191,6 +192,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
     try {
       await _service.delete(id);
       await _loadMonth(_focusedDay);
+      if (!mounted) return;
       NestlyToast.success(context, 'Zapis obrisan.');
     } catch (_) {
       NestlyToast.error(context, 'Greška pri brisanju.');
@@ -273,6 +275,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       DateTime(d.year, d.month + 1, 0, 23, 59, 59);
 
   Future<void> _loadMonth(DateTime month) async {
+    if (!mounted) return;
     setState(() => _loading = true);
 
     try {
@@ -282,16 +285,26 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         to: _monthEnd(month),
       );
 
-      _entriesByDay.clear();
+      final map = <DateTime, List<HealthEntry>>{};
+
       for (final e in list) {
         final key = _dayOnly(e.entryDate);
-        _entriesByDay.putIfAbsent(key, () => []).add(e);
+        map.putIfAbsent(key, () => []).add(e);
       }
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri učitavanju');
-    }
 
-    if (mounted) setState(() => _loading = false);
+      if (!mounted) return;
+
+      setState(() {
+        _entriesByDay
+          ..clear()
+          ..addAll(map);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      NestlyToast.error(context, 'Greška pri učitavanju');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   List<HealthEntry> _forDay(DateTime day) =>
@@ -353,7 +366,10 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         if (_checkCtrl.text.trim().isNotEmpty) {
           patchBody['doctorVisit'] = _checkCtrl.text.trim();
         }
-
+        if (patchBody.isEmpty) {
+          NestlyToast.info(context, 'Nema izmjena.');
+          return;
+        }
         await _service.patch(_editingEntry!.id, patchBody);
 
         NestlyToast.success(context, 'Zapis ažuriran.');
@@ -433,6 +449,9 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
             TextField(
               controller: _tempCtrl,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,1}$')),
+              ],
               cursorColor: AppColors.roseDark,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,

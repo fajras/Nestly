@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_application_nestly/main.dart';
@@ -95,7 +96,7 @@ class _BlogScreenState extends State<BlogScreen> {
         _posts = results[1] as List<BlogPostDto>;
         _loading = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = 'Greška pri učitavanju bloga';
@@ -110,27 +111,36 @@ class _BlogScreenState extends State<BlogScreen> {
       _loading = true;
     });
 
-    if (id == null) {
-      final rec = await fetchRecommended(take: 10);
+    try {
+      if (id == null) {
+        final rec = await fetchRecommended(take: 10);
+
+        if (!mounted) return;
+
+        setState(() {
+          _posts = rec;
+          _loading = false;
+        });
+
+        return;
+      }
+
+      final posts = await fetchPosts(categoryId: id);
 
       if (!mounted) return;
 
       setState(() {
-        _posts = rec;
+        _posts = posts;
         _loading = false;
       });
+    } catch (_) {
+      if (!mounted) return;
 
-      return;
+      setState(() {
+        _error = 'Greška pri učitavanju bloga';
+        _loading = false;
+      });
     }
-
-    final posts = await fetchPosts(categoryId: id);
-
-    if (!mounted) return;
-
-    setState(() {
-      _posts = posts;
-      _loading = false;
-    });
   }
 
   Future<void> _openDetail(BlogPostDto post) async {
@@ -142,10 +152,8 @@ class _BlogScreenState extends State<BlogScreen> {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => BlogPostDetailScreen(post: fullPost)),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Greška pri učitavanju članka')),
-      );
+    } catch (_) {
+      NestlyToast.error(context, 'Greška pri učitavanju članka');
     }
   }
 
@@ -172,7 +180,7 @@ class _BlogScreenState extends State<BlogScreen> {
         child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.xl),
-          itemCount: _posts.length + 3,
+          itemCount: _posts.length + 2,
           itemBuilder: (context, index) {
             if (index == 0) {
               return _CategoryFilterBar(
@@ -435,10 +443,10 @@ class _PostText extends StatelessWidget {
 }
 
 Future<List<BlogCategory>> fetchCategories() async {
-  final res = await ApiClient.get('/api/BlogPost/category');
+  final res = await ApiClient.get('/api/BlogCategory');
 
   if (res.statusCode != 200) {
-    throw Exception('Failed to load categories');
+    throw Exception('Fetch blog category failed');
   }
 
   final List data = jsonDecode(res.body);

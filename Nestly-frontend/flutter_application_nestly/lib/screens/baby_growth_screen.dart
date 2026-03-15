@@ -60,10 +60,10 @@ class FetalApi {
     ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode == 404) {
-      throw Exception('Nema podataka za sedmicu $week.');
+      throw Exception();
     }
     if (res.statusCode != 200) {
-      throw Exception('HTTP ${res.statusCode}');
+      throw Exception();
     }
 
     if (kIsWeb) {
@@ -198,7 +198,7 @@ class _BabyGrowthScreenState extends State<BabyGrowthScreen>
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.xl),
                   child: Text(
-                    'Greška: ${snap.error ?? 'Nije moguće učitati podatke.'}',
+                    'Nije moguće učitati podatke.',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.red[700]),

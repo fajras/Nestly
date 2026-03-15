@@ -162,10 +162,14 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     try {
       _markedDays = await _service.getMarkedDays(widget.parentProfileId);
 
+      if (!mounted) return;
+
       final entry = await _service.getByDate(
         widget.parentProfileId,
         _selectedDay,
       );
+
+      if (!mounted) return;
 
       if (entry == null) {
         _entryId = null;

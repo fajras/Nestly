@@ -36,16 +36,21 @@ class FeedingLog {
       id: json['id'],
       babyId: json['babyId'],
       feedDate: DateTime.parse(json['feedDate']),
-      feedTime: _parseTime(json['feedTime']),
+      feedTime: _parseTime(json['feedTime']?.toString()),
       amountMl: json['amountMl']?.toDouble(),
       foodTypeId: json['foodTypeId'],
       notes: json['notes'],
     );
   }
 
-  static Duration _parseTime(String time) {
-    final parts = time.split(':');
-    return Duration(hours: int.parse(parts[0]), minutes: int.parse(parts[1]));
+  static Duration _parseTime(String? time) {
+    final value = (time ?? '00:00:00').toString();
+    final parts = value.split(':');
+
+    final hours = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+    final minutes = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+
+    return Duration(hours: hours, minutes: minutes);
   }
 }
 
@@ -147,13 +152,24 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() => _loading = true);
+
     try {
-      _logs = await _service.fetch();
+      final logs = await _service.fetch();
+      if (!mounted) return;
+
+      setState(() {
+        _logs = logs;
+      });
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju dnevnika');
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
-    if (mounted) setState(() => _loading = false);
   }
 
   List<FeedingLog> _forDay(DateTime day) =>
@@ -303,7 +319,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
 
                 try {
                   await _service.delete(log.id);
-
+                  if (!mounted) return;
                   NestlyToast.success(
                     context,
                     'Unos uspješno obrisan',
@@ -311,7 +327,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                   );
 
                   _load();
-                } catch (e) {
+                } catch (_) {
                   NestlyToast.error(context, 'Brisanje nije uspjelo');
                 }
               },
@@ -390,6 +406,13 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
 
   bool _saving = false;
   @override
+  void dispose() {
+    _amount.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
 
@@ -424,7 +447,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final amount = double.tryParse(_amount.text);
+    final amount = double.tryParse(_amount.text.replaceAll(',', '.'));
     if (amount == null) {
       NestlyToast.error(context, 'Unesite validnu količinu');
       return;
@@ -440,7 +463,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
           amountMl: amount,
           notes: _notes.text,
         );
-
+        if (!mounted) return;
         NestlyToast.success(context, 'Unos dodan', accentColor: AppColors.seed);
       } else {
         await widget.service.update(
@@ -450,7 +473,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
           amountMl: amount,
           notes: _notes.text,
         );
-
+        if (!mounted) return;
         NestlyToast.success(
           context,
           'Unos ažuriran',
@@ -460,7 +483,8 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
 
       Navigator.pop(context);
     } catch (_) {
-      NestlyToast.error(context, 'Greška');
+      if (!mounted) return;
+      NestlyToast.error(context, 'Greška pri spremanju unosa');
     }
 
     if (mounted) setState(() => _saving = false);
@@ -507,7 +531,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
                   decimal: true,
                 ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$')),
                 ],
                 decoration: _decoration(
                   label: 'Količina (ml/g)',
@@ -517,7 +541,8 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Unesite količinu';
                   }
-                  if (double.tryParse(value) == null) {
+                  final normalized = value.replaceAll(',', '.');
+                  if (double.tryParse(normalized) == null) {
                     return 'Dozvoljeni su samo brojevi';
                   }
                   return null;

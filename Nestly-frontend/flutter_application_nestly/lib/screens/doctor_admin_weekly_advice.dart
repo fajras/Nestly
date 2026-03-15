@@ -74,6 +74,12 @@ class _DoctorAdminWeeklyAdviceScreenState
     _load();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
 
@@ -81,12 +87,14 @@ class _DoctorAdminWeeklyAdviceScreenState
       final data = await _service.getAll();
       data.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
 
+      if (!mounted) return;
+
       setState(() {
         _all = data;
         _filtered = data;
         _searchController.clear();
       });
-    } catch (e) {
+    } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju savjeta');
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -95,6 +103,11 @@ class _DoctorAdminWeeklyAdviceScreenState
 
   void _onSearch(String value) {
     final q = value.toLowerCase();
+
+    if (q.isEmpty) {
+      setState(() => _filtered = _all);
+      return;
+    }
 
     setState(() {
       _filtered = _all.where((x) {
@@ -181,6 +194,12 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
     _controller = TextEditingController(text: widget.advice.adviceText);
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _save() async {
     final text = _controller.text.trim();
 
@@ -207,7 +226,7 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
 
       widget.onSaved();
       setState(() => _editing = false);
-    } catch (e) {
+    } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju');
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -259,7 +278,10 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   TextButton(
-                    onPressed: () => setState(() => _editing = false),
+                    onPressed: () {
+                      _controller.text = widget.advice.adviceText;
+                      setState(() => _editing = false);
+                    },
                     child: const Text('Otkaži'),
                   ),
                 ] else

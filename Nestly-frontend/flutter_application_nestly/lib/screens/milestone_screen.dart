@@ -152,14 +152,27 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
   Future<void> _load() async {
     try {
       final data = await _service.getForBaby(widget.babyId);
+
+      if (!mounted) return;
+
       setState(() {
         _items = data;
         _loading = false;
       });
     } catch (_) {
+      if (!mounted) return;
+
       setState(() => _loading = false);
       NestlyToast.error(context, 'Greška pri učitavanju');
     }
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _notesCtrl.dispose();
+    _dateCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _pickDate() async {
@@ -188,7 +201,9 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
     setState(() => _saving = true);
 
     try {
-      if (_editingItem == null) {
+      final isEdit = _editingItem != null;
+
+      if (!isEdit) {
         final created = await _service.create(
           CreateMilestoneRequest(
             babyId: widget.babyId,
@@ -200,6 +215,8 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
           ),
         );
 
+        if (!mounted) return;
+
         _items.add(created);
       } else {
         final updated = await _service.update(
@@ -209,27 +226,30 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
           notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         );
 
-        final index = _items.indexWhere((e) => e.id == _editingItem!.id);
+        if (!mounted) return;
 
-        _items[index] = updated;
+        final index = _items.indexWhere((e) => e.id == _editingItem!.id);
+        if (index != -1) {
+          _items[index] = updated;
+        }
       }
 
       _items.sort((a, b) => a.achievedDate.compareTo(b.achievedDate));
-
       _cancelEdit();
 
       NestlyToast.success(
         context,
-        _editingItem == null
-            ? 'Dostignuće je sačuvano'
-            : 'Dostignuće je ažurirano',
+        isEdit ? 'Dostignuće je ažurirano' : 'Dostignuće je sačuvano',
         accentColor: AppColors.seed,
       );
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri spremanju');
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
-
-    setState(() => _saving = false);
   }
 
   void _cancelEdit() {
@@ -265,11 +285,17 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
 
     try {
       await _service.delete(item.id);
+      if (!mounted) return;
       setState(() {
         _items.removeWhere((e) => e.id == item.id);
       });
-      NestlyToast.success(context, 'Dostignuće obrisano');
+      NestlyToast.success(
+        context,
+        'Dostignuće obrisano',
+        accentColor: AppColors.seed,
+      );
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri brisanju');
     }
   }

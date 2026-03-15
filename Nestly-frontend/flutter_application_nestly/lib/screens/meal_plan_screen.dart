@@ -19,9 +19,13 @@ class MealRecommendation {
 
   factory MealRecommendation.fromJson(Map<String, dynamic> json) {
     return MealRecommendation(
-      id: (json['id'] ?? json['Id']) as int,
-      weekNumber: (json['weekNumber'] ?? json['WeekNumber']) as int,
-      foodTypeId: (json['foodTypeId'] ?? json['FoodTypeId']) as int,
+      id: int.parse((json['id'] ?? json['Id']).toString()),
+      weekNumber: int.parse(
+        (json['weekNumber'] ?? json['WeekNumber']).toString(),
+      ),
+      foodTypeId: int.parse(
+        (json['foodTypeId'] ?? json['FoodTypeId']).toString(),
+      ),
       foodName: (json['foodName'] ?? json['FoodName'] ?? '').toString(),
     );
   }
@@ -33,61 +37,82 @@ class MealPlanApiService {
   MealPlanApiService({required this.babyId});
 
   Future<List<MealRecommendation>> fetchRecommendations() async {
-    final res = await ApiClient.get('/api/MealPlan/Recommendation');
+    try {
+      final res = await ApiClient.get('/api/MealPlan/Recommendation');
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load meal recommendations');
+      if (res.statusCode != 200) {
+        throw Exception("Failed to load meal recommendations from the server.");
+      }
+
+      final decoded = jsonDecode(res.body);
+
+      if (decoded is! List) return const [];
+
+      final items = decoded
+          .cast<Map<String, dynamic>>()
+          .map(MealRecommendation.fromJson)
+          .toList();
+
+      items.sort((a, b) {
+        final byWeek = a.weekNumber.compareTo(b.weekNumber);
+        return byWeek != 0 ? byWeek : a.foodName.compareTo(b.foodName);
+      });
+
+      return items;
+    } catch (_) {
+      throw Exception(
+        "Unable to retrieve meal recommendations. Please try again later.",
+      );
     }
-
-    final decoded = jsonDecode(res.body);
-    if (decoded is! List) return const [];
-
-    final items = decoded
-        .cast<Map<String, dynamic>>()
-        .map(MealRecommendation.fromJson)
-        .toList();
-
-    items.sort((a, b) {
-      final byWeek = a.weekNumber.compareTo(b.weekNumber);
-      return byWeek != 0 ? byWeek : a.foodName.compareTo(b.foodName);
-    });
-
-    return items;
   }
 
   Future<Map<int, int?>> fetchRatingsForBaby() async {
-    final res = await ApiClient.get('/api/MealPlan?BabyId=$babyId');
+    try {
+      final res = await ApiClient.get('/api/MealPlan?BabyId=$babyId');
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load ratings');
+      if (res.statusCode != 200) {
+        throw Exception("Failed to load baby food ratings.");
+      }
+
+      final decoded = jsonDecode(res.body);
+      if (decoded is! List) return const {};
+
+      final map = <int, int?>{};
+
+      for (final raw in decoded.cast<Map<String, dynamic>>()) {
+        final foodTypeId = int.tryParse(raw['foodTypeId'].toString());
+        if (foodTypeId == null) continue;
+
+        final rating = raw['rating'];
+
+        map[foodTypeId] = rating == null
+            ? null
+            : int.tryParse(rating.toString());
+      }
+
+      return map;
+    } catch (_) {
+      throw Exception("Unable to retrieve saved food ratings for the baby.");
     }
-
-    final decoded = jsonDecode(res.body);
-    if (decoded is! List) return const {};
-
-    final map = <int, int?>{};
-    for (final raw in decoded.cast<Map<String, dynamic>>()) {
-      final foodTypeId = raw['foodTypeId'] as int;
-      final rating = raw['rating'];
-      map[foodTypeId] = rating == null ? null : int.tryParse(rating.toString());
-    }
-
-    return map;
   }
 
   Future<void> rateFood({required int foodTypeId, required int rating}) async {
-    final res = await ApiClient.post(
-      '/api/MealPlan',
-      body: {
-        'babyId': babyId,
-        'foodTypeId': foodTypeId,
-        'rating': rating,
-        'triedAt': DateTime.now().toIso8601String(),
-      },
-    );
+    try {
+      final res = await ApiClient.post(
+        '/api/MealPlan',
+        body: {
+          'babyId': babyId,
+          'foodTypeId': foodTypeId,
+          'rating': rating,
+          'triedAt': DateTime.now().toIso8601String(),
+        },
+      );
 
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to save rating');
+      if (res.statusCode != 200 && res.statusCode != 201) {
+        throw Exception("Failed to save the food rating.");
+      }
+    } catch (_) {
+      throw Exception("An error occurred while saving the food rating.");
     }
   }
 }
@@ -140,12 +165,9 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
         _dirtyRatings.clear();
         _loading = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      NestlyToast.error(context, "Greška pri učitavanju preporuka.");
     }
   }
 
@@ -165,9 +187,12 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
     setState(() => _saving = true);
 
     try {
-      for (final entry in _dirtyRatings.entries) {
-        await _service.rateFood(foodTypeId: entry.key, rating: entry.value);
-      }
+      await Future.wait(
+        _dirtyRatings.entries.map(
+          (entry) =>
+              _service.rateFood(foodTypeId: entry.key, rating: entry.value),
+        ),
+      );
 
       if (!mounted) return;
 
@@ -177,10 +202,13 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       });
 
       NestlyToast.success(context, 'Ocjene su uspješno sačuvane.');
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      NestlyToast.error(context, 'Greška pri spremanju ocjena: $e');
+      NestlyToast.error(
+        context,
+        'Došlo je do greške prilikom spremanja ocjena.',
+      );
     }
   }
 

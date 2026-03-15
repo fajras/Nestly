@@ -179,7 +179,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
   Future<void> _load() async {
     try {
       final entries = await _service.getLast7Days(babyId: widget.babyId);
-
+      if (!mounted) return;
       setState(() {
         _entries = entries;
         _last7Days = _buildSummary(entries);
@@ -541,7 +541,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                     getTitlesWidget: (v, _) => Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        const ['P', 'U', 'S', 'Č', 'P', 'S', 'N'][v.toInt()],
+                        const ['P', 'U', 'S', 'C', 'P', 'S', 'N'][v.toInt()],
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.seed,

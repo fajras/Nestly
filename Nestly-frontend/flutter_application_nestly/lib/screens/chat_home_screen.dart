@@ -124,14 +124,21 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
   Future<void> _load() async {
     try {
-      _conversations = await _api.getMyConversations();
-      _users = await _api.getAllUsers();
+      final conversations = await _api.getMyConversations();
+      final users = await _api.getAllUsers();
+
+      if (!mounted) return;
+
+      setState(() {
+        _conversations = conversations;
+        _users = users;
+      });
     } catch (_) {
       if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri učitavanju chata');
-    }
 
-    if (mounted) {
+      NestlyToast.error(context, 'Greška pri učitavanju chata');
+    } finally {
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }
@@ -235,7 +242,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
     }).toList();
 
     if (filtered.isEmpty) {
-      return [_emptyBox('Nema korisnika')];
+      return [_emptyBox('Nema rezultata pretrage.')];
     }
 
     return filtered.map((u) {
@@ -262,7 +269,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: AppColors.babyPink,
-          child: Text(name.characters.first),
+          child: Text(name.isNotEmpty ? name.characters.first : '?'),
         ),
         title: Text(name),
         subtitle: Text(subtitle),

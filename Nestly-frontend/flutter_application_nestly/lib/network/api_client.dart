@@ -1,21 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 
 class ApiClient {
-  static String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5167';
-    }
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5167';
-    }
-    return 'http://localhost:5167';
-  }
+  static const String _baseUrl = String.fromEnvironment('API_URL');
 
-  static String get baseUrl => _baseUrl;
+  static String get baseUrl {
+    if (_baseUrl.isEmpty) {
+      throw Exception(
+        'API_URL nije definisan. Pokreni aplikaciju sa --dart-define=API_URL=<url>',
+      );
+    }
+    return _baseUrl;
+  }
 
   static Future<http.Response> get(String path) async {
     final token = await AuthStorage.getToken();

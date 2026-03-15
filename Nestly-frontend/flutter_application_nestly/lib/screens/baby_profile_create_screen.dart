@@ -32,7 +32,7 @@ class BabyProfileApiService {
     ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode != 201 && res.statusCode != 200) {
-      throw Exception('Failed to create baby profile (${res.statusCode})');
+      throw Exception('Failed to create baby profile. Please try again.');
     }
   }
 }
@@ -80,12 +80,16 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
 
   double? _parseDouble(String value) {
     final v = value.trim().replaceAll(',', '.');
-    return v.isEmpty ? null : double.tryParse(v);
+
+    if (v.isEmpty) return null;
+
+    final parsed = double.tryParse(v);
+    return parsed;
   }
 
   Future<void> _pickBirthDate() async {
     final now = DateTime.now();
-    final firstDate = now.subtract(const Duration(days: 365));
+    final firstDate = DateTime(2000);
 
     final picked = await showDatePicker(
       context: context,
@@ -129,7 +133,7 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
       if (!mounted) return;
 
       NestlyToast.success(context, 'Profil bebe je uspješno spremljen.');
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
       NestlyToast.error(
@@ -153,7 +157,7 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.roseDark,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _saving ? null : () => Navigator.pop(context),
         ),
         title: Text(
           'Unesite podatke o bebi',
@@ -178,6 +182,7 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xl),
+
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -254,7 +259,7 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                         ),
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
+                            RegExp(r'^\d*\.?\d{0,2}$'),
                           ),
                         ],
                         decoration: const InputDecoration(
@@ -263,10 +268,12 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return null;
+
                           final value = double.tryParse(v.replaceAll(',', '.'));
-                          if (value == null || value <= 0) {
-                            return 'Unesite pozitivnu vrijednost';
+                          if (value == null || value <= 0 || value > 100) {
+                            return 'Unesite realnu vrijednost';
                           }
+
                           return null;
                         },
                       ),
@@ -279,7 +286,7 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                         ),
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
+                            RegExp(r'^\d*\.?\d{0,2}$'),
                           ),
                         ],
                         decoration: const InputDecoration(
@@ -288,10 +295,12 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return null;
+
                           final value = double.tryParse(v.replaceAll(',', '.'));
-                          if (value == null || value <= 0) {
-                            return 'Unesite pozitivnu vrijednost';
+                          if (value == null || value <= 0 || value > 10) {
+                            return 'Unesite realnu vrijednost';
                           }
+
                           return null;
                         },
                       ),

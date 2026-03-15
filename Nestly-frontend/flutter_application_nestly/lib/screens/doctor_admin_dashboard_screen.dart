@@ -9,6 +9,7 @@ import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/admin_blog_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_questions_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_weekly_advice.dart';
+import 'package:flutter_application_nestly/screens/doctor_system_management_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/user_detail_screen.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
@@ -112,6 +113,8 @@ class _DoctorAdminDashboardScreenState
         return DoctorAdminWeeklyAdviceScreen();
       case 4:
         return DoctorAdminBlogScreen();
+      case 5:
+        return SystemManagementScreen();
       default:
         return const SizedBox();
     }
@@ -194,6 +197,13 @@ class _Sidebar extends StatelessWidget {
             icon: Icons.article_rounded,
             label: 'Blog',
             index: 4,
+            selectedIndex: selectedIndex,
+            onTap: onSelect,
+          ),
+          _SidebarItem(
+            icon: Icons.admin_panel_settings_rounded,
+            label: 'Upravljanje sistemom',
+            index: 5,
             selectedIndex: selectedIndex,
             onTap: onSelect,
           ),
@@ -293,7 +303,6 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
   final _service = AdminDashboardService();
 
   Future<void> _loadData() async {
-    if (!mounted) return;
     setState(() => _loading = true);
 
     try {
@@ -318,7 +327,10 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
 
   void _onSearch(String value) {
     final q = value.toLowerCase();
-
+    if (q.isEmpty) {
+      setState(() => _filtered = _users);
+      return;
+    }
     setState(() {
       _filtered = _users.where((u) {
         return u.firstName.toLowerCase().contains(q) ||

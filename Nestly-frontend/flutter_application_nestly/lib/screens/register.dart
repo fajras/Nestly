@@ -191,7 +191,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-
+    if (_dob == null || _lmpDate == null || _dueDate == null) {
+      setState(() => _loading = false);
+      NestlyToast.error(context, 'Popunite sve datume');
+      return;
+    }
     try {
       final res = await ApiClient.post(
         '/AppUser',
@@ -210,7 +214,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           "cycleLengthDays": int.parse(_cycleCtrl.text),
         },
       );
-
       if (res.statusCode == 201) {
         NestlyToast.success(context, 'Registracija uspješna 🎉');
         if (mounted) Navigator.pop(context);
@@ -220,21 +223,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         try {
           final body = jsonDecode(res.body);
 
-          if (body is Map && body.containsKey('message')) {
-            message = body['message'];
-          } else if (body is Map && body.containsKey('title')) {
-            message = body['title'];
+          if (body is Map) {
+            if (body['message'] != null) {
+              message = body['message'].toString();
+            } else if (body['title'] != null) {
+              message = body['title'].toString();
+            } else if (body['detail'] != null) {
+              message = body['detail'].toString();
+            } else if (body['errors'] != null) {
+              message = body['errors'].toString();
+            } else {
+              message = res.body.toString();
+            }
           } else {
-            message = res.body;
+            message = res.body.toString();
           }
         } catch (_) {
-          message = res.body;
+          message = res.body.toString();
         }
-
+        if (!mounted) return;
         message = _translateBackendError(message);
+        if (message.trim().isEmpty) {
+          message = "Greška pri registraciji";
+        }
         NestlyToast.error(context, message);
       }
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Server nedostupan');
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -205,6 +205,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         });
       }
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju termina');
     }
 
@@ -269,18 +270,17 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
           startAt: startAt,
         );
       }
-
+      final isEdit = _editingEvent != null;
       _cancelEdit();
       await _loadMonth(_focusedDay);
 
       NestlyToast.success(
         context,
-        _editingEvent == null
-            ? 'Termin je uspješno sačuvan.'
-            : 'Termin je ažuriran.',
+        isEdit ? 'Termin je ažuriran.' : 'Termin je uspješno sačuvan.',
         accentColor: AppColors.seed,
       );
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri spremanju termina.');
     }
 
@@ -326,6 +326,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         accentColor: AppColors.seed,
       );
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri brisanju.');
     }
   }

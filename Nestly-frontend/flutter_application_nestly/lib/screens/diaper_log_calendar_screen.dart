@@ -98,7 +98,7 @@ class DiaperLogApiService {
       '&DateTo=${to.toIso8601String()}',
     );
 
-    if (res.statusCode != 200) throw Exception();
+    if (res.statusCode != 200) throw Exception('Failed to fetch diaper logs');
 
     final List data = jsonDecode(res.body);
     return data.map((e) => DiaperLog.fromJson(e)).toList();
@@ -123,7 +123,7 @@ class DiaperLogApiService {
     final res = await ApiClient.post('/api/DiaperLog', body: body);
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Neuspješno spremanje');
+      throw Exception('Failed to create diaper log');
     }
   }
 }
@@ -158,12 +158,13 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
       return false;
     }
 
-    if (_state.isEmpty) {
-      NestlyToast.info(context, 'Odaberite stanje');
-      return false;
-    }
-
     return true;
+  }
+
+  @override
+  void dispose() {
+    _notesCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -236,6 +237,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
         });
       }
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju');
     }
 
@@ -274,6 +276,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
       _cancelEdit();
       await _loadMonth(_focusedDay);
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri spremanju');
     }
 
@@ -485,6 +488,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
       await _loadMonth(_focusedDay);
       NestlyToast.success(context, 'Zapis obrisan');
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri brisanju');
     }
   }
@@ -519,6 +523,12 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                   selectedDay: _selectedDay,
                   accentColor: AppColors.roseDark,
                   markerIcon: Icons.baby_changing_station,
+                  onPageChanged: (focused) {
+                    setState(() {
+                      _focusedDay = _dayOnly(focused);
+                    });
+                    _loadMonth(_focusedDay);
+                  },
                   eventLoader: (day) => _forDay(day),
                   onDaySelected: (selected, focused) {
                     setState(() {

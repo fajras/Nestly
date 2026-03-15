@@ -49,7 +49,7 @@ class ApiQaService implements QaService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Greška pri izmjeni pitanja.');
+      throw Exception('Failed to update the question. Please try again later.');
     }
 
     final jsonRes = jsonDecode(res.body);
@@ -67,7 +67,7 @@ class ApiQaService implements QaService {
     final res = await ApiClient.delete('/api/QaQuestion/$id');
 
     if (res.statusCode != 204) {
-      throw Exception('Greška pri brisanju pitanja.');
+      throw Exception('Failed to delete the question. Please try again.');
     }
   }
 
@@ -78,7 +78,7 @@ class ApiQaService implements QaService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Greška pri učitavanju pitanja (${res.statusCode}).');
+      throw Exception('Failed to load your questions.');
     }
 
     final list = jsonDecode(res.body) as List;
@@ -94,9 +94,9 @@ class ApiQaService implements QaService {
         answer: answered && q['latestAnswerText'] != null
             ? Answer(
                 text: q['latestAnswerText'],
-                createdAt: q['latestAnswerCreatedAt'] != null
-                    ? DateTime.parse(q['latestAnswerCreatedAt'])
-                    : DateTime.now(),
+                createdAt: DateTime.parse(
+                  q['latestAnswerCreatedAt'] ?? q['createdAt'],
+                ),
                 responderName: q['answeredByName'],
               )
             : null,
@@ -112,7 +112,7 @@ class ApiQaService implements QaService {
     );
 
     if (res.statusCode != 201 && res.statusCode != 200) {
-      throw Exception('Greška pri slanju pitanja (${res.statusCode}).');
+      throw Exception('Failed to send the question. Please try again.');
     }
 
     final jsonRes = jsonDecode(res.body) as Map<String, dynamic>;
@@ -142,7 +142,7 @@ class InMemoryQaService implements QaService {
 
     final index = _data.indexWhere((q) => q.id == id);
     if (index == -1) {
-      throw Exception('Pitanje nije pronađeno.');
+      throw Exception('Question not found.');
     }
 
     final updated = Question(
@@ -193,7 +193,6 @@ class MyQuestionsScreen extends StatefulWidget {
 class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
   late final QaService _service;
   bool _loading = true;
-  String? _error;
   List<Question> _items = [];
 
   @override
@@ -207,17 +206,27 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
   Future<void> _load() async {
     setState(() {
       _loading = true;
-      _error = null;
     });
 
     try {
-      _items = await _service.fetchMyQuestions();
-    } catch (e) {
-      _error = e.toString();
-    }
+      final items = await _service.fetchMyQuestions();
 
-    if (mounted) {
-      setState(() => _loading = false);
+      if (!mounted) return;
+
+      setState(() {
+        _items = items;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      NestlyToast.error(
+        context,
+        'Trenutno nije moguće učitati pitanja. Pokušajte ponovo.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -293,10 +302,6 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.roseDark),
       );
-    }
-
-    if (_error != null) {
-      return Center(child: Text('Greška: $_error'));
     }
 
     if (_items.isEmpty) {
@@ -481,13 +486,26 @@ class _QuestionCard extends StatelessWidget {
                         onPressed: () async {
                           if (!formKey.currentState!.validate()) return;
 
-                          await service.updateQuestion(
-                            question.id,
-                            controller.text.trim(),
-                          );
+                          try {
+                            await service.updateQuestion(
+                              question.id,
+                              controller.text.trim(),
+                            );
 
-                          Navigator.pop(context);
-                          onRefresh();
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                            onRefresh();
+                            NestlyToast.success(
+                              context,
+                              'Pitanje je ažurirano.',
+                            );
+                          } catch (_) {
+                            if (!context.mounted) return;
+                            NestlyToast.error(
+                              context,
+                              'Greška pri uređivanju pitanja.',
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.roseDark,
@@ -519,10 +537,17 @@ class _QuestionCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await service.deleteQuestion(question.id);
+              try {
+                await service.deleteQuestion(question.id);
 
-              Navigator.pop(context);
-              onRefresh();
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                onRefresh();
+                NestlyToast.success(context, 'Pitanje je obrisano.');
+              } catch (_) {
+                if (!context.mounted) return;
+                NestlyToast.error(context, 'Greška pri brisanju pitanja.');
+              }
             },
             child: const Text('Obriši', style: TextStyle(color: Colors.red)),
           ),
@@ -572,6 +597,11 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
   final _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _sending = false;
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -579,11 +609,10 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     setState(() => _sending = true);
     try {
       final q = await widget.service.createQuestion(_controller.text.trim());
-      if (mounted) {
-        Navigator.pop(context, q);
-        NestlyToast.success(context, 'Pitanje poslano');
-      }
+      if (!mounted) return;
+      Navigator.pop(context, q);
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri slanju pitanja');
     } finally {
       if (mounted) setState(() => _sending = false);

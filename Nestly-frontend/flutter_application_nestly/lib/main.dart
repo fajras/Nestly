@@ -1,18 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/network/app_config.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_dashboard_screen.dart';
 import 'package:flutter_application_nestly/providers/splash_screen.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
-import 'dart:io';
 import 'package:flutter_application_nestly/screens/home_dashboard.dart';
 import 'package:flutter_application_nestly/screens/register.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:flutter_application_nestly/network/api_client.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final RouteObserver<ModalRoute<void>> routeObserver =
@@ -22,7 +21,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await initializeDateFormatting('bs_BA', null);
-
+  AppConfig.validate();
   runApp(const NestlyApp());
 }
 
@@ -153,22 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   bool _loading = false;
 
-  static String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5167';
-    }
-
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5167';
-    }
-
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      return 'http://localhost:5167';
-    }
-
-    return 'http://localhost:5167';
-  }
-
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -204,15 +187,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      final uri = Uri.parse('$_baseUrl/api/Auth/login');
-
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await ApiClient.post(
+        '/api/Auth/login',
+        body: {
           'email': _emailCtrl.text.trim(),
           'password': _pwCtrl.text.trim(),
-        }),
+        },
       );
 
       if (!mounted) return;
@@ -230,6 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         final decoded = JwtDecoder.decode(token);
+
         final appUserId =
             decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
 
@@ -253,13 +234,19 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         } else if (role.toUpperCase() == 'DOCTOR') {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => DoctorAdminDashboardScreen()),
+            MaterialPageRoute(
+              builder: (_) => const DoctorAdminDashboardScreen(),
+            ),
           );
         }
       } else {
-        NestlyToast.error(context, 'Pogrešan email ili lozinka');
+        if (response.statusCode == 401) {
+          NestlyToast.error(context, 'Pogrešan email ili lozinka');
+        } else {
+          NestlyToast.error(context, 'Greška servera');
+        }
       }
-    } catch (e) {
+    } catch (_) {
       NestlyToast.error(context, 'Server nedostupan');
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
-import 'package:flutter_application_nestly/auth/auth_storage.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -22,54 +21,69 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _load();
   }
 
-  Future<int> _getUserId() async {
-    final token = await AuthStorage.getToken();
-    final decoded = JwtDecoder.decode(token!);
-    return int.parse(
-      decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]
-          .toString(),
-    );
-  }
-
   Future<void> _load() async {
     try {
-      final userId = await _getUserId();
-      final res = await ApiClient.get('/api/Notification/$userId');
+      final res = await ApiClient.get('/api/Notification');
 
-      if (res.statusCode == 200) {
-        final all = jsonDecode(res.body) as List<dynamic>;
-
-        final threeDaysAgo = DateTime.now().subtract(const Duration(days: 3));
-
-        final filtered = all.where((n) {
-          if (n["createdAt"] == null) return false;
-
-          final date = DateTime.parse(n["createdAt"]);
-          return date.isAfter(threeDaysAgo);
-        }).toList();
-
-        setState(() {
-          _notifications = filtered;
-          _loading = false;
-        });
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load notifications');
       }
+
+      final all = jsonDecode(res.body) as List<dynamic>;
+      final threeDaysAgo = DateTime.now().subtract(const Duration(days: 3));
+
+      final filtered = all.where((n) {
+        if (n["createdAt"] == null) return false;
+
+        final raw = n["createdAt"].toString();
+        final date = DateTime.tryParse(raw);
+        if (date == null) return false;
+
+        return date.isAfter(threeDaysAgo);
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _notifications = filtered;
+        _loading = false;
+      });
     } catch (_) {
+      if (!mounted) return;
+
       setState(() => _loading = false);
+      NestlyToast.error(context, 'Greška pri učitavanju notifikacija.');
     }
   }
 
   Future<void> _markAsRead(int id) async {
-    await ApiClient.post('/api/Notification/mark-as-read/$id');
-    await _load();
+    try {
+      final res = await ApiClient.post('/api/Notification/mark-as-read/$id');
+
+      if (res.statusCode != 200 && res.statusCode != 204) {
+        throw Exception('Failed to mark notification as read');
+      }
+
+      await _load();
+    } catch (_) {
+      if (!mounted) return;
+      NestlyToast.error(context, 'Greška pri označavanju notifikacije.');
+    }
   }
 
   Future<void> _markAllAsRead() async {
-    for (var n in _notifications) {
-      if (n["isRead"] == false) {
-        await ApiClient.post('/api/Notification/mark-as-read/${n["id"]}');
+    try {
+      final res = await ApiClient.post('/api/Notification/mark-all-as-read');
+
+      if (res.statusCode != 200 && res.statusCode != 204) {
+        throw Exception('Failed to mark all notifications as read');
       }
+
+      await _load();
+    } catch (_) {
+      if (!mounted) return;
+      NestlyToast.error(context, 'Greška pri označavanju svih notifikacija.');
     }
-    await _load();
   }
 
   int get _unreadCount =>

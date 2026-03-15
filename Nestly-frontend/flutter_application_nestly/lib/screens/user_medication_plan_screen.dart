@@ -25,23 +25,37 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
+
+    setState(() => _loading = true);
+
     try {
       final res = await ApiClient.get(
-        '/api/MedicationPlan?UserId=${widget.userId}',
+        '/api/MedicationPlan?ParentProfileId=${widget.userId}',
       );
 
       if (res.statusCode != 200) {
-        throw Exception();
+        throw Exception('Failed to load medication plans');
       }
 
       final List data = jsonDecode(res.body);
+
+      final plans = data
+          .map((e) => MedicationPlanRow.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      if (!mounted) return;
+
       setState(() {
-        _plans = data.map((e) => MedicationPlanRow.fromJson(e)).toList();
+        _plans = plans;
       });
     } catch (_) {
+      if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju terapije');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -49,40 +63,44 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        title: Text(
+          'Terapija',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.roseDark,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Terapija',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                ),
-              ],
+            Expanded(
+              child: _loading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.roseDark,
+                      ),
+                    )
+                  : _plans.isEmpty
+                  ? const _EmptyState()
+                  : RefreshIndicator(
+                      color: AppColors.roseDark,
+                      onRefresh: _load,
+                      child: ListView.separated(
+                        itemCount: _plans.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: AppSpacing.md),
+                        itemBuilder: (_, i) => _MedicationCard(plan: _plans[i]),
+                      ),
+                    ),
             ),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (_plans.isEmpty)
-              _EmptyState()
-            else
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _plans.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSpacing.md),
-                  itemBuilder: (_, i) => _MedicationCard(plan: _plans[i]),
-                ),
-              ),
           ],
         ),
       ),
@@ -96,7 +114,7 @@ class MedicationPlanRow {
   final DateTime startDate;
   final DateTime endDate;
 
-  MedicationPlanRow({
+  const MedicationPlanRow({
     required this.medicineName,
     required this.dose,
     required this.startDate,
@@ -105,8 +123,8 @@ class MedicationPlanRow {
 
   factory MedicationPlanRow.fromJson(Map<String, dynamic> json) {
     return MedicationPlanRow(
-      medicineName: json['medicineName'],
-      dose: json['dose'],
+      medicineName: (json['medicineName'] ?? '').toString(),
+      dose: (json['dose'] ?? '').toString(),
       startDate: DateTime.parse(json['startDate']),
       endDate: DateTime.parse(json['endDate']),
     );
@@ -121,9 +139,14 @@ class _MedicationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
               backgroundColor: AppColors.roseDark.withOpacity(.15),
@@ -142,6 +165,7 @@ class _MedicationCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
+                      color: AppColors.roseDark,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -152,7 +176,10 @@ class _MedicationCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Period: ${_fmt(plan.startDate)} – ${_fmt(plan.endDate)}',
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -165,22 +192,43 @@ class _MedicationCard extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.medication_outlined, size: 48),
-          SizedBox(height: 12),
-          Text(
-            'Nema evidentirane terapije',
-            style: TextStyle(fontWeight: FontWeight.w600),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(
+                Icons.medication_outlined,
+                size: 48,
+                color: AppColors.roseDark,
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Nema evidentirane terapije',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-String _fmt(DateTime d) => '${d.day}.${d.month}.${d.year}.';
+String _fmt(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}.'
+    '${d.month.toString().padLeft(2, '0')}.'
+    '${d.year}.';

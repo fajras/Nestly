@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
@@ -52,7 +53,6 @@ class QaAdminService {
       '/api/QaQuestion/$questionId/answers',
       body: {'answerText': answerText, 'answeredById': answeredById},
     );
-
     if (res.statusCode != 200 && res.statusCode != 201) {
       throw Exception('Failed to save answer');
     }
@@ -82,18 +82,26 @@ class _DoctorAdminQuestionsScreenState
     _load();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
 
     try {
       final data = await _service.getUnansweredQuestions();
 
+      if (!mounted) return;
+
       setState(() {
         _questions = data;
         _filtered = data;
         _searchController.clear();
       });
-    } catch (e) {
+    } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju pitanja');
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -102,7 +110,10 @@ class _DoctorAdminQuestionsScreenState
 
   void _onSearch(String value) {
     final q = value.toLowerCase();
-
+    if (q.isEmpty) {
+      setState(() => _filtered = _questions);
+      return;
+    }
     setState(() {
       _filtered = _questions.where((x) {
         return x.questionText.toLowerCase().contains(q);
@@ -187,6 +198,11 @@ class _QuestionCardState extends State<_QuestionCard> {
   bool _saving = false;
   final _controller = TextEditingController();
   final _service = QaAdminService();
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _save() async {
     final text = _controller.text.trim();
@@ -203,11 +219,22 @@ class _QuestionCardState extends State<_QuestionCard> {
 
     setState(() => _saving = true);
 
+    final userId = await AuthStorage.getUserId();
+    print(userId);
+    if (!mounted) return;
+
+    if (userId == null) {
+      setState(() => _saving = false);
+      NestlyToast.error(context, 'Greška identifikacije korisnika');
+      return;
+    }
+
+    if (!mounted) return;
     try {
       await _service.answerQuestion(
         questionId: widget.question.id,
         answerText: text,
-        answeredById: 1,
+        answeredById: userId,
       );
 
       NestlyToast.success(
@@ -218,7 +245,7 @@ class _QuestionCardState extends State<_QuestionCard> {
 
       _controller.clear();
       widget.onAnswered();
-    } catch (e) {
+    } catch (_) {
       NestlyToast.error(context, 'Greška pri spremanju odgovora');
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -261,7 +288,10 @@ class _QuestionCardState extends State<_QuestionCard> {
                   ),
                   const SizedBox(width: 12),
                   TextButton(
-                    onPressed: () => setState(() => _answering = false),
+                    onPressed: () {
+                      _controller.clear();
+                      setState(() => _answering = false);
+                    },
                     child: const Text('Otkaži'),
                   ),
                 ],

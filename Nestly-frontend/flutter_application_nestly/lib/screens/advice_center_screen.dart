@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 
@@ -36,11 +37,11 @@ class WeeklyAdviceApi {
     ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode == 404) {
-      throw Exception('Nema savjeta za sedmicu $week.');
+      throw Exception('Advice not found.');
     }
 
     if (res.statusCode != 200) {
-      throw Exception('Greška (${res.statusCode})');
+      throw Exception('Advice load failed.');
     }
 
     final map = jsonDecode(res.body) as Map<String, dynamic>;
@@ -58,7 +59,7 @@ class AdviceCenterScreen extends StatefulWidget {
 class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
   late final List<int> _weeks;
   late int _currentWeek;
-
+  bool _errorShown = false;
   final WeeklyAdviceApi _api = WeeklyAdviceApi();
   late Future<WeeklyAdviceDto> _featuredFuture;
 
@@ -73,10 +74,13 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
 
   Future<void> _refresh() async {
     final week = widget.gestationalWeek.clamp(1, 40);
+
     setState(() {
+      _errorShown = false;
       _currentWeek = week;
       _featuredFuture = _api.getByWeek(_currentWeek);
     });
+
     await _featuredFuture;
   }
 
@@ -89,7 +93,6 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
   @override
   Widget build(BuildContext context) {
     final highlight = _currentWeek;
-
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -137,11 +140,22 @@ class _AdviceCenterScreenState extends State<AdviceCenterScreen> {
                         );
                       }
                       if (snap.hasError || !snap.hasData) {
+                        if (!_errorShown) {
+                          _errorShown = true;
+
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+
+                            NestlyToast.error(
+                              context,
+                              'Trenutno nije moguće učitati savjete.',
+                            );
+                          });
+                        }
+
                         return _FeaturedAdviceCard(
                           week: highlight,
-                          summary:
-                              'Nije moguće učitati podatke: '
-                              '${snap.error ?? ''}',
+                          summary: 'Savjeti trenutno nisu dostupni.',
                           onTap: () => _openDetail(highlight),
                         );
                       }
@@ -393,7 +407,7 @@ class AdviceDetailScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Text(
-                  'Greška: ${snap.error ?? 'Nije moguće učitati podatke.'}',
+                  'Savjeti za ovu sedmicu još nisu dostupni.',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.red[700]),

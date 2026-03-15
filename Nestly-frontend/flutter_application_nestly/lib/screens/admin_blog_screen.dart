@@ -12,12 +12,13 @@ class BlogPostRow {
   final String title;
   final String content;
   final String imageUrl;
-
+  final List<int> categoryIds;
   BlogPostRow({
     required this.id,
     required this.title,
     required this.content,
     required this.imageUrl,
+    required this.categoryIds,
   });
 
   factory BlogPostRow.fromJson(Map<String, dynamic> json) {
@@ -29,6 +30,8 @@ class BlogPostRow {
       imageUrl: url != null && url.isNotEmpty
           ? '$url?v=${DateTime.now().millisecondsSinceEpoch}'
           : '',
+      categoryIds:
+          (json['categoryIds'] as List?)?.map((e) => e as int).toList() ?? [],
     );
   }
 }
@@ -46,25 +49,51 @@ class BlogCategoryRow {
 
 class BlogAdminService {
   Future<List<BlogPostRow>> getBlogs() async {
-    final res = await ApiClient.get('/api/blogpost');
+    try {
+      final res = await ApiClient.get('/api/blogpost');
 
-    if (res.statusCode != 200) {
-      throw Exception(res.body);
+      if (res.statusCode != 200) {
+        throw Exception("Failed to load blogs.");
+      }
+
+      final List data = jsonDecode(res.body);
+      return data.map((e) => BlogPostRow.fromJson(e)).toList();
+    } catch (_) {
+      throw Exception("Unable to retrieve blogs.");
     }
-
-    final List data = jsonDecode(res.body);
-    return data.map((e) => BlogPostRow.fromJson(e)).toList();
   }
 
   Future<List<BlogCategoryRow>> getCategories() async {
-    final res = await ApiClient.get('/api/blogpost/category');
+    try {
+      final res = await ApiClient.get('/api/BlogCategory');
+
+      if (res.statusCode != 200) {
+        throw Exception("Failed to load blog categories.");
+      }
+
+      final List data = jsonDecode(res.body);
+      return data.map((e) => BlogCategoryRow.fromJson(e)).toList();
+    } catch (_) {
+      throw Exception("Unable to retrieve blog categories.");
+    }
+  }
+
+  Future<void> updateBlog({
+    required int id,
+    String? title,
+    String? content,
+  }) async {
+    final res = await ApiClient.patch(
+      '/api/blogpost/$id',
+      body: {
+        if (title != null) 'title': title,
+        if (content != null) 'content': content,
+      },
+    );
 
     if (res.statusCode != 200) {
-      throw Exception(res.body);
+      throw Exception('Failed to update blog');
     }
-
-    final List data = jsonDecode(res.body);
-    return data.map((e) => BlogCategoryRow.fromJson(e)).toList();
   }
 
   Future<int> createBlogWithoutImage({
@@ -89,7 +118,7 @@ class BlogAdminService {
     );
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception(res.body);
+      throw Exception('Failed to create blog');
     }
 
     final body = jsonDecode(res.body);
@@ -100,14 +129,18 @@ class BlogAdminService {
     required int blogId,
     required File file,
   }) async {
-    await ApiClient.multipart('/api/blogmedia/upload/$blogId', file: file);
+    try {
+      await ApiClient.multipart('/api/blogmedia/upload/$blogId', file: file);
+    } catch (_) {
+      throw Exception('Failed to upload blog image');
+    }
   }
 
   Future<void> deleteBlog(int id) async {
     final res = await ApiClient.delete('/api/blogpost/$id');
 
     if (res.statusCode != 204) {
-      throw Exception(res.body);
+      throw Exception('Failed to delete blog');
     }
   }
 }
@@ -139,10 +172,7 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
       setState(() => _blogs = data);
     } catch (_) {
       if (!mounted) return;
-      NestlyToast.error(
-        Navigator.of(context, rootNavigator: true).context,
-        'Greška pri učitavanju blogova',
-      );
+      NestlyToast.error(context, 'Greška pri učitavanju blogova');
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -208,12 +238,81 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      await _service.deleteBlog(b.id);
-                      _load();
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) =>
+                                _BlogEditorSheet(onSaved: _load, blog: b),
+                          );
+                        },
+                      ),
+
+                      if (b.id > 12)
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('Potvrda brisanja'),
+                                  content: const Text(
+                                    'Da li ste sigurni da želite obrisati ovaj blog članak?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Otkaži'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Obriši'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirm == true) {
+                              try {
+                                await _service.deleteBlog(b.id);
+                                await _load();
+
+                                NestlyToast.success(
+                                  Navigator.of(
+                                    context,
+                                    rootNavigator: true,
+                                  ).context,
+                                  'Blog uspješno obrisan',
+                                  accentColor: AppColors.seed,
+                                );
+                              } catch (_) {
+                                NestlyToast.error(
+                                  Navigator.of(
+                                    context,
+                                    rootNavigator: true,
+                                  ).context,
+                                  'Brisanje bloga nije uspjelo',
+                                );
+                              }
+                            }
+                          },
+                        )
+                      else
+                        const Tooltip(
+                          message: 'Sistemski blog postovi se ne mogu brisati',
+                          child: Icon(Icons.lock_outline, color: Colors.grey),
+                        ),
+                    ],
                   ),
                 ),
               );
@@ -227,8 +326,9 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
 
 class _BlogEditorSheet extends StatefulWidget {
   final VoidCallback onSaved;
+  final BlogPostRow? blog;
 
-  const _BlogEditorSheet({required this.onSaved});
+  const _BlogEditorSheet({required this.onSaved, this.blog});
 
   @override
   State<_BlogEditorSheet> createState() => _BlogEditorSheetState();
@@ -253,6 +353,12 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
   void initState() {
     super.initState();
     _loadCategories();
+
+    if (widget.blog != null) {
+      _title.text = widget.blog!.title;
+      _content.text = widget.blog!.content;
+      _selectedCategoryIds.addAll(widget.blog!.categoryIds);
+    }
   }
 
   @override
@@ -267,6 +373,13 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
   Future<void> _loadCategories() async {
     try {
       _categories = await _service.getCategories();
+    } catch (_) {
+      if (!mounted) return;
+
+      NestlyToast.error(
+        Navigator.of(context, rootNavigator: true).context,
+        'Greška pri učitavanju kategorija',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -282,65 +395,81 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
     }
   }
 
+  String? _validateForm() {
+    final title = _title.text.trim();
+    final content = _content.text.trim();
+
+    if (title.isEmpty || content.isEmpty) {
+      return 'Sva polja moraju biti popunjena';
+    }
+
+    if (title.length < 5) {
+      return 'Naslov je prekratak';
+    }
+
+    if (content.length < 20) {
+      return 'Sadržaj mora imati barem 20 karaktera';
+    }
+
+    if (widget.blog == null && _image == null) {
+      return 'Slika je obavezna';
+    }
+
+    if (_selectedCategoryIds.isEmpty) {
+      return 'Odaberite barem jednu kategoriju';
+    }
+
+    return null;
+  }
+
   Future<void> _save() async {
     final title = _title.text.trim();
     final content = _content.text.trim();
     final weekFromText = _weekFrom.text.trim();
     final weekToText = _weekTo.text.trim();
 
-    if (title.isEmpty ||
-        content.isEmpty ||
-        weekFromText.isEmpty ||
-        weekToText.isEmpty) {
+    int? wf;
+    int? wt;
+
+    if (weekFromText.isNotEmpty) {
+      wf = int.tryParse(weekFromText);
+      if (wf == null) {
+        NestlyToast.error(
+          Navigator.of(context, rootNavigator: true).context,
+          'Početna sedmica mora biti broj',
+        );
+        return;
+      }
+    }
+
+    if (weekToText.isNotEmpty) {
+      wt = int.tryParse(weekToText);
+      if (wt == null) {
+        NestlyToast.error(
+          Navigator.of(context, rootNavigator: true).context,
+          'Završna sedmica mora biti broj',
+        );
+        return;
+      }
+    }
+
+    if (wf != null && wf <= 0) {
       NestlyToast.error(
         Navigator.of(context, rootNavigator: true).context,
-        'Sva polja moraju biti popunjena',
+        'Sedmica mora biti veća od nule',
       );
       return;
     }
 
-    if (title.length < 5) {
+    if (wt != null && wt <= 0) {
       NestlyToast.error(
         Navigator.of(context, rootNavigator: true).context,
-        'Naslov je prekratak',
+        'Sedmica mora biti veća od nule',
       );
       return;
     }
 
-    if (content.length < 20) {
-      NestlyToast.error(
-        Navigator.of(context, rootNavigator: true).context,
-        'Sadržaj mora imati barem 20 karaktera',
-      );
-      return;
-    }
-
-    final wf = int.tryParse(weekFromText);
-    final wt = int.tryParse(weekToText);
-
-    if (wf == null || wt == null) {
-      NestlyToast.error(
-        Navigator.of(context, rootNavigator: true).context,
-        'Sedmice moraju biti broj',
-      );
-      return;
-    }
-    if (_image == null) {
-      NestlyToast.error(
-        Navigator.of(context, rootNavigator: true).context,
-        'Slika je obavezna',
-      );
-      return;
-    }
-    if (wf <= 0 || wt <= 0) {
-      NestlyToast.error(
-        Navigator.of(context, rootNavigator: true).context,
-        'Sedmice moraju biti veće od nule',
-      );
-      return;
-    }
-
-    if (wf > wt) {
+    if (wf != null && wt != null && wf > wt) {
       NestlyToast.error(
         Navigator.of(context, rootNavigator: true).context,
         'Početna sedmica ne može biti veća od završne',
@@ -348,28 +477,34 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
       return;
     }
 
-    if (_selectedCategoryIds.isEmpty) {
-      NestlyToast.error(
-        Navigator.of(context, rootNavigator: true).context,
-        'Odaberite barem jednu kategoriju',
-      );
+    final validationError = _validateForm();
+
+    if (validationError != null) {
+      NestlyToast.error(context, validationError);
       return;
     }
 
     setState(() => _saving = true);
-
     try {
-      final blogId = await _service.createBlogWithoutImage(
-        title: title,
-        content: content,
-        phase: _phase,
-        weekFrom: wf,
-        weekTo: wt,
-        categoryIds: _selectedCategoryIds.toList(),
-      );
+      if (widget.blog != null) {
+        await _service.updateBlog(
+          id: widget.blog!.id,
+          title: title,
+          content: content,
+        );
+      } else {
+        final blogId = await _service.createBlogWithoutImage(
+          title: title,
+          content: content,
+          phase: _phase,
+          weekFrom: wf,
+          weekTo: wt,
+          categoryIds: _selectedCategoryIds.toList(),
+        );
 
-      if (_image != null) {
-        await _service.uploadBlogImage(blogId: blogId, file: _image!);
+        if (_image != null) {
+          await _service.uploadBlogImage(blogId: blogId, file: _image!);
+        }
       }
 
       if (!mounted) return;
@@ -379,7 +514,9 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
 
       NestlyToast.success(
         Navigator.of(context, rootNavigator: true).context,
-        'Blog uspješno kreiran',
+        widget.blog == null
+            ? 'Blog uspješno kreiran'
+            : 'Blog uspješno ažuriran',
         accentColor: AppColors.seed,
       );
     } catch (_) {
@@ -415,10 +552,12 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
               children: [
                 Center(
                   child: Column(
-                    children: const [
+                    children: [
                       Text(
-                        'Novi blog članak',
-                        style: TextStyle(
+                        widget.blog == null
+                            ? 'Novi blog članak'
+                            : 'Uredi blog članak',
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
                         ),
@@ -445,6 +584,13 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
                       image: _image != null
                           ? DecorationImage(
                               image: FileImage(_image!),
+                              fit: BoxFit.cover,
+                            )
+                          : widget.blog?.imageUrl.isNotEmpty == true
+                          ? DecorationImage(
+                              image: CachedNetworkImageProvider(
+                                widget.blog!.imageUrl,
+                              ),
                               fit: BoxFit.cover,
                             )
                           : null,

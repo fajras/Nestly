@@ -14,7 +14,30 @@ namespace Nestly.Services.Repository
         {
             _db = db;
         }
+        public IEnumerable<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject? search)
+        {
+            IQueryable<SymptomDiary> q = _db.SymptomDiaries.AsNoTracking();
 
+            if (search?.ParentProfileId is not null)
+            {
+                q = q.Where(s => s.ParentProfileId == search.ParentProfileId);
+            }
+
+            if (search?.DateFrom is not null)
+            {
+                q = q.Where(s => s.Date >= search.DateFrom.Value.Date);
+            }
+
+            if (search?.DateTo is not null)
+            {
+                q = q.Where(s => s.Date <= search.DateTo.Value.Date);
+            }
+
+            return q
+                .OrderByDescending(s => s.Date)
+                .Select(ToDto)
+                .ToList();
+        }
         private static SymptomDiaryResponseDto ToDto(SymptomDiary s) => new()
         {
             Id = s.Id,
@@ -159,5 +182,7 @@ namespace Nestly.Services.Repository
                 throw new ArgumentOutOfRangeException(field, "Value must be between 1 and 5.");
             }
         }
+
+
     }
 }

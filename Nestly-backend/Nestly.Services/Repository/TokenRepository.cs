@@ -25,11 +25,10 @@ namespace Nestly.Services.Repository
         {
             var claims = new List<Claim>
             {
-                // 🔑 KLJUČNO: DOMAIN USER ID
-                new Claim(ClaimTypes.NameIdentifier, appUserId.ToString()),
-
-                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-                new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
+                 new Claim(ClaimTypes.NameIdentifier, user.Id),
+                 new Claim("appUserId", appUserId.ToString()),
+                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
             };
 
             claims.AddRange(

@@ -10,6 +10,8 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public PregnancyService(NestlyDbContext db) => _db = db;
 
+        private const int GestationDays = 280;
+
         public List<PregnancyResponseDto> Get(PregnancySearchObject? search)
         {
             IQueryable<Pregnancy> q = _db.Pregnancies.AsNoTracking();
@@ -41,7 +43,6 @@ namespace Nestly.Services.Repository
 
             return q
                 .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
-                .ThenByDescending(p => p.DueDate ?? DateTime.MinValue)
                 .ThenByDescending(p => p.Id)
                 .Select(ToDto)
                 .ToList();
@@ -56,29 +57,48 @@ namespace Nestly.Services.Repository
             return entity is null ? null : ToDto(entity);
         }
 
+        public PregnancyResponseDto? GetByParentProfileId(long parentProfileId)
+        {
+            var entity = _db.Pregnancies
+                .AsNoTracking()
+                .Where(p => p.ParentProfileId == parentProfileId)
+                .OrderByDescending(p => p.LmpDate ?? p.DueDate)
+                .FirstOrDefault();
+
+            return entity is null ? null : ToDto(entity);
+        }
 
         public PregnancyResponseDto Create(CreatePregnancyDto dto)
         {
-            if (dto is null)
+            if (dto == null)
             {
                 throw new ArgumentNullException(nameof(dto));
             }
 
             if (!_db.ParentProfiles.Any(p => p.Id == dto.UserId))
             {
-                throw new ArgumentException("Parent profile does not exist.", nameof(dto.UserId));
+                throw new ArgumentException("Parent profile does not exist.");
             }
 
-            if (dto.LmpDate.HasValue && dto.DueDate.HasValue && dto.DueDate.Value < dto.LmpDate.Value)
+            var (lmp, due) = NormalizeDates(dto.LmpDate, dto.DueDate);
+
+            if (lmp.HasValue && due.HasValue && due < lmp)
             {
-                throw new ArgumentException("DueDate cannot be before LmpDate.", nameof(dto.DueDate));
+                throw new ArgumentException("DueDate cannot be before LmpDate.");
+            }
+
+            if (dto.CycleLengthDays.HasValue &&
+                (dto.CycleLengthDays < 20 || dto.CycleLengthDays > 40))
+            {
+                throw new ArgumentException("Cycle length must be between 20 and 40.");
             }
 
             var entity = new Pregnancy
             {
                 ParentProfileId = dto.UserId,
-                LmpDate = dto.LmpDate,
-                DueDate = dto.DueDate
+                LmpDate = lmp,
+                DueDate = due,
+                CycleLengthDays = dto.CycleLengthDays
             };
 
             _db.Pregnancies.Add(entity);
@@ -90,14 +110,14 @@ namespace Nestly.Services.Repository
         public PregnancyResponseDto? Patch(long id, PregnancyPatchDto patch)
         {
             var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
-            if (entity is null)
+            if (entity == null)
             {
                 return null;
             }
 
-            if (patch.UserId is not null && patch.UserId.Value != entity.ParentProfileId)
+            if (patch.UserId is not null && patch.UserId != entity.ParentProfileId)
             {
-                if (!_db.ParentProfiles.Any(p => p.Id == patch.UserId.Value))
+                if (!_db.ParentProfiles.Any(p => p.Id == patch.UserId))
                 {
                     throw new ArgumentException("Parent profile does not exist.");
                 }
@@ -105,38 +125,53 @@ namespace Nestly.Services.Repository
                 entity.ParentProfileId = patch.UserId.Value;
             }
 
-            if (patch.LmpDate is not null)
+            var newLmp = patch.LmpDate ?? entity.LmpDate;
+            var newDue = patch.DueDate ?? entity.DueDate;
+
+            (newLmp, newDue) = NormalizeDates(newLmp, newDue);
+
+            if (newLmp.HasValue && newDue.HasValue && newDue < newLmp)
             {
-                entity.LmpDate = patch.LmpDate.Value;
+                throw new ArgumentException("DueDate cannot be before LmpDate.");
             }
 
-            if (patch.DueDate is not null)
+            entity.LmpDate = newLmp;
+            entity.DueDate = newDue;
+
+            if (patch.CycleLengthDays is not null)
             {
-                entity.DueDate = patch.DueDate.Value;
+                if (!newLmp.HasValue)
+                {
+                    throw new ArgumentException("Cycle length requires LMP.");
+                }
+
+                if (patch.CycleLengthDays < 20 || patch.CycleLengthDays > 40)
+                {
+                    throw new ArgumentException("Cycle length must be between 20 and 40.");
+                }
+
+                entity.CycleLengthDays = patch.CycleLengthDays;
             }
 
             _db.SaveChanges();
-
             return ToDto(entity);
         }
 
         public bool Delete(long id)
         {
-            var dbEntity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
-            if (dbEntity is null)
+            var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
+            if (entity == null)
             {
                 return false;
             }
 
-            _db.Pregnancies.Remove(dbEntity);
+            _db.Pregnancies.Remove(entity);
             _db.SaveChanges();
             return true;
         }
 
-        private const int GestationFromLmpDays = 280;
         public PregnancyStatusDto? GetStatus(long parentProfileId)
         {
-            // Uzimamo zadnju trudnoću za tog roditelja (ako ih ima više)
             var pregnancy = _db.Pregnancies
                 .Where(p => p.ParentProfileId == parentProfileId)
                 .OrderByDescending(p => p.LmpDate ?? p.DueDate)
@@ -147,48 +182,18 @@ namespace Nestly.Services.Repository
                 return null;
             }
 
-            if (!pregnancy.LmpDate.HasValue && !pregnancy.DueDate.HasValue)
+            var (lmp, due) = NormalizeDates(pregnancy.LmpDate, pregnancy.DueDate);
+
+            if (!lmp.HasValue || !due.HasValue)
             {
                 return null;
             }
 
             var today = DateTime.UtcNow.Date;
 
-            DateTime lmp;
-            DateTime due;
-
-            if (pregnancy.LmpDate.HasValue)
-            {
-                lmp = pregnancy.LmpDate.Value.Date;
-                due = (pregnancy.DueDate ?? lmp.AddDays(GestationFromLmpDays)).Date;
-            }
-            else
-            {
-                // Nema LMP, ali ima DueDate -> izračunaj LMP unazad
-                due = pregnancy.DueDate!.Value.Date;
-                lmp = due.AddDays(-GestationFromLmpDays);
-            }
-
-            // gestacijska dob u danima (ne ispod 0)
-            var ageDays = (today - lmp).Days;
-            if (ageDays < 0)
-            {
-                ageDays = 0;
-            }
-
-            // sedmica trudnoće (1-based)
-            var week = (ageDays / 7) + 1;
-            if (week < 1)
-            {
-                week = 1;
-            }
-
-            // preostali dani (ne ispod 0)
-            var remaining = (due - today).Days;
-            if (remaining < 0)
-            {
-                remaining = 0;
-            }
+            var ageDays = Math.Max(0, (today - lmp.Value).Days);
+            var week = Math.Max(1, (ageDays / 7) + 1);
+            var remaining = Math.Max(0, (due.Value - today).Days);
 
             return new PregnancyStatusDto
             {
@@ -200,6 +205,21 @@ namespace Nestly.Services.Repository
             };
         }
 
+        private static (DateTime? lmp, DateTime? due) NormalizeDates(DateTime? lmp, DateTime? due)
+        {
+            if (lmp.HasValue && !due.HasValue)
+            {
+                return (lmp, lmp.Value.AddDays(GestationDays));
+            }
+
+            if (!lmp.HasValue && due.HasValue)
+            {
+                return (due.Value.AddDays(-GestationDays), due);
+            }
+
+            return (lmp, due);
+        }
+
         private static PregnancyResponseDto ToDto(Pregnancy p) => new()
         {
             Id = p.Id,
@@ -209,6 +229,4 @@ namespace Nestly.Services.Repository
             CycleLengthDays = p.CycleLengthDays
         };
     }
-
-
-};
+}

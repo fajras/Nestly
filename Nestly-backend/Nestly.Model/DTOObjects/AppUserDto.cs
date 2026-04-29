@@ -34,7 +34,6 @@ public class AppUserPatchDto
     public string? PhoneNumber { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public string? Gender { get; set; }
-    public string? Password { get; set; }
 }
 
 public class AppUserResultDto
@@ -43,12 +42,22 @@ public class AppUserResultDto
     public string Email { get; set; } = default!;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string? PhoneNumber { get; set; }
+    public DateTime? DateOfBirth { get; set; }
+    public string? Gender { get; set; }
     public long? RoleId { get; set; }
     public string IdentityUserId { get; set; } = default!;
     public string ParentStatus { get; set; }
     public int? BabyAgeMonths { get; set; }
     public int? PregnancyTrimester { get; set; }
     public long? ParentProfileId { get; set; }
+}
+
+public class ChangePasswordDto
+{
+    public string? OldPassword { get; set; }
+    public string NewPassword { get; set; } = default!;
+    public string ConfirmPassword { get; set; } = default!;
 }
 
 

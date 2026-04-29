@@ -46,10 +46,10 @@ namespace Nestly.WebAPI.Controllers
             }
         }
 
-
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
             => appUserService.Delete(id) ? NoContent() : NotFound();
+
     }
 }
 

@@ -16,7 +16,9 @@ namespace Nestly.WebAPI.Controllers
         {
             _service = service;
         }
-
+        [HttpGet]
+        public ActionResult<IEnumerable<SymptomDiaryResponseDto>> Get([FromQuery] SymptomDiarySearchObject? search)
+     => Ok(_service.Get(search));
         [HttpPost]
         public ActionResult<SymptomDiaryResponseDto> Create([FromBody] CreateSymptomDiaryDto request)
         {

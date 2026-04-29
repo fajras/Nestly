@@ -7,12 +7,14 @@ namespace Nestly.Model.DTOObjects
         public long? UserId { get; set; }
         public DateTime? LmpDate { get; set; }
         public DateTime? DueDate { get; set; }
+        public int? CycleLengthDays { get; set; }
     }
     public class CreatePregnancyDto
     {
         public long UserId { get; set; }
         public DateTime? LmpDate { get; set; }
         public DateTime? DueDate { get; set; }
+        public int? CycleLengthDays { get; set; }
     }
     public class PregnancySearchObject
     {

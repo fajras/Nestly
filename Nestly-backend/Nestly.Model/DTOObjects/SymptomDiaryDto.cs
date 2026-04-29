@@ -33,4 +33,11 @@ namespace Nestly.Model.DTOObjects
         public int? Heartburn { get; set; }
         public int? LegSwelling { get; set; }
     }
+
+    public class SymptomDiarySearchObject
+    {
+        public long? ParentProfileId { get; set; }
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
+    }
 }

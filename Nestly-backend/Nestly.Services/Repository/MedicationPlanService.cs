@@ -33,12 +33,42 @@ namespace Nestly.Services.Repository
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (search?.ParentProfileId != null)
+            if (search?.ParentProfileId is not null)
             {
                 q = q.Where(x => x.ParentProfileId == search.ParentProfileId);
             }
 
-            return q.Select(ToDto).ToList();
+            if (!string.IsNullOrWhiteSpace(search?.MedicineNameContains))
+            {
+                var medicineName = search.MedicineNameContains.Trim();
+                q = q.Where(x => x.MedicineName.Contains(medicineName));
+            }
+
+            if (search?.StartDateFrom is not null)
+            {
+                q = q.Where(x => x.StartDate >= search.StartDateFrom.Value);
+            }
+
+            if (search?.StartDateTo is not null)
+            {
+                q = q.Where(x => x.StartDate <= search.StartDateTo.Value);
+            }
+
+            if (search?.EndDateFrom is not null)
+            {
+                q = q.Where(x => x.EndDate >= search.EndDateFrom.Value);
+            }
+
+            if (search?.EndDateTo is not null)
+            {
+                q = q.Where(x => x.EndDate <= search.EndDateTo.Value);
+            }
+
+            return q
+                .OrderByDescending(x => x.StartDate)
+                .ThenByDescending(x => x.EndDate)
+                .Select(ToDto)
+                .ToList();
         }
 
         public MedicationPlanResponseDto? GetById(long id)

@@ -11,6 +11,7 @@ import 'package:flutter_application_nestly/screens/baby_profile_create_screen.da
 import 'package:flutter_application_nestly/screens/baby_time_home_screen.dart';
 import 'package:flutter_application_nestly/screens/blog_module_screen.dart';
 import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
+import 'package:flutter_application_nestly/screens/edit_profile_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/qa_module_screen.dart';
 import 'package:flutter_application_nestly/screens/symptom_diary_screen.dart';
@@ -239,6 +240,23 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 },
               ),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.account_circle_rounded),
+            onPressed: () async {
+              final token = await AuthStorage.getToken();
+              if (token == null) return;
+
+              final decoded = JwtDecoder.decode(token);
+              final userId = int.parse(decoded["appUserId"]);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(userId: userId),
+                ),
+              );
+            },
           ),
         ],
       ),

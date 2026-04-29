@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
@@ -82,6 +83,68 @@ namespace Nestly.WebAPI.Controllers
                 DoctorProfileId = doctorProfileId,
                 UserName = identityUser.UserName
             });
+        }
+        [Authorize]
+        [HttpPost("change-password/{id}")]
+        public async Task<IActionResult> ChangePassword(long id, [FromBody] ChangePasswordDto dto)
+        {
+            var userIdClaim = User.FindFirst("appUserId")?.Value;
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var currentUserId = long.Parse(userIdClaim);
+
+            var isAdmin = User.IsInRole("Doctor");
+            var isSelf = currentUserId == id;
+
+            if (!isAdmin && !isSelf)
+            {
+                return Forbid();
+            }
+
+            if (dto.NewPassword != dto.ConfirmPassword)
+            {
+                return BadRequest("Passwords do not match.");
+            }
+
+            var appUser = await _db.AppUsers.FirstOrDefaultAsync(x => x.Id == id);
+            if (appUser == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var identityUser = await userManager.FindByIdAsync(appUser.IdentityUserId);
+            if (identityUser == null)
+            {
+                return NotFound("Identity user not found.");
+            }
+
+            IdentityResult result;
+
+            if (isAdmin)
+            {
+                var token = await userManager.GeneratePasswordResetTokenAsync(identityUser);
+                result = await userManager.ResetPasswordAsync(identityUser, token, dto.NewPassword);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(dto.OldPassword))
+                {
+                    return BadRequest("Old password is required.");
+                }
+
+                result = await userManager.ChangePasswordAsync(identityUser, dto.OldPassword, dto.NewPassword);
+            }
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors.Select(e => e.Description));
+            }
+
+            return Ok();
         }
 
     }

@@ -53,6 +53,9 @@ namespace Nestly.Services.Repository
                 Email = x.Email,
                 FirstName = x.FirstName,
                 LastName = x.LastName,
+                PhoneNumber = x.PhoneNumber,
+                DateOfBirth = x.DateOfBirth,
+                Gender = x.Gender,
                 RoleId = x.RoleId,
                 IdentityUserId = x.IdentityUserId,
                 ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
@@ -70,7 +73,10 @@ namespace Nestly.Services.Repository
                     .FirstOrDefault()
                 : null
 
-            }).ToList();
+            }).OrderBy(x => x.LastName ?? "")
+            .ThenBy(x => x.FirstName ?? "")
+            .ToList();
+
 
             return rows.Select(r =>
             {
@@ -80,6 +86,9 @@ namespace Nestly.Services.Repository
                     Email = r.Email,
                     FirstName = r.FirstName,
                     LastName = r.LastName,
+                    PhoneNumber = r.PhoneNumber,
+                    DateOfBirth = r.DateOfBirth,
+                    Gender = r.Gender,
                     RoleId = r.RoleId,
                     IdentityUserId = r.IdentityUserId,
                     ParentStatus = "UNKNOWN",
@@ -119,6 +128,10 @@ namespace Nestly.Services.Repository
                     FirstName = x.FirstName,
                     LastName = x.LastName,
                     RoleId = x.RoleId,
+                    PhoneNumber = x.PhoneNumber,
+                    DateOfBirth = x.DateOfBirth,
+                    Gender = x.Gender,
+                    ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
                     IdentityUserId = x.IdentityUserId,
 
                     LatestBabyBirthDate = x.ParentProfile != null
@@ -150,9 +163,13 @@ namespace Nestly.Services.Repository
                 FirstName = row.FirstName,
                 LastName = row.LastName,
                 RoleId = row.RoleId,
+                PhoneNumber = row.PhoneNumber,
+                DateOfBirth = row.DateOfBirth,
+                Gender = row.Gender,
                 IdentityUserId = row.IdentityUserId,
                 ParentStatus = "UNKNOWN",
                 BabyAgeMonths = null,
+                ParentProfileId = row.ParentProfileId,
                 PregnancyTrimester = null
             };
 
@@ -318,7 +335,6 @@ namespace Nestly.Services.Repository
                     }
                 }
 
-                // 4️⃣ Ako je doktor
                 if (role.Id == 2)
                 {
                     var doctorProfile = new DoctorProfile
@@ -368,17 +384,15 @@ namespace Nestly.Services.Repository
                 return null;
             }
 
-            if (patch.FirstName is not null)
+            if (!string.IsNullOrWhiteSpace(patch.FirstName))
             {
                 u.FirstName = patch.FirstName.Trim();
             }
-
-            if (patch.LastName is not null)
+            if (!string.IsNullOrWhiteSpace(patch.LastName))
             {
                 u.LastName = patch.LastName.Trim();
             }
-
-            if (patch.PhoneNumber is not null)
+            if (!string.IsNullOrWhiteSpace(patch.PhoneNumber))
             {
                 u.PhoneNumber = patch.PhoneNumber.Trim();
             }
@@ -388,7 +402,7 @@ namespace Nestly.Services.Repository
                 u.DateOfBirth = patch.DateOfBirth.Value;
             }
 
-            if (patch.Gender is not null)
+            if (!string.IsNullOrWhiteSpace(patch.Gender))
             {
                 u.Gender = patch.Gender.Trim();
             }
@@ -454,6 +468,9 @@ namespace Nestly.Services.Repository
             public string Email { get; set; } = default!;
             public string? FirstName { get; set; }
             public string? LastName { get; set; }
+            public string? PhoneNumber { get; set; }
+            public DateTime? DateOfBirth { get; set; }
+            public string? Gender { get; set; }
             public long? RoleId { get; set; }
             public string IdentityUserId { get; set; } = default!;
             public long? ParentProfileId { get; set; }
@@ -470,6 +487,9 @@ namespace Nestly.Services.Repository
                 Email = u.Email,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
+                PhoneNumber = u.PhoneNumber,
+                DateOfBirth = u.DateOfBirth,
+                Gender = u.Gender,
                 RoleId = u.RoleId,
                 IdentityUserId = u.IdentityUserId,
                 ParentStatus = "UNKNOWN",
@@ -485,7 +505,7 @@ namespace Nestly.Services.Repository
 
                 if (latestBaby != null)
                 {
-                    dto.ParentStatus = "Parent";
+                    dto.ParentStatus = "PARENT";
                     dto.BabyAgeMonths = CalculateBabyAgeInMonths(latestBaby.BirthDate);
                     return dto;
                 }
@@ -506,4 +526,7 @@ namespace Nestly.Services.Repository
         }
 
     }
+
+
+
 }

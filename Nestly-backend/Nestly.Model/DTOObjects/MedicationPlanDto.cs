@@ -6,8 +6,11 @@ namespace Nestly.Model.DTOObjects
     public class MedicationPlanSearchObject
     {
         public long? ParentProfileId { get; set; }
-        public DateTime? From { get; set; }
-        public DateTime? To { get; set; }
+        public string? MedicineNameContains { get; set; }
+        public DateTime? StartDateFrom { get; set; }
+        public DateTime? StartDateTo { get; set; }
+        public DateTime? EndDateFrom { get; set; }
+        public DateTime? EndDateTo { get; set; }
     }
 
     public class CreateMedicationPlanDto

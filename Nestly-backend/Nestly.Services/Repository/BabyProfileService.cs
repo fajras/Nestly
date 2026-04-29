@@ -43,7 +43,11 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.BirthDate <= search.BirthDateTo.Value.Date);
             }
 
-            return q.Select(MapToDto).ToList();
+            return q
+               .OrderByDescending(x => x.BirthDate)
+               .ThenBy(x => x.BabyName)
+               .Select(MapToDto)
+               .ToList();
         }
 
         public BabyProfileSummaryDto? GetById(long id)

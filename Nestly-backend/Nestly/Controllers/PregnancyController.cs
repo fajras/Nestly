@@ -23,6 +23,14 @@ namespace Nestly.WebAPI.Controllers
             return entity is null ? NotFound() : Ok(entity);
         }
 
+        [HttpGet("by-parent/{parentProfileId:long}")]
+        public ActionResult<PregnancyResponseDto> GetByParentProfileId(long parentProfileId)
+        {
+            var entity = _service.GetByParentProfileId(parentProfileId);
+
+            return entity is null ? NotFound() : Ok(entity);
+        }
+
         [HttpPost]
         public ActionResult<PregnancyResponseDto> Create([FromBody] CreatePregnancyDto request)
         {

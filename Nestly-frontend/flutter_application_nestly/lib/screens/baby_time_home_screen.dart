@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/providers/notification_state.dart';
+import 'package:flutter_application_nestly/screens/edit_baby_profile_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
+import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:flutter_application_nestly/screens/baby_growth_tracker_screen.dart';
 import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
@@ -36,7 +40,7 @@ class BabyTimeHomeScreen extends StatefulWidget {
 class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
   final NotificationSignalRService _signalRService =
       NotificationSignalRService();
-
+  String? _babyName;
   bool get _isGirl {
     final g = widget.gender.toLowerCase();
     return g == 'female' || g == 'f';
@@ -46,6 +50,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
   void initState() {
     super.initState();
     notificationState.loadUnreadCount();
+    _babyName = widget.babyName;
     _initSignalR();
   }
 
@@ -61,19 +66,27 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
       if (token == null) return;
 
       final decoded = JwtDecoder.decode(token);
-      final userId =
-          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+      final userId = decoded["userId"];
 
       await _signalRService.connect(
         userId.toString(),
         token,
-        onNotification: () {
-          notificationState.increment();
+        onNotification: () async {
+          await notificationState.loadUnreadCount();
         },
       );
-    } catch (_) {
-      debugPrint('SignalR init failed.');
+    } catch (e) {
+      debugPrint('SignalR error: $e');
     }
+  }
+
+  Future<void> _reloadBaby() async {
+    final resp = await ApiClient.get('/api/BabyProfile/${widget.babyId}');
+    final data = jsonDecode(resp.body);
+
+    setState(() {
+      _babyName = data['babyName'];
+    });
   }
 
   void _push(BuildContext context, Widget screen) {
@@ -105,21 +118,25 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   notificationState.loadUnreadCount();
                 },
               ),
+
               AnimatedBuilder(
                 animation: notificationState,
                 builder: (_, __) {
                   final count = notificationState.unreadCount;
 
-                  if (count == 0) return const SizedBox.shrink();
+                  if (count == 0) return const SizedBox();
 
                   return Positioned(
-                    right: 10,
-                    top: 10,
+                    right: 8,
+                    top: 8,
                     child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
                         color: AppColors.roseDark,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       constraints: const BoxConstraints(
                         minWidth: 18,
@@ -129,7 +146,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                         count > 9 ? '9+' : count.toString(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -140,15 +157,32 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
               ),
             ],
           ),
+
+          IconButton(
+            icon: const Icon(Icons.account_circle_rounded),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditBabyProfileScreen(babyId: widget.babyId),
+                ),
+              );
+
+              if (result == true) {
+                await _reloadBaby();
+              }
+            },
+          ),
         ],
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _HeaderCard(babyName: widget.babyName, isGirl: _isGirl),
+              _HeaderCard(babyName: _babyName ?? '', isGirl: _isGirl),
               const SizedBox(height: AppSpacing.xl),
 
               _menu(
@@ -159,7 +193,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   context,
                   BabyGrowthTrackerScreen(
                     babyId: widget.babyId,
-                    babyName: widget.babyName,
+                    babyName: _babyName ?? widget.babyName,
                   ),
                 ),
               ),
@@ -192,7 +226,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   context,
                   HealthTrackingScreen(
                     babyId: widget.babyId,
-                    babyName: widget.babyName,
+                    babyName: _babyName ?? widget.babyName,
                     userId: widget.parentProfileId,
                   ),
                 ),
@@ -206,7 +240,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   context,
                   SleepLogOverviewScreen(
                     babyId: widget.babyId,
-                    babyName: widget.babyName,
+                    babyName: _babyName ?? widget.babyName,
                   ),
                 ),
               ),
@@ -229,7 +263,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   context,
                   MilestoneScreen(
                     babyId: widget.babyId,
-                    babyName: widget.babyName,
+                    babyName: _babyName ?? widget.babyName,
                   ),
                 ),
               ),
@@ -252,7 +286,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   context,
                   CalendarEventScreen(
                     babyId: widget.babyId,
-                    babyName: widget.babyName,
+                    babyName: _babyName ?? widget.babyName,
                     userId: widget.parentProfileId,
                   ),
                 ),

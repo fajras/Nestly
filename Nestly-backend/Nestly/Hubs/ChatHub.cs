@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
 
 namespace Nestly.WebAPI.Hubs
 {
@@ -9,7 +8,7 @@ namespace Nestly.WebAPI.Hubs
     {
         public override async Task OnConnectedAsync()
         {
-            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = Context.User?.FindFirst("userId")?.Value;
 
             if (!string.IsNullOrEmpty(userId))
             {
@@ -21,7 +20,7 @@ namespace Nestly.WebAPI.Hubs
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = Context.User?.FindFirst("userId")?.Value;
 
             if (!string.IsNullOrEmpty(userId))
             {

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
-using System.Security.Claims;
 
 namespace Nestly.WebAPI.Controllers
 {
@@ -21,7 +20,7 @@ namespace Nestly.WebAPI.Controllers
         [HttpGet("blog")]
         public async Task<IActionResult> Get(int take = 10)
         {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var claim = User.FindFirst("userId");
 
             if (claim == null)
             {
@@ -36,7 +35,7 @@ namespace Nestly.WebAPI.Controllers
         [HttpPost("log")]
         public async Task<IActionResult> Log(LogBlogInteractionRequest req)
         {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var claim = User.FindFirst("userId");
 
             if (claim == null)
             {

@@ -1905,8 +1905,8 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = 1L,
                             CycleLengthDays = 28,
-                            DueDate = new DateTime(2026, 5, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LmpDate = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DueDate = new DateTime(2026, 8, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            LmpDate = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             ParentProfileId = 1L
                         });
                 });

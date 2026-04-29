@@ -32,20 +32,11 @@ class AuthStorage {
     if (token == null) return null;
 
     final decoded = JwtDecoder.decode(token);
-    const possibleKeys = [
-      'nameid',
-      'sub',
-      'id',
-      'userId',
-      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
-    ];
 
-    for (final key in possibleKeys) {
-      if (decoded.containsKey(key)) {
-        return int.tryParse(decoded[key].toString());
-      }
-    }
-    return null;
+    final userId = decoded["userId"];
+    if (userId == null) return null;
+
+    return int.tryParse(userId.toString());
   }
 
   static Future<String?> getRole() async {

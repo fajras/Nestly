@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Nestly.Model.DTOObjects
 {
+
     public class BlogPostPatchDto
     {
         public string? Title { get; set; }

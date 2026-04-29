@@ -48,6 +48,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     _loadBabyStatus();
     notificationState.loadUnreadCount();
     _initSignalR();
+    _refreshBadge();
+  }
+
+  void _refreshBadge() async {
+    await notificationState.loadUnreadCount();
   }
 
   @override
@@ -62,14 +67,13 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       if (token == null) return;
 
       final decoded = JwtDecoder.decode(token);
-      final userId =
-          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+      final userId = decoded["userId"];
 
       await _signalRService.connect(
         userId.toString(),
         token,
-        onNotification: () {
-          notificationState.increment();
+        onNotification: () async {
+          await notificationState.loadUnreadCount();
         },
       );
     } catch (e) {
@@ -214,26 +218,32 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   if (count == 0) return const SizedBox();
 
                   return Positioned(
-                    right: 10,
-                    top: 10,
+                    right: 8,
+                    top: 8,
                     child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
+                      padding: count > 0
+                          ? const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            )
+                          : const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
                         color: AppColors.roseDark,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       constraints: const BoxConstraints(
                         minWidth: 18,
                         minHeight: 18,
                       ),
-                      child: Text(
-                        count > 9 ? '9+' : count.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                      child: Center(
+                        child: Text(
+                          count > 9 ? '9+' : count.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   );
@@ -248,7 +258,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               if (token == null) return;
 
               final decoded = JwtDecoder.decode(token);
-              final userId = int.parse(decoded["appUserId"]);
+              final userId = int.parse(decoded["userId"].toString());
 
               Navigator.push(
                 context,
@@ -341,10 +351,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     _menu(
                       icon: Icons.chat_bubble_outline_rounded,
                       label: 'Chat',
-                      onTap: () => _open(
-                        context,
-                        ChatHomeScreen(currentUserId: widget.parentProfileId),
-                      ),
+                      onTap: () async {
+                        final userId = await AuthStorage.getUserId();
+
+                        if (userId == null) {
+                          debugPrint("userId je null!");
+                          return;
+                        }
+
+                        _open(context, ChatHomeScreen(currentUserId: userId));
+                      },
                     ),
                     _menu(
                       icon: Icons.logout_rounded,

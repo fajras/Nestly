@@ -30,7 +30,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
 
       final all = jsonDecode(res.body) as List<dynamic>;
-      final threeDaysAgo = DateTime.now().subtract(const Duration(days: 3));
+      final threeDaysAgo = DateTime.now().toUtc().subtract(
+        const Duration(days: 3),
+      );
 
       final filtered = all.where((n) {
         if (n["createdAt"] == null) return false;
@@ -151,6 +153,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   return _NotificationCard(
                     title: n["title"] ?? "",
                     message: n["message"] ?? "",
+                    createdAt: n["createdAt"],
                     isRead: isRead,
                     onTap: () {
                       if (!isRead) {
@@ -171,12 +174,14 @@ class _NotificationCard extends StatelessWidget {
     required this.message,
     required this.isRead,
     required this.onTap,
+    required this.createdAt,
   });
 
   final String title;
   final String message;
   final bool isRead;
   final VoidCallback onTap;
+  final String? createdAt;
 
   @override
   Widget build(BuildContext context) {
@@ -233,6 +238,14 @@ class _NotificationCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _formatDate(createdAt!),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -252,6 +265,13 @@ class _NotificationCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatDate(String raw) {
+  final date = DateTime.tryParse(raw);
+  if (date == null) return '';
+
+  return "${date.day}.${date.month}.${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
 }
 
 class _EmptyState extends StatelessWidget {

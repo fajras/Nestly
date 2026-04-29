@@ -11,21 +11,15 @@ class NotificationState extends ChangeNotifier {
 
   Future<void> loadUnreadCount() async {
     try {
-      final token = await AuthStorage.getToken();
-      final decoded = JwtDecoder.decode(token!);
-      final userId = int.parse(
-        decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]
-            .toString(),
-      );
-
-      final res = await ApiClient.get('/api/Notification/$userId');
+      final res = await ApiClient.get('/api/Notification/unread-count');
 
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body) as List<dynamic>;
-        _unreadCount = data.where((n) => n["isRead"] == false).length;
+        _unreadCount = jsonDecode(res.body);
         notifyListeners();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("Unread error: $e");
+    }
   }
 
   void increment() {

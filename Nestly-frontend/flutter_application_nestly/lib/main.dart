@@ -210,15 +210,12 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         final decoded = JwtDecoder.decode(token);
+        final userId = int.tryParse(decoded["userId"].toString());
 
-        final appUserId =
-            decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-
-        if (appUserId == null) {
+        if (userId == null) {
           NestlyToast.error(context, 'JWT ne sadrži user ID');
           return;
         }
-
         await AuthStorage.saveLogin(
           token: token,
           role: role,

@@ -220,7 +220,6 @@ class _QuestionCardState extends State<_QuestionCard> {
     setState(() => _saving = true);
 
     final userId = await AuthStorage.getUserId();
-    print(userId);
     if (!mounted) return;
 
     if (userId == null) {

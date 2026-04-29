@@ -25,10 +25,10 @@ namespace Nestly.Services.Repository
         {
             var claims = new List<Claim>
             {
-                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                 new Claim("appUserId", appUserId.ToString()),
-                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
+                new Claim("userId", appUserId.ToString()),
+                new Claim("identityUserId", user.Id),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
             };
 
             claims.AddRange(

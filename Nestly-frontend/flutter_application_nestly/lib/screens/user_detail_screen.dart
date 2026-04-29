@@ -434,7 +434,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                   shrinkWrap: true,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.3,
+                  childAspectRatio: 1,
                   children: [
                     _ModuleCard(
                       icon: Icons.restaurant,

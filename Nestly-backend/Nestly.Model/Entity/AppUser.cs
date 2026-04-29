@@ -16,23 +16,23 @@ namespace Nestly.Model.Entity
         [Required, MaxLength(255)]
         public string Email { get; set; } = default!;
 
-        [MaxLength(150)]
+        [Required, MaxLength(150)]
         public string FirstName { get; set; } = default!;
 
-        [MaxLength(150)]
+        [Required, MaxLength(150)]
         public string LastName { get; set; } = default!;
 
-        [MaxLength(50)]
+        [Required, MaxLength(50)]
         public string PhoneNumber { get; set; } = default!;
-
+        [Required]
         public DateTime DateOfBirth { get; set; }
 
-        [MaxLength(20)]
+        [Required, MaxLength(20)]
         public string Gender { get; set; } = default!;
 
         [ForeignKey(nameof(Role))]
         public long RoleId { get; set; }
-        public Role Role { get; set; } = default!;
+        public Role Role { get; set; }
 
         public ParentProfile? ParentProfile { get; set; }
         public DoctorProfile? DoctorProfile { get; set; }

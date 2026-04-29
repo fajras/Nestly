@@ -10,9 +10,11 @@ import 'package:flutter_application_nestly/screens/admin_blog_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_questions_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_weekly_advice.dart';
 import 'package:flutter_application_nestly/screens/doctor_system_management_screen.dart';
+import 'package:flutter_application_nestly/screens/edit_doctor_profile_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/user_detail_screen.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
@@ -24,6 +26,14 @@ class AdminDashboardService {
 
     final List data = jsonDecode(res.body);
     return data.map((e) => AppUserRow.fromJson(e)).toList();
+  }
+
+  Future<void> deleteUser(int id) async {
+    final res = await ApiClient.delete('/AppUser/$id');
+
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete user');
+    }
   }
 
   Future<int> getQuestionCount() async {
@@ -59,13 +69,59 @@ class _DoctorAdminDashboardScreenState
         backgroundColor: AppColors.bg,
         iconTheme: const IconThemeData(color: AppColors.seed),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_rounded),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_rounded),
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+
+                  notificationState.loadUnreadCount();
+                },
+              ),
+
+              AnimatedBuilder(
+                animation: notificationState,
+                builder: (_, __) {
+                  final count = notificationState.unreadCount;
+
+                  if (count == 0) return const SizedBox();
+
+                  return Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.roseDark,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Center(
+                        child: Text(
+                          count > 9 ? '9+' : count.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -115,6 +171,16 @@ class _DoctorAdminDashboardScreenState
         return DoctorAdminBlogScreen();
       case 5:
         return SystemManagementScreen();
+      case 6:
+        return FutureBuilder<int?>(
+          future: AuthStorage.getUserId(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return EditDoctorProfileScreen(userId: snapshot.data!);
+          },
+        );
       default:
         return const SizedBox();
     }
@@ -207,7 +273,13 @@ class _Sidebar extends StatelessWidget {
             selectedIndex: selectedIndex,
             onTap: onSelect,
           ),
-
+          _SidebarItem(
+            icon: Icons.manage_accounts,
+            label: 'Upravljanje računom',
+            index: 6,
+            selectedIndex: selectedIndex,
+            onTap: onSelect,
+          ),
           const Spacer(),
 
           TextButton.icon(
@@ -288,7 +360,8 @@ class _DashboardOverview extends StatefulWidget {
 class _DashboardOverviewState extends State<_DashboardOverview> {
   List<AppUserRow> _users = [];
   List<AppUserRow> _filtered = [];
-
+  final NotificationSignalRService _signalRService =
+      NotificationSignalRService();
   int _userCount = 0;
   int _questionCount = 0;
 
@@ -297,10 +370,52 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
   @override
   void initState() {
     super.initState();
+    notificationState.loadUnreadCount();
+    _initSignalR();
     _loadData();
   }
 
+  Future<void> _initSignalR() async {
+    try {
+      final token = await AuthStorage.getToken();
+      if (token == null) return;
+
+      final decoded = JwtDecoder.decode(token);
+      final userId = decoded["userId"];
+
+      await _signalRService.connect(
+        userId.toString(),
+        token,
+        onNotification: () async {
+          await notificationState.loadUnreadCount();
+        },
+      );
+    } catch (e) {
+      debugPrint('SignalR error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _signalRService.disconnect();
+    super.dispose();
+  }
+
   final _service = AdminDashboardService();
+  Future<void> _deleteUser(int id) async {
+    try {
+      await _service.deleteUser(id);
+      await _loadData();
+
+      NestlyToast.success(
+        context,
+        'Korisnica uspješno obrisana',
+        accentColor: AppColors.seed,
+      );
+    } catch (_) {
+      NestlyToast.error(context, 'Brisanje nije uspjelo');
+    }
+  }
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
@@ -463,22 +578,76 @@ class _UsersTable extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          u.fullName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    u.fullName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    u.email,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            /// 🔴 DELETE BUTTON
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Potvrda brisanja'),
+                                      content: const Text(
+                                        'Da li ste sigurni da želite obrisati ovu korisnicu?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text('Otkaži'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text('Obriši'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (confirm == true) {
+                                  final parentState = context
+                                      .findAncestorStateOfType<
+                                        _DashboardOverviewState
+                                      >();
+                                  parentState?._deleteUser(u.id);
+                                }
+                              },
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          u.email,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+
                         const SizedBox(height: 6),
+
                         Align(
                           alignment: Alignment.centerLeft,
                           child: ConstrainedBox(

@@ -29,6 +29,10 @@ class BlogPostDto {
   final DateTime? createdAt;
   final List<int> categoryIds;
 
+  final String? mainReason;
+  final List<dynamic>? scoreBreakdown;
+  final double? finalScore;
+
   const BlogPostDto({
     required this.id,
     required this.title,
@@ -36,10 +40,14 @@ class BlogPostDto {
     this.imageUrl,
     this.createdAt,
     required this.categoryIds,
+    this.mainReason,
+    this.scoreBreakdown,
+    this.finalScore,
   });
 
   factory BlogPostDto.fromJson(Map<String, dynamic> json) {
     final raw = json['categoryIds'];
+
     return BlogPostDto(
       id: json['id'],
       title: json['title'] ?? '',
@@ -51,6 +59,10 @@ class BlogPostDto {
       categoryIds: raw is List
           ? raw.map((e) => int.tryParse(e.toString())).whereType<int>().toList()
           : const [],
+
+      mainReason: json['mainReason'],
+      scoreBreakdown: json['scoreBreakdown'],
+      finalScore: (json['finalScore'] as num?)?.toDouble(),
     );
   }
 }
@@ -334,21 +346,41 @@ class _BlogPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        onTap: onTap,
-        child: Ink(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      onTap: onTap,
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _PostImage(imageUrl: post.imageUrl),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(child: _PostText(post: post)),
+              Row(
+                children: [
+                  _PostImage(imageUrl: post.imageUrl),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: _PostText(post: post)),
+                ],
+              ),
+
+              if (post.mainReason != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.babyPink.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    post.mainReason!,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -564,6 +596,7 @@ Future<List<BlogPostDto>> fetchRecommended({int take = 5}) async {
   }
 
   final List data = jsonDecode(res.body);
+
   return data.map((e) => BlogPostDto.fromJson(e)).toList();
 }
 

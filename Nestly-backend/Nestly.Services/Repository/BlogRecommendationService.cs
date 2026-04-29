@@ -16,24 +16,56 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public async Task<List<BlogPostResponseDto>> GetRecommendations(long userId, int take)
+        public async Task<List<BlogPostRecommendationDto>> GetRecommendations(long userId, int take)
         {
+            if (take <= 0)
+            {
+                take = 5;
+            }
+
             var context = await BuildUserContext(userId);
             var weights = await GetWeights();
 
             var posts = await _db.BlogPosts
                 .Include(p => p.BlogPostCategories)
                 .ThenInclude(pc => pc.Category)
-                .Where(p => p.Phase == context.Phase)
+                .Where(p =>
+                    p.Phase == context.Phase &&
+                    p.WeekFrom.HasValue &&
+                    p.WeekTo.HasValue &&
+                    context.WeekValue >= p.WeekFrom.Value - 2 &&
+                    context.WeekValue <= p.WeekTo.Value + 2
+                )
                 .ToListAsync();
 
-            var scored = new List<(BlogPost post, double score)>();
+            if (!posts.Any())
+            {
+                posts = await _db.BlogPosts
+                    .Include(p => p.BlogPostCategories)
+                    .ThenInclude(pc => pc.Category)
+                    .Where(p => p.Phase == context.Phase)
+                    .OrderByDescending(p => p.Id)
+                    .Take(20)
+                    .ToListAsync();
+            }
+
+            if (!posts.Any())
+            {
+                posts = await _db.BlogPosts
+                    .Include(p => p.BlogPostCategories)
+                    .ThenInclude(pc => pc.Category)
+                    .OrderByDescending(p => p.Id)
+                    .Take(20)
+                    .ToListAsync();
+            }
+
+            var scored = new List<(BlogPost post, double score, List<RecommendationScoreBreakdown> breakdown)>();
 
             foreach (var post in posts)
             {
                 double weekScore = ComputeWeekScore(context.WeekValue, post.WeekFrom, post.WeekTo);
-                double categoryAffinity = await ComputeCategoryAffinity(userId, post.Id);
-                double popularity = await ComputePopularity(post.Id);
+                double categoryAffinity = Math.Min(1.0, await ComputeCategoryAffinity(userId, post.Id));
+                double popularity = Math.Min(1.0, await ComputePopularity(post.Id));
 
                 var features = new Dictionary<string, double>
         {
@@ -43,76 +75,119 @@ namespace Nestly.Services.Repository
             { "popularity", popularity }
         };
 
-                double score = Sigmoid(Dot(weights, features));
+                double rawScore = Dot(weights, features);
 
-                scored.Add((post, score));
+                if (weekScore < 0.3)
+                {
+                    rawScore -= 1.5;
+                }
+
+                double score = Sigmoid(rawScore);
+
+                var breakdown = new List<RecommendationScoreBreakdown>
+        {
+            new()
+            {
+                FactorName = "weekScore",
+                Value = weekScore,
+                Weight = weights["weekScore"],
+                Explanation = GetWeekScoreExplanation(weekScore, context.WeekValue, post.WeekFrom, post.WeekTo)
+            },
+            new()
+            {
+                FactorName = "categoryAffinity",
+                Value = categoryAffinity,
+                Weight = weights["categoryAffinity"],
+                Explanation = GetCategoryAffinityExplanation(categoryAffinity)
+            },
+            new()
+            {
+                FactorName = "popularity",
+                Value = popularity,
+                Weight = weights["popularity"],
+                Explanation = GetPopularityExplanation(popularity)
+            }
+        };
+
+                scored.Add((post, score, breakdown));
             }
 
             return scored
                 .OrderByDescending(x => x.score)
                 .Take(take)
-                .Select(x => new BlogPostResponseDto
+                .Select(x => new BlogPostRecommendationDto
                 {
                     Id = x.post.Id,
                     Title = x.post.Title,
                     Content = x.post.Content,
                     ImageUrl = x.post.ImageUrl,
-                    AuthorId = x.post.AuthorId,
-                    Phase = x.post.Phase,
+                    Phase = (int)x.post.Phase,
                     WeekFrom = x.post.WeekFrom,
-                    WeekTo = x.post.WeekTo
+                    WeekTo = x.post.WeekTo,
+                    FinalScore = x.score,
+                    ScoreBreakdown = x.breakdown,
+                    MainReason = GenerateMainReason(x.breakdown)
                 })
                 .ToList();
         }
-
-
-        public async Task LogInteraction(long userId, LogBlogInteractionRequest request)
+        private string GenerateMainReason(List<RecommendationScoreBreakdown> breakdown)
         {
-            _db.BlogPostInteractions.Add(new BlogPostInteraction
+            var top = breakdown
+                .Where(x => x.Value > 0.3)
+                .OrderByDescending(x => x.Value * x.Weight)
+                .FirstOrDefault();
+
+            if (top == null)
             {
-                UserId = userId,
-                PostId = request.PostId,
-                EventType = (ArticleEventType)request.EventType,
-                SpentSeconds = request.SpentSeconds,
-                CreatedAt = DateTime.UtcNow
-            });
-
-            await _db.SaveChangesAsync();
-
-            bool isPositive = request.EventType == 2 && request.SpentSeconds >= 15;
-
-            await Train(userId, request.PostId, isPositive);
-        }
-
-        private async Task Train(long userId, long postId, bool positive)
-        {
-            var weights = await GetWeights();
-            var context = await BuildUserContext(userId);
-            var post = await _db.BlogPosts.FirstAsync(p => p.Id == postId);
-
-            double weekScore = ComputeWeekScore(context.WeekValue, post.WeekFrom, post.WeekTo);
-            double categoryAffinity = await ComputeCategoryAffinity(userId, post.Id);
-            double popularity = await ComputePopularity(post.Id);
-
-            var features = new Dictionary<string, double>
-            {
-                { "bias", 1.0 },
-                { "weekScore", weekScore },
-                { "categoryAffinity", categoryAffinity },
-                { "popularity", popularity }
-            };
-
-            double prediction = Sigmoid(Dot(weights, features));
-            double target = positive ? 1 : 0;
-            double error = target - prediction;
-            double lr = 0.1;
-
-            foreach (var f in features)
-            {
-                weights[f.Key] += lr * error * f.Value;
+                return "Preporuka na osnovu opšte popularnosti";
             }
 
-            await SaveWeights(weights);
+            return $"Preporučeno jer: {top.Explanation}";
+        }
+
+        private string GetWeekScoreExplanation(double score, int userWeek, int? from, int? to)
+        {
+            if (score == 1.0)
+            {
+                return $"Idealno za vašu trenutnu sedmicu ({userWeek}.)";
+            }
+
+            if (score >= 0.5)
+            {
+                return $"Blizu vašoj trenutnoj sedmici ({userWeek}.)";
+            }
+
+            return "Manje relevantno";
+        }
+
+        private string GetCategoryAffinityExplanation(double score)
+        {
+            if (score >= 0.8)
+            {
+                return "Često čitate ovu kategoriju";
+            }
+
+            if (score >= 0.4)
+            {
+                return "Ponekad čitate ovu kategoriju";
+            }
+
+            return "Rijetko čitate ovu kategoriju";
+        }
+
+        private string GetPopularityExplanation(double score)
+        {
+            if (score >= 0.8)
+            {
+                return "Veoma popularan sadržaj";
+            }
+
+            if (score >= 0.4)
+            {
+                return "Umjereno popularan";
+            }
+
+            return "Nova ili manje popularna objava";
         }
 
         private async Task<(UserPhase Phase, int WeekValue)> BuildUserContext(long userId)
@@ -182,7 +257,7 @@ namespace Nestly.Services.Repository
                 .Where(x => postCategories.Contains(x.pc.CategoryId))
                 .CountAsync();
 
-            return interactions / 10.0;
+            return Math.Min(1.0, interactions / 10.0);
         }
 
         private async Task<double> ComputePopularity(long postId)
@@ -190,7 +265,7 @@ namespace Nestly.Services.Repository
             int count = await _db.BlogPostInteractions
                 .CountAsync(i => i.PostId == postId);
 
-            return count / 50.0;
+            return Math.Min(1.0, count / 50.0);
         }
 
         private async Task<Dictionary<string, double>> GetWeights()
@@ -202,12 +277,12 @@ namespace Nestly.Services.Repository
             if (state == null)
             {
                 var initial = new Dictionary<string, double>
-        {
-            { "bias", 0 },
-            { "weekScore", 1 },
-            { "categoryAffinity", 1 },
-            { "popularity", 0.5 }
-        };
+            {
+                { "bias", 0 },
+                { "weekScore", 1 },
+                { "categoryAffinity", 1 },
+                { "popularity", 0.5 }
+            };
 
                 var newState = new RecommendationModelState
                 {
@@ -242,7 +317,6 @@ namespace Nestly.Services.Repository
             await _db.SaveChangesAsync();
         }
 
-
         private double Dot(Dictionary<string, double> w, Dictionary<string, double> x)
         {
             double sum = 0;
@@ -258,5 +332,59 @@ namespace Nestly.Services.Repository
         {
             return 1.0 / (1.0 + Math.Exp(-z));
         }
+
+        public async Task LogInteraction(long userId, LogBlogInteractionRequest request)
+        {
+            _db.BlogPostInteractions.Add(new BlogPostInteraction
+            {
+                UserId = userId,
+                PostId = request.PostId,
+                EventType = (ArticleEventType)request.EventType,
+                SpentSeconds = request.SpentSeconds,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync();
+
+            bool isPositive =
+            request.EventType == 2 &&
+            request.SpentSeconds.HasValue &&
+            request.SpentSeconds.Value >= 15;
+
+            await Train(userId, request.PostId, isPositive);
+        }
+
+        private async Task Train(long userId, long postId, bool positive)
+        {
+            var weights = await GetWeights();
+            var context = await BuildUserContext(userId);
+            var post = await _db.BlogPosts.FirstAsync(p => p.Id == postId);
+
+            double weekScore = ComputeWeekScore(context.WeekValue, post.WeekFrom, post.WeekTo);
+            double categoryAffinity = Math.Min(1.0, await ComputeCategoryAffinity(userId, post.Id));
+            double popularity = Math.Min(1.0, await ComputePopularity(post.Id));
+
+            var features = new Dictionary<string, double>
+         {
+             { "bias", 1.0 },
+             { "weekScore", weekScore },
+             { "categoryAffinity", categoryAffinity },
+             { "popularity", popularity }
+         };
+
+            double prediction = Sigmoid(Dot(weights, features));
+            double target = positive ? 1 : 0;
+            double error = target - prediction;
+            double lr = 0.1;
+
+            foreach (var f in features)
+            {
+                weights[f.Key] += lr * error * f.Value;
+            }
+
+            await SaveWeights(weights);
+        }
+
     }
+
 }

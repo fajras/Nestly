@@ -40,7 +40,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _obscure = true;
   bool _dateError = false;
 
-  // Greške za pojedina polja
   String? _oldPasswordError;
   String? _firstNameError;
   String? _lastNameError;
@@ -167,48 +166,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return null;
   }
 
-  bool _hasChanges() {
-    // Provjera ima li promjena u bilo kojem polju
-    bool hasProfileChanges = false;
-    bool hasPregnancyChanges = false;
-    bool hasPasswordChanges = false;
-
-    // Provjera promjena u profilu
-    if (_firstNameCtrl.text.trim() !=
-            (_firstNameCtrl.text.trim().isEmpty
-                ? ''
-                : _firstNameCtrl.text.trim()) ||
-        _lastNameCtrl.text.trim() !=
-            (_lastNameCtrl.text.trim().isEmpty
-                ? ''
-                : _lastNameCtrl.text.trim()) ||
-        _phoneCtrl.text.trim() !=
-            (_phoneCtrl.text.trim().isEmpty ? '' : _phoneCtrl.text.trim())) {
-      hasProfileChanges = true;
-    }
-
-    // Provjera promjena u trudnoći
-    if (_lmpDate != null ||
-        _dueDate != null ||
-        _cycleCtrl.text.trim().isNotEmpty) {
-      hasPregnancyChanges = true;
-    }
-
-    // Provjera promjena lozinke
-    if (_changePassword &&
-        _oldPasswordCtrl.text.isNotEmpty &&
-        _newPasswordCtrl.text.isNotEmpty &&
-        _confirmPasswordCtrl.text.isNotEmpty) {
-      hasPasswordChanges = true;
-    }
-
-    return hasProfileChanges || hasPregnancyChanges || hasPasswordChanges;
-  }
-
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Očisti sve greške prije početka
     setState(() {
       _oldPasswordError = null;
       _firstNameError = null;
@@ -220,19 +180,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
 
     try {
+      if (_dueDate != null &&
+          _dueDate!.isBefore(
+            DateTime.now().subtract(const Duration(days: 7)),
+          )) {
+        NestlyToast.error(context, 'Termin poroda ne može biti u prošlosti');
+        setState(() => _saving = false);
+        return;
+      }
+
+      if (_lmpDate != null && _lmpDate!.isAfter(DateTime.now())) {
+        NestlyToast.error(
+          context,
+          'Datum posljednje menstruacije ne može biti u budućnosti',
+        );
+        setState(() => _saving = false);
+        return;
+      }
       bool allSuccess = true;
 
-      // Provjera datuma trudnoće
       if (_lmpDate != null && _dueDate != null) {
         final diff = _dueDate!.difference(_lmpDate!).inDays;
 
-        if (diff < 250 || diff > 320) {
-          setState(() => _dateError = true);
-          allSuccess = false;
+        if (diff < 240 || diff > 300) {
+          NestlyToast.error(context, 'Razmak mora biti oko 9 mjeseci');
+          setState(() {
+            _dateError = true;
+            _saving = false;
+          });
+          return;
         }
       }
 
-      // Promjena lozinke - SAMO AKO JE OZNAČENA I AKO IMA PROMJENA
       if (_changePassword &&
           _oldPasswordCtrl.text.isNotEmpty &&
           _newPasswordCtrl.text.isNotEmpty &&
@@ -261,7 +240,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       }
 
-      // Ažuriranje profila - SAMO AKO IMA PROMJENA
       final userBody = {
         if (_firstNameCtrl.text.trim().isNotEmpty)
           "firstName": _firstNameCtrl.text.trim(),
@@ -298,7 +276,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       }
 
-      // Ažuriranje trudnoće - SAMO AKO IMA PROMJENA
       final pregnancyBody = {
         if (_lmpDate != null) "lmpDate": _lmpDate!.toUtc().toIso8601String(),
         if (_dueDate != null) "dueDate": _dueDate!.toUtc().toIso8601String(),
@@ -328,19 +305,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       }
 
-      // AKO SVE PRODE USPJESNO
       if (allSuccess) {
         if (!mounted) return;
         NestlyToast.success(context, 'Uspješno spremljeno');
         if (!mounted) return;
         Navigator.pop(context);
       } else {
-        // AKO NESTO PADNE - OSTANI NA SCREENU
         if (!mounted) return;
-        NestlyToast.error(
-          context,
-          'Spremanje nije uspjesno. Provjerite greške ispod.',
-        );
+        NestlyToast.error(context, 'Spremanje nije uspjesno.');
       }
     } catch (e) {
       if (!mounted) return;
@@ -467,7 +439,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       obscureText: _obscure,
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Obavezno polje';
-                        if (v.length < 6) return 'Min 6 karaktera';
+                        if (v.length < 8) return 'Min 8 karaktera';
+                        if (!RegExp(r'[A-Z]').hasMatch(v)) {
+                          return 'Mora sadržavati veliko slovo';
+                        }
+                        if (!RegExp(r'[0-9]').hasMatch(v)) {
+                          return 'Mora sadržavati broj';
+                        }
                         return null;
                       },
                       decoration: _decoration(
@@ -521,6 +499,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ],
                   ),
+                  if (_lmpDate != null && _lmpDate!.isAfter(DateTime.now()))
+                    const Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Datum ne može biti u budućnosti',
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                    ),
+
+                  if (_dueDate != null &&
+                      _dueDate!.isBefore(
+                        DateTime.now().subtract(const Duration(days: 7)),
+                      ))
+                    const Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Termin poroda ne može biti u prošlosti',
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -555,17 +559,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ],
                   ),
-                  if (_dateError)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 6),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Razlika između datuma mora biti približno 9 mjeseci',
-                          style: TextStyle(color: Colors.red, fontSize: 12),
+                  if (_dueDate != null &&
+                      _dueDate!.isBefore(
+                        DateTime.now().subtract(const Duration(days: 7)),
+                      ))
+                    if (_dateError)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Razlika između datuma mora biti približno 9 mjeseci',
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
                         ),
                       ),
-                    ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _cycleCtrl,

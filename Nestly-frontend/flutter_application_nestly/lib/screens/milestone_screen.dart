@@ -56,18 +56,39 @@ class CreateMilestoneRequest {
 
 class MilestoneApiService {
   Future<List<MilestoneEntry>> getForBaby(int babyId) async {
-    final res = await ApiClient.get('/api/Milestone?BabyId=$babyId');
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load milestones');
+    List<MilestoneEntry> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/Milestone?BabyId=$babyId&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load milestones');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<MilestoneEntry>((e) => MilestoneEntry.fromJson(e))
+          .toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final decoded = jsonDecode(res.body) as List;
+    result.sort((a, b) => a.achievedDate.compareTo(b.achievedDate));
 
-    final list = decoded.map((e) => MilestoneEntry.fromJson(e)).toList()
-      ..sort((a, b) => a.achievedDate.compareTo(b.achievedDate));
-
-    return list;
+    return result;
   }
 
   Future<MilestoneEntry> update({

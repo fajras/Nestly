@@ -89,18 +89,36 @@ class BabyGrowthApiService {
       return _cache[babyId]!;
     }
 
-    final resp = await ApiClient.get('$_basePath?BabyId=$babyId');
+    List<BabyGrowthEntry> all = [];
+    int page = 1;
+    bool hasMore = true;
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load baby growth data');
+    while (hasMore) {
+      final resp = await ApiClient.get(
+        '$_basePath?BabyId=$babyId&Page=$page&PageSize=100',
+      );
+
+      if (resp.statusCode != 200) {
+        throw Exception('Failed to load baby growth data');
+      }
+
+      final decoded = jsonDecode(resp.body);
+
+      final List<dynamic> items = decoded['items'];
+      final totalCount = decoded['totalCount'];
+
+      final list = items.map((e) => BabyGrowthEntry.fromJson(e)).toList();
+
+      all.addAll(list);
+
+      hasMore = all.length < totalCount;
+      page++;
     }
 
-    final List<dynamic> data = jsonDecode(resp.body);
-    final list = data.map((e) => BabyGrowthEntry.fromJson(e)).toList()
-      ..sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
+    all.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
 
-    _cache[babyId] = list;
-    return list;
+    _cache[babyId] = all;
+    return all;
   }
 
   Future<BabyGrowthEntry> create({
@@ -157,11 +175,20 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
   bool _isLoading = true;
   void _selectWeek(int week) {
     final matches = _entries.where((e) => e.weekNumber == week).toList();
-    if (matches.isEmpty) return;
 
     setState(() {
-      _selected = matches.first;
-      _isNewEntry = false;
+      if (matches.isEmpty) {
+        _selected = BabyGrowthEntry(
+          id: 0,
+          babyId: widget.babyId,
+          weekNumber: week,
+        );
+        _isNewEntry = true;
+      } else {
+        _selected = matches.first;
+        _isNewEntry = false;
+      }
+
       _touchedWeek = week;
     });
 
@@ -201,7 +228,18 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
       _touchedWeek = list.isNotEmpty ? list.last.weekNumber : null;
       setState(() {
         _entries = list;
-        _selected = list.isNotEmpty ? list.last : null;
+        if (list.isEmpty) {
+          _selected = BabyGrowthEntry(
+            id: 0,
+            babyId: widget.babyId,
+            weekNumber: 1,
+          );
+          _isNewEntry = true;
+          _touchedWeek = 1;
+        } else {
+          _selected = list.last;
+          _touchedWeek = list.last.weekNumber;
+        }
         _isLoading = false;
       });
 
@@ -414,7 +452,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                   : LineChart(
                       LineChartData(
                         minX: 1,
-                        maxX: (_maxWeek - 1).toDouble(),
+                        maxX: _maxWeek.toDouble(),
                         lineTouchData: LineTouchData(
                           touchCallback: (event, response) {
                             if (response?.lineBarSpots == null ||
@@ -422,7 +460,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                               return;
 
                             final spot = response.lineBarSpots!.first;
-                            final week = spot.x.toInt() + 1;
+                            final week = spot.x.toInt();
                             _selectWeek(week);
                           },
                         ),
@@ -432,7 +470,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                                 .where((e) => e.weightKg != null)
                                 .map(
                                   (e) => FlSpot(
-                                    (e.weekNumber - 1).toDouble(),
+                                    e.weekNumber.toDouble(),
                                     e.weightKg!,
                                   ),
                                 )
@@ -462,7 +500,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                                 .where((e) => e.heightCm != null)
                                 .map(
                                   (e) => FlSpot(
-                                    (e.weekNumber - 1).toDouble(),
+                                    e.weekNumber.toDouble(),
                                     e.heightCm!,
                                   ),
                                 )
@@ -492,7 +530,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
                                 .where((e) => e.headCircumferenceCm != null)
                                 .map(
                                   (e) => FlSpot(
-                                    (e.weekNumber - 1).toDouble(),
+                                    e.weekNumber.toDouble(),
                                     e.headCircumferenceCm!,
                                   ),
                                 )

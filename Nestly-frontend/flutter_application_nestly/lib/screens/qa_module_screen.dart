@@ -72,36 +72,57 @@ class ApiQaService implements QaService {
   }
 
   @override
+  @override
   Future<List<Question>> fetchMyQuestions() async {
-    final res = await ApiClient.get(
-      '/api/QaQuestion/my?AskedById=$parentProfileId',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load your questions.');
+    List<Question> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/QaQuestion/my'
+        '?AskedById=$parentProfileId'
+        '&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load your questions.');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items.map<Question>((q) {
+        final answered = q['isAnswered'] == true;
+
+        return Question(
+          id: q['id'],
+          text: q['questionText'],
+          createdAt: DateTime.parse(q['createdAt']),
+          status: answered ? QuestionStatus.answered : QuestionStatus.pending,
+          answer: answered && q['latestAnswerText'] != null
+              ? Answer(
+                  text: q['latestAnswerText'],
+                  createdAt: DateTime.parse(
+                    q['latestAnswerCreatedAt'] ?? q['createdAt'],
+                  ),
+                  responderName: q['answeredByName'],
+                )
+              : null,
+        );
+      }).toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final list = jsonDecode(res.body) as List;
-
-    return list.map<Question>((q) {
-      final answered = q['isAnswered'] == true;
-
-      return Question(
-        id: q['id'],
-        text: q['questionText'],
-        createdAt: DateTime.parse(q['createdAt']),
-        status: answered ? QuestionStatus.answered : QuestionStatus.pending,
-        answer: answered && q['latestAnswerText'] != null
-            ? Answer(
-                text: q['latestAnswerText'],
-                createdAt: DateTime.parse(
-                  q['latestAnswerCreatedAt'] ?? q['createdAt'],
-                ),
-                responderName: q['answeredByName'],
-              )
-            : null,
-      );
-    }).toList();
+    return result;
   }
 
   @override

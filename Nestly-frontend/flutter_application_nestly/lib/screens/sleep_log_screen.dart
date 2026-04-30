@@ -83,19 +83,41 @@ class SleepLogApiService {
     final now = DateTime.now();
     final from = now.subtract(const Duration(days: 6));
 
-    final res = await ApiClient.get(
-      '/api/SleepLog'
-      '?BabyId=$babyId'
-      '&DateFrom=${from.toIso8601String()}'
-      '&DateTo=${now.toIso8601String()}',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load sleep logs');
+    List<SleepLogEntry> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/SleepLog'
+        '?BabyId=$babyId'
+        '&DateFrom=${from.toIso8601String()}'
+        '&DateTo=${now.toIso8601String()}'
+        '&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load sleep logs');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<SleepLogEntry>((e) => SleepLogEntry.fromJson(e))
+          .toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List raw = jsonDecode(res.body);
-    return raw.map((e) => SleepLogEntry.fromJson(e)).toList();
+    return result;
   }
 
   Future<void> update({

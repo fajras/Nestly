@@ -18,8 +18,8 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<HealthEntryResponseDto>> Get([FromQuery] HealthEntrySearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<PagedResult<HealthEntryResponseDto>> Get([FromQuery] HealthEntrySearchObject search)
+      => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
         public ActionResult<HealthEntryResponseDto> GetById(long id)

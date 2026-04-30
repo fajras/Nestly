@@ -18,9 +18,9 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> Get(
-            [FromQuery] QaQuestionSearchObject? search,
-            CancellationToken ct)
+        public async Task<ActionResult<PagedResult<QaQuestionWithLatestAnswerDto>>> Get(
+     [FromQuery] QaQuestionSearchObject search,
+     CancellationToken ct)
         {
             var result = await _service.GetAllWithLatestAnswer(search, ct);
             return Ok(result);
@@ -34,16 +34,19 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet("user/{parentProfileId:long}")]
-        public async Task<ActionResult<IEnumerable<QaQuestionDto>>> GetByUser(long parentProfileId, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<QaQuestionDto>>> GetByUser(
+      long parentProfileId,
+      [FromQuery] QaQuestionSearchObject search,
+      CancellationToken ct)
         {
-            var result = await _service.GetByUserAsync(parentProfileId, ct);
+            var result = await _service.GetByUserAsync(parentProfileId, search, ct);
             return Ok(result);
         }
 
         [HttpGet("my")]
-        public async Task<ActionResult<IEnumerable<QaQuestionWithLatestAnswerDto>>> GetMy(
-            [FromQuery] QaQuestionSearchObject search,
-            CancellationToken ct)
+        public async Task<ActionResult<PagedResult<QaQuestionWithLatestAnswerDto>>> GetMy(
+           [FromQuery] QaQuestionSearchObject search,
+           CancellationToken ct)
         {
             if (search.AskedById is null || search.AskedById.Value <= 0)
             {
@@ -83,10 +86,13 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet("{questionId:long}/answers")]
-        public async Task<ActionResult<IEnumerable<QaAnswerDto>>> GetAnswers(long questionId, CancellationToken ct)
+        public async Task<ActionResult<PagedResult<QaAnswerDto>>> GetAnswers(
+        long questionId,
+        [FromQuery] QaQuestionSearchObject search,
+        CancellationToken ct)
         {
-            var answers = await _service.GetAnswers(questionId, ct);
-            return Ok(answers);
+            var result = await _service.GetAnswers(questionId, search, ct);
+            return Ok(result);
         }
 
         [HttpPost("{questionId:long}/answers")]

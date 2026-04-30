@@ -28,31 +28,41 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public List<SleepLogResponseDto> Get(SleepLogSearchObject? search)
+        public PagedResult<SleepLogResponseDto> Get(SleepLogSearchObject search)
         {
             IQueryable<SleepLog> q = _db.SleepLogs.AsNoTracking();
 
-            if (search?.BabyId is not null)
+            if (search.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.DateFrom is not null)
+            if (search.DateFrom is not null)
             {
                 q = q.Where(x => x.SleepDate >= search.DateFrom.Value.Date);
             }
 
-            if (search?.DateTo is not null)
+            if (search.DateTo is not null)
             {
                 q = q.Where(x => x.SleepDate <= search.DateTo.Value.Date);
             }
 
-            return q.OrderByDescending(x => x.SleepDate)
-                    .ThenByDescending(x => x.StartTime)
-                    .Select(x => MapToDto(x))
-                    .ToList();
-        }
+            var totalCount = q.Count();
 
+            var items = q
+                .OrderByDescending(x => x.SleepDate)
+                .ThenByDescending(x => x.StartTime)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .Select(x => MapToDto(x))
+                .ToList();
+
+            return new PagedResult<SleepLogResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
         public SleepLogResponseDto? GetById(long id)
         {
             var entity = _db.SleepLogs

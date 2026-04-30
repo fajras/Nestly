@@ -14,9 +14,9 @@ namespace Nestly.WebAPI.Controllers
         public MedicationPlanController(IMedicationPlanService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<MedicationPlanResponseDto>> Get(
-            [FromQuery] MedicationPlanSearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<PagedResult<MedicationPlanResponseDto>> Get(
+      [FromQuery] MedicationPlanSearchObject search)
+      => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
         public ActionResult<MedicationPlanResponseDto> GetById(long id)
@@ -60,11 +60,10 @@ namespace Nestly.WebAPI.Controllers
             return NoContent();
         }
         [HttpGet("day")]
-        public ActionResult<IEnumerable<MedicationIntakeLogDto>> GetForDay(
-    long parentProfileId,
-    DateTime date)
+        public ActionResult<PagedResult<MedicationIntakeLogDto>> GetForDay(
+         [FromQuery] MedicationIntakeLogSearchObject search)
         {
-            return Ok(_service.GetLogsForDay(parentProfileId, date));
+            return Ok(_service.GetLogsForDay(search));
         }
 
     }

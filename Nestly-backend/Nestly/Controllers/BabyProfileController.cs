@@ -18,7 +18,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BabyProfileSummaryDto>> Get([FromQuery] BabyProfileSearchObject? search)
+        public ActionResult<PagedResult<BabyProfileSummaryDto>> Get([FromQuery] BabyProfileSearchObject search)
         {
             return Ok(_service.Get(search));
         }

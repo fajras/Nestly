@@ -15,36 +15,46 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<MealPlanResponseDto> GetMealPlans(MealPlanSearchObject? search)
+        public PagedResult<MealPlanResponseDto> GetMealPlans(MealPlanSearchObject search)
         {
             IQueryable<MealPlan> q = _db.MealPlans
                 .Include(x => x.FoodType)
                 .AsQueryable();
 
-            if (search?.BabyId is not null)
+            if (search.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.FoodTypeId is not null)
+            if (search.FoodTypeId is not null)
             {
                 q = q.Where(x => x.FoodTypeId == search.FoodTypeId);
             }
 
-            if (search?.From is not null)
+            if (search.From is not null)
             {
                 q = q.Where(x => x.TriedAt >= search.From.Value);
             }
 
-            if (search?.To is not null)
+            if (search.To is not null)
             {
                 q = q.Where(x => x.TriedAt <= search.To.Value);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(x => x.TriedAt)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(MapToDto)
                 .ToList();
+
+            return new PagedResult<MealPlanResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public MealPlanResponseDto? GetById(long id)
@@ -144,19 +154,23 @@ namespace Nestly.Services.Repository
             return true;
         }
 
-        public List<MealRecommendationDto> GetMealRecommendations(MealRecommendationSearchObject? search)
+        public PagedResult<MealRecommendationDto> GetMealRecommendations(MealRecommendationSearchObject search)
         {
             IQueryable<MealRecommendation> q = _db.MealRecommendations
                 .Include(x => x.FoodType);
 
-            if (search?.WeekNumber is not null)
+            if (search.WeekNumber is not null)
             {
                 q = q.Where(x => x.WeekNumber == search.WeekNumber.Value);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderBy(x => x.WeekNumber)
                 .ThenBy(x => x.FoodType.Name)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => new MealRecommendationDto
                 {
                     Id = x.Id,
@@ -165,6 +179,12 @@ namespace Nestly.Services.Repository
                     FoodName = x.FoodType.Name
                 })
                 .ToList();
+
+            return new PagedResult<MealRecommendationDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public MealRecommendationDto? GetRecommendationById(long id)

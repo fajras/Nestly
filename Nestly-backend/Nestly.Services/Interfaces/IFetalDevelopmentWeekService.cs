@@ -4,7 +4,7 @@ namespace Nestly.Services.Interfaces
 {
     public interface IFetalDevelopmentWeekService
     {
-        List<FetalDevelopmentWeekResponseDto> Get();
+        PagedResult<FetalDevelopmentWeekResponseDto> Get(FetalDevelopmentWeekSearchObject search);
         FetalDevelopmentWeekResponseDto? GetById(int id);
         FetalDevelopmentWeekResponseDto? GetByWeekNumber(int weekNumber);
         FetalDevelopmentWeekResponseDto Create(CreateFetalDevelopmentWeekDto entity);

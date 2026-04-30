@@ -18,7 +18,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BlogCategoryDto>> Get([FromQuery] BlogCategorySearchObject? search)
+        public ActionResult<PagedResult<BlogCategoryDto>> Get([FromQuery] BlogCategorySearchObject search)
         {
             return Ok(_service.Get(search));
         }

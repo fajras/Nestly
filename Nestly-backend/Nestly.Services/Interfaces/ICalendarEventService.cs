@@ -2,7 +2,7 @@ using Nestly.Model.DTOObjects;
 
 public interface ICalendarEventService
 {
-    IEnumerable<CalendarEventResponseDto> Get(CalendarEventSearchObject? search);
+    PagedResult<CalendarEventResponseDto> Get(CalendarEventSearchObject search);
     CalendarEventResponseDto? GetById(long id);
     CalendarEventResponseDto Create(CreateCalendarEventDto entity);
     CalendarEventResponseDto? Patch(long id, CalendarEventPatchDto patch);

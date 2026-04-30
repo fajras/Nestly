@@ -10,34 +10,44 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         public MilestoneService(NestlyDbContext db) => _db = db;
 
-        public List<MilestoneResponseDto> Get(MilestoneSearchObject? search)
+        public PagedResult<MilestoneResponseDto> Get(MilestoneSearchObject search)
         {
             IQueryable<Milestone> q = _db.Milestones.AsNoTracking();
 
-            if (search?.BabyId is not null)
+            if (search.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.DateFrom is not null)
+            if (search.DateFrom is not null)
             {
                 q = q.Where(x => x.AchievedDate >= search.DateFrom.Value);
             }
 
-            if (search?.DateTo is not null)
+            if (search.DateTo is not null)
             {
                 q = q.Where(x => x.AchievedDate <= search.DateTo.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.Title))
+            if (!string.IsNullOrWhiteSpace(search.Title))
             {
                 q = q.Where(x => x.Title.Contains(search.Title));
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderBy(x => x.AchievedDate)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(ToDto)
                 .ToList();
+
+            return new PagedResult<MilestoneResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public MilestoneResponseDto? GetById(long id)

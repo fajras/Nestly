@@ -17,8 +17,8 @@ namespace Nestly.WebAPI.Controllers
             _service = service;
         }
         [HttpGet]
-        public ActionResult<IEnumerable<SymptomDiaryResponseDto>> Get([FromQuery] SymptomDiarySearchObject? search)
-     => Ok(_service.Get(search));
+        public ActionResult<PagedResult<SymptomDiaryResponseDto>> Get([FromQuery] SymptomDiarySearchObject search)
+            => Ok(_service.Get(search));
         [HttpPost]
         public ActionResult<SymptomDiaryResponseDto> Create([FromBody] CreateSymptomDiaryDto request)
         {
@@ -46,8 +46,13 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet("parent/{parentProfileId:long}")]
-        public ActionResult<IEnumerable<SymptomDiaryResponseDto>> GetByParent(long parentProfileId)
-            => Ok(_service.GetByParent(parentProfileId));
+        public ActionResult<PagedResult<SymptomDiaryResponseDto>> GetByParent(
+     long parentProfileId,
+     [FromQuery] SymptomDiarySearchObject search)
+        {
+            search.ParentProfileId = parentProfileId;
+            return Ok(_service.GetByParent(parentProfileId, search));
+        }
 
         [HttpGet("by-date", Name = "GetSymptomByDate")]
         public ActionResult<SymptomDiaryResponseDto> GetByDate(
@@ -79,10 +84,11 @@ namespace Nestly.WebAPI.Controllers
             => _service.Delete(id) ? NoContent() : NotFound();
 
         [HttpGet("marked-days")]
-        public ActionResult<IEnumerable<DateTime>> GetMarkedDays(
-            [FromQuery] long parentProfileId)
+        public ActionResult<PagedResult<DateTime>> GetMarkedDays(
+     [FromQuery] long parentProfileId,
+     [FromQuery] SymptomDiarySearchObject search)
         {
-            return Ok(_service.GetMarkedDays(parentProfileId));
+            return Ok(_service.GetMarkedDays(parentProfileId, search));
         }
     }
 }

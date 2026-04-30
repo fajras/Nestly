@@ -23,19 +23,29 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public List<RoleDto> Get(RoleSearchObject? search)
+        public PagedResult<RoleDto> Get(RoleSearchObject search)
         {
             IQueryable<Role> query = _db.Roles.AsNoTracking();
 
-            if (!string.IsNullOrWhiteSpace(search?.Name))
+            if (!string.IsNullOrWhiteSpace(search.Name))
             {
                 query = query.Where(x => x.Name.Contains(search.Name));
             }
 
-            return query
+            var totalCount = query.Count();
+
+            var items = query
                 .OrderBy(x => x.Name)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => MapToDto(x))
                 .ToList();
+
+            return new PagedResult<RoleDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public RoleDto? GetById(long id)

@@ -67,19 +67,42 @@ class HealthEntryApiService {
     required DateTime from,
     required DateTime to,
   }) async {
-    final res = await ApiClient.get(
-      '/api/HealthEntry'
-      '?BabyId=$babyId'
-      '&DateFrom=${from.toIso8601String()}'
-      '&DateTo=${to.toIso8601String()}',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load health entries');
+    List<HealthEntry> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/HealthEntry'
+        '?BabyId=$babyId'
+        '&DateFrom=${from.toIso8601String()}'
+        '&DateTo=${to.toIso8601String()}'
+        '&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load health entries');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+          .map(HealthEntry.fromJson)
+          .toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List data = jsonDecode(res.body);
-    return data.map((e) => HealthEntry.fromJson(e)).toList();
+    return result;
   }
 
   Future<void> patch(int id, Map<String, dynamic> body) async {

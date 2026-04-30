@@ -23,19 +23,29 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public List<FoodTypeDto> Get(FoodTypeSearchObject? search)
+        public PagedResult<FoodTypeDto> Get(FoodTypeSearchObject search)
         {
             IQueryable<FoodType> query = _db.FoodTypes.AsNoTracking();
 
-            if (!string.IsNullOrWhiteSpace(search?.Name))
+            if (!string.IsNullOrWhiteSpace(search.Name))
             {
                 query = query.Where(x => x.Name.Contains(search.Name));
             }
 
-            return query
+            var totalCount = query.Count();
+
+            var items = query
                 .OrderBy(x => x.Name)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => MapToDto(x))
                 .ToList();
+
+            return new PagedResult<FoodTypeDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public FoodTypeDto? GetById(int id)

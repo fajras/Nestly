@@ -16,41 +16,51 @@ namespace Nestly.Services.Repository
             _publisher = publisher;
         }
 
-        public IEnumerable<BlogPostResponseDto> Get(BlogPostSearchObject? search)
+        public PagedResult<BlogPostResponseDto> Get(BlogPostSearchObject search)
         {
             IQueryable<BlogPost> q = _db.BlogPosts
-                                        .Include(p => p.BlogPostCategories)
-                                        .AsQueryable();
+                .Include(p => p.BlogPostCategories)
+                .AsQueryable();
 
-            if (search?.AuthorId is not null)
+            if (search.AuthorId is not null)
             {
                 q = q.Where(p => p.AuthorId == search.AuthorId);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.Title))
+            if (!string.IsNullOrWhiteSpace(search.Title))
             {
                 q = q.Where(p => p.Title.Contains(search.Title));
             }
 
-            if (search?.CreatedFrom is not null)
+            if (search.CreatedFrom is not null)
             {
                 q = q.Where(p => p.CreatedAt >= search.CreatedFrom.Value);
             }
 
-            if (search?.CreatedTo is not null)
+            if (search.CreatedTo is not null)
             {
                 q = q.Where(p => p.CreatedAt <= search.CreatedTo.Value);
             }
 
-            if (search?.CategoryId is not null)
+            if (search.CategoryId is not null)
             {
-                q = q.Where(p => p.BlogPostCategories
-                                 .Any(c => c.CategoryId == search.CategoryId));
+                q = q.Where(p => p.BlogPostCategories.Any(c => c.CategoryId == search.CategoryId));
             }
 
-            return q.OrderByDescending(p => p.CreatedAt)
-                    .Select(MapToDto)
-                    .ToList();
+            var totalCount = q.Count();
+
+            var items = q
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .Select(MapToDto)
+                .ToList();
+
+            return new PagedResult<BlogPostResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public BlogPostResponseDto? GetById(long id)
@@ -76,19 +86,21 @@ namespace Nestly.Services.Repository
             };
 
             _db.BlogPosts.Add(post);
-            _db.SaveChanges();
 
             if (dto.CategoryIds?.Any() == true)
             {
-                _db.BlogPostCategories.AddRange(
-                    dto.CategoryIds.Select(cid => new BlogPostCategory
+                foreach (var cid in dto.CategoryIds)
+                {
+                    _db.BlogPostCategories.Add(new BlogPostCategory
                     {
-                        PostId = post.Id,
+                        Post = post,
                         CategoryId = cid
-                    })
-                );
-                _db.SaveChanges();
+                    });
+                }
             }
+
+            _db.SaveChanges();
+
             var parentIds = _db.AppUsers
                 .Where(u => u.ParentProfile != null)
                 .Select(u => u.Id)
@@ -103,6 +115,7 @@ namespace Nestly.Services.Repository
                     Message = $"Objavljen je novi članak: {post.Title}"
                 });
             }
+
             return MapToDto(post);
         }
 
@@ -156,14 +169,26 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
-        public IEnumerable<BlogPostResponseDto> GetByCategoryId(int categoryId)
+        public PagedResult<BlogPostResponseDto> GetByCategoryId(int categoryId, int page, int pageSize)
         {
-            return _db.BlogPosts
+            IQueryable<BlogPost> q = _db.BlogPosts
                 .Include(p => p.BlogPostCategories)
-                .Where(p => p.BlogPostCategories.Any(c => c.CategoryId == categoryId))
+                .Where(p => p.BlogPostCategories.Any(c => c.CategoryId == categoryId));
+
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(MapToDto)
                 .ToList();
+
+            return new PagedResult<BlogPostResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         private static BlogPostResponseDto MapToDto(BlogPost post)

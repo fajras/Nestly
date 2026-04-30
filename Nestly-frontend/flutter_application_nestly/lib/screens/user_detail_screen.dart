@@ -9,129 +9,93 @@ import 'package:flutter_application_nestly/providers/admin_pdf_service.dart';
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
     try {
-      final res = await ApiClient.get('/AppUser?RoleId=1');
+      final data = await _fetchAllPages('/AppUser?RoleId=1');
 
-      if (res.statusCode != 200) {
-        throw Exception("Failed to load users.");
-      }
-
-      final List data = jsonDecode(res.body);
-      return data.map((e) => AppUserRow.fromJson(e)).toList();
+      return data.map<AppUserRow>((e) => AppUserRow.fromJson(e)).toList();
     } catch (_) {
       throw Exception("Unable to retrieve users.");
     }
   }
 
-  Future<List> getFeedingLogs(int babyId) async {
-    final res = await ApiClient.get('/api/feedinglog?BabyId=$babyId');
+  Future<List<dynamic>> _fetchAllPages(String url) async {
+    List all = [];
+    int page = 1;
+    bool hasMore = true;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load feeding logs');
+    while (hasMore) {
+      final separator = url.contains('?') ? '&' : '?';
+
+      final res = await ApiClient.get(
+        '$url${separator}Page=$page&PageSize=100',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load data');
+      }
+
+      final decoded = jsonDecode(res.body);
+
+      final items = decoded['items'] as List;
+      final totalCount = decoded['totalCount'] as int;
+
+      all.addAll(items);
+
+      if (items.isEmpty) {
+        hasMore = false;
+      } else {
+        hasMore = all.length < totalCount;
+      }
+
+      page++;
     }
 
-    return jsonDecode(res.body);
+    return all;
+  }
+
+  Future<List> getFeedingLogs(int babyId) async {
+    return _fetchAllPages('/api/feedinglog?BabyId=$babyId');
   }
 
   Future<List> getMilestones(int babyId) async {
-    final res = await ApiClient.get('/api/milestone?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load milestones');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/milestone?BabyId=$babyId');
   }
 
   Future<List> getCalendarEvents(int babyId) async {
-    final res = await ApiClient.get('/api/calendarevent?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load calendar events');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/calendarevent?BabyId=$babyId');
   }
 
   Future<List> getMedication(int parentProfileId) async {
-    final res = await ApiClient.get(
+    return _fetchAllPages(
       '/api/medicationplan?ParentProfileId=$parentProfileId',
     );
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load medication');
-    }
-
-    return jsonDecode(res.body);
   }
 
   Future<List> getSymptoms(int userId) async {
-    final res = await ApiClient.get('/api/symptomdiary/parent/$userId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load symptoms');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/symptomdiary?ParentProfileId=$userId');
   }
 
   Future<List> getMeals(int babyId) async {
-    final res = await ApiClient.get('/api/mealplan?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load meals');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/mealplan?BabyId=$babyId');
   }
 
   Future<List> getHealth(int babyId) async {
-    final res = await ApiClient.get('/api/HealthEntry?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load health entries');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/HealthEntry?BabyId=$babyId');
   }
 
   Future<List> getDiapers(int babyId) async {
-    final res = await ApiClient.get('/api/diaperlog?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load diapers');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/diaperlog?BabyId=$babyId');
   }
 
   Future<List> getSleep(int babyId) async {
-    final res = await ApiClient.get('/api/sleeplog?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load sleep logs');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/sleeplog?BabyId=$babyId');
   }
 
   Future<List> getGrowth(int babyId) async {
-    final res = await ApiClient.get('/api/babygrowth?BabyId=$babyId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load growth');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/babygrowth?BabyId=$babyId');
   }
 
   Future<List> getQuestions(int userId) async {
-    final res = await ApiClient.get('/api/qaquestion/my?AskedById=$userId');
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load questions');
-    }
-
-    return jsonDecode(res.body);
+    return _fetchAllPages('/api/qaquestion/my?AskedById=$userId');
   }
 }
 
@@ -380,302 +344,306 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
           flex: 5,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Pregled korisnice',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
-                ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Pregled korisnice',
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+                  ),
 
-                const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
-                if (_selectedUser != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _selectedUser!.fullName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                  if (_selectedUser != null)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedUser!.fullName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          Text(
-                            _selectedUser!.pregnancyInfo,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                            Text(
+                              _selectedUser!.pregnancyInfo,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                const SizedBox(height: AppSpacing.lg),
-                if (_selectedUser == null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: Text(
-                      'Odaberite korisnicu da biste vidjeli detalje',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                  const SizedBox(height: AppSpacing.lg),
+                  if (_selectedUser == null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Text(
+                        'Odaberite korisnicu da biste vidjeli detalje',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
+
+                  GridView.count(
+                    crossAxisCount: 4,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1,
+                    children: [
+                      _ModuleCard(
+                        icon: Icons.restaurant,
+                        label: 'Hrana',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Hrana',
+                                request: () =>
+                                    _service.getMeals(_selectedUser!.id),
+                                mapper: _mapMeals,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.health_and_safety,
+                        label: 'Zdravlje',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Zdravlje',
+                                request: () =>
+                                    _service.getHealth(_selectedUser!.id),
+                                mapper: _mapHealth,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.baby_changing_station,
+                        label: 'Pelene',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Pelene',
+                                request: () =>
+                                    _service.getDiapers(_selectedUser!.id),
+                                mapper: _mapDiapers,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.bedtime,
+                        label: 'San bebe',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'San bebe',
+                                request: () =>
+                                    _service.getSleep(_selectedUser!.id),
+                                mapper: _mapSleep,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.monitor_weight,
+                        label: 'Rast bebe',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Rast bebe',
+                                request: () =>
+                                    _service.getGrowth(_selectedUser!.id),
+                                mapper: _mapGrowth,
+                              ),
+                      ),
+
+                      _ModuleCard(
+                        icon: Icons.baby_changing_station_outlined,
+                        label: 'Hranjenje',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Hranjenje',
+                                request: () =>
+                                    _service.getFeedingLogs(_selectedUser!.id),
+                                mapper: _mapFeeding,
+                              ),
+                      ),
+
+                      _ModuleCard(
+                        icon: Icons.flag,
+                        label: 'Dostignuća',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Milestones',
+                                request: () =>
+                                    _service.getMilestones(_selectedUser!.id),
+                                mapper: _mapMilestones,
+                              ),
+                      ),
+
+                      _ModuleCard(
+                        icon: Icons.event,
+                        label: 'Događaji',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Događaji',
+                                request: () => _service.getCalendarEvents(
+                                  _selectedUser!.id,
+                                ),
+                                mapper: _mapCalendar,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.medication,
+                        label: 'Terapija',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Terapija',
+                                request: () =>
+                                    _service.getMedication(_selectedUser!.id),
+                                mapper: _mapMedication,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.sick,
+                        label: 'Simptomi',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Simptomi',
+                                request: () =>
+                                    _service.getSymptoms(_selectedUser!.id),
+                                mapper: _mapSymptoms,
+                              ),
+                      ),
+                      _ModuleCard(
+                        icon: Icons.question_answer,
+                        label: 'Pitanja',
+                        onTap: _selectedUser == null
+                            ? null
+                            : () => _loadDetails(
+                                module: 'Pitanja',
+                                request: () =>
+                                    _service.getQuestions(_selectedUser!.id),
+                                mapper: _mapQuestions,
+                              ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.picture_as_pdf),
+                        label: const Text("PDF Mama"),
+                        onPressed: _selectedUser == null
+                            ? null
+                            : () async {
+                                final therapy = await _service.getMedication(
+                                  _selectedUser!.id,
+                                );
+                                final symptoms = await _service.getSymptoms(
+                                  _selectedUser!.id,
+                                );
+                                final questions = await _service.getQuestions(
+                                  _selectedUser!.id,
+                                );
+
+                                final file = await _pdfService
+                                    .generateMotherPdf(
+                                      userName: _selectedUser!.fullName,
+                                      therapy: _mapMedication(therapy),
+                                      symptoms: _mapSymptoms(symptoms),
+                                      questions: _mapQuestions(questions),
+                                    );
+
+                                NestlyToast.success(
+                                  context,
+                                  "PDF je uspješno preuzet u Dokumente.",
+                                  accentColor: AppColors.seed,
+                                );
+                              },
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.picture_as_pdf),
+                        label: const Text("PDF Beba"),
+                        onPressed: _selectedUser == null
+                            ? null
+                            : () async {
+                                final meals = await _service.getMeals(
+                                  _selectedUser!.id,
+                                );
+                                final health = await _service.getHealth(
+                                  _selectedUser!.id,
+                                );
+                                final diapers = await _service.getDiapers(
+                                  _selectedUser!.id,
+                                );
+                                final sleep = await _service.getSleep(
+                                  _selectedUser!.id,
+                                );
+                                final growth = await _service.getGrowth(
+                                  _selectedUser!.id,
+                                );
+                                final feeding = await _service.getFeedingLogs(
+                                  _selectedUser!.id,
+                                );
+                                final milestones = await _service.getMilestones(
+                                  _selectedUser!.id,
+                                );
+                                final calendar = await _service
+                                    .getCalendarEvents(_selectedUser!.id);
+
+                                final file = await _pdfService.generateBabyPdf(
+                                  userName: _selectedUser!.fullName,
+                                  meals: _mapMeals(meals),
+                                  health: _mapHealth(health),
+                                  diapers: _mapDiapers(diapers),
+                                  sleep: _mapSleep(sleep),
+                                  growth: _mapGrowth(growth),
+                                  feeding: _mapFeeding(feeding),
+                                  milestones: _mapMilestones(milestones),
+                                  calendar: _mapCalendar(calendar),
+                                );
+
+                                NestlyToast.success(
+                                  context,
+                                  "PDF je uspješno preuzet u Dokumente.",
+                                  accentColor: AppColors.seed,
+                                );
+                              },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  TextField(
+                    onChanged: _onSearch,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      hintText: 'Pretraga korisnica',
+                    ),
                   ),
 
-                GridView.count(
-                  crossAxisCount: 4,
-                  shrinkWrap: true,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1,
-                  children: [
-                    _ModuleCard(
-                      icon: Icons.restaurant,
-                      label: 'Hrana',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Hrana',
-                              request: () =>
-                                  _service.getMeals(_selectedUser!.id),
-                              mapper: _mapMeals,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.health_and_safety,
-                      label: 'Zdravlje',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Zdravlje',
-                              request: () =>
-                                  _service.getHealth(_selectedUser!.id),
-                              mapper: _mapHealth,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.baby_changing_station,
-                      label: 'Pelene',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Pelene',
-                              request: () =>
-                                  _service.getDiapers(_selectedUser!.id),
-                              mapper: _mapDiapers,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.bedtime,
-                      label: 'San bebe',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'San bebe',
-                              request: () =>
-                                  _service.getSleep(_selectedUser!.id),
-                              mapper: _mapSleep,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.monitor_weight,
-                      label: 'Rast bebe',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Rast bebe',
-                              request: () =>
-                                  _service.getGrowth(_selectedUser!.id),
-                              mapper: _mapGrowth,
-                            ),
-                    ),
+                  const SizedBox(height: AppSpacing.lg),
 
-                    _ModuleCard(
-                      icon: Icons.baby_changing_station_outlined,
-                      label: 'Hranjenje',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Hranjenje',
-                              request: () =>
-                                  _service.getFeedingLogs(_selectedUser!.id),
-                              mapper: _mapFeeding,
-                            ),
-                    ),
-
-                    _ModuleCard(
-                      icon: Icons.flag,
-                      label: 'Dostignuća',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Milestones',
-                              request: () =>
-                                  _service.getMilestones(_selectedUser!.id),
-                              mapper: _mapMilestones,
-                            ),
-                    ),
-
-                    _ModuleCard(
-                      icon: Icons.event,
-                      label: 'Događaji',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Događaji',
-                              request: () =>
-                                  _service.getCalendarEvents(_selectedUser!.id),
-                              mapper: _mapCalendar,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.medication,
-                      label: 'Terapija',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Terapija',
-                              request: () =>
-                                  _service.getMedication(_selectedUser!.id),
-                              mapper: _mapMedication,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.sick,
-                      label: 'Simptomi',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Simptomi',
-                              request: () =>
-                                  _service.getSymptoms(_selectedUser!.id),
-                              mapper: _mapSymptoms,
-                            ),
-                    ),
-                    _ModuleCard(
-                      icon: Icons.question_answer,
-                      label: 'Pitanja',
-                      onTap: _selectedUser == null
-                          ? null
-                          : () => _loadDetails(
-                              module: 'Pitanja',
-                              request: () =>
-                                  _service.getQuestions(_selectedUser!.id),
-                              mapper: _mapQuestions,
-                            ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text("PDF Mama"),
-                      onPressed: _selectedUser == null
-                          ? null
-                          : () async {
-                              final therapy = await _service.getMedication(
-                                _selectedUser!.id,
-                              );
-                              final symptoms = await _service.getSymptoms(
-                                _selectedUser!.id,
-                              );
-                              final questions = await _service.getQuestions(
-                                _selectedUser!.id,
-                              );
-
-                              final file = await _pdfService.generateMotherPdf(
-                                userName: _selectedUser!.fullName,
-                                therapy: _mapMedication(therapy),
-                                symptoms: _mapSymptoms(symptoms),
-                                questions: _mapQuestions(questions),
-                              );
-
-                              NestlyToast.success(
-                                context,
-                                "PDF je uspješno generisan.",
-                                accentColor: AppColors.seed,
-                              );
-                            },
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text("PDF Beba"),
-                      onPressed: _selectedUser == null
-                          ? null
-                          : () async {
-                              final meals = await _service.getMeals(
-                                _selectedUser!.id,
-                              );
-                              final health = await _service.getHealth(
-                                _selectedUser!.id,
-                              );
-                              final diapers = await _service.getDiapers(
-                                _selectedUser!.id,
-                              );
-                              final sleep = await _service.getSleep(
-                                _selectedUser!.id,
-                              );
-                              final growth = await _service.getGrowth(
-                                _selectedUser!.id,
-                              );
-                              final feeding = await _service.getFeedingLogs(
-                                _selectedUser!.id,
-                              );
-                              final milestones = await _service.getMilestones(
-                                _selectedUser!.id,
-                              );
-                              final calendar = await _service.getCalendarEvents(
-                                _selectedUser!.id,
-                              );
-
-                              final file = await _pdfService.generateBabyPdf(
-                                userName: _selectedUser!.fullName,
-                                meals: _mapMeals(meals),
-                                health: _mapHealth(health),
-                                diapers: _mapDiapers(diapers),
-                                sleep: _mapSleep(sleep),
-                                growth: _mapGrowth(growth),
-                                feeding: _mapFeeding(feeding),
-                                milestones: _mapMilestones(milestones),
-                                calendar: _mapCalendar(calendar),
-                              );
-
-                              NestlyToast.success(
-                                context,
-                                "PDF generisan: ${file.path}",
-                                accentColor: AppColors.seed,
-                              );
-                            },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                TextField(
-                  onChanged: _onSearch,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    hintText: 'Pretraga korisnica',
-                  ),
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                Expanded(
-                  child: ListView.separated(
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: _filtered.length,
                     separatorBuilder: (_, __) =>
                         const SizedBox(height: AppSpacing.md),
@@ -722,8 +690,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                       );
                     },
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

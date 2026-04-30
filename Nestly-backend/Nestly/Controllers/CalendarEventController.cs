@@ -13,7 +13,7 @@ namespace Nestly.WebAPI.Controllers
         public CalendarEventController(ICalendarEventService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<CalendarEventResponseDto>> Get([FromQuery] CalendarEventSearchObject? search)
+        public ActionResult<PagedResult<CalendarEventResponseDto>> Get([FromQuery] CalendarEventSearchObject search)
         {
             return Ok(_service.Get(search));
         }

@@ -4,7 +4,7 @@ namespace Nestly.Services.Interfaces
 {
     public interface IBabyGrowthService
     {
-        IEnumerable<BabyGrowthResponseDto> Get(BabyGrowthSearchObject? search);
+        PagedResult<BabyGrowthResponseDto> Get(BabyGrowthSearchObject search);
         BabyGrowthResponseDto? GetById(long id);
         BabyGrowthResponseDto Create(CreateBabyGrowthDto request);
         BabyGrowthResponseDto? Patch(long id, BabyGrowthPatchDto patch);

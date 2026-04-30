@@ -12,6 +12,14 @@ namespace Nestly.Model.DTOObjects
         public DateTime? StartDateTo { get; set; }
         public DateTime? EndDateFrom { get; set; }
         public DateTime? EndDateTo { get; set; }
+        public int Page { get; set; } = 1;
+
+        private int _pageSize = 20;
+        public int PageSize
+        {
+            get => _pageSize;
+            set => _pageSize = value > 100 ? 100 : value;
+        }
     }
 
     public class CreateMedicationPlanDto
@@ -68,6 +76,21 @@ namespace Nestly.Model.DTOObjects
         public DateTime ScheduledDate { get; set; }
         public TimeSpan IntakeTime { get; set; }
         public bool Taken { get; set; }
+    }
+
+    public class MedicationIntakeLogSearchObject
+    {
+        public long ParentProfileId { get; set; }
+        public DateTime Date { get; set; }
+
+        public int Page { get; set; } = 1;
+
+        private int _pageSize = 20;
+        public int PageSize
+        {
+            get => _pageSize;
+            set => _pageSize = value > 100 ? 100 : value;
+        }
     }
 
 }

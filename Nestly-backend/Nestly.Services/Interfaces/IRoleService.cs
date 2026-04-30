@@ -4,7 +4,7 @@ namespace Nestly.Services.Interfaces
 {
     public interface IRoleService
     {
-        List<RoleDto> Get(RoleSearchObject? search);
+        PagedResult<RoleDto> Get(RoleSearchObject search);
         RoleDto? GetById(long id);
         RoleDto Create(RoleInsertDto request);
         RoleDto? Update(long id, RoleUpdateDto request);

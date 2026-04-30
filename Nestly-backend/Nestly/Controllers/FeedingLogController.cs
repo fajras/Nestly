@@ -17,7 +17,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<FeedingLogResponseDto>> Get([FromQuery] FeedingLogSearchObject? search)
+        public ActionResult<PagedResult<FeedingLogResponseDto>> Get([FromQuery] FeedingLogSearchObject search)
      => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]

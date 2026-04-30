@@ -49,18 +49,38 @@ class BlogCategoryRow {
 
 class BlogAdminService {
   Future<List<BlogPostRow>> getBlogs() async {
-    try {
-      final res = await ApiClient.get('/api/blogpost');
+    int page = 1;
+    const pageSize = 100;
+
+    List<BlogPostRow> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/blogpost?page=$page&pageSize=$pageSize',
+      );
 
       if (res.statusCode != 200) {
         throw Exception("Failed to load blogs.");
       }
 
-      final List data = jsonDecode(res.body);
-      return data.map((e) => BlogPostRow.fromJson(e)).toList();
-    } catch (_) {
-      throw Exception("Unable to retrieve blogs.");
+      final data = jsonDecode(res.body);
+      final List items = data['items'] ?? [];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+          .map(BlogPostRow.fromJson)
+          .toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
+
+    return result;
   }
 
   Future<List<BlogCategoryRow>> getCategories() async {

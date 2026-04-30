@@ -11,34 +11,45 @@ public class DiaperLogService : IDiaperLogService
         _db = db;
     }
 
-    public IEnumerable<DiaperLogResponseDto> Get(DiaperLogSearchObject? search)
+    public PagedResult<DiaperLogResponseDto> Get(DiaperLogSearchObject search)
     {
         IQueryable<DiaperLog> q = _db.DiaperLogs.AsQueryable();
 
-        if (search?.BabyId is not null)
+        if (search.BabyId is not null)
         {
             q = q.Where(x => x.BabyId == search.BabyId);
         }
 
-        if (search?.DateFrom is not null)
+        if (search.DateFrom is not null)
         {
             q = q.Where(x => x.ChangeDate >= search.DateFrom.Value);
         }
 
-        if (search?.DateTo is not null)
+        if (search.DateTo is not null)
         {
             q = q.Where(x => x.ChangeDate <= search.DateTo.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(search?.DiaperState))
+        if (!string.IsNullOrWhiteSpace(search.DiaperState))
         {
             q = q.Where(x => x.DiaperState == search.DiaperState);
         }
 
-        return q.OrderByDescending(x => x.ChangeDate)
-                .ThenByDescending(x => x.ChangeTime)
-                .Select(MapToDto)
-                .ToList();
+        var totalCount = q.Count();
+
+        var items = q
+            .OrderByDescending(x => x.ChangeDate)
+            .ThenByDescending(x => x.ChangeTime)
+            .Skip((search.Page - 1) * search.PageSize)
+            .Take(search.PageSize)
+            .Select(MapToDto)
+            .ToList();
+
+        return new PagedResult<DiaperLogResponseDto>
+        {
+            TotalCount = totalCount,
+            Items = items
+        };
     }
 
     public DiaperLogResponseDto? GetById(long id)

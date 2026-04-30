@@ -26,49 +26,59 @@ namespace Nestly.Services.Repository
             IntakeTimes = m.Times.Select(t => t.IntakeTime).ToList()
         };
 
-        public IEnumerable<MedicationPlanResponseDto> Get(MedicationPlanSearchObject? search)
+        public PagedResult<MedicationPlanResponseDto> Get(MedicationPlanSearchObject search)
         {
             var q = _db.MedicationPlans
                 .Include(x => x.Times)
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (search?.ParentProfileId is not null)
+            if (search.ParentProfileId is not null)
             {
                 q = q.Where(x => x.ParentProfileId == search.ParentProfileId);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.MedicineNameContains))
+            if (!string.IsNullOrWhiteSpace(search.MedicineNameContains))
             {
                 var medicineName = search.MedicineNameContains.Trim();
                 q = q.Where(x => x.MedicineName.Contains(medicineName));
             }
 
-            if (search?.StartDateFrom is not null)
+            if (search.StartDateFrom is not null)
             {
                 q = q.Where(x => x.StartDate >= search.StartDateFrom.Value);
             }
 
-            if (search?.StartDateTo is not null)
+            if (search.StartDateTo is not null)
             {
                 q = q.Where(x => x.StartDate <= search.StartDateTo.Value);
             }
 
-            if (search?.EndDateFrom is not null)
+            if (search.EndDateFrom is not null)
             {
                 q = q.Where(x => x.EndDate >= search.EndDateFrom.Value);
             }
 
-            if (search?.EndDateTo is not null)
+            if (search.EndDateTo is not null)
             {
                 q = q.Where(x => x.EndDate <= search.EndDateTo.Value);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(x => x.StartDate)
                 .ThenByDescending(x => x.EndDate)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(ToDto)
                 .ToList();
+
+            return new PagedResult<MedicationPlanResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public MedicationPlanResponseDto? GetById(long id)
@@ -204,15 +214,23 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return true;
         }
-        public IEnumerable<MedicationIntakeLogDto> GetLogsForDay(long parentProfileId, DateTime date)
+        public PagedResult<MedicationIntakeLogDto> GetLogsForDay(MedicationIntakeLogSearchObject search)
         {
-            var day = date.Date;
+            var day = search.Date.Date;
 
-            return _db.MedicationIntakeLogs
+            var q = _db.MedicationIntakeLogs
                 .Include(x => x.Plan)
+                .AsNoTracking()
                 .Where(x =>
-                    x.Plan.ParentProfileId == parentProfileId &&
-                    x.ScheduledDate == day)
+                    x.Plan.ParentProfileId == search.ParentProfileId &&
+                    x.ScheduledDate == day);
+
+            var totalCount = q.Count();
+
+            var items = q
+                .OrderBy(x => x.IntakeTime)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => new MedicationIntakeLogDto
                 {
                     IntakeLogId = x.Id,
@@ -224,6 +242,12 @@ namespace Nestly.Services.Repository
                     Taken = x.Taken
                 })
                 .ToList();
+
+            return new PagedResult<MedicationIntakeLogDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
     }

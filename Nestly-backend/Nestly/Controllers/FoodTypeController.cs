@@ -18,7 +18,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<FoodTypeDto>> Get([FromQuery] FoodTypeSearchObject? search)
+        public ActionResult<PagedResult<FoodTypeDto>> Get([FromQuery] FoodTypeSearchObject search)
         {
             return Ok(_service.Get(search));
         }

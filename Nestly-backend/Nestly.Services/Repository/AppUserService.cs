@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
@@ -22,8 +23,9 @@ namespace Nestly.Services.Repository
             _roleManager = roleManager;
         }
 
-        public List<AppUserResultDto> Get(AppUserSearchObject? search)
+        public PagedResult<AppUserResultDto> Get(AppUserSearchObject search)
         {
+            search ??= new AppUserSearchObject();
             var nowUtc = DateTime.UtcNow;
 
             IQueryable<AppUser> q = _db.AppUsers.AsNoTracking();
@@ -42,43 +44,47 @@ namespace Nestly.Services.Repository
             {
                 q = q.Where(x => x.LastName.Contains(search.LastName));
             }
+
             if (search?.RoleId.HasValue == true)
             {
                 q = q.Where(x => x.RoleId == search.RoleId.Value);
             }
 
-            var rows = q.Select(x => new AppUserRow
-            {
-                Id = x.Id,
-                Email = x.Email,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                PhoneNumber = x.PhoneNumber,
-                DateOfBirth = x.DateOfBirth,
-                Gender = x.Gender,
-                RoleId = x.RoleId,
-                IdentityUserId = x.IdentityUserId,
-                ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
-                LatestBabyBirthDate = x.ParentProfile != null
-                    ? x.ParentProfile.Babies
-                        .OrderByDescending(b => b.BirthDate)
-                        .Select(b => (DateTime?)b.BirthDate)
-                        .FirstOrDefault()
-                    : null,
+            var totalCount = q.Count();
 
-                LatestPregnancyDueDate = x.ParentProfile != null
-                ? x.ParentProfile.Pregnancies
-                    .OrderByDescending(p => p.DueDate ?? p.LmpDate)
-                    .Select(p => p.DueDate)
-                    .FirstOrDefault()
-                : null
+            var data = q
+                .OrderBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .Select(x => new AppUserRow
+                {
+                    Id = x.Id,
+                    Email = x.Email,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    PhoneNumber = x.PhoneNumber,
+                    DateOfBirth = x.DateOfBirth,
+                    Gender = x.Gender,
+                    RoleId = x.RoleId,
+                    IdentityUserId = x.IdentityUserId,
+                    ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
+                    LatestBabyBirthDate = x.ParentProfile != null
+                        ? x.ParentProfile.Babies
+                            .OrderByDescending(b => b.BirthDate)
+                            .Select(b => (DateTime?)b.BirthDate)
+                            .FirstOrDefault()
+                        : null,
+                    LatestPregnancyDueDate = x.ParentProfile != null
+                        ? x.ParentProfile.Pregnancies
+                            .OrderByDescending(p => p.DueDate ?? p.LmpDate)
+                            .Select(p => p.DueDate)
+                            .FirstOrDefault()
+                        : null
+                })
+                .ToList();
 
-            }).OrderBy(x => x.LastName ?? "")
-            .ThenBy(x => x.FirstName ?? "")
-            .ToList();
-
-
-            return rows.Select(r =>
+            var items = data.Select(r =>
             {
                 var dto = new AppUserResultDto
                 {
@@ -92,8 +98,6 @@ namespace Nestly.Services.Repository
                     RoleId = r.RoleId,
                     IdentityUserId = r.IdentityUserId,
                     ParentStatus = "UNKNOWN",
-                    BabyAgeMonths = null,
-                    PregnancyTrimester = null,
                     ParentProfileId = r.ParentProfileId
                 };
 
@@ -101,20 +105,22 @@ namespace Nestly.Services.Repository
                 {
                     dto.ParentStatus = "PARENT";
                     dto.BabyAgeMonths = CalculateBabyAgeInMonths(r.LatestBabyBirthDate.Value);
-                    return dto;
                 }
-
-                if (r.LatestPregnancyDueDate.HasValue)
+                else if (r.LatestPregnancyDueDate.HasValue)
                 {
                     dto.ParentStatus = "PREGNANT";
                     dto.PregnancyTrimester = CalculatePregnancyTrimester(r.LatestPregnancyDueDate.Value);
-                    return dto;
                 }
 
                 return dto;
             }).ToList();
-        }
 
+            return new PagedResult<AppUserResultDto>
+            {
+                Items = items,
+                TotalCount = totalCount
+            };
+        }
         public AppUserResultDto? GetById(long id)
         {
             var nowUtc = DateTime.UtcNow;

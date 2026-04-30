@@ -14,12 +14,29 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<FetalDevelopmentWeekResponseDto> Get()
+        public PagedResult<FetalDevelopmentWeekResponseDto> Get(FetalDevelopmentWeekSearchObject search)
         {
-            return _db.FetalDevelopmentWeeks
+            IQueryable<FetalDevelopmentWeek> q = _db.FetalDevelopmentWeeks.AsQueryable();
+
+            if (search.WeekNumber is not null)
+            {
+                q = q.Where(x => x.WeekNumber == search.WeekNumber.Value);
+            }
+
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderBy(x => x.WeekNumber)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(MapToDto)
                 .ToList();
+
+            return new PagedResult<FetalDevelopmentWeekResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public FetalDevelopmentWeekResponseDto? GetById(int id)
@@ -75,16 +92,6 @@ namespace Nestly.Services.Repository
             if (entity is null)
             {
                 return null;
-            }
-
-            if (patch.WeekNumber is not null)
-            {
-                entity.WeekNumber = patch.WeekNumber.Value;
-            }
-
-            if (patch.ImageUrl is not null)
-            {
-                entity.ImageUrl = patch.ImageUrl.Trim();
             }
 
             if (patch.BabyDevelopment is not null)

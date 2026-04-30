@@ -18,7 +18,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<RoleDto>> Get([FromQuery] RoleSearchObject? search)
+        public ActionResult<PagedResult<RoleDto>> Get([FromQuery] RoleSearchObject search)
         {
             return Ok(_service.Get(search));
         }

@@ -17,45 +17,48 @@ namespace Nestly.Services.Repository
             _publisher = publisher;
         }
 
-        public async Task<List<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(
-            QaQuestionSearchObject? search,
-            CancellationToken ct = default)
+        public async Task<PagedResult<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(
+      QaQuestionSearchObject search,
+      CancellationToken ct = default)
         {
             IQueryable<QaQuestion> q = _db.QaQuestions.AsNoTracking();
 
-            if (search?.AskedById is not null)
+            if (search.AskedById is not null)
             {
                 q = q.Where(x => x.AskedById == search.AskedById.Value);
             }
 
-            if (search?.From is not null)
+            if (search.From is not null)
             {
                 q = q.Where(x => x.CreatedAt >= search.From.Value);
             }
 
-            if (search?.To is not null)
+            if (search.To is not null)
             {
                 q = q.Where(x => x.CreatedAt <= search.To.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.Query))
+            if (!string.IsNullOrWhiteSpace(search.Query))
             {
-                var text = search.Query.Trim();
-                q = q.Where(x => x.QuestionText.Contains(text));
+                q = q.Where(x => x.QuestionText.Contains(search.Query.Trim()));
             }
 
-            if (search?.OnlyUnanswered == true)
+            if (search.OnlyUnanswered == true)
             {
                 q = q.Where(x => !x.Answers.Any());
             }
 
-            return await q
+            var totalCount = await q.CountAsync(ct);
+
+            var items = await q
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => new QaQuestionWithLatestAnswerDto
                 {
                     Id = x.Id,
                     QuestionText = x.QuestionText,
                     CreatedAt = x.CreatedAt,
-
                     IsAnswered = x.Answers.Any(),
 
                     LatestAnswerText = x.Answers
@@ -75,8 +78,13 @@ namespace Nestly.Services.Repository
                             : null)
                         .FirstOrDefault()
                 })
-                .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync(ct);
+
+            return new PagedResult<QaQuestionWithLatestAnswerDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public async Task<QaQuestionDto?> GetById(long id, CancellationToken ct = default)
@@ -94,12 +102,21 @@ namespace Nestly.Services.Repository
                 .FirstOrDefaultAsync(ct);
         }
 
-        public async Task<List<QaQuestionDto>> GetByUserAsync(long askedByParentProfileId, CancellationToken ct = default)
+        public async Task<PagedResult<QaQuestionDto>> GetByUserAsync(
+      long askedByParentProfileId,
+      QaQuestionSearchObject search,
+      CancellationToken ct = default)
         {
-            return await _db.QaQuestions
+            var q = _db.QaQuestions
                 .AsNoTracking()
-                .Where(x => x.AskedById == askedByParentProfileId)
+                .Where(x => x.AskedById == askedByParentProfileId);
+
+            var totalCount = await q.CountAsync(ct);
+
+            var items = await q
                 .OrderByDescending(x => x.CreatedAt)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => new QaQuestionDto
                 {
                     Id = x.Id,
@@ -108,6 +125,12 @@ namespace Nestly.Services.Repository
                     CreatedAt = x.CreatedAt
                 })
                 .ToListAsync(ct);
+
+            return new PagedResult<QaQuestionDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public async Task<QaQuestionDto> Create(CreateQaQuestionDto dto, CancellationToken ct = default)
@@ -232,23 +255,29 @@ namespace Nestly.Services.Repository
             return true;
         }
 
-        public async Task<List<QaAnswerDto>> GetAnswers(long questionId, CancellationToken ct = default)
+        public async Task<PagedResult<QaAnswerDto>> GetAnswers(
+     long questionId,
+     QaQuestionSearchObject search,
+     CancellationToken ct = default)
         {
-            var questionExists = await _db.QaQuestions
-                .AsNoTracking()
-                .AnyAsync(x => x.Id == questionId, ct);
-
-            if (!questionExists)
+            var exists = await _db.QaQuestions.AnyAsync(x => x.Id == questionId, ct);
+            if (!exists)
             {
-                throw new ArgumentException("Question not found.", nameof(questionId));
+                throw new ArgumentException("Question not found.");
             }
 
-            return await _db.QaAnswers
+            var q = _db.QaAnswers
                 .AsNoTracking()
-                .Where(a => a.QuestionId == questionId)
+                .Where(a => a.QuestionId == questionId);
+
+            var totalCount = await q.CountAsync(ct);
+
+            var items = await q
+                .OrderBy(a => a.CreatedAt)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Include(a => a.AnsweredBy)
                 .ThenInclude(d => d.User)
-                .OrderBy(a => a.CreatedAt)
                 .Select(a => new QaAnswerDto
                 {
                     Id = a.Id,
@@ -261,6 +290,12 @@ namespace Nestly.Services.Repository
                         : null
                 })
                 .ToListAsync(ct);
+
+            return new PagedResult<QaAnswerDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public async Task<QaAnswerDto> CreateAnswer(long questionId, CreateQaAnswerDto dto, CancellationToken ct = default)
@@ -345,42 +380,30 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public async Task<List<QaQuestionWithLatestAnswerDto>> GetWithLatestAnswerForUser(
-            QaQuestionSearchObject search,
-            CancellationToken ct = default)
+        public async Task<PagedResult<QaQuestionWithLatestAnswerDto>> GetWithLatestAnswerForUser(
+      QaQuestionSearchObject search,
+      CancellationToken ct = default)
         {
-            if (search.AskedById is null || search.AskedById.Value <= 0)
+            if (search.AskedById is null)
             {
-                throw new ArgumentException("AskedById is required.", nameof(search.AskedById));
+                throw new ArgumentException("AskedById required");
             }
 
-            IQueryable<QaQuestion> q = _db.QaQuestions
+            var q = _db.QaQuestions
                 .AsNoTracking()
                 .Where(x => x.AskedById == search.AskedById.Value);
 
-            if (search.From is not null)
-            {
-                q = q.Where(x => x.CreatedAt >= search.From.Value);
-            }
+            var totalCount = await q.CountAsync(ct);
 
-            if (search.To is not null)
-            {
-                q = q.Where(x => x.CreatedAt <= search.To.Value);
-            }
-
-            if (!string.IsNullOrWhiteSpace(search.Query))
-            {
-                var text = search.Query.Trim();
-                q = q.Where(x => x.QuestionText.Contains(text));
-            }
-
-            return await q
+            var items = await q
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => new QaQuestionWithLatestAnswerDto
                 {
                     Id = x.Id,
                     QuestionText = x.QuestionText,
                     CreatedAt = x.CreatedAt,
-
                     IsAnswered = x.Answers.Any(),
 
                     LatestAnswerText = x.Answers
@@ -400,8 +423,13 @@ namespace Nestly.Services.Repository
                             : null)
                         .FirstOrDefault()
                 })
-                .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync(ct);
+
+            return new PagedResult<QaQuestionWithLatestAnswerDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
     }
 }

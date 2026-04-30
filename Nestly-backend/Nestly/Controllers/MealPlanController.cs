@@ -18,9 +18,8 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<MealPlanResponseDto>> Get([FromQuery] MealPlanSearchObject? search)
-            => Ok(_service.GetMealPlans(search));
-
+        public ActionResult<PagedResult<MealPlanResponseDto>> Get([FromQuery] MealPlanSearchObject search)
+       => Ok(_service.GetMealPlans(search));
         [HttpGet("{id:long}")]
         public ActionResult<MealPlanResponseDto> GetById(long id)
         {
@@ -47,9 +46,9 @@ namespace Nestly.WebAPI.Controllers
             => _service.Delete(id) ? NoContent() : NotFound();
 
         [HttpGet("Recommendation")]
-        public ActionResult<IEnumerable<MealRecommendationDto>> GetRecommendation(
-            [FromQuery] MealRecommendationSearchObject? search)
-            => Ok(_service.GetMealRecommendations(search));
+        public ActionResult<PagedResult<MealRecommendationDto>> GetRecommendation(
+          [FromQuery] MealRecommendationSearchObject search)
+          => Ok(_service.GetMealRecommendations(search));
 
         [HttpGet("Recommendation/{id:long}")]
         public ActionResult<MealRecommendationDto> GetRecommendationById(long id)

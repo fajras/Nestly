@@ -24,6 +24,11 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
     loadAll();
   }
 
+  Future<List<CategoryRow>> getAllFoodTypes() async {
+    final data = await _fetchAllPages('/api/FoodType');
+    return data.map((e) => CategoryRow.fromJson(e)).toList();
+  }
+
   void openRecommendationDialog({RecommendationRow? item}) async {
     final foodTypes = item == null
         ? await getFoodTypesWithoutRecommendation()
@@ -204,44 +209,67 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
     );
   }
 
+  Future<List<dynamic>> _fetchAllPages(String url) async {
+    List all = [];
+    int page = 1;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final separator = url.contains('?') ? '&' : '?';
+
+      final res = await ApiClient.get(
+        '$url${separator}Page=$page&PageSize=100',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load data');
+      }
+
+      final decoded = jsonDecode(res.body);
+
+      final items = decoded['items'] as List;
+      final totalCount = decoded['totalCount'] as int;
+
+      all.addAll(items);
+
+      if (items.isEmpty || items.length < 100) {
+        hasMore = false;
+      } else {
+        page++;
+      }
+
+      page++;
+    }
+
+    return all;
+  }
+
   Future<void> loadAll() async {
     setState(() => loading = true);
 
     try {
-      final r = await ApiClient.get('/api/Role');
-      final f = await ApiClient.get('/api/FoodType');
-      final b = await ApiClient.get('/api/BlogCategory');
-      final rec = await ApiClient.get('/api/MealPlan/Recommendation');
-
-      if (r.statusCode != 200 ||
-          f.statusCode != 200 ||
-          b.statusCode != 200 ||
-          rec.statusCode != 200) {
-        throw Exception('Greška pri učitavanju podataka');
-      }
+      final rolesData = await _fetchAllPages('/api/Role');
+      final foodTypesData = await _fetchAllPages('/api/FoodType');
+      final blogCategoriesData = await _fetchAllPages('/api/BlogCategory');
+      final recData = await _fetchAllPages('/api/MealPlan/Recommendation');
 
       if (!mounted) return;
 
-      final recList = (jsonDecode(rec.body) as List)
-          .map((e) => RecommendationRow.fromJson(e))
-          .toList();
-
       setState(() {
-        roles = parse(r.body);
-        foodTypes = parse(f.body);
-        blogCategories = parse(b.body);
-        recommendations = recList;
+        roles = rolesData.map((e) => CategoryRow.fromJson(e)).toList();
+        foodTypes = foodTypesData.map((e) => CategoryRow.fromJson(e)).toList();
+        blogCategories = blogCategoriesData
+            .map((e) => CategoryRow.fromJson(e))
+            .toList();
+        recommendations = recData
+            .map((e) => RecommendationRow.fromJson(e))
+            .toList();
       });
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju podataka');
     } finally {
       if (mounted) setState(() => loading = false);
     }
-  }
-
-  List<CategoryRow> parse(String body) {
-    final List<dynamic> data = jsonDecode(body);
-    return data.map((e) => CategoryRow.fromJson(e)).toList();
   }
 
   Future<void> delete(String path, int id) async {
@@ -606,22 +634,6 @@ class RecommendationRow {
   }
 }
 
-Future<List<RecommendationRow>> getRecommendations() async {
-  try {
-    final res = await ApiClient.get('/api/MealPlan/Recommendation');
-
-    if (res.statusCode != 200) {
-      throw Exception("Failed to load meal recommendations.");
-    }
-
-    final List data = jsonDecode(res.body);
-
-    return data.map((e) => RecommendationRow.fromJson(e)).toList();
-  } catch (e) {
-    throw Exception("Unable to retrieve meal recommendations from the server.");
-  }
-}
-
 Future<void> deleteRecommendation(int id) async {
   try {
     final res = await ApiClient.delete('/api/MealPlan/Recommendation/$id');
@@ -656,21 +668,5 @@ Future<void> updateRecommendation(
     throw Exception(
       "An error occurred while updating the meal recommendation.",
     );
-  }
-}
-
-Future<List<CategoryRow>> getAllFoodTypes() async {
-  try {
-    final res = await ApiClient.get('/api/FoodType');
-
-    if (res.statusCode != 200) {
-      throw Exception("Failed to load food types.");
-    }
-
-    final List data = jsonDecode(res.body);
-
-    return data.map((e) => CategoryRow.fromJson(e)).toList();
-  } catch (e) {
-    throw Exception("Unable to retrieve food types from the server.");
   }
 }

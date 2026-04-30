@@ -38,27 +38,45 @@ class MealPlanApiService {
 
   Future<List<MealRecommendation>> fetchRecommendations() async {
     try {
-      final res = await ApiClient.get('/api/MealPlan/Recommendation');
+      int page = 1;
+      const pageSize = 100;
 
-      if (res.statusCode != 200) {
-        throw Exception("Failed to load meal recommendations from the server.");
+      List<MealRecommendation> result = [];
+
+      while (true) {
+        final res = await ApiClient.get(
+          '/api/MealPlan/Recommendation?page=$page&pageSize=$pageSize',
+        );
+
+        if (res.statusCode != 200) {
+          throw Exception(
+            "Failed to load meal recommendations from the server.",
+          );
+        }
+
+        final data = jsonDecode(res.body);
+        final List items = data['items'];
+
+        if (items.isEmpty) break;
+
+        final parsed = items
+            .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+            .map(MealRecommendation.fromJson)
+            .toList();
+
+        result.addAll(parsed);
+
+        if (items.length < pageSize) break;
+
+        page++;
       }
 
-      final decoded = jsonDecode(res.body);
-
-      if (decoded is! List) return const [];
-
-      final items = decoded
-          .cast<Map<String, dynamic>>()
-          .map(MealRecommendation.fromJson)
-          .toList();
-
-      items.sort((a, b) {
+      result.sort((a, b) {
         final byWeek = a.weekNumber.compareTo(b.weekNumber);
         return byWeek != 0 ? byWeek : a.foodName.compareTo(b.foodName);
       });
 
-      return items;
+      return result;
     } catch (_) {
       throw Exception(
         "Unable to retrieve meal recommendations. Please try again later.",
@@ -68,26 +86,39 @@ class MealPlanApiService {
 
   Future<Map<int, int?>> fetchRatingsForBaby() async {
     try {
-      final res = await ApiClient.get('/api/MealPlan?BabyId=$babyId');
-
-      if (res.statusCode != 200) {
-        throw Exception("Failed to load baby food ratings.");
-      }
-
-      final decoded = jsonDecode(res.body);
-      if (decoded is! List) return const {};
+      int page = 1;
+      const pageSize = 100;
 
       final map = <int, int?>{};
 
-      for (final raw in decoded.cast<Map<String, dynamic>>()) {
-        final foodTypeId = int.tryParse(raw['foodTypeId'].toString());
-        if (foodTypeId == null) continue;
+      while (true) {
+        final res = await ApiClient.get(
+          '/api/MealPlan?BabyId=$babyId&page=$page&pageSize=$pageSize',
+        );
 
-        final rating = raw['rating'];
+        if (res.statusCode != 200) {
+          throw Exception("Failed to load baby food ratings.");
+        }
 
-        map[foodTypeId] = rating == null
-            ? null
-            : int.tryParse(rating.toString());
+        final data = jsonDecode(res.body);
+        final List items = data['items'];
+
+        if (items.isEmpty) break;
+
+        for (final raw in items.cast<Map<String, dynamic>>()) {
+          final foodTypeId = int.tryParse(raw['foodTypeId'].toString());
+          if (foodTypeId == null) continue;
+
+          final rating = raw['rating'];
+
+          map[foodTypeId] = rating == null
+              ? null
+              : int.tryParse(rating.toString());
+        }
+
+        if (items.length < pageSize) break;
+
+        page++;
       }
 
       return map;

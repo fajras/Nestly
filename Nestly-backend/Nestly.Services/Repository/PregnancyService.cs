@@ -12,40 +12,50 @@ namespace Nestly.Services.Repository
 
         private const int GestationDays = 280;
 
-        public List<PregnancyResponseDto> Get(PregnancySearchObject? search)
+        public PagedResult<PregnancyResponseDto> Get(PregnancySearchObject search)
         {
             IQueryable<Pregnancy> q = _db.Pregnancies.AsNoTracking();
 
-            if (search?.UserId is not null)
+            if (search.UserId is not null)
             {
                 q = q.Where(p => p.ParentProfileId == search.UserId);
             }
 
-            if (search?.LmpFrom is not null)
+            if (search.LmpFrom is not null)
             {
                 q = q.Where(p => p.LmpDate >= search.LmpFrom.Value);
             }
 
-            if (search?.LmpTo is not null)
+            if (search.LmpTo is not null)
             {
                 q = q.Where(p => p.LmpDate <= search.LmpTo.Value);
             }
 
-            if (search?.DueFrom is not null)
+            if (search.DueFrom is not null)
             {
                 q = q.Where(p => p.DueDate >= search.DueFrom.Value);
             }
 
-            if (search?.DueTo is not null)
+            if (search.DueTo is not null)
             {
                 q = q.Where(p => p.DueDate <= search.DueTo.Value);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
                 .ThenByDescending(p => p.Id)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(ToDto)
                 .ToList();
+
+            return new PagedResult<PregnancyResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public PregnancyResponseDto? GetById(long id)

@@ -4,13 +4,12 @@ namespace Nestly.Services.Interfaces
 {
     public interface IMedicationPlanService
     {
-        IEnumerable<MedicationPlanResponseDto> Get(MedicationPlanSearchObject? search);
+        PagedResult<MedicationPlanResponseDto> Get(MedicationPlanSearchObject search);
         MedicationPlanResponseDto? GetById(long id);
         MedicationPlanResponseDto Create(CreateMedicationPlanDto dto);
         MedicationPlanResponseDto? Patch(long id, MedicationPlanPatchDto patch);
         bool Delete(long id);
-        IEnumerable<MedicationIntakeLogDto> GetLogsForDay(long parentProfileId, DateTime date);
-
+        PagedResult<MedicationIntakeLogDto> GetLogsForDay(MedicationIntakeLogSearchObject search);
         void MarkAsTaken(long intakeLogId);
     }
 }

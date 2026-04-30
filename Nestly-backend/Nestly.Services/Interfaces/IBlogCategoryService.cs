@@ -4,7 +4,7 @@ namespace Nestly.Services.Interfaces
 {
     public interface IBlogCategoryService
     {
-        List<BlogCategoryDto> Get(BlogCategorySearchObject? search);
+        PagedResult<BlogCategoryDto> Get(BlogCategorySearchObject search);
         BlogCategoryDto? GetById(int id);
         BlogCategoryDto Create(BlogCategoryInsertDto request);
         BlogCategoryDto? Update(int id, BlogCategoryUpdateDto request);

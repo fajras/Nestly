@@ -18,8 +18,11 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<FetalDevelopmentWeekResponseDto>> Get()
-            => Ok(_service.Get());
+        public ActionResult<PagedResult<FetalDevelopmentWeekResponseDto>> Get(
+    [FromQuery] FetalDevelopmentWeekSearchObject search)
+        {
+            return Ok(_service.Get(search));
+        }
 
         [HttpGet("{id:int}")]
         public ActionResult<FetalDevelopmentWeekResponseDto> GetById(int id)

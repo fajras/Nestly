@@ -56,19 +56,36 @@ class SymptomDiaryApiService {
   }
 
   Future<Set<DateTime>> getMarkedDays(int parentProfileId) async {
-    final res = await ApiClient.get(
-      '/api/SymptomDiary/marked-days'
-      '?parentProfileId=$parentProfileId',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) return {};
+    Set<DateTime> result = {};
 
-    final List data = jsonDecode(res.body);
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/SymptomDiary/marked-days'
+        '?parentProfileId=$parentProfileId&page=$page&pageSize=$pageSize',
+      );
 
-    return data
-        .map<DateTime>((e) => DateTime.parse(e as String))
-        .map((d) => DateTime(d.year, d.month, d.day))
-        .toSet();
+      if (res.statusCode != 200) break;
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<DateTime>((e) => DateTime.parse(e as String))
+          .map((d) => DateTime(d.year, d.month, d.day));
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
+    }
+
+    return result;
   }
 
   Future<int> create(
@@ -160,7 +177,9 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
     setState(() => _loading = true);
 
     try {
-      _markedDays = await _service.getMarkedDays(widget.parentProfileId);
+      if (_markedDays.isEmpty) {
+        _markedDays = await _service.getMarkedDays(widget.parentProfileId);
+      }
 
       if (!mounted) return;
 

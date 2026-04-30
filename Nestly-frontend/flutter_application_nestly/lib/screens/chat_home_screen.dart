@@ -87,13 +87,16 @@ class ChatHomeApiService {
   }
 
   Future<List<AppUserFull>> getAllUsers() async {
-    final res = await ApiClient.get('/AppUser?roleId=1');
+    final res = await ApiClient.get('/AppUser?RoleId=1&Page=1&PageSize=100');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load users');
     }
 
-    final List data = jsonDecode(res.body);
+    final decoded = jsonDecode(res.body);
+
+    final List data = decoded is List ? decoded : (decoded['items'] ?? []);
+
     return data.map((e) => AppUserFull.fromJson(e)).toList();
   }
 }

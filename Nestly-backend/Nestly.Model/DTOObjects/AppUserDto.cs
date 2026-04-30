@@ -42,6 +42,14 @@ public class AppUserSearchObject
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public long? RoleId { get; set; }
+    public int Page { get; set; } = 1;
+
+    private int _pageSize = 100;
+    public int PageSize
+    {
+        get => _pageSize;
+        set => _pageSize = value > 100 ? 100 : value;
+    }
 
 }
 

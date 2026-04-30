@@ -14,33 +14,44 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public IEnumerable<BabyGrowthResponseDto> Get(BabyGrowthSearchObject? search)
+        public PagedResult<BabyGrowthResponseDto> Get(BabyGrowthSearchObject search)
         {
             IQueryable<BabyGrowth> q = _db.BabyGrowths.AsQueryable();
 
-            if (search?.BabyId is not null)
+            if (search.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.WeekNumber is not null)
+            if (search.WeekNumber is not null)
             {
                 q = q.Where(x => x.WeekNumber == search.WeekNumber);
             }
 
-            if (search?.WeekFrom is not null)
+            if (search.WeekFrom is not null)
             {
                 q = q.Where(x => x.WeekNumber >= search.WeekFrom.Value);
             }
 
-            if (search?.WeekTo is not null)
+            if (search.WeekTo is not null)
             {
                 q = q.Where(x => x.WeekNumber <= search.WeekTo.Value);
             }
 
-            return q.OrderBy(x => x.WeekNumber)
-                    .Select(MapToDto)
-                    .ToList();
+            var totalCount = q.Count();
+
+            var items = q
+                .OrderBy(x => x.WeekNumber)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .Select(MapToDto)
+                .ToList();
+
+            return new PagedResult<BabyGrowthResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public BabyGrowthResponseDto? GetById(long id)

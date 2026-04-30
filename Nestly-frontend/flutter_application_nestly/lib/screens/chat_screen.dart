@@ -24,7 +24,7 @@ class ChatMessage {
       id: json['id'],
       senderId: json['senderId'],
       content: json['content'],
-      createdAt: DateTime.tryParse(json['createdAt']) ?? DateTime.now(),
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -47,7 +47,7 @@ class ChatRealtimeMessage {
       conversationId: json['conversationId'],
       senderId: json['senderId'],
       content: json['content'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 }

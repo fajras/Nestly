@@ -18,8 +18,8 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<SleepLogResponseDto>> Get([FromQuery] SleepLogSearchObject? search)
-            => Ok(_service.Get(search));
+        public ActionResult<PagedResult<SleepLogResponseDto>> Get([FromQuery] SleepLogSearchObject search)
+       => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
         public ActionResult<SleepLogResponseDto> GetById(long id)

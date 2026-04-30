@@ -78,32 +78,50 @@ class MedicationPlanApiService {
   }
 
   Future<List<TherapyPlan>> fetchPlans() async {
-    final res = await ApiClient.get(
-      '/api/MedicationPlan?ParentProfileId=$parentProfileId',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to fetch medication plan');
+    List<TherapyPlan> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/MedicationPlan?ParentProfileId=$parentProfileId&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to fetch medication plan');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items.map((e) {
+        return TherapyPlan(
+          id: e['id'],
+          name: e['medicineName'],
+          dose: e['dose'],
+          start: DateTime.parse(e['startDate']),
+          end: DateTime.parse(e['endDate']),
+          intakeTimes: ((e['intakeTimes'] ?? []) as List).map((t) {
+            final parts = t.toString().split(':');
+            return Duration(
+              hours: int.parse(parts[0]),
+              minutes: int.parse(parts[1]),
+            );
+          }).toList(),
+        );
+      }).toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List data = jsonDecode(res.body);
-
-    return data.map((e) {
-      return TherapyPlan(
-        id: e['id'],
-        name: e['medicineName'],
-        dose: e['dose'],
-        start: DateTime.parse(e['startDate']),
-        end: DateTime.parse(e['endDate']),
-        intakeTimes: ((e['intakeTimes'] ?? []) as List).map((t) {
-          final parts = t.toString().split(':');
-          return Duration(
-            hours: int.parse(parts[0]),
-            minutes: int.parse(parts[1]),
-          );
-        }).toList(),
-      );
-    }).toList();
+    return result;
   }
 
   Future<List<MedicationIntakeLog>> fetchLogsForDay(DateTime date) async {
@@ -112,32 +130,53 @@ class MedicationPlanApiService {
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
 
-    final res = await ApiClient.get(
-      '/api/MedicationPlan/day?parentProfileId=$parentProfileId&date=$formattedDate',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load medication plans');
+    List<MedicationIntakeLog> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/MedicationPlan/day'
+        '?parentProfileId=$parentProfileId'
+        '&date=$formattedDate'
+        '&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load medication plans');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items']; // 👈 KLJUČNO
+
+      if (items.isEmpty) break;
+
+      final parsed = items.map((e) {
+        final parts = e['intakeTime'].toString().split(':');
+
+        return MedicationIntakeLog(
+          intakeLogId: e['intakeLogId'],
+          planId: e['planId'],
+          medicineName: e['medicineName'],
+          dose: e['dose'],
+          scheduledDate: DateTime.parse(e['scheduledDate']),
+          intakeTime: Duration(
+            hours: int.parse(parts[0]),
+            minutes: int.parse(parts[1]),
+          ),
+          taken: e['taken'],
+        );
+      }).toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List data = jsonDecode(res.body);
-
-    return data.map((e) {
-      final parts = e['intakeTime'].toString().split(':');
-
-      return MedicationIntakeLog(
-        intakeLogId: e['intakeLogId'],
-        planId: e['planId'],
-        medicineName: e['medicineName'],
-        dose: e['dose'],
-        scheduledDate: DateTime.parse(e['scheduledDate']),
-        intakeTime: Duration(
-          hours: int.parse(parts[0]),
-          minutes: int.parse(parts[1]),
-        ),
-        taken: e['taken'],
-      );
-    }).toList();
+    return result;
   }
 
   Future<void> markTaken(int logId) async {

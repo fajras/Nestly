@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.WebAPI.Controllers
@@ -16,8 +17,8 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<AppUserResultDto>> Get([FromQuery] AppUserSearchObject? search)
-     => Ok(appUserService.Get(search));
+        public ActionResult<PagedResult<AppUserResultDto>> Get([FromQuery] AppUserSearchObject search)
+           => Ok(appUserService.Get(search));
 
         [HttpGet("{id:long}", Name = "GetAppUserById")]
         public ActionResult<AppUserResultDto> GetById(long id)

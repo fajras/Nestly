@@ -7,6 +7,7 @@ import 'package:flutter_application_nestly/model/app_user_row.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/admin_blog_screen.dart';
+import 'package:flutter_application_nestly/screens/admin_fetal_week_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_questions_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_weekly_advice.dart';
 import 'package:flutter_application_nestly/screens/doctor_system_management_screen.dart';
@@ -18,14 +19,48 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
-    final res = await ApiClient.get('/AppUser?RoleId=1');
+    try {
+      final data = await _fetchAllPages('/AppUser?RoleId=1');
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load users');
+      return data.map<AppUserRow>((e) => AppUserRow.fromJson(e)).toList();
+    } catch (_) {
+      throw Exception('Unable to retrieve users.');
+    }
+  }
+
+  Future<List<dynamic>> _fetchAllPages(String url) async {
+    List all = [];
+    int page = 1;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final separator = url.contains('?') ? '&' : '?';
+
+      final res = await ApiClient.get(
+        '$url${separator}Page=$page&PageSize=100',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load data');
+      }
+
+      final decoded = jsonDecode(res.body);
+
+      final items = decoded['items'] as List;
+      final totalCount = decoded['totalCount'] as int;
+
+      all.addAll(items);
+
+      if (items.isEmpty) {
+        hasMore = false;
+      } else {
+        hasMore = all.length < totalCount;
+      }
+
+      page++;
     }
 
-    final List data = jsonDecode(res.body);
-    return data.map((e) => AppUserRow.fromJson(e)).toList();
+    return all;
   }
 
   Future<void> deleteUser(int id) async {
@@ -37,14 +72,14 @@ class AdminDashboardService {
   }
 
   Future<int> getQuestionCount() async {
-    final res = await ApiClient.get('/api/qaquestion');
+    final res = await ApiClient.get('/api/qaquestion?Page=1&PageSize=1');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load questions');
     }
 
-    final List data = jsonDecode(res.body);
-    return data.length;
+    final decoded = jsonDecode(res.body);
+    return decoded['totalCount'];
   }
 }
 
@@ -181,6 +216,8 @@ class _DoctorAdminDashboardScreenState
             return EditDoctorProfileScreen(userId: snapshot.data!);
           },
         );
+      case 7:
+        return AdminFetalDevelopmentScreen();
       default:
         return const SizedBox();
     }
@@ -217,75 +254,92 @@ class _Sidebar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/nestly_logo_seed.png',
-                width: 150,
-                height: 150,
-                fit: BoxFit.contain,
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/nestly_logo_seed.png',
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  _SidebarItem(
+                    icon: Icons.dashboard_rounded,
+                    label: 'Dashboard',
+                    index: 0,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.people_alt_rounded,
+                    label: 'Korisnice',
+                    index: 1,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.question_answer_rounded,
+                    label: 'Pitanja',
+                    index: 2,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.tips_and_updates_rounded,
+                    label: 'Savjeti',
+                    index: 3,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.article_rounded,
+                    label: 'Blog',
+                    index: 4,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.admin_panel_settings_rounded,
+                    label: 'Upravljanje sistemom',
+                    index: 5,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.trending_up_rounded,
+                    label: 'Upravljanje rastom',
+                    index: 7,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.manage_accounts,
+                    label: 'Upravljanje računom',
+                    index: 6,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                ],
               ),
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xl),
-
-          _SidebarItem(
-            icon: Icons.dashboard_rounded,
-            label: 'Dashboard',
-            index: 0,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          _SidebarItem(
-            icon: Icons.people_alt_rounded,
-            label: 'Korisnice',
-            index: 1,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          _SidebarItem(
-            icon: Icons.question_answer_rounded,
-            label: 'Pitanja',
-            index: 2,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          _SidebarItem(
-            icon: Icons.tips_and_updates_rounded,
-            label: 'Savjeti',
-            index: 3,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          _SidebarItem(
-            icon: Icons.article_rounded,
-            label: 'Blog',
-            index: 4,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          _SidebarItem(
-            icon: Icons.admin_panel_settings_rounded,
-            label: 'Upravljanje sistemom',
-            index: 5,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          _SidebarItem(
-            icon: Icons.manage_accounts,
-            label: 'Upravljanje računom',
-            index: 6,
-            selectedIndex: selectedIndex,
-            onTap: onSelect,
-          ),
-          const Spacer(),
-
-          TextButton.icon(
-            onPressed: onLogout,
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Odjava'),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: TextButton.icon(
+              onPressed: onLogout,
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Odjava'),
+            ),
           ),
         ],
       ),
@@ -492,7 +546,7 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
         Expanded(
           child: Card(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -559,7 +613,7 @@ class _UsersTable extends StatelessWidget {
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 26,
+                    radius: 20,
                     backgroundColor: AppColors.seed.withOpacity(.15),
                     child: Text(
                       u.firstName.isNotEmpty
@@ -571,8 +625,7 @@ class _UsersTable extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: AppSpacing.lg),
+                  const SizedBox(width: 12),
 
                   Expanded(
                     child: Column(
@@ -731,7 +784,7 @@ class _StatCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                radius: 22,
+                radius: 18,
                 backgroundColor: AppColors.seed.withOpacity(.15),
                 child: Icon(icon, color: AppColors.seed),
               ),

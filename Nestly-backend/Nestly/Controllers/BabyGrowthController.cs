@@ -18,11 +18,10 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BabyGrowthResponseDto>> Get(
-            [FromQuery] BabyGrowthSearchObject? search)
+        public ActionResult<PagedResult<BabyGrowthResponseDto>> Get(
+      [FromQuery] BabyGrowthSearchObject search)
         {
-            var result = _service.Get(search);
-            return Ok(result);
+            return Ok(_service.Get(search));
         }
 
         [HttpGet("{id:long}")]

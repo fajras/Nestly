@@ -82,14 +82,38 @@ class FeedingLogApiService {
   }
 
   Future<List<FeedingLog>> fetch() async {
-    final res = await ApiClient.get('/api/FeedingLog?BabyId=$babyId');
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Load failed');
+    List<FeedingLog> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/FeedingLog?BabyId=$babyId&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Load failed');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+          .map(FeedingLog.fromJson)
+          .toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List data = jsonDecode(res.body);
-    return data.map((e) => FeedingLog.fromJson(e)).toList();
+    return result;
   }
 
   Future<void> create({

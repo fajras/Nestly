@@ -475,31 +475,56 @@ class _PostText extends StatelessWidget {
 }
 
 Future<List<BlogCategory>> fetchCategories() async {
-  final res = await ApiClient.get('/api/BlogCategory');
+  final res = await ApiClient.get('/api/BlogCategory?page=1&pageSize=100');
 
   if (res.statusCode != 200) {
     throw Exception('Fetch blog category failed');
   }
 
-  final List data = jsonDecode(res.body);
-  return data.map((e) => BlogCategory.fromJson(e)).toList();
+  final data = jsonDecode(res.body);
+  final List items = data['items'] ?? [];
+
+  return items
+      .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+      .map(BlogCategory.fromJson)
+      .toList();
 }
 
 Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
-  final path = categoryId == null
-      ? '/api/BlogPost'
-      : '/api/BlogPost/category/$categoryId';
+  int page = 1;
+  const pageSize = 100;
 
-  final res = await ApiClient.get(path);
+  List<BlogPostDto> result = [];
 
-  if (res.statusCode != 200) {
-    throw Exception('Failed to load posts');
+  while (true) {
+    final path = categoryId == null
+        ? '/api/BlogPost?page=$page&pageSize=$pageSize'
+        : '/api/BlogPost/category/$categoryId?page=$page&pageSize=$pageSize';
+
+    final res = await ApiClient.get(path);
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load posts');
+    }
+
+    final data = jsonDecode(res.body);
+    final List items = data['items'];
+
+    if (items.isEmpty) break;
+
+    final parsed = items
+        .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+        .map(BlogPostDto.fromJson)
+        .toList();
+
+    result.addAll(parsed);
+
+    if (items.length < pageSize) break;
+
+    page++;
   }
 
-  final body = jsonDecode(res.body);
-  return body is List
-      ? body.map((e) => BlogPostDto.fromJson(e)).toList()
-      : const [];
+  return result;
 }
 
 class BlogPostDetailScreen extends StatefulWidget {

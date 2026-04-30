@@ -71,19 +71,42 @@ class CalendarEventApiService {
     required DateTime from,
     required DateTime to,
   }) async {
-    final resp = await ApiClient.get(
-      '/api/CalendarEvent'
-      '?BabyId=$babyId'
-      '&From=${from.toIso8601String()}'
-      '&To=${to.toIso8601String()}',
-    );
+    int page = 1;
+    const pageSize = 100;
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to fetch calendar events');
+    List<CalendarEventEntry> result = [];
+
+    while (true) {
+      final resp = await ApiClient.get(
+        '/api/CalendarEvent'
+        '?BabyId=$babyId'
+        '&From=${from.toIso8601String()}'
+        '&To=${to.toIso8601String()}'
+        '&page=$page&pageSize=$pageSize',
+      );
+
+      if (resp.statusCode != 200) {
+        throw Exception('Failed to fetch calendar events');
+      }
+
+      final data = jsonDecode(resp.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items
+          .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+          .map(CalendarEventEntry.fromJson)
+          .toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List data = jsonDecode(resp.body) as List;
-    return data.map((e) => CalendarEventEntry.fromJson(e)).toList();
+    return result;
   }
 
   Future<CalendarEventEntry> update({

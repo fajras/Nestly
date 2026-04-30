@@ -4,7 +4,7 @@ namespace Nestly.Services.Interfaces
 {
     public interface IWeeklyAdviceService
     {
-        IEnumerable<WeeklyAdviceResponseDto> Get();
+        PagedResult<WeeklyAdviceResponseDto> Get(WeeklyAdviceSearchObject search);
         WeeklyAdviceResponseDto? GetById(int id);
         WeeklyAdviceResponseDto? GetByWeek(short weekNumber);
         WeeklyAdviceResponseDto Create(CreateWeeklyAdviceDto dto);

@@ -14,29 +14,39 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<HealthEntryResponseDto> Get(HealthEntrySearchObject? search)
+        public PagedResult<HealthEntryResponseDto> Get(HealthEntrySearchObject search)
         {
             IQueryable<HealthEntry> q = _db.HealthEntries.AsQueryable();
 
-            if (search?.BabyId is not null)
+            if (search.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.DateFrom is not null)
+            if (search.DateFrom is not null)
             {
                 q = q.Where(x => x.EntryDate >= search.DateFrom.Value);
             }
 
-            if (search?.DateTo is not null)
+            if (search.DateTo is not null)
             {
                 q = q.Where(x => x.EntryDate <= search.DateTo.Value);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(x => x.EntryDate)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(MapToDto)
                 .ToList();
+
+            return new PagedResult<HealthEntryResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public HealthEntryResponseDto? GetById(long id)

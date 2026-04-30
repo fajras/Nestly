@@ -11,33 +11,44 @@ public class CalendarEventService : ICalendarEventService
         _db = db;
     }
 
-    public IEnumerable<CalendarEventResponseDto> Get(CalendarEventSearchObject? search)
+    public PagedResult<CalendarEventResponseDto> Get(CalendarEventSearchObject search)
     {
         IQueryable<CalendarEvent> q = _db.CalendarEvents.AsQueryable();
 
-        if (search?.BabyId is not null)
+        if (search.BabyId is not null)
         {
             q = q.Where(e => e.BabyId == search.BabyId);
         }
 
-        if (search?.UserId is not null)
+        if (search.UserId is not null)
         {
             q = q.Where(e => e.UserId == search.UserId);
         }
 
-        if (search?.From is not null)
+        if (search.From is not null)
         {
             q = q.Where(e => e.StartAt >= search.From.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(search?.Title))
+        if (!string.IsNullOrWhiteSpace(search.Title))
         {
             q = q.Where(e => e.Title.Contains(search.Title));
         }
 
-        return q.OrderBy(e => e.StartAt)
-                .Select(MapToDto)
-                .ToList();
+        var totalCount = q.Count();
+
+        var items = q
+            .OrderBy(e => e.StartAt)
+            .Skip((search.Page - 1) * search.PageSize)
+            .Take(search.PageSize)
+            .Select(MapToDto)
+            .ToList();
+
+        return new PagedResult<CalendarEventResponseDto>
+        {
+            TotalCount = totalCount,
+            Items = items
+        };
     }
 
     public CalendarEventResponseDto? GetById(long id)

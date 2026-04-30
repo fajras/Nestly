@@ -13,8 +13,8 @@ namespace Nestly.WebAPI.Controllers
         public MilestoneController(IMilestoneService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<MilestoneResponseDto>> Get([FromQuery] MilestoneSearchObject? search)
-     => Ok(_service.Get(search));
+        public ActionResult<PagedResult<MilestoneResponseDto>> Get([FromQuery] MilestoneSearchObject search)
+          => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
         public ActionResult<MilestoneResponseDto> GetById(long id)

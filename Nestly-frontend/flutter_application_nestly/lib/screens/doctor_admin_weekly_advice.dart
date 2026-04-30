@@ -25,15 +25,23 @@ class WeeklyAdviceRow {
 }
 
 class WeeklyAdviceAdminService {
-  Future<List<WeeklyAdviceRow>> getAll() async {
-    final res = await ApiClient.get('/api/weeklyadvice');
+  Future<List<WeeklyAdviceRow>> getAll({
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    final res = await ApiClient.get(
+      '/api/weeklyadvice?page=$page&pageSize=$pageSize',
+    );
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load weekly advice');
     }
 
-    final List data = jsonDecode(res.body);
-    return data.map((e) => WeeklyAdviceRow.fromJson(e)).toList();
+    final data = jsonDecode(res.body);
+
+    final List items = data['items'];
+
+    return items.map((e) => WeeklyAdviceRow.fromJson(e)).toList();
   }
 
   Future<void> updateAdvice({

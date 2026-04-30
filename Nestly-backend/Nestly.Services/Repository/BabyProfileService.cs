@@ -14,40 +14,50 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public IEnumerable<BabyProfileSummaryDto> Get(BabyProfileSearchObject? search)
+        public PagedResult<BabyProfileSummaryDto> Get(BabyProfileSearchObject search)
         {
             IQueryable<BabyProfile> q = _db.BabyProfiles.AsQueryable();
 
-            if (search?.UserId is not null)
+            if (search.UserId is not null)
             {
                 q = q.Where(x => x.ParentProfileId == search.UserId);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.BabyName))
+            if (!string.IsNullOrWhiteSpace(search.BabyName))
             {
                 q = q.Where(x => x.BabyName.Contains(search.BabyName.Trim()));
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.Gender))
+            if (!string.IsNullOrWhiteSpace(search.Gender))
             {
                 q = q.Where(x => x.Gender == search.Gender.Trim());
             }
 
-            if (search?.BirthDateFrom is not null)
+            if (search.BirthDateFrom is not null)
             {
                 q = q.Where(x => x.BirthDate >= search.BirthDateFrom.Value.Date);
             }
 
-            if (search?.BirthDateTo is not null)
+            if (search.BirthDateTo is not null)
             {
                 q = q.Where(x => x.BirthDate <= search.BirthDateTo.Value.Date);
             }
 
-            return q
-               .OrderByDescending(x => x.BirthDate)
-               .ThenBy(x => x.BabyName)
-               .Select(MapToDto)
-               .ToList();
+            var totalCount = q.Count();
+
+            var items = q
+                .OrderByDescending(x => x.BirthDate)
+                .ThenBy(x => x.BabyName)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .Select(MapToDto)
+                .ToList();
+
+            return new PagedResult<BabyProfileSummaryDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public BabyProfileSummaryDto? GetById(long id)

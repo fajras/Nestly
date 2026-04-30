@@ -30,18 +30,37 @@ class QaQuestionRow {
 
 class QaAdminService {
   Future<List<QaQuestionRow>> getUnansweredQuestions() async {
-    final res = await ApiClient.get('/api/qaquestion');
+    int page = 1;
+    const pageSize = 100;
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load questions');
+    List<QaQuestionRow> result = [];
+
+    while (true) {
+      final res = await ApiClient.get(
+        '/api/qaquestion'
+        '?OnlyUnanswered=true'
+        '&page=$page&pageSize=$pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load questions');
+      }
+
+      final data = jsonDecode(res.body);
+      final List items = data['items'];
+
+      if (items.isEmpty) break;
+
+      final parsed = items.map((e) => QaQuestionRow.fromJson(e)).toList();
+
+      result.addAll(parsed);
+
+      if (items.length < pageSize) break;
+
+      page++;
     }
 
-    final List data = jsonDecode(res.body);
-
-    return data
-        .map((e) => QaQuestionRow.fromJson(e))
-        .where((q) => q.isAnswered == false)
-        .toList();
+    return result;
   }
 
   Future<void> answerQuestion({

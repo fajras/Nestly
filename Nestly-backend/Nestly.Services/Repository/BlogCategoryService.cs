@@ -23,19 +23,29 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public List<BlogCategoryDto> Get(BlogCategorySearchObject? search)
+        public PagedResult<BlogCategoryDto> Get(BlogCategorySearchObject search)
         {
             IQueryable<BlogCategory> query = _db.BlogCategories.AsNoTracking();
 
-            if (!string.IsNullOrWhiteSpace(search?.Name))
+            if (!string.IsNullOrWhiteSpace(search.Name))
             {
                 query = query.Where(x => x.Name.Contains(search.Name));
             }
 
-            return query
+            var totalCount = query.Count();
+
+            var items = query
                 .OrderBy(x => x.Name)
-                .Select(x => MapToDto(x))
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .Select(MapToDto)
                 .ToList();
+
+            return new PagedResult<BlogCategoryDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public BlogCategoryDto? GetById(int id)

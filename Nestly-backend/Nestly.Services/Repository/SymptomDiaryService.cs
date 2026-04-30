@@ -14,29 +14,39 @@ namespace Nestly.Services.Repository
         {
             _db = db;
         }
-        public IEnumerable<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject? search)
+        public PagedResult<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject search)
         {
             IQueryable<SymptomDiary> q = _db.SymptomDiaries.AsNoTracking();
 
-            if (search?.ParentProfileId is not null)
+            if (search.ParentProfileId is not null)
             {
                 q = q.Where(s => s.ParentProfileId == search.ParentProfileId);
             }
 
-            if (search?.DateFrom is not null)
+            if (search.DateFrom is not null)
             {
                 q = q.Where(s => s.Date >= search.DateFrom.Value.Date);
             }
 
-            if (search?.DateTo is not null)
+            if (search.DateTo is not null)
             {
                 q = q.Where(s => s.Date <= search.DateTo.Value.Date);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(s => s.Date)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(ToDto)
                 .ToList();
+
+            return new PagedResult<SymptomDiaryResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
         private static SymptomDiaryResponseDto ToDto(SymptomDiary s) => new()
         {
@@ -89,14 +99,26 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public IEnumerable<SymptomDiaryResponseDto> GetByParent(long parentProfileId)
+        public PagedResult<SymptomDiaryResponseDto> GetByParent(long parentProfileId, SymptomDiarySearchObject search)
         {
-            return _db.SymptomDiaries
+            var query = _db.SymptomDiaries
                 .AsNoTracking()
-                .Where(s => s.ParentProfileId == parentProfileId)
+                .Where(s => s.ParentProfileId == parentProfileId);
+
+            var totalCount = query.Count();
+
+            var items = query
                 .OrderByDescending(s => s.Date)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(ToDto)
                 .ToList();
+
+            return new PagedResult<SymptomDiaryResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public SymptomDiaryResponseDto? GetByDate(long parentProfileId, DateTime date)
@@ -165,14 +187,27 @@ namespace Nestly.Services.Repository
             return true;
         }
 
-        public IEnumerable<DateTime> GetMarkedDays(long parentProfileId)
+        public PagedResult<DateTime> GetMarkedDays(long parentProfileId, SymptomDiarySearchObject search)
         {
-            return _db.SymptomDiaries
+            var query = _db.SymptomDiaries
                 .AsNoTracking()
                 .Where(s => s.ParentProfileId == parentProfileId)
                 .Select(s => s.Date)
-                .Distinct()
+                .Distinct();
+
+            var totalCount = query.Count();
+
+            var items = query
+                .OrderByDescending(d => d)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .ToList();
+
+            return new PagedResult<DateTime>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         private static void ValidateRange(int? value, string field)

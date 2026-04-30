@@ -14,32 +14,42 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public List<FeedingLogResponseDto> Get(FeedingLogSearchObject? search)
+        public PagedResult<FeedingLogResponseDto> Get(FeedingLogSearchObject search)
         {
             IQueryable<FeedingLog> q = _db.FeedingLogs
                 .Include(f => f.FoodType)
                 .AsQueryable();
 
-            if (search?.BabyId is not null)
+            if (search.BabyId is not null)
             {
                 q = q.Where(x => x.BabyId == search.BabyId);
             }
 
-            if (search?.DateFrom is not null)
+            if (search.DateFrom is not null)
             {
                 q = q.Where(x => x.FeedDate >= search.DateFrom.Value);
             }
 
-            if (search?.DateTo is not null)
+            if (search.DateTo is not null)
             {
                 q = q.Where(x => x.FeedDate <= search.DateTo.Value);
             }
 
-            return q
+            var totalCount = q.Count();
+
+            var items = q
                 .OrderByDescending(x => x.FeedDate)
                 .ThenByDescending(x => x.FeedTime)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(x => MapToDto(x))
                 .ToList();
+
+            return new PagedResult<FeedingLogResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public FeedingLogResponseDto? GetById(long id)

@@ -11,9 +11,8 @@ namespace Nestly.WebAPI.Controllers
     {
         private readonly IDiaperLogService _service;
         public DiaperLogController(IDiaperLogService service) => _service = service;
-
         [HttpGet]
-        public ActionResult<IEnumerable<DiaperLogResponseDto>> Get([FromQuery] DiaperLogSearchObject? search)
+        public ActionResult<PagedResult<DiaperLogResponseDto>> Get([FromQuery] DiaperLogSearchObject search)
         {
             return Ok(_service.Get(search));
         }

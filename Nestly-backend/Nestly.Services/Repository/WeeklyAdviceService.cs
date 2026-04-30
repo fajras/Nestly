@@ -22,13 +22,31 @@ namespace Nestly.Services.Repository
             AdviceText = w.AdviceText
         };
 
-        public IEnumerable<WeeklyAdviceResponseDto> Get()
+        public PagedResult<WeeklyAdviceResponseDto> Get(WeeklyAdviceSearchObject search)
         {
-            return _db.WeeklyAdvices
+            var query = _db.WeeklyAdvices
                 .AsNoTracking()
+                .AsQueryable();
+
+            if (search.WeekNumber.HasValue)
+            {
+                query = query.Where(w => w.WeekNumber == search.WeekNumber);
+            }
+
+            var totalCount = query.Count();
+
+            var items = query
                 .OrderBy(w => w.WeekNumber)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .Select(ToDto)
                 .ToList();
+
+            return new PagedResult<WeeklyAdviceResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public WeeklyAdviceResponseDto? GetById(int id)

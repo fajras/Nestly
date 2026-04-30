@@ -28,6 +28,15 @@ namespace Nestly.Model.DTOObjects
         public long? UserId { get; set; }
         public DateTime? From { get; set; }
         public string? Title { get; set; }
+
+        public int Page { get; set; } = 1;
+
+        private int _pageSize = 20;
+        public int PageSize
+        {
+            get => _pageSize;
+            set => _pageSize = value > 100 ? 100 : value;
+        }
     }
     public class CalendarEventResponseDto
     {

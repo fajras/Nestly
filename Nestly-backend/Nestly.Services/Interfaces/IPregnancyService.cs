@@ -2,7 +2,7 @@ using Nestly.Model.DTOObjects;
 
 public interface IPregnancyService
 {
-    List<PregnancyResponseDto> Get(PregnancySearchObject? search);
+    PagedResult<PregnancyResponseDto> Get(PregnancySearchObject search);
     PregnancyResponseDto? GetById(long id);
     PregnancyResponseDto? GetByParentProfileId(long parentProfileId);
     PregnancyResponseDto Create(CreatePregnancyDto entity);

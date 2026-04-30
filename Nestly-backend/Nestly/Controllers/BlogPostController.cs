@@ -21,7 +21,7 @@ public class BlogPostController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<BlogPostResponseDto>> Get([FromQuery] BlogPostSearchObject? search)
+    public ActionResult<PagedResult<BlogPostResponseDto>> Get([FromQuery] BlogPostSearchObject search)
     {
         return Ok(_service.Get(search));
     }
@@ -59,12 +59,12 @@ public class BlogPostController : ControllerBase
         await _blob.DeleteBlogImageAsync(id);
         return NoContent();
     }
-
     [HttpGet("category/{categoryId:int}")]
-    public ActionResult<IEnumerable<BlogPostResponseDto>> GetByCategoryId(int categoryId)
+    public ActionResult<PagedResult<BlogPostResponseDto>> GetByCategoryId(
+        int categoryId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var posts = _service.GetByCategoryId(categoryId);
-        return posts.Any() ? Ok(posts) : NotFound();
+        return Ok(_service.GetByCategoryId(categoryId, page, pageSize));
     }
-
 }

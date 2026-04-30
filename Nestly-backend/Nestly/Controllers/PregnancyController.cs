@@ -13,8 +13,8 @@ namespace Nestly.WebAPI.Controllers
         public PregnancyController(IPregnancyService service) => _service = service;
 
         [HttpGet]
-        public ActionResult<IEnumerable<PregnancyResponseDto>> Get([FromQuery] PregnancySearchObject? search)
-    => Ok(_service.Get(search));
+        public ActionResult<PagedResult<PregnancyResponseDto>> Get([FromQuery] PregnancySearchObject search)
+     => Ok(_service.Get(search));
 
         [HttpGet("{id:long}")]
         public ActionResult<PregnancyResponseDto> GetById(long id)

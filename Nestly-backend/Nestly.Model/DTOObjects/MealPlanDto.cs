@@ -9,6 +9,14 @@ namespace Nestly.Model.DTOObjects
         public int? FoodTypeId { get; set; }
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
+        public int Page { get; set; } = 1;
+
+        private int _pageSize = 20;
+        public int PageSize
+        {
+            get => _pageSize;
+            set => _pageSize = value > 100 ? 100 : value;
+        }
     }
 
     public class CreateMealPlanDto
@@ -42,6 +50,15 @@ namespace Nestly.Model.DTOObjects
     public class MealRecommendationSearchObject
     {
         public short? WeekNumber { get; set; }
+
+        public int Page { get; set; } = 1;
+
+        private int _pageSize = 20;
+        public int PageSize
+        {
+            get => _pageSize;
+            set => _pageSize = value > 100 ? 100 : value;
+        }
     }
     public class MealPlanResponseDto
     {

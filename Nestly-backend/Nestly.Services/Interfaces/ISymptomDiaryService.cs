@@ -5,11 +5,11 @@ namespace Nestly.Services.Interfaces
     public interface ISymptomDiaryService
     {
         SymptomDiaryResponseDto Create(CreateSymptomDiaryDto dto);
-        IEnumerable<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject? search);
-        IEnumerable<SymptomDiaryResponseDto> GetByParent(long parentProfileId);
+        PagedResult<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject search);
+        PagedResult<SymptomDiaryResponseDto> GetByParent(long parentProfileId, SymptomDiarySearchObject search);
+        PagedResult<DateTime> GetMarkedDays(long parentProfileId, SymptomDiarySearchObject search);
         SymptomDiaryResponseDto? GetByDate(long parentProfileId, DateTime date);
         SymptomDiaryResponseDto? Patch(long id, SymptomDiaryPatchDto patch);
         bool Delete(long id);
-        IEnumerable<DateTime> GetMarkedDays(long parentProfileId);
     }
 }

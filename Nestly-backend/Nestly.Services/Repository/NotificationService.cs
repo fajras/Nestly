@@ -2,6 +2,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 namespace Nestly.Services.Repository
 {
@@ -30,21 +31,19 @@ namespace Nestly.Services.Repository
                 .ToListAsync();
         }
 
-        public async Task<bool> MarkAsReadAsync(int notificationId, int userId)
+        public async Task MarkAsReadAsync(int notificationId, int userId)
         {
             var notification = await _db.Notifications
                 .FirstOrDefaultAsync(x => x.Id == notificationId && x.UserId == userId);
 
             if (notification == null)
             {
-                return false;
+                throw new NotFoundException("Notification not found.");
             }
 
             notification.IsRead = true;
 
             await _db.SaveChangesAsync();
-
-            return true;
         }
         public async Task<int> GetUnreadCountAsync(long userId)
         {

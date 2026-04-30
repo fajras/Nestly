@@ -81,7 +81,10 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
-            => _service.Delete(id) ? NoContent() : NotFound();
+        {
+            _service.Delete(id);
+            return NoContent();
+        }
 
         [HttpGet("marked-days")]
         public ActionResult<PagedResult<DateTime>> GetMarkedDays(

@@ -48,8 +48,10 @@ class SymptomDiaryApiService {
     );
 
     if (res.statusCode == 404) return null;
+
     if (res.statusCode != 200) {
-      throw Exception('Failed to load symptom diary entry');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri učitavanju unosa");
     }
 
     return SymptomDiaryEntry.fromJson(jsonDecode(res.body));
@@ -103,7 +105,8 @@ class SymptomDiaryApiService {
     );
 
     if (res.statusCode != 201) {
-      throw Exception('Failed to create symptom diary entry');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri kreiranju unosa");
     }
 
     return jsonDecode(res.body)['id'] as int;
@@ -116,7 +119,8 @@ class SymptomDiaryApiService {
     );
 
     if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception('Failed to update symptom diary entry');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri ažuriranju");
     }
   }
 
@@ -197,8 +201,14 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
         _entryId = entry.id;
         _values = Map.of(entry.values);
       }
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri učitavanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Nema unosa za odabrani datum');
+      } else {
+        NestlyToast.error(context, 'Greška pri učitavanju');
+      }
     }
 
     if (mounted) setState(() => _loading = false);
@@ -236,8 +246,16 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
       }
 
       _markedDays = await _service.getMarkedDays(widget.parentProfileId);
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri spremanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("already exists")) {
+        NestlyToast.error(context, 'Unos za ovaj datum već postoji');
+      } else if (msg.contains("between 1 and 5")) {
+        NestlyToast.error(context, 'Vrijednosti moraju biti između 1 i 5');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju');
+      }
     }
 
     if (mounted) setState(() => _saving = false);

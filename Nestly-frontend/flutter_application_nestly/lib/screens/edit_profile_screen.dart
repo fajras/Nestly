@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final int userId;
@@ -216,6 +218,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _oldPasswordCtrl.text.isNotEmpty &&
           _newPasswordCtrl.text.isNotEmpty &&
           _confirmPasswordCtrl.text.isNotEmpty) {
+        final token = await AuthStorage.getToken();
+        final decoded = JwtDecoder.decode(token!);
+        final tokenUserId = decoded["appUserId"];
+
         try {
           final res = await ApiClient.post(
             '/api/Auth/change-password/${widget.userId}',
@@ -231,7 +237,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             final errorText = errorMsg is List
                 ? errorMsg.join(", ")
                 : errorMsg.toString();
-            setState(() => _oldPasswordError = errorText);
+            if (res.statusCode == 400) {
+              setState(() => _oldPasswordError = "Pogrešna stara lozinka");
+            }
             allSuccess = false;
           }
         } catch (e) {

@@ -55,13 +55,7 @@ namespace Nestly.WebAPI.Controllers
         {
             var userId = GetUserId();
 
-            var success = await _notificationService
-                .MarkAsReadAsync(id, userId);
-
-            if (!success)
-            {
-                return NotFound();
-            }
+            await _notificationService.MarkAsReadAsync(id, userId);
 
             return Ok();
         }

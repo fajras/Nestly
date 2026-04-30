@@ -104,7 +104,10 @@ class _EditDoctorProfileScreenState extends State<EditDoctorProfileScreen> {
 
     try {
       bool success = true;
-
+      print("=== CHANGE PASSWORD DEBUG ===");
+      print("UserId koji šaljem: ${widget.userId}");
+      print("OldPassword: ${_oldPasswordCtrl.text}");
+      print("NewPassword: ${_newPasswordCtrl.text}");
       if (_changePassword &&
           _oldPasswordCtrl.text.isNotEmpty &&
           _newPasswordCtrl.text.isNotEmpty &&

@@ -1,6 +1,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -60,55 +61,61 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BabyProfileSummaryDto? GetById(long id)
+        public BabyProfileSummaryDto GetById(long id)
         {
             var entity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
-            return entity is null ? null : MapToDto(entity);
+
+            if (entity is null)
+            {
+                throw new NotFoundException("Baby profile not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public BabyProfileSummaryDto Create(CreateBabyProfileDto dto)
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (dto.ParentProfileId <= 0)
             {
-                throw new ArgumentException("ParentProfileId is required.");
+                throw new BusinessException("Parent profile is required.");
             }
 
             if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
             {
-                throw new ArgumentException("Parent profile does not exist.");
+                throw new NotFoundException("Parent profile not found.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.BabyName))
             {
-                throw new ArgumentException("BabyName is required.");
+                throw new BusinessException("Baby name is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Gender))
             {
-                throw new ArgumentException("Gender is required.");
+                throw new BusinessException("Gender is required.");
             }
 
             if (dto.BirthDate == default)
             {
-                throw new ArgumentException("BirthDate is required.");
+                throw new BusinessException("Birth date is required.");
             }
 
             if (dto.PregnancyId.HasValue &&
                 !_db.Pregnancies.Any(x => x.Id == dto.PregnancyId.Value))
             {
-                throw new ArgumentException("Pregnancy does not exist.");
+                throw new NotFoundException("Pregnancy not found.");
             }
 
             var entity = new BabyProfile
             {
                 ParentProfileId = dto.ParentProfileId,
-                BabyName = dto.BabyName,
-                Gender = dto.Gender,
+                BabyName = dto.BabyName.Trim(),
+                Gender = dto.Gender.Trim(),
                 BirthDate = dto.BirthDate,
                 PregnancyId = dto.PregnancyId
             };
@@ -118,23 +125,23 @@ namespace Nestly.Services.Repository
 
             return MapToDto(entity);
         }
-
-        public BabyProfileSummaryDto? Patch(long id, BabyProfilePatchDto patch)
+        public BabyProfileSummaryDto Patch(long id, BabyProfilePatchDto patch)
         {
             var dbEntity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
-                return null;
+                throw new NotFoundException("Baby profile not found.");
             }
 
             if (patch.BabyName is not null)
             {
-                dbEntity.BabyName = patch.BabyName;
+                dbEntity.BabyName = patch.BabyName.Trim();
             }
 
             if (patch.Gender is not null)
             {
-                dbEntity.Gender = patch.Gender;
+                dbEntity.Gender = patch.Gender.Trim();
             }
 
             if (patch.BirthDate is not null)
@@ -146,18 +153,17 @@ namespace Nestly.Services.Repository
 
             return MapToDto(dbEntity);
         }
-
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var dbEntity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
-                return false;
+                throw new NotFoundException("Baby profile not found.");
             }
 
             _db.BabyProfiles.Remove(dbEntity);
             _db.SaveChanges();
-            return true;
         }
 
         public BabyProfileSummaryDto? GetLatestByParent(long parentProfileId)

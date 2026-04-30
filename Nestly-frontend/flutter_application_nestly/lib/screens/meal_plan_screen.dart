@@ -49,8 +49,9 @@ class MealPlanApiService {
         );
 
         if (res.statusCode != 200) {
+          final error = jsonDecode(res.body);
           throw Exception(
-            "Failed to load meal recommendations from the server.",
+            error["message"] ?? "Greška pri učitavanju preporuka",
           );
         }
 
@@ -78,9 +79,7 @@ class MealPlanApiService {
 
       return result;
     } catch (_) {
-      throw Exception(
-        "Unable to retrieve meal recommendations. Please try again later.",
-      );
+      throw Exception("Greška pri učitavanju preporuka");
     }
   }
 
@@ -97,7 +96,8 @@ class MealPlanApiService {
         );
 
         if (res.statusCode != 200) {
-          throw Exception("Failed to load baby food ratings.");
+          final error = jsonDecode(res.body);
+          throw Exception(error["message"] ?? "Greška pri učitavanju ocjena");
         }
 
         final data = jsonDecode(res.body);
@@ -123,7 +123,7 @@ class MealPlanApiService {
 
       return map;
     } catch (_) {
-      throw Exception("Unable to retrieve saved food ratings for the baby.");
+      throw Exception("Greška pri učitavanju ocjena");
     }
   }
 
@@ -140,10 +140,11 @@ class MealPlanApiService {
       );
 
       if (res.statusCode != 200 && res.statusCode != 201) {
-        throw Exception("Failed to save the food rating.");
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri spremanju ocjene");
       }
     } catch (_) {
-      throw Exception("An error occurred while saving the food rating.");
+      throw Exception("Došlo je do greške prilikom spremanja ocjene.");
     }
   }
 }
@@ -196,9 +197,16 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
         _dirtyRatings.clear();
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      NestlyToast.error(context, "Greška pri učitavanju preporuka.");
+
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, "Podaci nisu pronađeni");
+      } else {
+        NestlyToast.error(context, "Greška pri učitavanju preporuka");
+      }
     }
   }
 

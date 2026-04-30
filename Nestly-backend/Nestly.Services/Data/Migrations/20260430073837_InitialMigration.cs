@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -979,7 +978,7 @@ namespace Nestly.Services.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Pregnancies",
                 columns: new[] { "Id", "CycleLengthDays", "DueDate", "LmpDate", "ParentProfileId" },
-                values: new object[] { 1L, 28, new DateTime(2026, 5, 8, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1L });
+                values: new object[] { 1L, 28, new DateTime(2026, 8, 8, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1L });
 
             migrationBuilder.InsertData(
                 table: "BabyProfiles",

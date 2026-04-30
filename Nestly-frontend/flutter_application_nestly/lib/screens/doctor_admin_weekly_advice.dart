@@ -34,7 +34,8 @@ class WeeklyAdviceAdminService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to load weekly advice');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri učitavanju savjeta");
     }
 
     final data = jsonDecode(res.body);
@@ -54,7 +55,8 @@ class WeeklyAdviceAdminService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to update advice');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri spremanju");
     }
   }
 }
@@ -195,11 +197,18 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
   bool _saving = false;
   late TextEditingController _controller;
   final _service = WeeklyAdviceAdminService();
+  String? _errorText;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.advice.adviceText);
+
+    _controller.addListener(() {
+      if (_errorText != null) {
+        setState(() => _errorText = null);
+      }
+    });
   }
 
   @override
@@ -212,12 +221,12 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
     final text = _controller.text.trim();
 
     if (text.isEmpty) {
-      NestlyToast.error(context, 'Savjet ne može biti prazan');
+      setState(() => _errorText = 'Savjet ne može biti prazan');
       return;
     }
 
     if (text.length < 10) {
-      NestlyToast.error(context, 'Savjet je prekratak');
+      setState(() => _errorText = 'Savjet je prekratak');
       return;
     }
 
@@ -234,8 +243,16 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
 
       widget.onSaved();
       setState(() => _editing = false);
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri spremanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("cannot be empty")) {
+        NestlyToast.error(context, 'Savjet ne može biti prazan');
+      } else if (msg.contains("already exists")) {
+        NestlyToast.error(context, 'Savjet za ovu sedmicu već postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju');
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -260,7 +277,10 @@ class _WeeklyAdviceCardState extends State<_WeeklyAdviceCard> {
               TextField(
                 controller: _controller,
                 maxLines: 4,
-                decoration: const InputDecoration(hintText: 'Unesite savjet'),
+                decoration: InputDecoration(
+                  hintText: 'Unesite savjet',
+                  errorText: _errorText,
+                ),
               )
             else
               Text(

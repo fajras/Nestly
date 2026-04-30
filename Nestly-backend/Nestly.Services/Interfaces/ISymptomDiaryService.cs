@@ -8,8 +8,8 @@ namespace Nestly.Services.Interfaces
         PagedResult<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject search);
         PagedResult<SymptomDiaryResponseDto> GetByParent(long parentProfileId, SymptomDiarySearchObject search);
         PagedResult<DateTime> GetMarkedDays(long parentProfileId, SymptomDiarySearchObject search);
-        SymptomDiaryResponseDto? GetByDate(long parentProfileId, DateTime date);
+        SymptomDiaryResponseDto GetByDate(long parentProfileId, DateTime date);
         SymptomDiaryResponseDto? Patch(long id, SymptomDiaryPatchDto patch);
-        bool Delete(long id);
+        void Delete(long id);
     }
 }

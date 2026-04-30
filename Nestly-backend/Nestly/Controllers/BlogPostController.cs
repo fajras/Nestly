@@ -50,11 +50,7 @@ public class BlogPostController : ControllerBase
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id)
     {
-        var deleted = _service.Delete(id);
-        if (!deleted)
-        {
-            return NotFound();
-        }
+        _service.Delete(id);
 
         await _blob.DeleteBlogImageAsync(id);
         return NoContent();

@@ -82,7 +82,8 @@ class HealthEntryApiService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load health entries');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju zapisa");
       }
 
       final data = jsonDecode(res.body);
@@ -109,7 +110,8 @@ class HealthEntryApiService {
     final res = await ApiClient.patch('/api/HealthEntry/$id', body: body);
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to update');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri uređivanju zapisa");
     }
   }
 
@@ -117,7 +119,8 @@ class HealthEntryApiService {
     final res = await ApiClient.delete('/api/HealthEntry/$id');
 
     if (res.statusCode != 204) {
-      throw Exception('Failed to delete');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri brisanju zapisa");
     }
   }
 
@@ -157,7 +160,8 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   HealthEntry? _editingEntry;
   bool _loading = true;
   bool _saving = false;
-
+  String? _tempError;
+  String? _formError;
   final Map<DateTime, List<HealthEntry>> _entriesByDay = {};
 
   final _tempCtrl = TextEditingController();
@@ -169,6 +173,9 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   @override
   void initState() {
     super.initState();
+    _tempCtrl.addListener(() {
+      if (_tempError != null) setState(() => _tempError = null);
+    });
     _focusedDay = _dayOnly(DateTime.now());
     _selectedDay = _focusedDay;
     _loadMonth(_focusedDay);
@@ -217,8 +224,14 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       await _loadMonth(_focusedDay);
       if (!mounted) return;
       NestlyToast.success(context, 'Zapis obrisan.');
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri brisanju.');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Zapis ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri brisanju');
+      }
     }
   }
 
@@ -322,9 +335,11 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
           ..clear()
           ..addAll(map);
       });
-    } catch (_) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri učitavanju');
+    } catch (e) {
+      NestlyToast.error(
+        context,
+        'Greška pri učitavanju podataka. Pokušajte ponovo.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -338,25 +353,31 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       return;
     }
 
+    setState(() {
+      _tempError = null;
+      _formError = null;
+    });
+
     double? temp;
 
     if (_tempCtrl.text.isNotEmpty) {
       temp = double.tryParse(_tempCtrl.text.replaceAll(',', '.'));
+
       if (temp == null) {
-        NestlyToast.info(context, 'Temperatura nije validna.');
+        setState(() => _tempError = 'Temperatura nije validna');
         return;
       }
-    }
 
-    if (temp != null && (temp < 30 || temp > 45)) {
-      NestlyToast.info(context, 'Temperatura nije realna.');
-      return;
+      if (temp < 30 || temp > 45) {
+        setState(() => _tempError = 'Temperatura nije realna');
+        return;
+      }
     }
 
     if (temp == null &&
         _medCtrl.text.trim().isEmpty &&
         _checkCtrl.text.trim().isEmpty) {
-      NestlyToast.info(context, 'Unesite barem jedan podatak.');
+      setState(() => _formError = 'Unesite barem jedan podatak');
       return;
     }
 
@@ -389,10 +410,12 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
         if (_checkCtrl.text.trim().isNotEmpty) {
           patchBody['doctorVisit'] = _checkCtrl.text.trim();
         }
+
         if (patchBody.isEmpty) {
           NestlyToast.info(context, 'Nema izmjena.');
           return;
         }
+
         await _service.patch(_editingEntry!.id, patchBody);
 
         NestlyToast.success(context, 'Zapis ažuriran.');
@@ -404,8 +427,14 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       _editingEntry = null;
 
       await _loadMonth(_focusedDay);
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri spremanju.');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Profil nije pronađen');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju');
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -483,7 +512,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                 label: 'Temperatura (opcionalno)',
                 icon: Icons.thermostat_rounded,
                 hint: '36.8 °C',
-              ),
+              ).copyWith(errorText: _tempError),
             ),
 
             const SizedBox(height: AppSpacing.md),
@@ -509,7 +538,14 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                 hint: 'npr. Kontrola kod pedijatra',
               ),
             ),
-
+            if (_formError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  _formError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
             const SizedBox(height: AppSpacing.lg),
 
             SizedBox(

@@ -73,7 +73,8 @@ class MedicationPlanApiService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to update medication plan');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri ažuriranju terapije");
     }
   }
 
@@ -89,7 +90,8 @@ class MedicationPlanApiService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to fetch medication plan');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju terapija");
       }
 
       final data = jsonDecode(res.body);
@@ -144,11 +146,12 @@ class MedicationPlanApiService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load medication plans');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju terapije");
       }
 
       final data = jsonDecode(res.body);
-      final List items = data['items']; // 👈 KLJUČNO
+      final List items = data['items'];
 
       if (items.isEmpty) break;
 
@@ -184,9 +187,9 @@ class MedicationPlanApiService {
       '/api/MedicationPlan/mark-taken',
       body: {'intakeLogId': logId},
     );
-
     if (res.statusCode != 204) {
-      throw Exception('Failed to mark taken');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri označavanju terapije");
     }
   }
 
@@ -222,8 +225,9 @@ class MedicationPlanApiService {
   Future<void> deletePlan(int planId) async {
     final res = await ApiClient.delete('/api/MedicationPlan/$planId');
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Failed to delete medication plan');
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri spremanju terapije");
     }
   }
 }
@@ -616,6 +620,10 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
   DateTime? _start;
   DateTime? _end;
   bool _saving = false;
+  String? _nameError;
+  String? _doseError;
+  String? _dateError;
+  String? _timeError;
   List<TimeOfDay> _times = [];
   Future<void> _addTime() async {
     final picked = await showTimePicker(
@@ -668,27 +676,45 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty || _dose.text.trim().isEmpty) {
-      NestlyToast.error(context, 'Popunite sva polja');
-      return;
+    setState(() => _saving = true);
+    bool hasError = false;
+
+    setState(() {
+      _nameError = null;
+      _doseError = null;
+      _dateError = null;
+      _timeError = null;
+    });
+
+    if (_name.text.trim().isEmpty) {
+      _nameError = 'Naziv je obavezan';
+      hasError = true;
+    }
+
+    if (_dose.text.trim().isEmpty) {
+      _doseError = 'Doza je obavezna';
+      hasError = true;
     }
 
     if (_times.isEmpty) {
-      NestlyToast.error(context, 'Dodajte barem jedno vrijeme uzimanja');
-      return;
+      _timeError = 'Dodajte barem jedno vrijeme';
+      hasError = true;
     }
 
     if (_start == null || _end == null) {
-      NestlyToast.error(context, 'Odaberite period terapije');
-      return;
+      _dateError = 'Odaberite period';
+      hasError = true;
     }
 
-    if (_end!.isBefore(_start!)) {
-      NestlyToast.error(context, 'Datum završetka ne može biti prije početka');
-      return;
+    if (_start != null && _end != null && _end!.isBefore(_start!)) {
+      _dateError = 'Datum završetka ne može biti prije početka';
+      hasError = true;
     }
 
-    setState(() => _saving = true);
+    if (hasError) {
+      setState(() {});
+      return;
+    }
 
     try {
       if (widget.existingPlan == null) {
@@ -714,8 +740,20 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
       }
 
       Navigator.pop(context);
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri spremanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("required")) {
+        setState(() => _nameError = 'Naziv je obavezan');
+      } else if (msg.contains("dose")) {
+        setState(() => _doseError = 'Doza je obavezna');
+      } else if (msg.contains("date")) {
+        setState(() => _dateError = 'Neispravan period');
+      } else if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Profil nije pronađen');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju');
+      }
     }
 
     if (mounted) setState(() => _saving = false);
@@ -754,7 +792,13 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
   @override
   void initState() {
     super.initState();
+    _name.addListener(() {
+      if (_nameError != null) setState(() => _nameError = null);
+    });
 
+    _dose.addListener(() {
+      if (_doseError != null) setState(() => _doseError = null);
+    });
     if (widget.existingPlan != null) {
       final p = widget.existingPlan!;
       _name.text = p.name;
@@ -792,14 +836,17 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
               decoration: _decoration(
                 label: 'Naziv terapije',
                 icon: Icons.medication_rounded,
-              ),
+              ).copyWith(errorText: _nameError),
               cursorColor: AppColors.roseDark,
             ),
             const SizedBox(height: AppSpacing.md),
 
             TextField(
               controller: _dose,
-              decoration: _decoration(label: 'Doza', icon: Icons.scale_rounded),
+              decoration: _decoration(
+                label: 'Doza',
+                icon: Icons.scale_rounded,
+              ).copyWith(errorText: _doseError),
               cursorColor: AppColors.roseDark,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -824,7 +871,14 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
                 ),
               ),
             ),
-
+            if (_dateError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  _dateError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
             const SizedBox(height: AppSpacing.md),
 
             InkWell(
@@ -882,7 +936,14 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
               onPressed: _addTime,
               child: const Text('Dodaj termin'),
             ),
-
+            if (_timeError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  _timeError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
             const SizedBox(height: 16),
 
             SizedBox(

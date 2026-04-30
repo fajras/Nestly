@@ -88,7 +88,8 @@ namespace Nestly.WebAPI.Controllers
         [HttpPost("change-password/{id}")]
         public async Task<IActionResult> ChangePassword(long id, [FromBody] ChangePasswordDto dto)
         {
-            var userIdClaim = User.FindFirst("appUserId")?.Value;
+
+            var userIdClaim = User.FindFirst("userId")?.Value;
 
             if (userIdClaim == null)
             {

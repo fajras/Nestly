@@ -5,9 +5,9 @@ namespace Nestly.Services.Interfaces
     public interface IHealthEntryService
     {
         PagedResult<HealthEntryResponseDto> Get(HealthEntrySearchObject search);
-        HealthEntryResponseDto? GetById(long id);
+        HealthEntryResponseDto GetById(long id);
         HealthEntryResponseDto Create(CreateHealthEntryDto entity);
-        HealthEntryResponseDto? Patch(long id, HealthEntryPatchDto patch);
-        bool Delete(long id);
+        HealthEntryResponseDto Patch(long id, HealthEntryPatchDto patch);
+        void Delete(long id);
     }
 }

@@ -9,6 +9,7 @@ using Nestly.Services.Interfaces;
 using Nestly.Services.Messaging;
 using Nestly.Services.Repository;
 using Nestly.WebAPI.Hubs;
+using Nestly.WebAPI.Middleware;
 using NotificationHub = Nestly.Services.Messaging.NotificationHub;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -166,7 +167,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors("DevCors");
 
 app.UseAuthentication();

@@ -1,6 +1,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 
 public class DiaperLogService : IDiaperLogService
 {
@@ -52,33 +53,38 @@ public class DiaperLogService : IDiaperLogService
         };
     }
 
-    public DiaperLogResponseDto? GetById(long id)
+    public DiaperLogResponseDto GetById(long id)
     {
         var entity = _db.DiaperLogs.FirstOrDefault(x => x.Id == id);
-        return entity is null ? null : MapToDto(entity);
+
+        if (entity is null)
+        {
+            throw new NotFoundException("Diaper log not found.");
+        }
+
+        return MapToDto(entity);
     }
 
     public DiaperLogResponseDto Create(CreateDiaperLogDto dto)
     {
         if (dto.BabyId <= 0)
         {
-            throw new ArgumentException("BabyId is required.");
+            throw new BusinessException("Baby is required.");
+        }
+
+        if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+        {
+            throw new NotFoundException("Baby profile not found.");
         }
 
         if (dto.ChangeDate == default)
         {
-            throw new ArgumentException("ChangeDate is required.");
+            throw new BusinessException("Change date is required.");
         }
 
         if (string.IsNullOrWhiteSpace(dto.DiaperState))
         {
-            throw new ArgumentException("DiaperState is required.");
-        }
-
-        var babyExists = _db.BabyProfiles.Any(b => b.Id == dto.BabyId);
-        if (!babyExists)
-        {
-            throw new ArgumentException("Baby does not exist.");
+            throw new BusinessException("Diaper state is required.");
         }
 
         var entity = new DiaperLog
@@ -87,7 +93,9 @@ public class DiaperLogService : IDiaperLogService
             ChangeDate = dto.ChangeDate.Date,
             ChangeTime = dto.ChangeTime,
             DiaperState = dto.DiaperState.Trim(),
-            Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim()
+            Notes = string.IsNullOrWhiteSpace(dto.Notes)
+                ? null
+                : dto.Notes.Trim()
         };
 
         _db.DiaperLogs.Add(entity);
@@ -95,13 +103,13 @@ public class DiaperLogService : IDiaperLogService
 
         return MapToDto(entity);
     }
-
-    public DiaperLogResponseDto? Patch(long id, DiaperLogPatchDto patch)
+    public DiaperLogResponseDto Patch(long id, DiaperLogPatchDto patch)
     {
         var entity = _db.DiaperLogs.FirstOrDefault(x => x.Id == id);
+
         if (entity is null)
         {
-            return null;
+            throw new NotFoundException("Diaper log not found.");
         }
 
         if (patch.ChangeDate is not null)
@@ -121,7 +129,9 @@ public class DiaperLogService : IDiaperLogService
 
         if (patch.Notes is not null)
         {
-            entity.Notes = patch.Notes.Trim();
+            entity.Notes = string.IsNullOrWhiteSpace(patch.Notes)
+                ? null
+                : patch.Notes.Trim();
         }
 
         _db.SaveChanges();
@@ -129,17 +139,17 @@ public class DiaperLogService : IDiaperLogService
         return MapToDto(entity);
     }
 
-    public bool Delete(long id)
+    public void Delete(long id)
     {
         var entity = _db.DiaperLogs.FirstOrDefault(x => x.Id == id);
+
         if (entity is null)
         {
-            return false;
+            throw new NotFoundException("Diaper log not found.");
         }
 
         _db.DiaperLogs.Remove(entity);
         _db.SaveChanges();
-        return true;
     }
 
     private static DiaperLogResponseDto MapToDto(DiaperLog x)

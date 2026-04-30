@@ -2,6 +2,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 using Nestly.Services.Messaging;
 
@@ -87,9 +88,9 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public async Task<QaQuestionDto?> GetById(long id, CancellationToken ct = default)
+        public async Task<QaQuestionDto> GetById(long id, CancellationToken ct = default)
         {
-            return await _db.QaQuestions
+            var entity = await _db.QaQuestions
                 .AsNoTracking()
                 .Where(x => x.Id == id)
                 .Select(x => new QaQuestionDto
@@ -100,6 +101,13 @@ namespace Nestly.Services.Repository
                     CreatedAt = x.CreatedAt
                 })
                 .FirstOrDefaultAsync(ct);
+
+            if (entity == null)
+            {
+                throw new NotFoundException("Question not found.");
+            }
+
+            return entity;
         }
 
         public async Task<PagedResult<QaQuestionDto>> GetByUserAsync(
@@ -137,12 +145,12 @@ namespace Nestly.Services.Repository
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.QuestionText))
             {
-                throw new ArgumentException("QuestionText is required.", nameof(dto.QuestionText));
+                throw new BusinessException("Question text is required.");
             }
 
             if (dto.AskedById.HasValue)
@@ -153,7 +161,7 @@ namespace Nestly.Services.Repository
 
                 if (!parentExists)
                 {
-                    throw new ArgumentException("AskedById (ParentProfile) does not exist.", nameof(dto.AskedById));
+                    throw new NotFoundException("Parent profile not found.");
                 }
             }
 
@@ -189,17 +197,17 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public async Task<QaQuestionDto?> Patch(long id, QaQuestionPatchDto patch, CancellationToken ct = default)
+        public async Task<QaQuestionDto> Patch(long id, QaQuestionPatchDto patch, CancellationToken ct = default)
         {
             var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (q is null)
             {
-                return null;
+                throw new NotFoundException("Question not found.");
             }
 
             if (patch is null)
             {
-                throw new ArgumentNullException(nameof(patch));
+                throw new BusinessException("Question text cannot be empty.");
             }
 
             if (patch.QuestionText is not null)
@@ -207,7 +215,7 @@ namespace Nestly.Services.Repository
                 var text = patch.QuestionText.Trim();
                 if (string.IsNullOrWhiteSpace(text))
                 {
-                    throw new ArgumentException("QuestionText cannot be empty.", nameof(patch.QuestionText));
+                    throw new BusinessException("Question text cannot be empty.");
                 }
                 q.QuestionText = text;
             }
@@ -216,7 +224,7 @@ namespace Nestly.Services.Repository
             {
                 if (patch.AskedById.Value <= 0)
                 {
-                    throw new ArgumentException("AskedById must be > 0.", nameof(patch.AskedById));
+                    throw new BusinessException("Invalid parent profile id.");
                 }
 
                 var parentExists = await _db.ParentProfiles
@@ -225,7 +233,7 @@ namespace Nestly.Services.Repository
 
                 if (!parentExists)
                 {
-                    throw new ArgumentException("AskedById (ParentProfile) does not exist.", nameof(patch.AskedById));
+                    throw new NotFoundException("Parent profile not found.");
                 }
 
                 q.AskedById = patch.AskedById.Value;
@@ -242,17 +250,17 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public async Task<bool> Delete(long id, CancellationToken ct = default)
+        public async Task Delete(long id, CancellationToken ct = default)
         {
             var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id, ct);
+
             if (q is null)
             {
-                return false;
+                throw new NotFoundException("Question not found.");
             }
 
             _db.QaQuestions.Remove(q);
             await _db.SaveChangesAsync(ct);
-            return true;
         }
 
         public async Task<PagedResult<QaAnswerDto>> GetAnswers(
@@ -263,7 +271,7 @@ namespace Nestly.Services.Repository
             var exists = await _db.QaQuestions.AnyAsync(x => x.Id == questionId, ct);
             if (!exists)
             {
-                throw new ArgumentException("Question not found.");
+                throw new NotFoundException("Question not found.");
             }
 
             var q = _db.QaAnswers
@@ -302,12 +310,12 @@ namespace Nestly.Services.Repository
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.AnswerText))
             {
-                throw new ArgumentException("AnswerText is required.", nameof(dto.AnswerText));
+                throw new BusinessException("Answer text is required.");
             }
 
             var qExists = await _db.QaQuestions
@@ -316,7 +324,7 @@ namespace Nestly.Services.Repository
 
             if (!qExists)
             {
-                throw new ArgumentException("Question not found.", nameof(questionId));
+                throw new NotFoundException("Question not found.");
             }
             long? doctorProfileId = null;
 
@@ -328,7 +336,7 @@ namespace Nestly.Services.Repository
 
                 if (doctorProfile == null)
                 {
-                    throw new ArgumentException("Doctor profile for this user does not exist.", nameof(dto.AnsweredById));
+                    throw new NotFoundException("Doctor profile not found.");
                 }
 
                 doctorProfileId = doctorProfile.Id;
@@ -386,7 +394,7 @@ namespace Nestly.Services.Repository
         {
             if (search.AskedById is null)
             {
-                throw new ArgumentException("AskedById required");
+                throw new BusinessException("AskedById is required.");
             }
 
             var q = _db.QaQuestions

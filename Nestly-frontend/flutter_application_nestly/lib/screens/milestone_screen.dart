@@ -67,7 +67,8 @@ class MilestoneApiService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load milestones');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju dostignuća");
       }
 
       final data = jsonDecode(res.body);
@@ -106,7 +107,8 @@ class MilestoneApiService {
     final res = await ApiClient.patch('/api/Milestone/$id', body: body);
 
     if (res.statusCode != 200) {
-      throw Exception('Update failed');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri ažuriranju");
     }
 
     return MilestoneEntry.fromJson(jsonDecode(res.body));
@@ -116,7 +118,8 @@ class MilestoneApiService {
     final res = await ApiClient.delete('/api/Milestone/$id');
 
     if (res.statusCode != 204) {
-      throw Exception('Delete failed');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri brisanju");
     }
   }
 
@@ -124,7 +127,8 @@ class MilestoneApiService {
     final res = await ApiClient.post('/api/Milestone', body: request.toJson());
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to save milestone');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri spremanju");
     }
 
     return MilestoneEntry.fromJson(jsonDecode(res.body));
@@ -150,7 +154,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
   MilestoneEntry? _editingItem;
   bool _loading = true;
   bool _saving = false;
-
+  String? _titleError;
   List<MilestoneEntry> _items = [];
 
   final _titleCtrl = TextEditingController();
@@ -163,6 +167,11 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
   void initState() {
     super.initState();
     _syncDate();
+    _titleCtrl.addListener(() {
+      if (_titleError != null) {
+        setState(() => _titleError = null);
+      }
+    });
     _load();
   }
 
@@ -215,7 +224,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
     if (_saving) return;
 
     if (_titleCtrl.text.trim().isEmpty) {
-      NestlyToast.info(context, 'Naziv je obavezan');
+      setState(() => _titleError = 'Naziv je obavezan');
       return;
     }
 
@@ -263,9 +272,16 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
         isEdit ? 'Dostignuće je ažurirano' : 'Dostignuće je sačuvano',
         accentColor: AppColors.seed,
       );
-    } catch (_) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri spremanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("Title is required")) {
+        setState(() => _titleError = 'Naziv je obavezan');
+      } else if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Zapis ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju');
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -315,9 +331,14 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
         'Dostignuće obrisano',
         accentColor: AppColors.seed,
       );
-    } catch (_) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri brisanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Dostignuće već ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri brisanju');
+      }
     }
   }
 
@@ -437,7 +458,10 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
-            TextField(controller: _titleCtrl, decoration: deco('Naziv')),
+            TextField(
+              controller: _titleCtrl,
+              decoration: deco('Naziv').copyWith(errorText: _titleError),
+            ),
             const SizedBox(height: 12),
             GestureDetector(
               onTap: _pickDate,

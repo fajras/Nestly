@@ -81,8 +81,8 @@ namespace Nestly.WebAPI.Controllers
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id, CancellationToken ct)
         {
-            var ok = await _service.Delete(id, ct);
-            return ok ? NoContent() : NotFound();
+            await _service.Delete(id, ct);
+            return NoContent();
         }
 
         [HttpGet("{questionId:long}/answers")]

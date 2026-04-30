@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -81,30 +82,45 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public MedicationPlanResponseDto? GetById(long id)
+        public MedicationPlanResponseDto GetById(long id)
         {
             var m = _db.MedicationPlans
                 .Include(x => x.Times)
                 .FirstOrDefault(x => x.Id == id);
 
-            return m == null ? null : ToDto(m);
+            if (m == null)
+            {
+                throw new NotFoundException("Medication plan not found.");
+            }
+
+            return ToDto(m);
         }
 
         public MedicationPlanResponseDto Create(CreateMedicationPlanDto dto)
         {
             if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
             {
-                throw new ArgumentException("Parent profile not found.");
+                throw new NotFoundException("Parent profile not found.");
             }
 
             if (dto.StartDate > dto.EndDate)
             {
-                throw new ArgumentException("Invalid date range.");
+                throw new BusinessException("Start date cannot be after end date.");
             }
 
             if (!dto.IntakeTimes.Any())
             {
-                throw new ArgumentException("At least one intake time required.");
+                throw new BusinessException("At least one intake time is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.MedicineName))
+            {
+                throw new BusinessException("Medicine name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Dose))
+            {
+                throw new BusinessException("Dose is required.");
             }
 
             var entity = new MedicationPlan
@@ -160,7 +176,7 @@ namespace Nestly.Services.Repository
             var log = _db.MedicationIntakeLogs.FirstOrDefault(x => x.Id == intakeLogId);
             if (log == null)
             {
-                throw new ArgumentException("Log not found.");
+                throw new NotFoundException("Medication log not found.");
             }
 
             log.Taken = true;
@@ -174,7 +190,7 @@ namespace Nestly.Services.Repository
             var m = _db.MedicationPlans.FirstOrDefault(x => x.Id == id);
             if (m == null)
             {
-                return null;
+                throw new NotFoundException("Medication plan not found.");
             }
 
             if (!string.IsNullOrWhiteSpace(patch.MedicineName))
@@ -202,18 +218,19 @@ namespace Nestly.Services.Repository
             return ToDto(m);
         }
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var m = _db.MedicationPlans.FirstOrDefault(x => x.Id == id);
+
             if (m == null)
             {
-                return false;
+                throw new NotFoundException("Medication plan not found.");
             }
 
             _db.MedicationPlans.Remove(m);
             _db.SaveChanges();
-            return true;
         }
+
         public PagedResult<MedicationIntakeLogDto> GetLogsForDay(MedicationIntakeLogSearchObject search)
         {
             var day = search.Date.Date;

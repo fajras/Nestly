@@ -1,6 +1,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -39,12 +40,17 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public FetalDevelopmentWeekResponseDto? GetById(int id)
+        public FetalDevelopmentWeekResponseDto GetById(int id)
         {
             var entity = _db.FetalDevelopmentWeeks
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity is null ? null : MapToDto(entity);
+            if (entity is null)
+            {
+                throw new NotFoundException("Fetal development week not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public FetalDevelopmentWeekResponseDto? GetByWeekNumber(int weekNumber)
@@ -59,17 +65,17 @@ namespace Nestly.Services.Repository
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (dto.WeekNumber <= 0)
             {
-                throw new ArgumentException("WeekNumber must be greater than 0.");
+                throw new BusinessException("Week number must be greater than 0.");
             }
 
             if (_db.FetalDevelopmentWeeks.Any(x => x.WeekNumber == dto.WeekNumber))
             {
-                throw new InvalidOperationException($"Week {dto.WeekNumber} already exists.");
+                throw new BusinessException($"Week {dto.WeekNumber} already exists.");
             }
 
             var entity = new FetalDevelopmentWeek
@@ -85,13 +91,13 @@ namespace Nestly.Services.Repository
 
             return MapToDto(entity);
         }
-
-        public FetalDevelopmentWeekResponseDto? Patch(int id, FetalDevelopmentWeekPatchDto patch)
+        public FetalDevelopmentWeekResponseDto Patch(int id, FetalDevelopmentWeekPatchDto patch)
         {
             var entity = _db.FetalDevelopmentWeeks.FirstOrDefault(x => x.Id == id);
+
             if (entity is null)
             {
-                return null;
+                throw new NotFoundException("Fetal development week not found.");
             }
 
             if (patch.BabyDevelopment is not null)
@@ -109,17 +115,17 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public bool Delete(int id)
+        public void Delete(int id)
         {
             var entity = _db.FetalDevelopmentWeeks.FirstOrDefault(x => x.Id == id);
+
             if (entity is null)
             {
-                return false;
+                throw new NotFoundException("Fetal development week not found.");
             }
 
             _db.FetalDevelopmentWeeks.Remove(entity);
             _db.SaveChanges();
-            return true;
         }
 
         private static FetalDevelopmentWeekResponseDto MapToDto(FetalDevelopmentWeek x)

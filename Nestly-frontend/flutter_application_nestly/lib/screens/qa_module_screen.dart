@@ -49,7 +49,8 @@ class ApiQaService implements QaService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Failed to update the question. Please try again later.');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri uređivanju pitanja");
     }
 
     final jsonRes = jsonDecode(res.body);
@@ -67,7 +68,8 @@ class ApiQaService implements QaService {
     final res = await ApiClient.delete('/api/QaQuestion/$id');
 
     if (res.statusCode != 204) {
-      throw Exception('Failed to delete the question. Please try again.');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri brisanju pitanja");
     }
   }
 
@@ -87,7 +89,8 @@ class ApiQaService implements QaService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load your questions.');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju pitanja");
       }
 
       final data = jsonDecode(res.body);
@@ -133,7 +136,8 @@ class ApiQaService implements QaService {
     );
 
     if (res.statusCode != 201 && res.statusCode != 200) {
-      throw Exception('Failed to send the question. Please try again.');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri slanju pitanja");
     }
 
     final jsonRes = jsonDecode(res.body) as Map<String, dynamic>;
@@ -237,9 +241,7 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
       setState(() {
         _items = items;
       });
-    } catch (_) {
-      if (!mounted) return;
-
+    } catch (e) {
       NestlyToast.error(
         context,
         'Trenutno nije moguće učitati pitanja. Pokušajte ponovo.',
@@ -520,12 +522,22 @@ class _QuestionCard extends StatelessWidget {
                               context,
                               'Pitanje je ažurirano.',
                             );
-                          } catch (_) {
-                            if (!context.mounted) return;
-                            NestlyToast.error(
-                              context,
-                              'Greška pri uređivanju pitanja.',
-                            );
+                          } catch (e) {
+                            final msg = e.toString();
+
+                            if (msg.contains("not found")) {
+                              NestlyToast.error(context, 'Pitanje ne postoji');
+                            } else if (msg.contains("cannot be empty")) {
+                              NestlyToast.error(
+                                context,
+                                'Pitanje ne može biti prazno',
+                              );
+                            } else {
+                              NestlyToast.error(
+                                context,
+                                'Greška pri uređivanju pitanja',
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -565,9 +577,14 @@ class _QuestionCard extends StatelessWidget {
                 Navigator.pop(context);
                 onRefresh();
                 NestlyToast.success(context, 'Pitanje je obrisano.');
-              } catch (_) {
-                if (!context.mounted) return;
-                NestlyToast.error(context, 'Greška pri brisanju pitanja.');
+              } catch (e) {
+                final msg = e.toString();
+
+                if (msg.contains("not found")) {
+                  NestlyToast.error(context, 'Pitanje je već obrisano');
+                } else {
+                  NestlyToast.error(context, 'Greška pri brisanju pitanja');
+                }
               }
             },
             child: const Text('Obriši', style: TextStyle(color: Colors.red)),
@@ -632,9 +649,14 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
       final q = await widget.service.createQuestion(_controller.text.trim());
       if (!mounted) return;
       Navigator.pop(context, q);
-    } catch (_) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri slanju pitanja');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("required")) {
+        NestlyToast.error(context, 'Unesite pitanje');
+      } else {
+        NestlyToast.error(context, 'Greška pri slanju pitanja');
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }

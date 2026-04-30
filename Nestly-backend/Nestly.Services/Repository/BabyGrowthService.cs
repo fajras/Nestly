@@ -1,6 +1,7 @@
 ﻿using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -54,34 +55,38 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BabyGrowthResponseDto? GetById(long id)
+        public BabyGrowthResponseDto GetById(long id)
         {
-            var entity = _db.BabyGrowths
-                            .FirstOrDefault(x => x.Id == id);
+            var entity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
 
-            return entity is null ? null : MapToDto(entity);
+            if (entity is null)
+            {
+                throw new NotFoundException("Growth entry not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public BabyGrowthResponseDto Create(CreateBabyGrowthDto dto)
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new BusinessException("Baby is required.");
             }
 
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new NotFoundException("Baby profile not found.");
             }
 
             if (dto.WeekNumber <= 0)
             {
-                throw new ArgumentException("WeekNumber must be > 0.");
+                throw new BusinessException("Week number must be greater than 0.");
             }
 
             bool exists = _db.BabyGrowths
@@ -89,8 +94,8 @@ namespace Nestly.Services.Repository
 
             if (exists)
             {
-                throw new InvalidOperationException(
-                    $"Growth entry for baby {dto.BabyId} and week {dto.WeekNumber} already exists.");
+                throw new BusinessException(
+                    $"Growth entry for this week already exists.");
             }
 
             var entity = new BabyGrowth
@@ -107,24 +112,15 @@ namespace Nestly.Services.Repository
 
             return MapToDto(entity);
         }
-
-        public BabyGrowthResponseDto? Patch(long id, BabyGrowthPatchDto patch)
+        public BabyGrowthResponseDto Patch(long id, BabyGrowthPatchDto patch)
         {
             var dbEntity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
-                return null;
+                throw new NotFoundException("Growth entry not found.");
             }
 
-            if (patch.WeekNumber is not null)
-            {
-                if (patch.WeekNumber.Value <= 0)
-                {
-                    throw new ArgumentException("WeekNumber must be > 0.");
-                }
-
-                dbEntity.WeekNumber = patch.WeekNumber.Value;
-            }
 
             if (patch.WeightKg is not null)
             {
@@ -146,17 +142,17 @@ namespace Nestly.Services.Repository
             return MapToDto(dbEntity);
         }
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var dbEntity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
-                return false;
+                throw new NotFoundException("Growth entry not found.");
             }
 
             _db.BabyGrowths.Remove(dbEntity);
             _db.SaveChanges();
-            return true;
         }
 
         private static BabyGrowthResponseDto MapToDto(BabyGrowth entity)

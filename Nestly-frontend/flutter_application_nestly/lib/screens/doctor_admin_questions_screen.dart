@@ -43,7 +43,8 @@ class QaAdminService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load questions');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju pitanja");
       }
 
       final data = jsonDecode(res.body);
@@ -73,7 +74,8 @@ class QaAdminService {
       body: {'answerText': answerText, 'answeredById': answeredById},
     );
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to save answer');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri spremanju odgovora");
     }
   }
 }
@@ -120,8 +122,11 @@ class _DoctorAdminQuestionsScreenState
         _filtered = data;
         _searchController.clear();
       });
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri učitavanju pitanja');
+    } catch (e) {
+      NestlyToast.error(
+        context,
+        'Greška pri učitavanju pitanja. Pokušajte ponovo.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -217,25 +222,35 @@ class _QuestionCardState extends State<_QuestionCard> {
   bool _saving = false;
   final _controller = TextEditingController();
   final _service = QaAdminService();
+  String? _errorText;
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+
+    _controller.addListener(() {
+      if (_errorText != null) {
+        setState(() => _errorText = null);
+      }
+    });
+  }
+
   Future<void> _save() async {
     final text = _controller.text.trim();
-
     if (text.isEmpty) {
-      NestlyToast.error(context, 'Odgovor ne može biti prazan');
+      setState(() => _errorText = 'Odgovor ne može biti prazan');
       return;
     }
 
     if (text.length < 5) {
-      NestlyToast.error(context, 'Odgovor je prekratak');
+      setState(() => _errorText = 'Odgovor je prekratak');
       return;
     }
-
     setState(() => _saving = true);
 
     final userId = await AuthStorage.getUserId();
@@ -263,8 +278,18 @@ class _QuestionCardState extends State<_QuestionCard> {
 
       _controller.clear();
       widget.onAnswered();
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri spremanju odgovora');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("required")) {
+        NestlyToast.error(context, 'Odgovor je obavezan');
+      } else if (msg.contains("cannot be empty")) {
+        NestlyToast.error(context, 'Odgovor ne može biti prazan');
+      } else if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Pitanje ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju odgovora');
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -289,7 +314,10 @@ class _QuestionCardState extends State<_QuestionCard> {
               TextField(
                 controller: _controller,
                 maxLines: 3,
-                decoration: const InputDecoration(hintText: 'Upišite odgovor'),
+                decoration: InputDecoration(
+                  hintText: 'Upišite odgovor',
+                  errorText: _errorText,
+                ),
               ),
               const SizedBox(height: 12),
               Row(

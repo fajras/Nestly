@@ -76,7 +76,6 @@ namespace Nestly.Services.Repository
                 }
                 else
                 {
-                    // 2️⃣ AKO NEMA DIJETE → TRUDNOĆA
                     var pregnancy = parentProfile?.Pregnancies?
                         .OrderByDescending(p => p.DueDate)
                         .FirstOrDefault(p => p.DueDate != null && p.DueDate > DateTime.UtcNow);

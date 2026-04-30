@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 
 namespace Nestly.Services.Repository
 {
@@ -52,46 +53,51 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public FeedingLogResponseDto? GetById(long id)
+        public FeedingLogResponseDto GetById(long id)
         {
             var entity = _db.FeedingLogs
                 .Include(f => f.FoodType)
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity is null ? null : MapToDto(entity);
+            if (entity is null)
+            {
+                throw new NotFoundException("Feeding log not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public FeedingLogResponseDto Create(CreateFeedingLogDto dto)
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.", nameof(dto.BabyId));
+                throw new BusinessException("Baby is required.");
             }
 
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+                throw new NotFoundException("Baby profile not found.");
             }
 
             if (dto.FeedDate == default)
             {
-                throw new ArgumentException("FeedDate is required.", nameof(dto.FeedDate));
+                throw new BusinessException("Feed date is required.");
             }
 
             if (dto.AmountMl is < 0)
             {
-                throw new ArgumentException("AmountMl cannot be negative.", nameof(dto.AmountMl));
+                throw new BusinessException("Amount cannot be negative.");
             }
 
             if (dto.FoodTypeId.HasValue &&
                 !_db.FoodTypes.Any(f => f.Id == dto.FoodTypeId.Value))
             {
-                throw new ArgumentException("FoodType does not exist.", nameof(dto.FoodTypeId));
+                throw new NotFoundException("Food type not found.");
             }
 
             var entity = new FeedingLog
@@ -111,8 +117,7 @@ namespace Nestly.Services.Repository
 
             return MapToDto(entity);
         }
-
-        public FeedingLogResponseDto? Patch(long id, FeedingLogPatchDto patch)
+        public FeedingLogResponseDto Patch(long id, FeedingLogPatchDto patch)
         {
             var dbEntity = _db.FeedingLogs
                 .Include(f => f.FoodType)
@@ -120,7 +125,7 @@ namespace Nestly.Services.Repository
 
             if (dbEntity is null)
             {
-                return null;
+                throw new NotFoundException("Feeding log not found.");
             }
 
             if (patch.FeedDate is not null)
@@ -137,7 +142,7 @@ namespace Nestly.Services.Repository
             {
                 if (patch.AmountMl < 0)
                 {
-                    throw new ArgumentException("AmountMl cannot be negative.");
+                    throw new BusinessException("Amount cannot be negative.");
                 }
 
                 dbEntity.AmountMl = patch.AmountMl.Value;
@@ -147,7 +152,7 @@ namespace Nestly.Services.Repository
             {
                 if (!_db.FoodTypes.Any(f => f.Id == patch.FoodTypeId.Value))
                 {
-                    throw new ArgumentException("FoodType does not exist.");
+                    throw new NotFoundException("Food type not found.");
                 }
 
                 dbEntity.FoodTypeId = patch.FoodTypeId.Value;
@@ -164,19 +169,17 @@ namespace Nestly.Services.Repository
 
             return MapToDto(dbEntity);
         }
-
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var dbEntity = _db.FeedingLogs.FirstOrDefault(x => x.Id == id);
 
             if (dbEntity is null)
             {
-                return false;
+                throw new NotFoundException("Feeding log not found.");
             }
 
             _db.FeedingLogs.Remove(dbEntity);
             _db.SaveChanges();
-            return true;
         }
 
         private static FeedingLogResponseDto MapToDto(FeedingLog x)

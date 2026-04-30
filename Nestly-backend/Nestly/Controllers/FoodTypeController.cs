@@ -60,13 +60,7 @@ namespace Nestly.WebAPI.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var success = _service.Delete(id);
-
-            if (!success)
-            {
-                return NotFound();
-            }
-
+            _service.Delete(id);
             return NoContent();
         }
     }

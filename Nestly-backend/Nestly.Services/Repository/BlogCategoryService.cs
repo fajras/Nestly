@@ -2,6 +2,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 namespace Nestly.Services.Repository
 {
@@ -48,25 +49,30 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BlogCategoryDto? GetById(int id)
+        public BlogCategoryDto GetById(int id)
         {
             var entity = _db.BlogCategories
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity == null ? null : MapToDto(entity);
+            if (entity == null)
+            {
+                throw new NotFoundException("Category not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public BlogCategoryDto Create(BlogCategoryInsertDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
-                throw new ArgumentException("Name is required");
+                throw new BusinessException("Category name is required.");
             }
 
             var entity = new BlogCategory
             {
-                Name = request.Name
+                Name = request.Name.Trim()
             };
 
             _db.BlogCategories.Add(entity);
@@ -75,23 +81,23 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public BlogCategoryDto? Update(int id, BlogCategoryUpdateDto request)
+        public BlogCategoryDto Update(int id, BlogCategoryUpdateDto request)
         {
             if (id <= 6)
             {
-                throw new Exception("System categories cannot be edited.");
+                throw new BusinessException("System categories cannot be edited.");
             }
 
             var entity = _db.BlogCategories.FirstOrDefault(x => x.Id == id);
 
             if (entity == null)
             {
-                return null;
+                throw new NotFoundException("Category not found.");
             }
 
             if (!string.IsNullOrWhiteSpace(request.Name))
             {
-                entity.Name = request.Name;
+                entity.Name = request.Name.Trim();
             }
 
             _db.SaveChanges();
@@ -99,32 +105,29 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public bool Delete(int id)
+        public void Delete(int id)
         {
             if (id <= 6)
             {
-                throw new Exception("System categories cannot be deleted.");
+                throw new BusinessException("System categories cannot be deleted.");
             }
 
             var entity = _db.BlogCategories.FirstOrDefault(x => x.Id == id);
 
             if (entity == null)
             {
-                return false;
+                throw new NotFoundException("Category not found.");
             }
 
-            bool isUsed = _db.BlogPostCategories
-                .Any(x => x.CategoryId == id);
+            bool isUsed = _db.BlogPostCategories.Any(x => x.CategoryId == id);
 
             if (isUsed)
             {
-                throw new Exception("Category cannot be deleted because it is used by existing blog posts.");
+                throw new BusinessException("Category is used by blog posts and cannot be deleted.");
             }
 
             _db.BlogCategories.Remove(entity);
             _db.SaveChanges();
-
-            return true;
         }
     }
 }

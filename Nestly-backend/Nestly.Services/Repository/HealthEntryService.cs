@@ -1,6 +1,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -49,34 +50,39 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public HealthEntryResponseDto? GetById(long id)
+        public HealthEntryResponseDto GetById(long id)
         {
             var entity = _db.HealthEntries
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity is null ? null : MapToDto(entity);
+            if (entity is null)
+            {
+                throw new NotFoundException("Health entry not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public HealthEntryResponseDto Create(CreateHealthEntryDto dto)
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (dto.BabyId <= 0)
             {
-                throw new ArgumentException("BabyId is required.");
+                throw new BusinessException("Baby is required.");
             }
 
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new NotFoundException("Baby profile not found.");
             }
 
             if (dto.EntryDate == default)
             {
-                throw new ArgumentException("EntryDate is required.");
+                throw new BusinessException("Entry date is required.");
             }
 
             var entity = new HealthEntry
@@ -84,8 +90,12 @@ namespace Nestly.Services.Repository
                 BabyId = dto.BabyId,
                 EntryDate = dto.EntryDate,
                 TemperatureC = dto.TemperatureC,
-                Medicines = string.IsNullOrWhiteSpace(dto.Medicines) ? null : dto.Medicines.Trim(),
-                DoctorVisit = string.IsNullOrWhiteSpace(dto.DoctorVisit) ? null : dto.DoctorVisit.Trim()
+                Medicines = string.IsNullOrWhiteSpace(dto.Medicines)
+                    ? null
+                    : dto.Medicines.Trim(),
+                DoctorVisit = string.IsNullOrWhiteSpace(dto.DoctorVisit)
+                    ? null
+                    : dto.DoctorVisit.Trim()
             };
 
             _db.HealthEntries.Add(entity);
@@ -94,12 +104,13 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public HealthEntryResponseDto? Patch(long id, HealthEntryPatchDto patch)
+        public HealthEntryResponseDto Patch(long id, HealthEntryPatchDto patch)
         {
             var entity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
+
             if (entity is null)
             {
-                return null;
+                throw new NotFoundException("Health entry not found.");
             }
 
             if (patch.EntryDate is not null)
@@ -114,12 +125,16 @@ namespace Nestly.Services.Repository
 
             if (patch.Medicines is not null)
             {
-                entity.Medicines = patch.Medicines.Trim();
+                entity.Medicines = string.IsNullOrWhiteSpace(patch.Medicines)
+                    ? null
+                    : patch.Medicines.Trim();
             }
 
             if (patch.DoctorVisit is not null)
             {
-                entity.DoctorVisit = patch.DoctorVisit.Trim();
+                entity.DoctorVisit = string.IsNullOrWhiteSpace(patch.DoctorVisit)
+                    ? null
+                    : patch.DoctorVisit.Trim();
             }
 
             _db.SaveChanges();
@@ -127,17 +142,17 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var entity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
+
             if (entity is null)
             {
-                return false;
+                throw new NotFoundException("Health entry not found.");
             }
 
             _db.HealthEntries.Remove(entity);
             _db.SaveChanges();
-            return true;
         }
 
         private static HealthEntryResponseDto MapToDto(HealthEntry x)

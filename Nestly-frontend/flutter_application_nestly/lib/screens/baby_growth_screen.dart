@@ -59,16 +59,17 @@ class FetalApi {
       '/api/FetalDevelopmentWeek/week/$week',
     ).timeout(const Duration(seconds: 10));
 
-    if (res.statusCode == 404) {
-      throw Exception();
-    }
     if (res.statusCode != 200) {
-      throw Exception();
+      final error = jsonDecode(res.body);
+      throw Exception(
+        error["message"] ?? "Greška pri učitavanju podataka za sedmicu",
+      );
     }
 
     if (kIsWeb) {
       return _parseWeek(res.body);
     }
+
     return compute(_parseWeek, res.body);
   }
 

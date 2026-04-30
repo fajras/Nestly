@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -159,7 +160,7 @@ namespace Nestly.Services.Repository
 
             if (row == null)
             {
-                return null;
+                throw new NotFoundException("User not found.");
             }
 
             var dto = new AppUserResultDto
@@ -215,55 +216,55 @@ namespace Nestly.Services.Repository
         {
             if (dto == null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Email))
             {
-                throw new ArgumentException("Email is required.");
+                throw new BusinessException("Email is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Username))
             {
-                throw new ArgumentException("Username is required.");
+                throw new BusinessException("Username is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Password))
             {
-                throw new ArgumentException("Password is required.");
+                throw new BusinessException("Password is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.FirstName))
             {
-                throw new ArgumentException("FirstName is required.");
+                throw new BusinessException("FirstName is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.LastName))
             {
-                throw new ArgumentException("LastName is required.");
+                throw new BusinessException("LastName is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
             {
-                throw new ArgumentException("PhoneNumber is required.");
+                throw new BusinessException("PhoneNumber is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Gender))
             {
-                throw new ArgumentException("Gender is required.");
+                throw new BusinessException("Gender is required.");
             }
 
             if (_db.AppUsers.Any(u => u.Email == dto.Email))
             {
-                throw new ArgumentException("Email already exists.");
+                throw new BusinessException("Email already exists.");
             }
 
             var role = _db.Roles.FirstOrDefault(r => r.Id == dto.RoleId)
-                ?? throw new ArgumentException("Role not found.");
+                ?? throw new BusinessException("Role not found.");
 
             if (!_roleManager.RoleExistsAsync(role.Name!).GetAwaiter().GetResult())
             {
-                throw new ArgumentException($"Identity role '{role.Name}' does not exist.");
+                throw new BusinessException($"Identity role '{role.Name}' does not exist.");
             }
 
             var identityUser = new IdentityUser
@@ -279,17 +280,17 @@ namespace Nestly.Services.Repository
             if (!identityResult.Succeeded)
             {
                 var msg = string.Join("; ", identityResult.Errors.Select(e => e.Description));
-                throw new InvalidOperationException($"Identity creation failed: {msg}");
+                throw new BusinessException($"User creation failed: {msg}");
             }
-
             var roleResult = _userManager.AddToRoleAsync(identityUser, role.Name!)
-                .GetAwaiter().GetResult();
+        .GetAwaiter().GetResult();
 
             if (!roleResult.Succeeded)
             {
                 var msg = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                throw new InvalidOperationException($"Role assignment failed: {msg}");
+                throw new BusinessException($"Role assignment failed: {msg}");
             }
+
 
             long? parentProfileId = null;
 
@@ -387,7 +388,7 @@ namespace Nestly.Services.Repository
 
             if (u is null)
             {
-                return null;
+                throw new NotFoundException("User not found.");
             }
 
             if (!string.IsNullOrWhiteSpace(patch.FirstName))
@@ -419,28 +420,30 @@ namespace Nestly.Services.Repository
         }
 
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var u = _db.AppUsers.FirstOrDefault(x => x.Id == id);
+
             if (u is null)
             {
-                return false;
+                throw new NotFoundException("User not found.");
             }
 
             var identityUser = _userManager.FindByIdAsync(u.IdentityUserId).GetAwaiter().GetResult();
+
             if (identityUser != null)
             {
                 var del = _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
+
                 if (!del.Succeeded)
                 {
-                    var msg = string.Join("; ", del.Errors.Select(e => $"{e.Code}: {e.Description}"));
-                    throw new InvalidOperationException($"Failed to delete Identity user: {msg}");
+                    var msg = string.Join("; ", del.Errors.Select(e => e.Description));
+                    throw new BusinessException($"Failed to delete user: {msg}");
                 }
             }
 
             _db.AppUsers.Remove(u);
             _db.SaveChanges();
-            return true;
         }
 
         private static int CalculateBabyAgeInMonths(DateTime birthDate)

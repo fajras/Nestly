@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 
 namespace Nestly.Services.Repository
 {
@@ -50,13 +51,18 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public MilestoneResponseDto? GetById(long id)
+        public MilestoneResponseDto GetById(long id)
         {
             var entity = _db.Milestones
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity is null ? null : ToDto(entity);
+            if (entity is null)
+            {
+                throw new NotFoundException("Milestone not found.");
+            }
+
+            return ToDto(entity);
         }
 
 
@@ -64,12 +70,17 @@ namespace Nestly.Services.Repository
         {
             if (dto is null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.", nameof(dto.BabyId));
+                throw new NotFoundException("Baby profile not found.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Title))
+            {
+                throw new BusinessException("Title is required.");
             }
 
             var entity = new Milestone
@@ -87,16 +98,22 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public MilestoneResponseDto? Patch(long id, MilestonePatchDto patch)
+        public MilestoneResponseDto Patch(long id, MilestonePatchDto patch)
         {
             var entity = _db.Milestones.FirstOrDefault(x => x.Id == id);
+
             if (entity is null)
             {
-                return null;
+                throw new NotFoundException("Milestone not found.");
             }
 
             if (patch.Title is not null)
             {
+                if (string.IsNullOrWhiteSpace(patch.Title))
+                {
+                    throw new BusinessException("Title cannot be empty.");
+                }
+
                 entity.Title = patch.Title.Trim();
             }
 
@@ -107,25 +124,26 @@ namespace Nestly.Services.Repository
 
             if (patch.Notes is not null)
             {
-                entity.Notes = patch.Notes.Trim();
+                entity.Notes = string.IsNullOrWhiteSpace(patch.Notes)
+                    ? null
+                    : patch.Notes.Trim();
             }
 
             _db.SaveChanges();
 
             return ToDto(entity);
         }
-
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var dbEntity = _db.Milestones.FirstOrDefault(x => x.Id == id);
+
             if (dbEntity is null)
             {
-                return false;
+                throw new NotFoundException("Milestone not found.");
             }
 
             _db.Milestones.Remove(dbEntity);
             _db.SaveChanges();
-            return true;
         }
 
         private static MilestoneResponseDto ToDto(Milestone m) => new()

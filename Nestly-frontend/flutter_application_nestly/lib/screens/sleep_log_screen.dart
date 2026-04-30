@@ -98,7 +98,8 @@ class SleepLogApiService {
       );
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load sleep logs');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju spavanja");
       }
 
       final data = jsonDecode(res.body);
@@ -136,7 +137,8 @@ class SleepLogApiService {
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Update failed');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri ažuriranju");
     }
   }
 
@@ -144,7 +146,8 @@ class SleepLogApiService {
     final res = await ApiClient.delete('/api/SleepLog/$id');
 
     if (res.statusCode != 204) {
-      throw Exception('Delete failed');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri brisanju");
     }
   }
 
@@ -152,7 +155,8 @@ class SleepLogApiService {
     final res = await ApiClient.post('/api/SleepLog', body: request.toJson());
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('Failed to save sleep log');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri spremanju");
     }
   }
 }
@@ -207,9 +211,14 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
         _last7Days = _buildSummary(entries);
         _loading = false;
       });
-    } catch (_) {
-      setState(() => _loading = false);
-      NestlyToast.error(context, 'Greška pri učitavanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Nema podataka za prikaz');
+      } else {
+        NestlyToast.error(context, 'Greška pri učitavanju');
+      }
     }
   }
 
@@ -359,8 +368,18 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
       _endTime = null;
 
       await _load();
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri spremanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("Invalid start time")) {
+        NestlyToast.error(context, 'Neispravan format početka');
+      } else if (msg.contains("Invalid end time")) {
+        NestlyToast.error(context, 'Neispravan format kraja');
+      } else if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Zapis ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri spremanju');
+      }
     }
 
     setState(() => _saving = false);
@@ -489,8 +508,14 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
         'Zapis obrisan',
         accentColor: AppColors.seed,
       );
-    } catch (_) {
-      NestlyToast.error(context, 'Greška pri brisanju');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Zapis već ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri brisanju');
+      }
     }
   }
 

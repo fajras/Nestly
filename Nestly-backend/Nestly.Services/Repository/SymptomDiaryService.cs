@@ -2,6 +2,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -64,7 +65,7 @@ namespace Nestly.Services.Repository
         {
             if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
             {
-                throw new ArgumentException("ParentProfile not found.", nameof(dto.ParentProfileId));
+                throw new NotFoundException("Parent profile not found.");
             }
 
             var date = (dto.Date ?? DateTime.Today).Date;
@@ -73,7 +74,7 @@ namespace Nestly.Services.Repository
                 s.ParentProfileId == dto.ParentProfileId &&
                 s.Date == date))
             {
-                throw new InvalidOperationException("Diary entry already exists for this date.");
+                throw new BusinessException("Diary entry already exists for this date.");
             }
 
             ValidateRange(dto.Nausea, nameof(dto.Nausea));
@@ -121,7 +122,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public SymptomDiaryResponseDto? GetByDate(long parentProfileId, DateTime date)
+        public SymptomDiaryResponseDto GetByDate(long parentProfileId, DateTime date)
         {
             var entity = _db.SymptomDiaries
                 .AsNoTracking()
@@ -129,15 +130,20 @@ namespace Nestly.Services.Repository
                     s.ParentProfileId == parentProfileId &&
                     s.Date == date.Date);
 
-            return entity is null ? null : ToDto(entity);
+            if (entity == null)
+            {
+                throw new NotFoundException("Symptom diary entry not found.");
+            }
+
+            return ToDto(entity);
         }
 
         public SymptomDiaryResponseDto? Patch(long id, SymptomDiaryPatchDto patch)
         {
             var entity = _db.SymptomDiaries.FirstOrDefault(s => s.Id == id);
-            if (entity is null)
+            if (entity == null)
             {
-                return null;
+                throw new NotFoundException("Symptom diary entry not found.");
             }
 
             if (patch.Nausea.HasValue)
@@ -174,17 +180,17 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var entity = _db.SymptomDiaries.FirstOrDefault(s => s.Id == id);
-            if (entity is null)
+
+            if (entity == null)
             {
-                return false;
+                throw new NotFoundException("Symptom diary entry not found.");
             }
 
             _db.SymptomDiaries.Remove(entity);
             _db.SaveChanges();
-            return true;
         }
 
         public PagedResult<DateTime> GetMarkedDays(long parentProfileId, SymptomDiarySearchObject search)
@@ -214,7 +220,7 @@ namespace Nestly.Services.Repository
         {
             if (value.HasValue && (value.Value < 1 || value.Value > 5))
             {
-                throw new ArgumentOutOfRangeException(field, "Value must be between 1 and 5.");
+                throw new BusinessException($"{field} must be between 1 and 5.");
             }
         }
 

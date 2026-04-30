@@ -2,6 +2,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 
 namespace Nestly.Services.Repository
 {
@@ -58,13 +59,18 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PregnancyResponseDto? GetById(long id)
+        public PregnancyResponseDto GetById(long id)
         {
             var entity = _db.Pregnancies
                 .AsNoTracking()
                 .FirstOrDefault(p => p.Id == id);
 
-            return entity is null ? null : ToDto(entity);
+            if (entity == null)
+            {
+                throw new NotFoundException("Pregnancy not found.");
+            }
+
+            return ToDto(entity);
         }
 
         public PregnancyResponseDto? GetByParentProfileId(long parentProfileId)
@@ -82,26 +88,26 @@ namespace Nestly.Services.Repository
         {
             if (dto == null)
             {
-                throw new ArgumentNullException(nameof(dto));
+                throw new BusinessException("Request cannot be null.");
             }
 
             if (!_db.ParentProfiles.Any(p => p.Id == dto.UserId))
             {
-                throw new ArgumentException("Parent profile does not exist.");
+                throw new NotFoundException("Parent profile not found.");
             }
-
             var (lmp, due) = NormalizeDates(dto.LmpDate, dto.DueDate);
 
             if (lmp.HasValue && due.HasValue && due < lmp)
             {
-                throw new ArgumentException("DueDate cannot be before LmpDate.");
+                throw new BusinessException("Due date cannot be before LMP.");
             }
 
             if (dto.CycleLengthDays.HasValue &&
                 (dto.CycleLengthDays < 20 || dto.CycleLengthDays > 40))
             {
-                throw new ArgumentException("Cycle length must be between 20 and 40.");
+                throw new BusinessException("Cycle length must be between 20 and 40.");
             }
+
 
             var entity = new Pregnancy
             {
@@ -117,19 +123,19 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public PregnancyResponseDto? Patch(long id, PregnancyPatchDto patch)
+        public PregnancyResponseDto Patch(long id, PregnancyPatchDto patch)
         {
             var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
             if (entity == null)
             {
-                return null;
+                throw new NotFoundException("Pregnancy not found.");
             }
 
             if (patch.UserId is not null && patch.UserId != entity.ParentProfileId)
             {
                 if (!_db.ParentProfiles.Any(p => p.Id == patch.UserId))
                 {
-                    throw new ArgumentException("Parent profile does not exist.");
+                    throw new NotFoundException("Parent profile not found.");
                 }
 
                 entity.ParentProfileId = patch.UserId.Value;
@@ -142,7 +148,7 @@ namespace Nestly.Services.Repository
 
             if (newLmp.HasValue && newDue.HasValue && newDue < newLmp)
             {
-                throw new ArgumentException("DueDate cannot be before LmpDate.");
+                throw new BusinessException("Due date cannot be before LMP.");
             }
 
             entity.LmpDate = newLmp;
@@ -152,12 +158,12 @@ namespace Nestly.Services.Repository
             {
                 if (!newLmp.HasValue)
                 {
-                    throw new ArgumentException("Cycle length requires LMP.");
+                    throw new BusinessException("Cycle length requires LMP.");
                 }
 
                 if (patch.CycleLengthDays < 20 || patch.CycleLengthDays > 40)
                 {
-                    throw new ArgumentException("Cycle length must be between 20 and 40.");
+                    throw new BusinessException("Cycle length must be between 20 and 40.");
                 }
 
                 entity.CycleLengthDays = patch.CycleLengthDays;
@@ -167,17 +173,17 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
+
             if (entity == null)
             {
-                return false;
+                throw new NotFoundException("Pregnancy not found.");
             }
 
             _db.Pregnancies.Remove(entity);
             _db.SaveChanges();
-            return true;
         }
 
         public PregnancyStatusDto? GetStatus(long parentProfileId)

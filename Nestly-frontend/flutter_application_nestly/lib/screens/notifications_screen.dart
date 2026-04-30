@@ -26,7 +26,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final res = await ApiClient.get('/api/Notification');
 
       if (res.statusCode != 200) {
-        throw Exception('Failed to load notifications');
+        final error = jsonDecode(res.body);
+        throw Exception(
+          error["message"] ?? "Greška pri učitavanju notifikacija",
+        );
       }
 
       final all = jsonDecode(res.body) as List<dynamic>;
@@ -50,11 +53,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _notifications = filtered;
         _loading = false;
       });
-    } catch (_) {
-      if (!mounted) return;
-
-      setState(() => _loading = false);
-      NestlyToast.error(context, 'Greška pri učitavanju notifikacija.');
+    } catch (e) {
+      NestlyToast.error(
+        context,
+        'Greška pri učitavanju notifikacija. Pokušajte ponovo.',
+      );
     }
   }
 
@@ -63,13 +66,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final res = await ApiClient.post('/api/Notification/mark-as-read/$id');
 
       if (res.statusCode != 200 && res.statusCode != 204) {
-        throw Exception('Failed to mark notification as read');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri označavanju");
       }
 
       await _load();
-    } catch (_) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri označavanju notifikacije.');
+    } catch (e) {
+      final msg = e.toString();
+
+      if (msg.contains("not found")) {
+        NestlyToast.error(context, 'Notifikacija ne postoji');
+      } else {
+        NestlyToast.error(context, 'Greška pri označavanju notifikacije');
+      }
     }
   }
 
@@ -78,13 +87,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final res = await ApiClient.post('/api/Notification/mark-all-as-read');
 
       if (res.statusCode != 200 && res.statusCode != 204) {
-        throw Exception('Failed to mark all notifications as read');
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri označavanju svih");
       }
 
       await _load();
-    } catch (_) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri označavanju svih notifikacija.');
+    } catch (e) {
+      NestlyToast.error(context, 'Greška pri označavanju svih notifikacija');
     }
   }
 
@@ -240,7 +249,7 @@ class _NotificationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      _formatDate(createdAt!),
+                      _formatDate(createdAt ?? ""),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                         fontSize: 11,

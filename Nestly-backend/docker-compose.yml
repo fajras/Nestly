@@ -41,7 +41,7 @@ services:
       - rabbitmq
 
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
     container_name: nestly-sql
     environment:
       ACCEPT_EULA: "Y"
@@ -50,7 +50,7 @@ services:
       - "1433:1433"
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.13.3-management
     container_name: nestly-rabbit
     ports:
       - "5672:5672"

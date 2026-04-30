@@ -2,6 +2,7 @@
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 namespace Nestly.Services.Repository
 {
@@ -48,20 +49,25 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public RoleDto? GetById(long id)
+        public RoleDto GetById(long id)
         {
             var entity = _db.Roles
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity == null ? null : MapToDto(entity);
+            if (entity == null)
+            {
+                throw new NotFoundException("Role not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public RoleDto Create(RoleInsertDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
-                throw new ArgumentException("Name is required");
+                throw new BusinessException("Role name is required.");
             }
 
             var entity = new Role
@@ -75,18 +81,18 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public RoleDto? Update(long id, RoleUpdateDto request)
+        public RoleDto Update(long id, RoleUpdateDto request)
         {
             if (id == 1 || id == 2)
             {
-                throw new Exception("System roles cannot be edited.");
+                throw new BusinessException("System roles cannot be edited.");
             }
 
             var entity = _db.Roles.FirstOrDefault(x => x.Id == id);
 
             if (entity == null)
             {
-                return null;
+                throw new NotFoundException("Role not found.");
             }
 
             if (!string.IsNullOrWhiteSpace(request.Name))
@@ -99,24 +105,22 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             if (id == 1 || id == 2)
             {
-                throw new Exception("System roles cannot be deleted.");
+                throw new BusinessException("System roles cannot be deleted.");
             }
 
             var entity = _db.Roles.FirstOrDefault(x => x.Id == id);
 
             if (entity == null)
             {
-                return false;
+                throw new NotFoundException("Role not found.");
             }
 
             _db.Roles.Remove(entity);
             _db.SaveChanges();
-
-            return true;
         }
     }
 }

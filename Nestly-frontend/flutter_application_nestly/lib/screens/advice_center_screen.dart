@@ -36,12 +36,9 @@ class WeeklyAdviceApi {
       '/api/WeeklyAdvice/week/$week',
     ).timeout(const Duration(seconds: 10));
 
-    if (res.statusCode == 404) {
-      throw Exception('Advice not found.');
-    }
-
     if (res.statusCode != 200) {
-      throw Exception('Advice load failed.');
+      final error = jsonDecode(res.body);
+      throw Exception(error["message"] ?? "Greška pri učitavanju.");
     }
 
     final map = jsonDecode(res.body) as Map<String, dynamic>;

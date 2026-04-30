@@ -1,6 +1,7 @@
 ﻿using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 
 public class CalendarEventService : ICalendarEventService
 {
@@ -51,27 +52,38 @@ public class CalendarEventService : ICalendarEventService
         };
     }
 
-    public CalendarEventResponseDto? GetById(long id)
+    public CalendarEventResponseDto GetById(long id)
     {
         var ev = _db.CalendarEvents.FirstOrDefault(e => e.Id == id);
-        return ev is null ? null : MapToDto(ev);
+
+        if (ev is null)
+        {
+            throw new NotFoundException("Calendar event not found.");
+        }
+
+        return MapToDto(ev);
     }
 
     public CalendarEventResponseDto Create(CreateCalendarEventDto dto)
     {
         if (dto.BabyId <= 0)
         {
-            throw new ArgumentException("BabyId is required.");
+            throw new BusinessException("Baby is required.");
+        }
+
+        if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+        {
+            throw new NotFoundException("Baby profile not found.");
         }
 
         if (string.IsNullOrWhiteSpace(dto.Title))
         {
-            throw new ArgumentException("Title is required.");
+            throw new BusinessException("Title is required.");
         }
 
         if (dto.StartAt == default)
         {
-            throw new ArgumentException("StartAt is required.");
+            throw new BusinessException("Start date is required.");
         }
 
         var entity = new CalendarEvent
@@ -79,7 +91,9 @@ public class CalendarEventService : ICalendarEventService
             BabyId = dto.BabyId,
             UserId = dto.UserId,
             Title = dto.Title.Trim(),
-            Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
+            Description = string.IsNullOrWhiteSpace(dto.Description)
+                ? null
+                : dto.Description.Trim(),
             StartAt = dto.StartAt
         };
 
@@ -88,23 +102,25 @@ public class CalendarEventService : ICalendarEventService
 
         return MapToDto(entity);
     }
-
-    public CalendarEventResponseDto? Patch(long id, CalendarEventPatchDto patch)
+    public CalendarEventResponseDto Patch(long id, CalendarEventPatchDto patch)
     {
         var ev = _db.CalendarEvents.FirstOrDefault(x => x.Id == id);
+
         if (ev is null)
         {
-            return null;
+            throw new NotFoundException("Calendar event not found.");
         }
 
         if (patch.Title is not null)
         {
-            ev.Title = patch.Title;
+            ev.Title = patch.Title.Trim();
         }
 
         if (patch.Description is not null)
         {
-            ev.Description = patch.Description;
+            ev.Description = string.IsNullOrWhiteSpace(patch.Description)
+                ? null
+                : patch.Description.Trim();
         }
 
         if (patch.StartAt is not null)
@@ -117,19 +133,19 @@ public class CalendarEventService : ICalendarEventService
 
         return MapToDto(ev);
     }
-
-    public bool Delete(long id)
+    public void Delete(long id)
     {
         var ev = _db.CalendarEvents.FirstOrDefault(x => x.Id == id);
+
         if (ev is null)
         {
-            return false;
+            throw new NotFoundException("Calendar event not found.");
         }
 
         _db.CalendarEvents.Remove(ev);
         _db.SaveChanges();
-        return true;
     }
+
 
     private static CalendarEventResponseDto MapToDto(CalendarEvent ev)
     {

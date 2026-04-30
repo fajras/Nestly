@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -63,30 +64,35 @@ namespace Nestly.Services.Repository
                 Items = items
             };
         }
-        public SleepLogResponseDto? GetById(long id)
+        public SleepLogResponseDto GetById(long id)
         {
             var entity = _db.SleepLogs
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
 
-            return entity == null ? null : MapToDto(entity);
+            if (entity == null)
+            {
+                throw new NotFoundException("Sleep log not found.");
+            }
+
+            return MapToDto(entity);
         }
 
         public SleepLogResponseDto Create(CreateSleepLogDto dto)
         {
             if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
             {
-                throw new ArgumentException("Baby does not exist.");
+                throw new NotFoundException("Baby profile not found.");
             }
 
             if (!TimeSpan.TryParse(dto.StartTime, out var start))
             {
-                throw new ArgumentException("Invalid StartTime format.");
+                throw new BusinessException("Invalid start time format.");
             }
 
             if (!TimeSpan.TryParse(dto.EndTime, out var end))
             {
-                throw new ArgumentException("Invalid EndTime format.");
+                throw new BusinessException("Invalid end time format.");
             }
 
             var entity = new SleepLog
@@ -102,13 +108,13 @@ namespace Nestly.Services.Repository
 
             return MapToDto(entity);
         }
-
-        public SleepLogResponseDto? Patch(long id, SleepLogPatchDto patch)
+        public SleepLogResponseDto Patch(long id, SleepLogPatchDto patch)
         {
             var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
+
             if (entity == null)
             {
-                return null;
+                throw new NotFoundException("Sleep log not found.");
             }
 
             if (patch.SleepDate is not null)
@@ -120,7 +126,7 @@ namespace Nestly.Services.Repository
             {
                 if (!TimeSpan.TryParse(patch.StartTime, out var start))
                 {
-                    throw new ArgumentException("Invalid StartTime format");
+                    throw new BusinessException("Invalid start time format.");
                 }
 
                 entity.StartTime = start;
@@ -130,7 +136,7 @@ namespace Nestly.Services.Repository
             {
                 if (!TimeSpan.TryParse(patch.EndTime, out var end))
                 {
-                    throw new ArgumentException("Invalid EndTime format");
+                    throw new BusinessException("Invalid end time format.");
                 }
 
                 entity.EndTime = end;
@@ -139,18 +145,17 @@ namespace Nestly.Services.Repository
             _db.SaveChanges();
             return MapToDto(entity);
         }
-
-        public bool Delete(long id)
+        public void Delete(long id)
         {
             var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
+
             if (entity == null)
             {
-                return false;
+                throw new NotFoundException("Sleep log not found.");
             }
 
             _db.SleepLogs.Remove(entity);
             _db.SaveChanges();
-            return true;
         }
     }
 }

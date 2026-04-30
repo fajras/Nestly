@@ -43,7 +43,7 @@ flutter --version
 1. Klonirati repozitorij i release.
   
 2. Otvoriti backend folder:
-pronaći .env folder, extractati ga  uz pomoć lozinke
+pronaći .env folder, extractati ga  uz pomoć lozinke prilozene uz prijavu rada
 ```bash
 cd Nestly-backend
 ```

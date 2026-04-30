@@ -41,9 +41,9 @@ flutter --version
 # 🐳 Backend Setup
 
 1. Klonirati repozitorij.
-
-2. Otvoriti backend folder:
-
+2. 
+3. Otvoriti backend folder:
+pronaći .env folder, extractati ga  uz pomoć lozinke
 ```bash
 cd Nestly-backend
 ```

@@ -10,7 +10,8 @@ namespace Nestly.Model.Entity
     {
         [Key]
         public long Id { get; set; }
-        public string QuestionText { get; set; }
+        [Required]
+        public string QuestionText { get; set; } = default!;
         [ForeignKey(nameof(ParentProfile))]
         public long? AskedById { get; set; }
         public DateTime CreatedAt { get; set; }

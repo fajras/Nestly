@@ -11,7 +11,8 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(QaQuestion))]
         public long QuestionId { get; set; }
-        public string AnswerText { get; set; }
+        [Required]
+        public string AnswerText { get; set; } = default!;
         [ForeignKey(nameof(DoctorProfile))]
         public long? AnsweredById { get; set; }
         public DateTime CreatedAt { get; set; }

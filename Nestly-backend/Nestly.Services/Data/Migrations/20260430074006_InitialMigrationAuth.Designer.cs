@@ -12,7 +12,7 @@ using Nestly.Services.Data;
 namespace Nestly.Services.Data.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20260228195427_InitialMigrationAuth")]
+    [Migration("20260430074006_InitialMigrationAuth")]
     partial class InitialMigrationAuth
     {
         /// <inheritdoc />
@@ -162,15 +162,15 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = "b5b77b5d-65b6-4f32-93f4-3f76b14e6f3c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "de85c3da-62ca-42c9-adb5-475f815108e4",
+                            ConcurrencyStamp = "c4ca6493-b0da-4241-a3d0-bc53439770de",
                             Email = "parent@nestly.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "PARENT@NESTLY.COM",
                             NormalizedUserName = "PARENT@NESTLY.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELpct9GgE7Vr+lWBnbeKFEo41S3Exz1LPa5uEcFTlJdGz+8UynV+JhoO6q7c/LaV8Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOdhAHVfifSq3iEPqoo8iNNXpItOIsGZzOcKxSl2Vj9K/IJHhb+i2JdcoEEkA7eedg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9dd4afb0-6761-49be-b9b1-af3dddf8230a",
+                            SecurityStamp = "13164e58-823f-4bc9-85eb-efa09e00c24d",
                             TwoFactorEnabled = false,
                             UserName = "parent@nestly.com"
                         },
@@ -178,15 +178,15 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = "work7b5d-65b6-4f32-93f4-126sko5e6f3c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ca15b707-81ec-4dd5-a5a6-ca9c7081717d",
+                            ConcurrencyStamp = "6df972ea-a3cc-441a-9b4c-ea5743ee60a3",
                             Email = "doctor@nestly.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "DOCTOR@NESTLY.COM",
                             NormalizedUserName = "DOCTOR@NESTLY.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJODiyfeR8JkUNj3h9C2YRjZIcatMGQzUgjQcAwSPMtXoV/baiTZFJMJAP9UwlWs5A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPSQv0jMlTTXS5MH8/tyxuer/rzGtR8/iHAZ0NxzLH1JBNzbk3Vzxk7YApMu5gPpog==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6e634456-4a5d-48ca-93c6-4872b8046c38",
+                            SecurityStamp = "dd1db4ca-763a-40ac-a7ef-9945094aba47",
                             TwoFactorEnabled = false,
                             UserName = "doctor@nestly.com"
                         });

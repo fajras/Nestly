@@ -12,8 +12,11 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(ParentProfile))]
         public long ParentProfileId { get; set; }
-        public string BabyName { get; set; }
-        public string Gender { get; set; }
+        [Required, MaxLength(150)]
+        public string BabyName { get; set; } = default!;
+
+        [Required, MaxLength(20)]
+        public string Gender { get; set; } = default!;
         public DateTime BirthDate { get; set; }
         [ForeignKey(nameof(Pregnancy))]
         public long? PregnancyId { get; set; }

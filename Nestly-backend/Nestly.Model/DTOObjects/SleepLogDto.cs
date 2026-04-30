@@ -1,13 +1,17 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
     public class CreateSleepLogDto
     {
+        [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
+        [Required]
         public DateTime SleepDate { get; set; }
-
+        [Required]
         public string StartTime { get; set; } = default!;
+        [Required]
         public string EndTime { get; set; } = default!;
     }
 

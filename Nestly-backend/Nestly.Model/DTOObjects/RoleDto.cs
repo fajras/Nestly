@@ -1,4 +1,6 @@
-﻿namespace Nestly.Model.DTOObjects
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Nestly.Model.DTOObjects
 {
     public class RoleDto
     {
@@ -8,6 +10,8 @@
 
     public class RoleInsertDto
     {
+        [Required]
+        [MaxLength(50)]
         public string Name { get; set; } = default!;
     }
 

@@ -106,10 +106,8 @@ namespace Nestly.Services.Data
             {
                 e.HasKey(x => x.Id);
                 e.Property(x => x.IdentityUserId)
-                    .HasMaxLength(64)
-                    .IsRequired(false);
-
-                e.Property(x => x.IdentityUserId).HasMaxLength(64);
+                 .IsRequired()
+                 .HasMaxLength(64);
                 e.Property(x => x.Email).IsRequired().HasMaxLength(255);
                 e.Property(x => x.FirstName).HasMaxLength(150);
                 e.Property(x => x.LastName).HasMaxLength(150);
@@ -117,9 +115,7 @@ namespace Nestly.Services.Data
                 e.Property(x => x.Gender).HasMaxLength(20);
                 e.HasIndex(x => x.Email).IsUnique();
 
-                e.HasIndex(x => x.IdentityUserId)
-                 .IsUnique()
-                 .HasFilter("[IdentityUserId] IS NOT NULL");
+                e.HasIndex(x => x.IdentityUserId).IsUnique();
 
                 e.HasOne(x => x.Role)
                  .WithMany(r => r.Users)

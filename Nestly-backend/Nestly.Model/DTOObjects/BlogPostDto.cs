@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -33,13 +34,16 @@ namespace Nestly.Model.DTOObjects
     }
     public class CreateBlogPostDto
     {
+        [Required]
+        [MaxLength(200)]
         public string Title { get; set; } = default!;
+        [Required]
         public string Content { get; set; } = default!;
         public long? AuthorId { get; set; }
         public int Phase { get; set; }
         public int? WeekFrom { get; set; }
         public int? WeekTo { get; set; }
-
+        [Required]
         public List<int> CategoryIds { get; set; }
     }
 

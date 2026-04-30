@@ -1,15 +1,22 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
     public class CreateSymptomDiaryDto
     {
+        [Range(1, long.MaxValue)]
         public long ParentProfileId { get; set; }
         public DateTime? Date { get; set; }
+        [Range(1, 5)]
         public int? Nausea { get; set; }
+        [Range(1, 5)]
         public int? Fatigue { get; set; }
+        [Range(1, 5)]
         public int? Headache { get; set; }
+        [Range(1, 5)]
         public int? Heartburn { get; set; }
+        [Range(1, 5)]
         public int? LegSwelling { get; set; }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -13,7 +14,9 @@ namespace Nestly.Model.DTOObjects
 
     public class CreateQaQuestionDto
     {
+        [Required]
         public string QuestionText { get; set; } = default!;
+        [Range(1, long.MaxValue)]
         public long? AskedById { get; set; }
     }
 
@@ -25,7 +28,9 @@ namespace Nestly.Model.DTOObjects
 
     public class CreateQaAnswerDto
     {
+        [Required]
         public string AnswerText { get; set; } = default!;
+        [Range(1, long.MaxValue)]
         public long? AnsweredById { get; set; }
     }
 

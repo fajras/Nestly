@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -6,15 +7,22 @@ namespace Nestly.Model.DTOObjects
     {
         public DateTime? EntryDate { get; set; }
         public decimal? TemperatureC { get; set; }
+        [MaxLength(1000)]
         public string? Medicines { get; set; }
+        [MaxLength(500)]
         public string? DoctorVisit { get; set; }
     }
     public class CreateHealthEntryDto
     {
+        [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
+        [Required]
         public DateTime EntryDate { get; set; }
+        [Range(30, 45)]
         public decimal? TemperatureC { get; set; }
+        [MaxLength(1000)]
         public string? Medicines { get; set; }
+        [MaxLength(500)]
         public string? DoctorVisit { get; set; }
     }
     public class HealthEntrySearchObject

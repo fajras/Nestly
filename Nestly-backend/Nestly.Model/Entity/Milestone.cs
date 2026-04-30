@@ -10,7 +10,8 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         [ForeignKey(nameof(BabyProfile))]
         public long BabyId { get; set; }
-        public string Title { get; set; }
+        [Required]
+        public string Title { get; set; } = default!;
         public DateTime AchievedDate { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }

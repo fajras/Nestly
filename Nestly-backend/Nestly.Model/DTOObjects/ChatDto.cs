@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -13,7 +14,10 @@ namespace Nestly.Model.DTOObjects
 
     public class SendMessageRequest
     {
+        [Range(1, long.MaxValue)]
         public long ReceiverUserId { get; set; }
+        [Required]
+        [MaxLength(4000)]
         public string Content { get; set; } = default!;
     }
 

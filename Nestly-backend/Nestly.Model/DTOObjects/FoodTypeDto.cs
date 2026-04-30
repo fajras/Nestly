@@ -1,4 +1,6 @@
-﻿namespace Nestly.Model.DTOObjects
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Nestly.Model.DTOObjects
 {
     public class FoodTypeDto
     {
@@ -8,11 +10,15 @@
 
     public class FoodTypeInsertDto
     {
+        [Required]
+        [MaxLength(120)]
         public string Name { get; set; } = default!;
     }
 
     public class FoodTypeUpdateDto
     {
+        [Required]
+        [MaxLength(120)]
         public string Name { get; set; } = default!;
     }
 

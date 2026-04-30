@@ -32,7 +32,7 @@ namespace Nestly.Model.Entity
 
         [ForeignKey(nameof(Role))]
         public long RoleId { get; set; }
-        public Role Role { get; set; }
+        public Role Role { get; set; } = default!;
 
         public ParentProfile? ParentProfile { get; set; }
         public DoctorProfile? DoctorProfile { get; set; }

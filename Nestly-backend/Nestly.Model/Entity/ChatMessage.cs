@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.Entity
 {
@@ -7,7 +8,8 @@ namespace Nestly.Model.Entity
         public long Id { get; set; }
         public long ConversationId { get; set; }
         public long SenderId { get; set; }
-        public string Content { get; set; }
+        [Required, MaxLength(4000)]
+        public string Content { get; set; } = default!;
         public DateTime CreatedAt { get; set; }
         public ChatConversation Conversation { get; set; }
         public AppUser Sender { get; set; }

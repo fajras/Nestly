@@ -1,10 +1,13 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
     public class BabyProfilePatchDto
     {
+        [MaxLength(150)]
         public string? BabyName { get; set; }
+        [MaxLength(20)]
         public string? Gender { get; set; }
         public DateTime? BirthDate { get; set; }
     }
@@ -25,14 +28,20 @@ namespace Nestly.Model.DTOObjects
     }
     public class CreateBabyProfileDto
     {
+        [Range(1, long.MaxValue)]
         public long ParentProfileId { get; set; }
+
+        [Required]
         public string BabyName { get; set; } = default!;
+
+        [Required]
         public string Gender { get; set; } = default!;
+
+        [Required]
         public DateTime BirthDate { get; set; }
+
         public long? PregnancyId { get; set; }
     }
-
-
 
 
 }

@@ -13,7 +13,8 @@ namespace Nestly.Model.Entity
         public long BabyId { get; set; }
         [ForeignKey(nameof(ParentProfile))]
         public long? UserId { get; set; }
-        public string Title { get; set; }
+        [Required, MaxLength(200)]
+        public string Title { get; set; } = default!;
         public string? Description { get; set; }
         public DateTime StartAt { get; set; }
         public bool Reminder24hSent { get; set; } = false;

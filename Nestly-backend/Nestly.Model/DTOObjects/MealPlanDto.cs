@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -12,8 +13,11 @@ namespace Nestly.Model.DTOObjects
 
     public class CreateMealPlanDto
     {
+        [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
+        [Range(1, int.MaxValue)]
         public int FoodTypeId { get; set; }
+        [Range(1, 5)]
         public short? Rating { get; set; }
         public DateTime? TriedAt { get; set; }
     }
@@ -28,8 +32,9 @@ namespace Nestly.Model.DTOObjects
     public class MealRecommendationDto
     {
         public long Id { get; set; }
+        [Range(1, short.MaxValue)]
         public short WeekNumber { get; set; }
-
+        [Range(1, int.MaxValue)]
         public int FoodTypeId { get; set; }
         public string FoodName { get; set; } = string.Empty;
     }

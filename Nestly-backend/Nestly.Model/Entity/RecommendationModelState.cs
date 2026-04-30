@@ -7,6 +7,7 @@ namespace Nestly.Model.Entity
     {
         [Key]
         public int Id { get; set; }
+        [Required]
         public string WeightsJson { get; set; } = default!;
         public DateTime UpdatedAt { get; set; }
     }

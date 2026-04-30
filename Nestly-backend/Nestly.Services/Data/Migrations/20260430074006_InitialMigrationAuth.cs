@@ -172,8 +172,8 @@ namespace Nestly.Services.Data.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "b5b77b5d-65b6-4f32-93f4-3f76b14e6f3c", 0, "de85c3da-62ca-42c9-adb5-475f815108e4", "parent@nestly.com", true, false, null, "PARENT@NESTLY.COM", "PARENT@NESTLY.COM", "AQAAAAIAAYagAAAAELpct9GgE7Vr+lWBnbeKFEo41S3Exz1LPa5uEcFTlJdGz+8UynV+JhoO6q7c/LaV8Q==", null, false, "9dd4afb0-6761-49be-b9b1-af3dddf8230a", false, "parent@nestly.com" },
-                    { "work7b5d-65b6-4f32-93f4-126sko5e6f3c", 0, "ca15b707-81ec-4dd5-a5a6-ca9c7081717d", "doctor@nestly.com", true, false, null, "DOCTOR@NESTLY.COM", "DOCTOR@NESTLY.COM", "AQAAAAIAAYagAAAAEJODiyfeR8JkUNj3h9C2YRjZIcatMGQzUgjQcAwSPMtXoV/baiTZFJMJAP9UwlWs5A==", null, false, "6e634456-4a5d-48ca-93c6-4872b8046c38", false, "doctor@nestly.com" }
+                    { "b5b77b5d-65b6-4f32-93f4-3f76b14e6f3c", 0, "c4ca6493-b0da-4241-a3d0-bc53439770de", "parent@nestly.com", true, false, null, "PARENT@NESTLY.COM", "PARENT@NESTLY.COM", "AQAAAAIAAYagAAAAEOdhAHVfifSq3iEPqoo8iNNXpItOIsGZzOcKxSl2Vj9K/IJHhb+i2JdcoEEkA7eedg==", null, false, "13164e58-823f-4bc9-85eb-efa09e00c24d", false, "parent@nestly.com" },
+                    { "work7b5d-65b6-4f32-93f4-126sko5e6f3c", 0, "6df972ea-a3cc-441a-9b4c-ea5743ee60a3", "doctor@nestly.com", true, false, null, "DOCTOR@NESTLY.COM", "DOCTOR@NESTLY.COM", "AQAAAAIAAYagAAAAEPSQv0jMlTTXS5MH8/tyxuer/rzGtR8/iHAZ0NxzLH1JBNzbk3Vzxk7YApMu5gPpog==", null, false, "dd1db4ca-763a-40ac-a7ef-9945094aba47", false, "doctor@nestly.com" }
                 });
 
             migrationBuilder.InsertData(

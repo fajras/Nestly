@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -15,12 +16,22 @@ namespace Nestly.Model.DTOObjects
 
     public class CreateMedicationPlanDto
     {
+        [Range(1, long.MaxValue)]
         public long ParentProfileId { get; set; }
+
+        [Required]
         public string MedicineName { get; set; } = default!;
+
+        [Required]
         public string Dose { get; set; } = default!;
+
+        [Required]
         public DateTime StartDate { get; set; }
+
+        [Required]
         public DateTime EndDate { get; set; }
 
+        [MinLength(1)]
         public List<TimeSpan> IntakeTimes { get; set; } = new();
     }
 

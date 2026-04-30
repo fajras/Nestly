@@ -1,4 +1,6 @@
-﻿namespace Nestly.Model.DTOObjects
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Nestly.Model.DTOObjects
 {
     public class BabyGrowthResponseDto
     {
@@ -25,7 +27,10 @@
     }
     public class CreateBabyGrowthDto
     {
+        [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
+
+        [Range(1, short.MaxValue)]
         public short WeekNumber { get; set; }
         public decimal? WeightKg { get; set; }
         public decimal? HeightCm { get; set; }

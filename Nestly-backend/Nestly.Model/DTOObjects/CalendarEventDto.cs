@@ -1,19 +1,25 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
     public class CalendarEventPatchDto
     {
+        [MaxLength(200)]
         public string? Title { get; set; }
         public string? Description { get; set; }
         public DateTime? StartAt { get; set; }
     }
     public class CreateCalendarEventDto
     {
+        [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
         public long? UserId { get; set; }
+        [Required]
+        [MaxLength(200)]
         public string Title { get; set; } = default!;
         public string? Description { get; set; }
+        [Required]
         public DateTime StartAt { get; set; }
     }
     public class CalendarEventSearchObject

@@ -1,15 +1,33 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 public class CreateAppUserDto
 {
+    [Required, EmailAddress]
     public string Email { get; set; } = default!;
+
+    [Required]
     public string FirstName { get; set; } = default!;
+
+    [Required]
     public string LastName { get; set; } = default!;
+
+    [Required]
     public string PhoneNumber { get; set; } = default!;
+
+    [Required]
     public DateTime DateOfBirth { get; set; }
+
+    [Required]
     public string Gender { get; set; } = default!;
+
+    [Required]
     public string Username { get; set; } = default!;
+
+    [Required]
     public string Password { get; set; } = default!;
+
+    [Range(1, long.MaxValue)]
     public long RoleId { get; set; }
 
     public DateTime? LmpDate { get; set; }
@@ -29,10 +47,14 @@ public class AppUserSearchObject
 
 public class AppUserPatchDto
 {
+    [MaxLength(150)]
     public string? FirstName { get; set; }
+    [MaxLength(150)]
     public string? LastName { get; set; }
+    [MaxLength(50)]
     public string? PhoneNumber { get; set; }
     public DateTime? DateOfBirth { get; set; }
+    [MaxLength(20)]
     public string? Gender { get; set; }
 }
 
@@ -56,7 +78,9 @@ public class AppUserResultDto
 public class ChangePasswordDto
 {
     public string? OldPassword { get; set; }
+    [Required]
     public string NewPassword { get; set; } = default!;
+    [Required]
     public string ConfirmPassword { get; set; } = default!;
 }
 

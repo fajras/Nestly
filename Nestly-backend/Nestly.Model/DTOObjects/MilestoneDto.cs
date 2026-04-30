@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
@@ -18,8 +19,11 @@ namespace Nestly.Model.DTOObjects
 
     public class CreateMilestoneDto
     {
+        [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
+        [Required]
         public string Title { get; set; }
+        [Required]
         public DateTime AchievedDate { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }

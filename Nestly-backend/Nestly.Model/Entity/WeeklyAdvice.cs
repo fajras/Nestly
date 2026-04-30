@@ -7,6 +7,7 @@ namespace Nestly.Model.Entity
         [Key]
         public int Id { get; set; }
         public short WeekNumber { get; set; }
-        public string AdviceText { get; set; }
+        [Required, MaxLength(4000)]
+        public string AdviceText { get; set; } = default!;
     }
 }

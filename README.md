@@ -40,10 +40,10 @@ flutter --version
 
 # 🐳 Backend Setup
 
-1. Klonirati repozitorij.
-
+1. Klonirati repozitorij i release.
+  
 2. Otvoriti backend folder:
-
+pronaći .env folder, extractati ga  uz pomoć lozinke
 ```bash
 cd Nestly-backend
 ```
@@ -98,7 +98,7 @@ Ako se Swagger UI prikaže, backend je uspješno pokrenut.
 
 # 💻 Pokretanje Windows Desktop aplikacije
 
-U folderu `Windows_Build` (u root folderu projekta) pokrenuti:
+Iz releasea pokrenuti /Release:
 
 ```
 flutter_application_nestly.exe
@@ -113,7 +113,7 @@ flutter_application_nestly.exe
 
 # 📱 Pokretanje mobilne aplikacije (Android)
 
-U root folderu projekta locirati fajl:
+Iz releasea locirati file:
 
 ```
 app-release.apk

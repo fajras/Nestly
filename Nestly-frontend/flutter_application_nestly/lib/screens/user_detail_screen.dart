@@ -542,90 +542,172 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                   ),
                   const SizedBox(height: 12),
 
-                  Row(
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
                     children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.picture_as_pdf),
-                        label: const Text("PDF Mama"),
-                        onPressed: _selectedUser == null
-                            ? null
-                            : () async {
-                                final therapy = await _service.getMedication(
-                                  _selectedUser!.id,
-                                );
-                                final symptoms = await _service.getSymptoms(
-                                  _selectedUser!.id,
-                                );
-                                final questions = await _service.getQuestions(
-                                  _selectedUser!.id,
-                                );
+                      _ReportActionCard(
+                        title: 'Izvještaj o majci',
+                        subtitle: 'Terapija, simptomi i pitanja',
+                        icon: Icons.pregnant_woman,
+                        enabled: _selectedUser != null,
 
-                                final file = await _pdfService
-                                    .generateMotherPdf(
-                                      userName: _selectedUser!.fullName,
-                                      therapy: _mapMedication(therapy),
-                                      symptoms: _mapSymptoms(symptoms),
-                                      questions: _mapQuestions(questions),
-                                    );
+                        onDownload: () async {
+                          final therapy = await _service.getMedication(
+                            _selectedUser!.id,
+                          );
 
-                                NestlyToast.success(
-                                  context,
-                                  "PDF je uspješno preuzet u Dokumente.",
-                                  accentColor: AppColors.seed,
-                                );
-                              },
+                          final symptoms = await _service.getSymptoms(
+                            _selectedUser!.id,
+                          );
+
+                          final questions = await _service.getQuestions(
+                            _selectedUser!.id,
+                          );
+
+                          await _pdfService.saveMotherPdf(
+                            userName: _selectedUser!.fullName,
+                            therapy: _mapMedication(therapy),
+                            symptoms: _mapSymptoms(symptoms),
+                            questions: _mapQuestions(questions),
+                          );
+
+                          if (!mounted) return;
+
+                          NestlyToast.success(
+                            context,
+                            "PDF izvještaj je uspješno preuzet.",
+                            accentColor: AppColors.seed,
+                          );
+                        },
+
+                        onPrint: () async {
+                          final therapy = await _service.getMedication(
+                            _selectedUser!.id,
+                          );
+
+                          final symptoms = await _service.getSymptoms(
+                            _selectedUser!.id,
+                          );
+
+                          final questions = await _service.getQuestions(
+                            _selectedUser!.id,
+                          );
+
+                          await _pdfService.printMotherPdf(
+                            userName: _selectedUser!.fullName,
+                            therapy: _mapMedication(therapy),
+                            symptoms: _mapSymptoms(symptoms),
+                            questions: _mapQuestions(questions),
+                          );
+                        },
                       ),
 
-                      const SizedBox(width: 10),
+                      _ReportActionCard(
+                        title: 'Izvještaj o bebi',
+                        subtitle: 'Zdravlje, rast i aktivnosti',
+                        icon: Icons.child_care,
+                        enabled: _selectedUser != null,
 
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.picture_as_pdf),
-                        label: const Text("PDF Beba"),
-                        onPressed: _selectedUser == null
-                            ? null
-                            : () async {
-                                final meals = await _service.getMeals(
-                                  _selectedUser!.id,
-                                );
-                                final health = await _service.getHealth(
-                                  _selectedUser!.id,
-                                );
-                                final diapers = await _service.getDiapers(
-                                  _selectedUser!.id,
-                                );
-                                final sleep = await _service.getSleep(
-                                  _selectedUser!.id,
-                                );
-                                final growth = await _service.getGrowth(
-                                  _selectedUser!.id,
-                                );
-                                final feeding = await _service.getFeedingLogs(
-                                  _selectedUser!.id,
-                                );
-                                final milestones = await _service.getMilestones(
-                                  _selectedUser!.id,
-                                );
-                                final calendar = await _service
-                                    .getCalendarEvents(_selectedUser!.id);
+                        onDownload: () async {
+                          final meals = await _service.getMeals(
+                            _selectedUser!.id,
+                          );
 
-                                final file = await _pdfService.generateBabyPdf(
-                                  userName: _selectedUser!.fullName,
-                                  meals: _mapMeals(meals),
-                                  health: _mapHealth(health),
-                                  diapers: _mapDiapers(diapers),
-                                  sleep: _mapSleep(sleep),
-                                  growth: _mapGrowth(growth),
-                                  feeding: _mapFeeding(feeding),
-                                  milestones: _mapMilestones(milestones),
-                                  calendar: _mapCalendar(calendar),
-                                );
+                          final health = await _service.getHealth(
+                            _selectedUser!.id,
+                          );
 
-                                NestlyToast.success(
-                                  context,
-                                  "PDF je uspješno preuzet u Dokumente.",
-                                  accentColor: AppColors.seed,
-                                );
-                              },
+                          final diapers = await _service.getDiapers(
+                            _selectedUser!.id,
+                          );
+
+                          final sleep = await _service.getSleep(
+                            _selectedUser!.id,
+                          );
+
+                          final growth = await _service.getGrowth(
+                            _selectedUser!.id,
+                          );
+
+                          final feeding = await _service.getFeedingLogs(
+                            _selectedUser!.id,
+                          );
+
+                          final milestones = await _service.getMilestones(
+                            _selectedUser!.id,
+                          );
+
+                          final calendar = await _service.getCalendarEvents(
+                            _selectedUser!.id,
+                          );
+
+                          await _pdfService.saveBabyPdf(
+                            userName: _selectedUser!.fullName,
+                            meals: _mapMeals(meals),
+                            health: _mapHealth(health),
+                            diapers: _mapDiapers(diapers),
+                            sleep: _mapSleep(sleep),
+                            growth: _mapGrowth(growth),
+                            feeding: _mapFeeding(feeding),
+                            milestones: _mapMilestones(milestones),
+                            calendar: _mapCalendar(calendar),
+                          );
+
+                          if (!mounted) return;
+
+                          NestlyToast.success(
+                            context,
+                            "PDF izvještaj je uspješno preuzet.",
+                            accentColor: AppColors.seed,
+                          );
+                        },
+
+                        onPrint: () async {
+                          final meals = await _service.getMeals(
+                            _selectedUser!.id,
+                          );
+
+                          final health = await _service.getHealth(
+                            _selectedUser!.id,
+                          );
+
+                          final diapers = await _service.getDiapers(
+                            _selectedUser!.id,
+                          );
+
+                          final sleep = await _service.getSleep(
+                            _selectedUser!.id,
+                          );
+
+                          final growth = await _service.getGrowth(
+                            _selectedUser!.id,
+                          );
+
+                          final feeding = await _service.getFeedingLogs(
+                            _selectedUser!.id,
+                          );
+
+                          final milestones = await _service.getMilestones(
+                            _selectedUser!.id,
+                          );
+
+                          final calendar = await _service.getCalendarEvents(
+                            _selectedUser!.id,
+                          );
+
+                          await _pdfService.printBabyPdf(
+                            userName: _selectedUser!.fullName,
+                            meals: _mapMeals(meals),
+                            health: _mapHealth(health),
+                            diapers: _mapDiapers(diapers),
+                            sleep: _mapSleep(sleep),
+                            growth: _mapGrowth(growth),
+                            feeding: _mapFeeding(feeding),
+                            milestones: _mapMilestones(milestones),
+                            calendar: _mapCalendar(calendar),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -857,4 +939,131 @@ List<DetailItem> _mapCalendar(List data) {
       meta: e['description'] ?? '',
     );
   }).toList();
+}
+
+class _ReportActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  final VoidCallback onDownload;
+  final VoidCallback onPrint;
+
+  final bool enabled;
+
+  const _ReportActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onDownload,
+    required this.onPrint,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+
+      child: Container(
+        width: 320,
+
+        padding: const EdgeInsets.all(AppSpacing.lg),
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+
+          border: Border.all(color: AppColors.seed.withOpacity(.15)),
+
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+
+                  decoration: BoxDecoration(
+                    color: AppColors.seed.withOpacity(.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+
+                  child: Icon(icon, color: AppColors.seed),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      Text(
+                        title,
+
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        subtitle,
+
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: enabled ? onDownload : null,
+
+                    icon: const Icon(Icons.download),
+
+                    label: const Text('Preuzmi'),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: enabled ? onPrint : null,
+
+                    icon: const Icon(Icons.print),
+
+                    label: const Text('Print'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

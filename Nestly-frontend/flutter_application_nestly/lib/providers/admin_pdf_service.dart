@@ -1,11 +1,15 @@
 import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
 import '../screens/user_detail_screen.dart';
 import 'package:flutter/services.dart';
 
 class AdminPdfService {
-  Future<File> generateMotherPdf({
+  Future<Uint8List> generateMotherPdfBytes({
     required String userName,
     required List<DetailItem> therapy,
     required List<DetailItem> symptoms,
@@ -18,6 +22,7 @@ class AdminPdfService {
     final fontBold = pw.Font.ttf(
       await rootBundle.load("assets/fonts/RobotoSlab-Bold.ttf"),
     );
+
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -42,17 +47,10 @@ class AdminPdfService {
       ),
     );
 
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(
-      '${dir.path}/mother_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
-    );
-
-    await file.writeAsBytes(await pdf.save());
-
-    return file;
+    return pdf.save();
   }
 
-  Future<File> generateBabyPdf({
+  Future<Uint8List> generateBabyPdfBytes({
     required String userName,
     required List<DetailItem> meals,
     required List<DetailItem> health,
@@ -66,9 +64,11 @@ class AdminPdfService {
     final font = pw.Font.ttf(
       await rootBundle.load("assets/fonts/RobotoSlab-Regular.ttf"),
     );
+
     final fontBold = pw.Font.ttf(
       await rootBundle.load("assets/fonts/RobotoSlab-Bold.ttf"),
     );
+
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -98,13 +98,107 @@ class AdminPdfService {
       ),
     );
 
+    return pdf.save();
+  }
+
+  Future<File> saveMotherPdf({
+    required String userName,
+    required List<DetailItem> therapy,
+    required List<DetailItem> symptoms,
+    required List<DetailItem> questions,
+  }) async {
+    final bytes = await generateMotherPdfBytes(
+      userName: userName,
+      therapy: therapy,
+      symptoms: symptoms,
+      questions: questions,
+    );
+
     final dir = await getApplicationDocumentsDirectory();
+
+    final file = File(
+      '${dir.path}/mother_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+
+    await file.writeAsBytes(bytes);
+
+    return file;
+  }
+
+  Future<File> saveBabyPdf({
+    required String userName,
+    required List<DetailItem> meals,
+    required List<DetailItem> health,
+    required List<DetailItem> diapers,
+    required List<DetailItem> sleep,
+    required List<DetailItem> growth,
+    required List<DetailItem> feeding,
+    required List<DetailItem> milestones,
+    required List<DetailItem> calendar,
+  }) async {
+    final bytes = await generateBabyPdfBytes(
+      userName: userName,
+      meals: meals,
+      health: health,
+      diapers: diapers,
+      sleep: sleep,
+      growth: growth,
+      feeding: feeding,
+      milestones: milestones,
+      calendar: calendar,
+    );
+
+    final dir = await getApplicationDocumentsDirectory();
+
     final file = File(
       '${dir.path}/baby_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
-    await file.writeAsBytes(await pdf.save());
+
+    await file.writeAsBytes(bytes);
 
     return file;
+  }
+
+  Future<void> printMotherPdf({
+    required String userName,
+    required List<DetailItem> therapy,
+    required List<DetailItem> symptoms,
+    required List<DetailItem> questions,
+  }) async {
+    final bytes = await generateMotherPdfBytes(
+      userName: userName,
+      therapy: therapy,
+      symptoms: symptoms,
+      questions: questions,
+    );
+
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
+  }
+
+  Future<void> printBabyPdf({
+    required String userName,
+    required List<DetailItem> meals,
+    required List<DetailItem> health,
+    required List<DetailItem> diapers,
+    required List<DetailItem> sleep,
+    required List<DetailItem> growth,
+    required List<DetailItem> feeding,
+    required List<DetailItem> milestones,
+    required List<DetailItem> calendar,
+  }) async {
+    final bytes = await generateBabyPdfBytes(
+      userName: userName,
+      meals: meals,
+      health: health,
+      diapers: diapers,
+      sleep: sleep,
+      growth: growth,
+      feeding: feeding,
+      milestones: milestones,
+      calendar: calendar,
+    );
+
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
   }
 
   pw.Widget _section(String title, List<DetailItem> items) {
@@ -116,7 +210,9 @@ class AdminPdfService {
             title,
             style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
+
           pw.Text("Nema podataka"),
+
           pw.SizedBox(height: 20),
         ],
       );
@@ -142,6 +238,7 @@ class AdminPdfService {
                   e.title,
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
+
                 pw.Text(e.subtitle),
                 pw.Text(e.meta),
               ],

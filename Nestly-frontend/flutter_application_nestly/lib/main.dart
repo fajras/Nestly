@@ -36,7 +36,7 @@ class AppColors {
   static const roseDark = Color.fromARGB(255, 168, 40, 89);
 }
 
-const bool forceLoginOnStart = true;
+const bool forceLoginOnStart = false;
 
 class AppRadius {
   static const xl = 24.0;

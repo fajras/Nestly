@@ -24,36 +24,35 @@ namespace Nestly.Services.Repository
             _roleManager = roleManager;
         }
 
-        public PagedResult<AppUserResultDto> Get(AppUserSearchObject search)
+        public async Task<PagedResult<AppUserResultDto>> Get(AppUserSearchObject search)
         {
             search ??= new AppUserSearchObject();
-            var nowUtc = DateTime.UtcNow;
 
             IQueryable<AppUser> q = _db.AppUsers.AsNoTracking();
 
-            if (!string.IsNullOrWhiteSpace(search?.Email))
+            if (!string.IsNullOrWhiteSpace(search.Email))
             {
                 q = q.Where(x => x.Email == search.Email);
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.FirstName))
+            if (!string.IsNullOrWhiteSpace(search.FirstName))
             {
                 q = q.Where(x => x.FirstName.Contains(search.FirstName));
             }
 
-            if (!string.IsNullOrWhiteSpace(search?.LastName))
+            if (!string.IsNullOrWhiteSpace(search.LastName))
             {
                 q = q.Where(x => x.LastName.Contains(search.LastName));
             }
 
-            if (search?.RoleId.HasValue == true)
+            if (search.RoleId.HasValue)
             {
                 q = q.Where(x => x.RoleId == search.RoleId.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
-            var data = q
+            var data = await q
                 .OrderBy(x => x.LastName)
                 .ThenBy(x => x.FirstName)
                 .Skip((search.Page - 1) * search.PageSize)
@@ -69,13 +68,17 @@ namespace Nestly.Services.Repository
                     Gender = x.Gender,
                     RoleId = x.RoleId,
                     IdentityUserId = x.IdentityUserId,
-                    ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
+                    ParentProfileId = x.ParentProfile != null
+                        ? x.ParentProfile.Id
+                        : null,
+
                     LatestBabyBirthDate = x.ParentProfile != null
                         ? x.ParentProfile.Babies
                             .OrderByDescending(b => b.BirthDate)
                             .Select(b => (DateTime?)b.BirthDate)
                             .FirstOrDefault()
                         : null,
+
                     LatestPregnancyDueDate = x.ParentProfile != null
                         ? x.ParentProfile.Pregnancies
                             .OrderByDescending(p => p.DueDate ?? p.LmpDate)
@@ -83,7 +86,7 @@ namespace Nestly.Services.Repository
                             .FirstOrDefault()
                         : null
                 })
-                .ToList();
+                .ToListAsync();
 
             var items = data.Select(r =>
             {
@@ -105,12 +108,14 @@ namespace Nestly.Services.Repository
                 if (r.LatestBabyBirthDate.HasValue)
                 {
                     dto.ParentStatus = "PARENT";
-                    dto.BabyAgeMonths = CalculateBabyAgeInMonths(r.LatestBabyBirthDate.Value);
+                    dto.BabyAgeMonths =
+                        CalculateBabyAgeInMonths(r.LatestBabyBirthDate.Value);
                 }
                 else if (r.LatestPregnancyDueDate.HasValue)
                 {
                     dto.ParentStatus = "PREGNANT";
-                    dto.PregnancyTrimester = CalculatePregnancyTrimester(r.LatestPregnancyDueDate.Value);
+                    dto.PregnancyTrimester =
+                        CalculatePregnancyTrimester(r.LatestPregnancyDueDate.Value);
                 }
 
                 return dto;
@@ -122,11 +127,13 @@ namespace Nestly.Services.Repository
                 TotalCount = totalCount
             };
         }
-        public AppUserResultDto? GetById(long id)
+
+        public async Task<AppUserResultDto?> GetById(long id)
         {
             var nowUtc = DateTime.UtcNow;
 
-            var row = _db.AppUsers.AsNoTracking()
+            var row = await _db.AppUsers
+                .AsNoTracking()
                 .Where(u => u.Id == id)
                 .Select(x => new AppUserRow
                 {
@@ -138,7 +145,10 @@ namespace Nestly.Services.Repository
                     PhoneNumber = x.PhoneNumber,
                     DateOfBirth = x.DateOfBirth,
                     Gender = x.Gender,
-                    ParentProfileId = x.ParentProfile != null ? x.ParentProfile.Id : null,
+                    ParentProfileId = x.ParentProfile != null
+                        ? x.ParentProfile.Id
+                        : null,
+
                     IdentityUserId = x.IdentityUserId,
 
                     LatestBabyBirthDate = x.ParentProfile != null
@@ -150,13 +160,15 @@ namespace Nestly.Services.Repository
 
                     LatestPregnancyDueDate = x.ParentProfile != null
                         ? x.ParentProfile.Pregnancies
-                            .Where(p => p.DueDate != null && p.DueDate > nowUtc)
+                            .Where(p =>
+                                p.DueDate != null &&
+                                p.DueDate > nowUtc)
                             .OrderByDescending(p => p.DueDate)
                             .Select(p => p.DueDate)
                             .FirstOrDefault()
                         : null
                 })
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (row == null)
             {
@@ -183,21 +195,26 @@ namespace Nestly.Services.Repository
             if (row.LatestBabyBirthDate.HasValue)
             {
                 dto.ParentStatus = "PARENT";
-                dto.BabyAgeMonths = CalculateBabyAgeInMonths(row.LatestBabyBirthDate.Value);
+                dto.BabyAgeMonths =
+                    CalculateBabyAgeInMonths(row.LatestBabyBirthDate.Value);
+
                 return dto;
             }
 
             if (row.LatestPregnancyDueDate.HasValue)
             {
                 dto.ParentStatus = "PREGNANT";
-                dto.PregnancyTrimester = CalculatePregnancyTrimester(row.LatestPregnancyDueDate.Value);
+                dto.PregnancyTrimester =
+                    CalculatePregnancyTrimester(row.LatestPregnancyDueDate.Value);
+
                 return dto;
             }
 
             return dto;
         }
 
-        private static (DateTime? Lmp, DateTime? Due) NormalizePregnancyDates(DateTime? lmp, DateTime? due)
+        private static (DateTime? Lmp, DateTime? Due)
+            NormalizePregnancyDates(DateTime? lmp, DateTime? due)
         {
             if (lmp.HasValue && !due.HasValue)
             {
@@ -206,13 +223,13 @@ namespace Nestly.Services.Repository
 
             if (!lmp.HasValue && due.HasValue)
             {
-                return (due.Value.AddDays(280 * -1), due);
+                return (due.Value.AddDays(-280), due);
             }
 
             return (lmp, due);
         }
 
-        public AppUserResultDto Create(CreateAppUserDto dto)
+        public async Task<AppUserResultDto> Create(CreateAppUserDto dto)
         {
             if (dto == null)
             {
@@ -254,50 +271,69 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Gender is required.");
             }
 
-            if (_db.AppUsers.Any(u => u.Email == dto.Email))
+            if (await _db.AppUsers.AnyAsync(u => u.Email == dto.Email))
             {
                 throw new BusinessException("Email already exists.");
             }
 
-            var role = _db.Roles.FirstOrDefault(r => r.Id == dto.RoleId)
+            var role = await _db.Roles
+                .FirstOrDefaultAsync(r => r.Id == dto.RoleId)
                 ?? throw new BusinessException("Role not found.");
 
-            if (!_roleManager.RoleExistsAsync(role.Name!).GetAwaiter().GetResult())
+            var roleExists =
+                await _roleManager.RoleExistsAsync(role.Name!);
+
+            if (!roleExists)
             {
-                throw new BusinessException($"Identity role '{role.Name}' does not exist.");
+                throw new BusinessException(
+                    $"Identity role '{role.Name}' does not exist.");
             }
 
-            var identityUser = new IdentityUser
-            {
-                UserName = dto.Username.Trim(),
-                Email = dto.Email.Trim(),
-                EmailConfirmed = true
-            };
-
-            var identityResult = _userManager.CreateAsync(identityUser, dto.Password)
-                .GetAwaiter().GetResult();
-
-            if (!identityResult.Succeeded)
-            {
-                var msg = string.Join("; ", identityResult.Errors.Select(e => e.Description));
-                throw new BusinessException($"User creation failed: {msg}");
-            }
-            var roleResult = _userManager.AddToRoleAsync(identityUser, role.Name!)
-        .GetAwaiter().GetResult();
-
-            if (!roleResult.Succeeded)
-            {
-                var msg = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                throw new BusinessException($"Role assignment failed: {msg}");
-            }
-
-
+            IdentityUser? identityUser = null;
             long? parentProfileId = null;
 
-            using var tx = _db.Database.BeginTransaction();
+            await using var tx =
+                await _db.Database.BeginTransactionAsync();
 
             try
             {
+                identityUser = new IdentityUser
+                {
+                    UserName = dto.Username.Trim(),
+                    Email = dto.Email.Trim(),
+                    EmailConfirmed = true
+                };
+
+                var identityResult =
+                    await _userManager.CreateAsync(
+                        identityUser,
+                        dto.Password);
+
+                if (!identityResult.Succeeded)
+                {
+                    var msg = string.Join(
+                        "; ",
+                        identityResult.Errors.Select(e => e.Description));
+
+                    throw new BusinessException(
+                        $"User creation failed: {msg}");
+                }
+
+                var roleResult =
+                    await _userManager.AddToRoleAsync(
+                        identityUser,
+                        role.Name!);
+
+                if (!roleResult.Succeeded)
+                {
+                    var msg = string.Join(
+                        "; ",
+                        roleResult.Errors.Select(e => e.Description));
+
+                    throw new BusinessException(
+                        $"Role assignment failed: {msg}");
+                }
+
                 var user = new AppUser
                 {
                     IdentityUserId = identityUser.Id,
@@ -311,7 +347,8 @@ namespace Nestly.Services.Repository
                 };
 
                 _db.AppUsers.Add(user);
-                _db.SaveChanges();
+
+                await _db.SaveChangesAsync();
 
                 if (role.Id == 1)
                 {
@@ -321,11 +358,15 @@ namespace Nestly.Services.Repository
                     };
 
                     _db.ParentProfiles.Add(parentProfile);
-                    _db.SaveChanges();
+
+                    await _db.SaveChangesAsync();
 
                     parentProfileId = parentProfile.Id;
 
-                    var (normLmp, normDue) = NormalizePregnancyDates(dto.LmpDate, dto.DueDate);
+                    var (normLmp, normDue) =
+                        NormalizePregnancyDates(
+                            dto.LmpDate,
+                            dto.DueDate);
 
                     if (normLmp.HasValue || normDue.HasValue)
                     {
@@ -338,7 +379,8 @@ namespace Nestly.Services.Repository
                         };
 
                         _db.Pregnancies.Add(pregnancy);
-                        _db.SaveChanges();
+
+                        await _db.SaveChangesAsync();
                     }
                 }
 
@@ -350,10 +392,11 @@ namespace Nestly.Services.Repository
                     };
 
                     _db.DoctorProfiles.Add(doctorProfile);
-                    _db.SaveChanges();
+
+                    await _db.SaveChangesAsync();
                 }
 
-                tx.Commit();
+                await tx.CommitAsync();
 
                 return new AppUserResultDto
                 {
@@ -363,7 +406,9 @@ namespace Nestly.Services.Repository
                     LastName = user.LastName,
                     RoleId = user.RoleId,
                     IdentityUserId = user.IdentityUserId,
-                    ParentStatus = role.Id == 1 ? "PARENT" : "UNKNOWN",
+                    ParentStatus = role.Id == 1
+                        ? "PARENT"
+                        : "UNKNOWN",
                     BabyAgeMonths = null,
                     PregnancyTrimester = null,
                     ParentProfileId = parentProfileId
@@ -371,20 +416,33 @@ namespace Nestly.Services.Repository
             }
             catch
             {
-                tx.Rollback();
-                _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
+                await tx.RollbackAsync();
+
+                if (identityUser != null)
+                {
+                    try
+                    {
+                        await _userManager.DeleteAsync(identityUser);
+                    }
+                    catch
+                    {
+                    }
+                }
+
                 throw;
             }
         }
 
-        public AppUserResultDto? Patch(long id, AppUserPatchDto patch)
+        public async Task<AppUserResultDto?> Patch(
+            long id,
+            AppUserPatchDto patch)
         {
-            var u = _db.AppUsers
+            var u = await _db.AppUsers
                 .Include(x => x.ParentProfile)
                 .ThenInclude(p => p.Babies)
                 .Include(x => x.ParentProfile)
                 .ThenInclude(p => p.Pregnancies)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (u is null)
             {
@@ -395,10 +453,12 @@ namespace Nestly.Services.Repository
             {
                 u.FirstName = patch.FirstName.Trim();
             }
+
             if (!string.IsNullOrWhiteSpace(patch.LastName))
             {
                 u.LastName = patch.LastName.Trim();
             }
+
             if (!string.IsNullOrWhiteSpace(patch.PhoneNumber))
             {
                 u.PhoneNumber = patch.PhoneNumber.Trim();
@@ -414,49 +474,77 @@ namespace Nestly.Services.Repository
                 u.Gender = patch.Gender.Trim();
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToResultDto(u);
         }
 
-
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var u = _db.AppUsers.FirstOrDefault(x => x.Id == id);
+            var u = await _db.AppUsers
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (u is null)
             {
                 throw new NotFoundException("User not found.");
             }
 
-            var identityUser = _userManager.FindByIdAsync(u.IdentityUserId).GetAwaiter().GetResult();
+            var identityUser =
+                await _userManager.FindByIdAsync(u.IdentityUserId);
 
-            if (identityUser != null)
+            await using var tx =
+                await _db.Database.BeginTransactionAsync();
+
+            try
             {
-                var del = _userManager.DeleteAsync(identityUser).GetAwaiter().GetResult();
-
-                if (!del.Succeeded)
+                if (identityUser != null)
                 {
-                    var msg = string.Join("; ", del.Errors.Select(e => e.Description));
-                    throw new BusinessException($"Failed to delete user: {msg}");
-                }
-            }
+                    var del =
+                        await _userManager.DeleteAsync(identityUser);
 
-            _db.AppUsers.Remove(u);
-            _db.SaveChanges();
+                    if (!del.Succeeded)
+                    {
+                        var msg = string.Join(
+                            "; ",
+                            del.Errors.Select(e => e.Description));
+
+                        throw new BusinessException(
+                            $"Failed to delete identity user: {msg}");
+                    }
+                }
+
+                _db.AppUsers.Remove(u);
+
+                await _db.SaveChangesAsync();
+
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
 
-        private static int CalculateBabyAgeInMonths(DateTime birthDate)
+        private static int CalculateBabyAgeInMonths(
+            DateTime birthDate)
         {
             var now = DateTime.UtcNow;
-            return (now.Year - birthDate.Year) * 12 + now.Month - birthDate.Month;
+
+            return (now.Year - birthDate.Year) * 12 +
+                   now.Month - birthDate.Month;
         }
 
-        private static int CalculatePregnancyTrimester(DateTime dueDate)
+        private static int CalculatePregnancyTrimester(
+            DateTime dueDate)
         {
             const int totalWeeks = 40;
-            var weeksLeft = (dueDate - DateTime.UtcNow).Days / 7;
-            var currentWeek = totalWeeks - weeksLeft;
+
+            var weeksLeft =
+                (dueDate - DateTime.UtcNow).Days / 7;
+
+            var currentWeek =
+                totalWeeks - weeksLeft;
 
             if (currentWeek <= 13)
             {
@@ -474,19 +562,29 @@ namespace Nestly.Services.Repository
         private sealed class AppUserRow
         {
             public long Id { get; set; }
+
             public string Email { get; set; } = default!;
+
             public string? FirstName { get; set; }
+
             public string? LastName { get; set; }
+
             public string? PhoneNumber { get; set; }
+
             public DateTime? DateOfBirth { get; set; }
+
             public string? Gender { get; set; }
+
             public long? RoleId { get; set; }
+
             public string IdentityUserId { get; set; } = default!;
+
             public long? ParentProfileId { get; set; }
+
             public DateTime? LatestBabyBirthDate { get; set; }
+
             public DateTime? LatestPregnancyDueDate { get; set; }
         }
-
 
         private AppUserResultDto MapToResultDto(AppUser u)
         {
@@ -515,27 +613,31 @@ namespace Nestly.Services.Repository
                 if (latestBaby != null)
                 {
                     dto.ParentStatus = "PARENT";
-                    dto.BabyAgeMonths = CalculateBabyAgeInMonths(latestBaby.BirthDate);
+
+                    dto.BabyAgeMonths =
+                        CalculateBabyAgeInMonths(latestBaby.BirthDate);
+
                     return dto;
                 }
 
                 var latestPregnancy = u.ParentProfile.Pregnancies?
-                    .Where(p => p.DueDate != null && p.DueDate > DateTime.UtcNow)
+                    .Where(p =>
+                        p.DueDate != null &&
+                        p.DueDate > DateTime.UtcNow)
                     .OrderByDescending(p => p.DueDate)
                     .FirstOrDefault();
 
                 if (latestPregnancy?.DueDate != null)
                 {
                     dto.ParentStatus = "PREGNANT";
-                    dto.PregnancyTrimester = CalculatePregnancyTrimester(latestPregnancy.DueDate.Value);
+
+                    dto.PregnancyTrimester =
+                        CalculatePregnancyTrimester(
+                            latestPregnancy.DueDate.Value);
                 }
             }
 
             return dto;
         }
-
     }
-
-
-
 }

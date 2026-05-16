@@ -4,10 +4,10 @@ namespace Nestly.Services.Interfaces
 {
     public interface IAppUserService
     {
-        PagedResult<AppUserResultDto> Get(AppUserSearchObject? search);
-        AppUserResultDto GetById(long id);
-        AppUserResultDto Create(CreateAppUserDto entity);
-        AppUserResultDto Patch(long id, AppUserPatchDto patch);
-        void Delete(long id);
+        Task<AppUserResultDto> Create(CreateAppUserDto dto);
+        Task<AppUserResultDto?> Patch(long id, AppUserPatchDto patch);
+        Task Delete(long id);
+        Task<AppUserResultDto?> GetById(long id);
+        Task<PagedResult<AppUserResultDto>> Get(AppUserSearchObject search);
     }
 }

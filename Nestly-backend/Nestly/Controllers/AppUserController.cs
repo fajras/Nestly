@@ -11,49 +11,70 @@ namespace Nestly.WebAPI.Controllers
     public class AppUserController : ControllerBase
     {
         protected readonly IAppUserService appUserService;
+
         public AppUserController(IAppUserService service)
         {
             appUserService = service;
         }
 
         [HttpGet]
-        public ActionResult<PagedResult<AppUserResultDto>> Get([FromQuery] AppUserSearchObject search)
-           => Ok(appUserService.Get(search));
+        public async Task<ActionResult<PagedResult<AppUserResultDto>>> Get(
+            [FromQuery] AppUserSearchObject search)
+        {
+            var result = await appUserService.Get(search);
+
+            return Ok(result);
+        }
 
         [HttpGet("{id:long}", Name = "GetAppUserById")]
-        public ActionResult<AppUserResultDto> GetById(long id)
-            => appUserService.GetById(id) is { } dto ? Ok(dto) : NotFound();
+        public async Task<ActionResult<AppUserResultDto>> GetById(long id)
+        {
+            var dto = await appUserService.GetById(id);
+
+            return dto is not null ? Ok(dto) : NotFound();
+        }
 
         [HttpPost]
         [AllowAnonymous]
-        public ActionResult<AppUserResultDto> Create([FromBody] CreateAppUserDto request)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateAppUserDto request)
         {
-            var dto = appUserService.Create(request);
-            return CreatedAtRoute("GetAppUserById", new { id = dto.Id }, dto);
+            var dto = await appUserService.Create(request);
+
+            return CreatedAtRoute(
+                "GetAppUserById",
+                new { id = dto.Id },
+                dto);
         }
 
-
         [HttpPatch("{id:long}")]
-        public ActionResult<AppUserResultDto> Patch(long id, [FromBody] AppUserPatchDto patch)
+        public async Task<ActionResult<AppUserResultDto>> Patch(
+            long id,
+            [FromBody] AppUserPatchDto patch)
         {
             try
             {
-                var updated = appUserService.Patch(id, patch);
-                return updated is null ? NotFound() : Ok(updated);
+                var updated = await appUserService.Patch(id, patch);
+
+                return updated is null
+                    ? NotFound()
+                    : Ok(updated);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(long id)
         {
-            appUserService.Delete(id);
+            await appUserService.Delete(id);
+
             return NoContent();
         }
-
     }
 }
-

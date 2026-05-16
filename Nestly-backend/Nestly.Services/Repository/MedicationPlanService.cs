@@ -66,12 +66,18 @@ namespace Nestly.Services.Repository
             }
 
             var totalCount = q.Count();
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = q
                 .OrderByDescending(x => x.StartDate)
                 .ThenByDescending(x => x.EndDate)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(ToDto)
                 .ToList();
 
@@ -187,10 +193,27 @@ namespace Nestly.Services.Repository
 
         public MedicationPlanResponseDto? Patch(long id, MedicationPlanPatchDto patch)
         {
-            var m = _db.MedicationPlans.FirstOrDefault(x => x.Id == id);
+            var m = _db.MedicationPlans
+                .Include(x => x.Times)
+                .FirstOrDefault(x => x.Id == id);
+
             if (m == null)
             {
                 throw new NotFoundException("Medication plan not found.");
+            }
+
+            if (patch.StartDate.HasValue &&
+                patch.StartDate.Value.Date != m.StartDate.Date)
+            {
+                throw new BusinessException(
+                    "Changing therapy start date is not allowed after creation.");
+            }
+
+            if (patch.EndDate.HasValue &&
+                patch.EndDate.Value.Date != m.EndDate.Date)
+            {
+                throw new BusinessException(
+                    "Changing therapy end date is not allowed after creation.");
             }
 
             if (!string.IsNullOrWhiteSpace(patch.MedicineName))
@@ -201,16 +224,6 @@ namespace Nestly.Services.Repository
             if (!string.IsNullOrWhiteSpace(patch.Dose))
             {
                 m.Dose = patch.Dose.Trim();
-            }
-
-            if (patch.StartDate.HasValue)
-            {
-                m.StartDate = patch.StartDate.Value;
-            }
-
-            if (patch.EndDate.HasValue)
-            {
-                m.EndDate = patch.EndDate.Value;
             }
 
             _db.SaveChanges();
@@ -243,11 +256,17 @@ namespace Nestly.Services.Repository
                     x.ScheduledDate == day);
 
             var totalCount = q.Count();
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = q
                 .OrderBy(x => x.IntakeTime)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => new MedicationIntakeLogDto
                 {
                     IntakeLogId = x.Id,

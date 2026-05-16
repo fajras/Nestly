@@ -5,9 +5,9 @@ import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 
 class UserMedicationPlanScreen extends StatefulWidget {
-  final int userId;
+  final int parentProfileId;
 
-  const UserMedicationPlanScreen({super.key, required this.userId});
+  const UserMedicationPlanScreen({super.key, required this.parentProfileId});
 
   @override
   State<UserMedicationPlanScreen> createState() =>
@@ -31,7 +31,7 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
 
     try {
       final res = await ApiClient.get(
-        '/api/MedicationPlan?ParentProfileId=${widget.userId}',
+        '/api/MedicationPlan?ParentProfileId=${widget.parentProfileId}',
       );
 
       if (res.statusCode != 200) {

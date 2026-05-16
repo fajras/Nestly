@@ -34,11 +34,17 @@ namespace Nestly.Services.Repository
             }
 
             var totalCount = query.Count();
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = query
                 .OrderBy(x => x.Name)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(MapToDto)
                 .ToList();
 

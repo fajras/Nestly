@@ -50,11 +50,17 @@ namespace Nestly.Services.Repository
             }
 
             var totalCount = await q.CountAsync(ct);
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = await q
                 .OrderByDescending(x => x.CreatedAt)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => new QaQuestionWithLatestAnswerDto
                 {
                     Id = x.Id,
@@ -120,11 +126,17 @@ namespace Nestly.Services.Repository
                 .Where(x => x.AskedById == askedByParentProfileId);
 
             var totalCount = await q.CountAsync(ct);
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = await q
                 .OrderByDescending(x => x.CreatedAt)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => new QaQuestionDto
                 {
                     Id = x.Id,
@@ -279,11 +291,17 @@ namespace Nestly.Services.Repository
                 .Where(a => a.QuestionId == questionId);
 
             var totalCount = await q.CountAsync(ct);
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = await q
                 .OrderBy(a => a.CreatedAt)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Include(a => a.AnsweredBy)
                 .ThenInclude(d => d.User)
                 .Select(a => new QaAnswerDto
@@ -402,11 +420,17 @@ namespace Nestly.Services.Repository
                 .Where(x => x.AskedById == search.AskedById.Value);
 
             var totalCount = await q.CountAsync(ct);
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = await q
                 .OrderByDescending(x => x.CreatedAt)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => new QaQuestionWithLatestAnswerDto
                 {
                     Id = x.Id,

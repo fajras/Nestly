@@ -51,12 +51,18 @@ namespace Nestly.Services.Repository
             }
 
             var totalCount = await q.CountAsync();
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var data = await q
                 .OrderBy(x => x.LastName)
                 .ThenBy(x => x.FirstName)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => new AppUserRow
                 {
                     Id = x.Id,

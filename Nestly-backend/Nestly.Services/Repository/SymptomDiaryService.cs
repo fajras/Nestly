@@ -34,12 +34,20 @@ namespace Nestly.Services.Repository
                 q = q.Where(s => s.Date <= search.DateTo.Value.Date);
             }
 
+            int page = search.Page < 1 ? 1 : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
             var totalCount = q.Count();
 
             var items = q
                 .OrderByDescending(s => s.Date)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(ToDto)
                 .ToList();
 
@@ -107,11 +115,17 @@ namespace Nestly.Services.Repository
                 .Where(s => s.ParentProfileId == parentProfileId);
 
             var totalCount = query.Count();
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = query
                 .OrderByDescending(s => s.Date)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(ToDto)
                 .ToList();
 
@@ -202,11 +216,17 @@ namespace Nestly.Services.Repository
                 .Distinct();
 
             var totalCount = query.Count();
+            int page = search.Page < 1 ? 1 : search.Page;
 
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
             var items = query
                 .OrderByDescending(d => d)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
 
             return new PagedResult<DateTime>

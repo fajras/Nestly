@@ -129,7 +129,6 @@ class BlogAdminService {
       body: {
         'title': title,
         'content': content,
-        'authorId': 1,
         'phase': phase,
         'weekFrom': weekFrom,
         'weekTo': weekTo,

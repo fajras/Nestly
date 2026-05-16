@@ -34,25 +34,52 @@ public class BlogPostController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Doctor")]
     public ActionResult<BlogPostResponseDto> Create([FromBody] CreateBlogPostDto request)
     {
-        var created = _service.Create(request);
+        var userIdClaim = User.FindFirst("userId")?.Value;
+
+        if (!long.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var created = _service.Create(request, currentUserId);
+
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPatch("{id:long}")]
+    [Authorize(Roles = "Doctor")]
     public ActionResult<BlogPostResponseDto> Patch(long id, [FromBody] BlogPostPatchDto patch)
     {
-        var updated = _service.Patch(id, patch);
-        return updated is null ? NotFound() : Ok(updated);
+        var userIdClaim = User.FindFirst("userId")?.Value;
+
+        if (!long.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var updated = _service.Patch(id, patch, currentUserId);
+
+        return Ok(updated);
     }
 
     [HttpDelete("{id:long}")]
+    [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> Delete(long id)
     {
-        _service.Delete(id);
+        var userIdClaim = User.FindFirst("userId")?.Value;
+
+        if (!long.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        _service.Delete(id, currentUserId);
 
         await _blob.DeleteBlogImageAsync(id);
+
         return NoContent();
     }
     [HttpGet("category/{categoryId:int}")]

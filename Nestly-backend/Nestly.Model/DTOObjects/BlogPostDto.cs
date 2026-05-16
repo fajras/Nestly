@@ -9,7 +9,6 @@ namespace Nestly.Model.DTOObjects
     {
         public string? Title { get; set; }
         public string? Content { get; set; }
-        public long? AuthorId { get; set; }
     }
     public class BlogPostResponseDto
     {
@@ -31,7 +30,6 @@ namespace Nestly.Model.DTOObjects
         public DateTime? CreatedFrom { get; set; }
         public DateTime? CreatedTo { get; set; }
         public int? CategoryId { get; set; }
-
         public int Page { get; set; } = 1;
 
         private int _pageSize = 20;
@@ -48,7 +46,6 @@ namespace Nestly.Model.DTOObjects
         public string Title { get; set; } = default!;
         [Required]
         public string Content { get; set; } = default!;
-        public long? AuthorId { get; set; }
         public int Phase { get; set; }
         public int? WeekFrom { get; set; }
         public int? WeekTo { get; set; }

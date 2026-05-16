@@ -78,7 +78,7 @@ namespace Nestly.Services.Repository
             return MapToDto(post);
         }
 
-        public BlogPostResponseDto Create(CreateBlogPostDto dto)
+        public BlogPostResponseDto Create(CreateBlogPostDto dto, long authorId)
         {
             if (string.IsNullOrWhiteSpace(dto.Title))
             {
@@ -90,7 +90,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Content is required.");
             }
 
-            if (!_db.AppUsers.Any(u => u.Id == dto.AuthorId))
+            if (!_db.AppUsers.Any(u => u.Id == authorId))
             {
                 throw new NotFoundException("Author not found.");
             }
@@ -99,7 +99,7 @@ namespace Nestly.Services.Repository
             {
                 Title = dto.Title.Trim(),
                 Content = dto.Content,
-                AuthorId = dto.AuthorId,
+                AuthorId = authorId,
                 CreatedAt = DateTime.UtcNow,
                 Phase = (UserPhase)dto.Phase,
                 WeekFrom = dto.WeekFrom,
@@ -144,13 +144,18 @@ namespace Nestly.Services.Repository
 
             return MapToDto(post);
         }
-        public BlogPostResponseDto Patch(long id, BlogPostPatchDto patch)
+        public BlogPostResponseDto Patch(long id, BlogPostPatchDto patch, long currentUserId)
         {
             var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
 
             if (post is null)
             {
                 throw new NotFoundException("Blog post not found.");
+            }
+
+            if (post.AuthorId != currentUserId)
+            {
+                throw new BusinessException("You can only edit your own blog posts.");
             }
 
             if (patch.Title is not null)
@@ -163,22 +168,13 @@ namespace Nestly.Services.Repository
                 post.Content = patch.Content;
             }
 
-            if (patch.AuthorId is not null && patch.AuthorId != post.AuthorId)
-            {
-                if (!_db.AppUsers.Any(u => u.Id == patch.AuthorId.Value))
-                {
-                    throw new NotFoundException("Author not found.");
-                }
-
-                post.AuthorId = patch.AuthorId.Value;
-            }
-
             post.UpdatedAt = DateTime.UtcNow;
+
             _db.SaveChanges();
 
             return MapToDto(post);
         }
-        public void Delete(long id)
+        public void Delete(long id, long currentUserId)
         {
             var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
 
@@ -187,12 +183,18 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Blog post not found.");
             }
 
+            if (post.AuthorId != currentUserId)
+            {
+                throw new BusinessException("You can only delete your own blog posts.");
+            }
+
             if (id <= 12)
             {
                 throw new BusinessException("System blog posts cannot be deleted.");
             }
 
             _db.BlogPosts.Remove(post);
+
             _db.SaveChanges();
         }
         public PagedResult<BlogPostResponseDto> GetByCategoryId(int categoryId, int page, int pageSize)

@@ -550,7 +550,7 @@ class _BlogPostDetailScreenState extends State<BlogPostDetailScreen> {
 
     logBlogInteraction(
       postId: widget.post.id,
-      eventType: 1,
+      eventType: 2, // Open/read article event
       spentSeconds: seconds,
     );
 

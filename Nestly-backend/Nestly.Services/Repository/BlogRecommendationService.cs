@@ -207,18 +207,55 @@ namespace Nestly.Services.Repository
 
                 int weeks = (int)((DateTime.UtcNow - baby.BirthDate).TotalDays / 7);
 
+                weeks = Math.Max(1, Math.Min(weeks, 104));
+
                 return (UserPhase.BabyTime, weeks);
             }
 
             if (user.ParentProfile?.Pregnancies.Any() == true)
             {
-                var preg = user.ParentProfile.Pregnancies
-                    .OrderByDescending(p => p.DueDate)
-                    .First();
+                var now = DateTime.UtcNow;
 
-                int weeks = 40 - (int)((preg.DueDate.Value - DateTime.UtcNow).TotalDays / 7);
+                var pregnancy = user.ParentProfile.Pregnancies
+                    .Select(p =>
+                    {
+                        DateTime? normalizedDue = p.DueDate;
+                        DateTime? normalizedLmp = p.LmpDate;
 
-                return (UserPhase.BellyTime, weeks);
+                        if (normalizedLmp.HasValue && !normalizedDue.HasValue)
+                        {
+                            normalizedDue = normalizedLmp.Value.AddDays(280);
+                        }
+
+                        if (!normalizedLmp.HasValue && normalizedDue.HasValue)
+                        {
+                            normalizedLmp = normalizedDue.Value.AddDays(-280);
+                        }
+
+                        return new
+                        {
+                            Pregnancy = p,
+                            Lmp = normalizedLmp,
+                            Due = normalizedDue
+                        };
+                    })
+                    .Where(x =>
+                        x.Due.HasValue &&
+                        x.Lmp.HasValue &&
+                        x.Due.Value > now &&
+                        x.Lmp.Value <= now &&
+                        x.Lmp.Value >= now.AddDays(-320))
+                    .OrderByDescending(x => x.Due)
+                    .FirstOrDefault();
+
+                if (pregnancy != null)
+                {
+                    int weeks = (int)((now - pregnancy.Lmp!.Value).TotalDays / 7);
+
+                    weeks = Math.Max(1, Math.Min(weeks, 40));
+
+                    return (UserPhase.BellyTime, weeks);
+                }
             }
 
             return (UserPhase.BellyTime, 1);

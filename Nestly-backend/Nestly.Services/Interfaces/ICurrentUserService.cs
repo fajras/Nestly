@@ -1,4 +1,4 @@
-﻿using Nestly.Model.Entity;
+using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
@@ -21,5 +21,11 @@ namespace Nestly.Services.Interfaces
         Task EnsureCalendarEventOwnershipAsync(long calendarEventId);
 
         Task EnsureQaQuestionOwnershipAsync(long questionId);
+
+        Task EnsureSymptomDiaryOwnershipAsync(long diaryId);
+
+        Task EnsureMedicationPlanOwnershipAsync(long medicationPlanId);
+
+        Task EnsureHealthEntryOwnershipAsync(long healthEntryId);
     }
 }

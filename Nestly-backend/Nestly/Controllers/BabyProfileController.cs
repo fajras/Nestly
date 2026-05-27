@@ -11,52 +11,69 @@ namespace Nestly.WebAPI.Controllers
     public class BabyProfileController : ControllerBase
     {
         private readonly IBabyProfileService _service;
+        private readonly ICurrentUserService _currentUserService;
 
-        public BabyProfileController(IBabyProfileService service)
+        public BabyProfileController(
+            IBabyProfileService service,
+            ICurrentUserService currentUserService)
         {
             _service = service;
+            _currentUserService = currentUserService;
         }
 
+        [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<BabyProfileSummaryDto>> Get([FromQuery] BabyProfileSearchObject search)
+        public async Task<ActionResult<PagedResult<BabyProfileSummaryDto>>> Get(
+            [FromQuery] BabyProfileSearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
 
-        [HttpGet("{id:long}")]
-        public ActionResult<BabyProfileSummaryDto> GetById(long id)
+        [HttpGet("my-latest")]
+        public async Task<ActionResult<BabyProfileSummaryDto>> GetMyLatest()
         {
-            var result = _service.GetById(id);
-            return result is null ? NotFound() : Ok(result);
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            var result = await _service
+                .GetLatestByParent(parent.Id);
+
+            return result is null
+                ? NotFound()
+                : Ok(result);
         }
 
         [HttpPost]
-        public ActionResult<BabyProfileSummaryDto> Create([FromBody] CreateBabyProfileDto request)
+        public async Task<ActionResult<BabyProfileSummaryDto>> Create(
+            [FromBody] CreateBabyProfileDto request)
         {
-            var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var created = await _service.Create(request);
+
+            return Ok(created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<BabyProfileSummaryDto> Patch(long id, [FromBody] BabyProfilePatchDto patch)
+        public async Task<ActionResult<BabyProfileSummaryDto>> Patch(
+            long id,
+            [FromBody] BabyProfilePatchDto patch)
         {
-            var updated = _service.Patch(id, patch);
-            return updated is null ? NotFound() : Ok(updated);
+            await _currentUserService
+                .EnsureBabyOwnershipAsync(id);
+
+            var updated = await _service.Patch(id, patch);
+
+            return Ok(updated);
         }
 
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(long id)
         {
-            _service.Delete(id);
+            await _currentUserService
+                .EnsureBabyOwnershipAsync(id);
+
+            await _service.Delete(id);
+
             return NoContent();
         }
-
-        [HttpGet("latest-by-parent/{parentProfileId:long}")]
-        public ActionResult<BabyProfileSummaryDto> GetLatestByParent(long parentProfileId)
-        {
-            var result = _service.GetLatestByParent(parentProfileId);
-            return result is null ? NotFound() : Ok(result);
-        }
-
     }
 }

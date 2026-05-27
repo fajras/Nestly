@@ -52,6 +52,7 @@ builder.Services.AddScoped<ISymptomDiaryService, SymptomDiaryService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IBlogRecommendationService, BlogRecommendationService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IBlogCategoryService, BlogCategoryService>();
 builder.Services.AddScoped<IFoodTypeService, FoodTypeService>();

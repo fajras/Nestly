@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -9,42 +10,47 @@ namespace Nestly.Services.Repository
     public class BabyProfileService : IBabyProfileService
     {
         private readonly NestlyDbContext _db;
+        private readonly ICurrentUserService _currentUserService;
 
-        public BabyProfileService(NestlyDbContext db)
+        public BabyProfileService(
+            NestlyDbContext db,
+            ICurrentUserService currentUserService)
         {
             _db = db;
+            _currentUserService = currentUserService;
         }
 
-        public PagedResult<BabyProfileSummaryDto> Get(BabyProfileSearchObject search)
+        public async Task<PagedResult<BabyProfileSummaryDto>> Get(
+            BabyProfileSearchObject search)
         {
-            IQueryable<BabyProfile> q = _db.BabyProfiles.AsQueryable();
-
-            if (search.UserId is not null)
-            {
-                q = q.Where(x => x.ParentProfileId == search.UserId);
-            }
+            IQueryable<BabyProfile> q = _db.BabyProfiles.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(search.BabyName))
             {
-                q = q.Where(x => x.BabyName.Contains(search.BabyName.Trim()));
+                q = q.Where(x =>
+                    x.BabyName.Contains(search.BabyName.Trim()));
             }
 
             if (!string.IsNullOrWhiteSpace(search.Gender))
             {
-                q = q.Where(x => x.Gender == search.Gender.Trim());
+                q = q.Where(x =>
+                    x.Gender == search.Gender.Trim());
             }
 
             if (search.BirthDateFrom is not null)
             {
-                q = q.Where(x => x.BirthDate >= search.BirthDateFrom.Value.Date);
+                q = q.Where(x =>
+                    x.BirthDate >= search.BirthDateFrom.Value.Date);
             }
 
             if (search.BirthDateTo is not null)
             {
-                q = q.Where(x => x.BirthDate <= search.BirthDateTo.Value.Date);
+                q = q.Where(x =>
+                    x.BirthDate <= search.BirthDateTo.Value.Date);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
+
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -52,11 +58,15 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+
+            var entities = await q
                 .OrderByDescending(x => x.BirthDate)
                 .ThenBy(x => x.BabyName)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .ToListAsync();
+
+            var items = entities
                 .Select(MapToDto)
                 .ToList();
 
@@ -67,77 +77,91 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BabyProfileSummaryDto GetById(long id)
+        public async Task<BabyProfileSummaryDto> GetById(long id)
         {
-            var entity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.BabyProfiles
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
-                throw new NotFoundException("Baby profile not found.");
+                throw new NotFoundException(
+                    "Baby profile not found.");
             }
 
             return MapToDto(entity);
         }
 
-        public BabyProfileSummaryDto Create(CreateBabyProfileDto dto)
+        public async Task<BabyProfileSummaryDto> Create(
+            CreateBabyProfileDto dto)
         {
             if (dto is null)
             {
-                throw new BusinessException("Request cannot be null.");
+                throw new BusinessException(
+                    "Request cannot be null.");
             }
 
-            if (dto.ParentProfileId <= 0)
-            {
-                throw new BusinessException("Parent profile is required.");
-            }
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
 
-            if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
+            if (parent == null)
             {
-                throw new NotFoundException("Parent profile not found.");
+                throw new NotFoundException(
+                    "Parent profile not found.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.BabyName))
             {
-                throw new BusinessException("Baby name is required.");
+                throw new BusinessException(
+                    "Baby name is required.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.Gender))
             {
-                throw new BusinessException("Gender is required.");
+                throw new BusinessException(
+                    "Gender is required.");
             }
 
             if (dto.BirthDate == default)
             {
-                throw new BusinessException("Birth date is required.");
+                throw new BusinessException(
+                    "Birth date is required.");
             }
 
             if (dto.PregnancyId.HasValue &&
-                !_db.Pregnancies.Any(x => x.Id == dto.PregnancyId.Value))
+                !await _db.Pregnancies.AnyAsync(
+                    x => x.Id == dto.PregnancyId.Value))
             {
-                throw new NotFoundException("Pregnancy not found.");
+                throw new NotFoundException(
+                    "Pregnancy not found.");
             }
 
             var entity = new BabyProfile
             {
-                ParentProfileId = dto.ParentProfileId,
+                ParentProfileId = parent.Id,
                 BabyName = dto.BabyName.Trim(),
                 Gender = dto.Gender.Trim(),
                 BirthDate = dto.BirthDate,
                 PregnancyId = dto.PregnancyId
             };
 
-            _db.BabyProfiles.Add(entity);
-            _db.SaveChanges();
+            await _db.BabyProfiles.AddAsync(entity);
+
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
-        public BabyProfileSummaryDto Patch(long id, BabyProfilePatchDto patch)
+
+        public async Task<BabyProfileSummaryDto> Patch(
+            long id,
+            BabyProfilePatchDto patch)
         {
-            var dbEntity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
+            var dbEntity = await _db.BabyProfiles
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
-                throw new NotFoundException("Baby profile not found.");
+                throw new NotFoundException(
+                    "Baby profile not found.");
             }
 
             if (patch.BabyName is not null)
@@ -155,34 +179,42 @@ namespace Nestly.Services.Repository
                 dbEntity.BirthDate = patch.BirthDate.Value;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(dbEntity);
         }
-        public void Delete(long id)
+
+        public async Task Delete(long id)
         {
-            var dbEntity = _db.BabyProfiles.FirstOrDefault(x => x.Id == id);
+            var dbEntity = await _db.BabyProfiles
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
-                throw new NotFoundException("Baby profile not found.");
+                throw new NotFoundException(
+                    "Baby profile not found.");
             }
 
             _db.BabyProfiles.Remove(dbEntity);
-            _db.SaveChanges();
+
+            await _db.SaveChangesAsync();
         }
 
-        public BabyProfileSummaryDto? GetLatestByParent(long parentProfileId)
+        public async Task<BabyProfileSummaryDto?> GetLatestByParent(
+            long parentProfileId)
         {
-            var entity = _db.BabyProfiles
-                            .Where(x => x.ParentProfileId == parentProfileId)
-                            .OrderByDescending(x => x.BirthDate)
-                            .FirstOrDefault();
+            var entity = await _db.BabyProfiles
+                .Where(x => x.ParentProfileId == parentProfileId)
+                .OrderByDescending(x => x.BirthDate)
+                .FirstOrDefaultAsync();
 
-            return entity is null ? null : MapToDto(entity);
+            return entity is null
+                ? null
+                : MapToDto(entity);
         }
 
-        private static BabyProfileSummaryDto MapToDto(BabyProfile entity)
+        private static BabyProfileSummaryDto MapToDto(
+            BabyProfile entity)
         {
             return new BabyProfileSummaryDto
             {

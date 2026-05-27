@@ -4,11 +4,21 @@ namespace Nestly.Services.Interfaces
 {
     public interface IBabyProfileService
     {
-        PagedResult<BabyProfileSummaryDto> Get(BabyProfileSearchObject search);
-        BabyProfileSummaryDto GetById(long id);
-        BabyProfileSummaryDto Create(CreateBabyProfileDto entity);
-        BabyProfileSummaryDto Patch(long id, BabyProfilePatchDto patch);
-        void Delete(long id);
-        BabyProfileSummaryDto? GetLatestByParent(long parentProfileId);
+        Task<PagedResult<BabyProfileSummaryDto>> Get(
+            BabyProfileSearchObject search);
+
+        Task<BabyProfileSummaryDto> GetById(long id);
+
+        Task<BabyProfileSummaryDto> Create(
+            CreateBabyProfileDto dto);
+
+        Task<BabyProfileSummaryDto> Patch(
+            long id,
+            BabyProfilePatchDto patch);
+
+        Task Delete(long id);
+
+        Task<BabyProfileSummaryDto?> GetLatestByParent(
+            long parentProfileId);
     }
 }

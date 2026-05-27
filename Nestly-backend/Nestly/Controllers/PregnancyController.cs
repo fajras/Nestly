@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
+using Nestly.Services.Interfaces;
 
 namespace Nestly.WebAPI.Controllers
 {
@@ -10,65 +11,96 @@ namespace Nestly.WebAPI.Controllers
     public class PregnancyController : ControllerBase
     {
         private readonly IPregnancyService _service;
-        public PregnancyController(IPregnancyService service) => _service = service;
+        private readonly ICurrentUserService _currentUserService;
 
-        [HttpGet]
-        public ActionResult<PagedResult<PregnancyResponseDto>> Get([FromQuery] PregnancySearchObject search)
-     => Ok(_service.Get(search));
-
-        [HttpGet("{id:long}")]
-        public ActionResult<PregnancyResponseDto> GetById(long id)
+        public PregnancyController(
+            IPregnancyService service,
+            ICurrentUserService currentUserService)
         {
-            var entity = _service.GetById(id);
-            return entity is null ? NotFound() : Ok(entity);
+            _service = service;
+            _currentUserService = currentUserService;
         }
 
-        [HttpGet("by-parent/{parentProfileId:long}")]
-        public ActionResult<PregnancyResponseDto> GetByParentProfileId(long parentProfileId)
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<PregnancyResponseDto>>> Get(
+            [FromQuery] PregnancySearchObject search)
         {
-            var entity = _service.GetByParentProfileId(parentProfileId);
+            return Ok(await _service.Get(search));
+        }
 
-            return entity is null ? NotFound() : Ok(entity);
+        [HttpGet("my")]
+        public async Task<ActionResult<PregnancyResponseDto>> GetMy()
+        {
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            var entity = await _service
+                .GetByParentProfileId(parent.Id);
+
+            return entity is null
+                ? NotFound()
+                : Ok(entity);
         }
 
         [HttpPost]
-        public ActionResult<PregnancyResponseDto> Create([FromBody] CreatePregnancyDto request)
+        public async Task<ActionResult<PregnancyResponseDto>> Create(
+            [FromBody] CreatePregnancyDto request)
         {
-            var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var created = await _service.Create(request);
+
+            return Ok(created);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<PregnancyResponseDto> Patch(long id, [FromBody] PregnancyPatchDto patch)
+        public async Task<ActionResult<PregnancyResponseDto>> Patch(
+            long id,
+            [FromBody] PregnancyPatchDto patch)
         {
+            await _currentUserService
+                .EnsurePregnancyOwnershipAsync(id);
+
             try
             {
-                var updated = _service.Patch(id, patch);
-                return updated is null ? NotFound() : Ok(updated);
+                var updated = await _service
+                    .Patch(id, patch);
+
+                return Ok(updated);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
-
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(long id)
         {
-            _service.Delete(id);
+            await _currentUserService
+                .EnsurePregnancyOwnershipAsync(id);
+
+            await _service.Delete(id);
+
             return NoContent();
         }
 
-
-        [HttpGet("status")]
-        public ActionResult<PregnancyStatusDto> GetStatus([FromQuery] long parentProfileId)
+        [HttpGet("my-status")]
+        public async Task<ActionResult<PregnancyStatusDto>> GetMyStatus()
         {
-            var status = _service.GetStatus(parentProfileId);
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            var status = await _service
+                .GetStatus(parent.Id);
 
             if (status is null)
             {
-                return NotFound(new { message = "Pregnancy data not found for this parent." });
+                return NotFound(new
+                {
+                    message = "Pregnancy data not found for this parent."
+                });
             }
 
             return Ok(status);

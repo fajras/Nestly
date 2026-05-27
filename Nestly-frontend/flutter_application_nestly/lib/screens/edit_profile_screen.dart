@@ -9,7 +9,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 class EditProfileScreen extends StatefulWidget {
   final int userId;
 
-  const EditProfileScreen({super.key, required this.userId});
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -35,7 +35,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _gender;
 
   int? _pregnancyId;
-  int? _parentProfileId;
 
   bool _loading = true;
   bool _saving = false;
@@ -56,41 +55,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _loadAll() async {
     try {
-      final res = await ApiClient.get('/AppUser/${widget.userId}');
+      final res = await ApiClient.get('/AppUser/me');
       final data = jsonDecode(res.body);
 
       _firstNameCtrl.text = data['firstName'] ?? '';
       _lastNameCtrl.text = data['lastName'] ?? '';
       _phoneCtrl.text = data['phoneNumber'] ?? '';
       _gender = data['gender']?.toString().toLowerCase().trim();
-      _parentProfileId = data['parentProfileId'];
 
       if (data['dateOfBirth'] != null) {
         _dob = DateTime.parse(data['dateOfBirth']);
       }
 
-      if (_parentProfileId != null) {
-        final pregRes = await ApiClient.get(
-          '/api/Pregnancy/by-parent/$_parentProfileId',
-        );
+      final pregRes = await ApiClient.get('/api/Pregnancy/my');
 
-        if (pregRes.statusCode == 200 && pregRes.body.isNotEmpty) {
-          final p = jsonDecode(pregRes.body);
+      if (pregRes.statusCode == 200 && pregRes.body.isNotEmpty) {
+        final p = jsonDecode(pregRes.body);
 
-          setState(() {
-            _pregnancyId = p['id'];
+        setState(() {
+          _pregnancyId = p['id'];
 
-            _cycleCtrl.text = p['cycleLengthDays']?.toString() ?? '';
+          _cycleCtrl.text = p['cycleLengthDays']?.toString() ?? '';
 
-            _lmpDate = p['lmpDate'] != null
-                ? DateTime.parse(p['lmpDate'])
-                : null;
+          _lmpDate = p['lmpDate'] != null ? DateTime.parse(p['lmpDate']) : null;
 
-            _dueDate = p['dueDate'] != null
-                ? DateTime.parse(p['dueDate'])
-                : null;
-          });
-        }
+          _dueDate = p['dueDate'] != null ? DateTime.parse(p['dueDate']) : null;
+        });
       }
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju');
@@ -219,8 +209,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _newPasswordCtrl.text.isNotEmpty &&
           _confirmPasswordCtrl.text.isNotEmpty) {
         final token = await AuthStorage.getToken();
-        final decoded = JwtDecoder.decode(token!);
-        final tokenUserId = decoded["appUserId"];
 
         try {
           final res = await ApiClient.post(
@@ -298,10 +286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   '/api/Pregnancy/$_pregnancyId',
                   body: pregnancyBody,
                 )
-              : await ApiClient.post(
-                  '/api/Pregnancy',
-                  body: {...pregnancyBody, "userId": _parentProfileId},
-                );
+              : await ApiClient.post('/api/Pregnancy', body: pregnancyBody);
 
           if (res.statusCode != 200 && res.statusCode != 201) {
             setState(() => _cycleError = 'Greška pri spremanju trudnoće');

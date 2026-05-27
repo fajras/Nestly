@@ -19,9 +19,8 @@ import 'package:flutter_application_nestly/screens/therapy_module_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
-  const HomeDashboardScreen({super.key, required this.parentProfileId});
+  const HomeDashboardScreen({super.key});
 
-  final int parentProfileId;
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
 }
@@ -88,9 +87,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     });
 
     try {
-      final resp = await ApiClient.get(
-        '/api/Pregnancy/status?parentProfileId=${widget.parentProfileId}',
-      );
+      final resp = await ApiClient.get('/api/Pregnancy/my-status');
 
       if (!mounted) return;
 
@@ -124,9 +121,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     setState(() => _checkingBaby = true);
 
     try {
-      final resp = await ApiClient.get(
-        '/api/BabyProfile/latest-by-parent/${widget.parentProfileId}',
-      );
+      final resp = await ApiClient.get('/api/BabyProfile/my-latest');
 
       if (!mounted) return;
 
@@ -182,7 +177,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       BabyTimeHomeScreen(
         babyName: _babyName ?? 'Vaša beba',
         babyId: _babyId!,
-        parentProfileId: widget.parentProfileId,
         gender: _normalizeGender(_gender),
       ),
     );
@@ -305,12 +299,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     _menu(
                       icon: Icons.fact_check_rounded,
                       label: 'Dnevnik simptoma',
-                      onTap: () => _open(
-                        context,
-                        SymptomDiaryScreen(
-                          parentProfileId: widget.parentProfileId,
-                        ),
-                      ),
+                      onTap: () => _open(context, SymptomDiaryScreen()),
                     ),
                     _menu(
                       icon: Icons.lightbulb_outline_rounded,
@@ -323,30 +312,17 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     _menu(
                       icon: Icons.article_outlined,
                       label: 'Blog',
-                      onTap: () => _open(
-                        context,
-                        BlogScreen(parentProfileId: widget.parentProfileId),
-                      ),
+                      onTap: () => _open(context),
                     ),
                     _menu(
                       icon: Icons.help_outline_rounded,
                       label: 'Pitanja',
-                      onTap: () => _open(
-                        context,
-                        MyQuestionsScreen(
-                          parentProfileId: widget.parentProfileId,
-                        ),
-                      ),
+                      onTap: () => _open(context, MyQuestionsScreen()),
                     ),
                     _menu(
                       icon: Icons.medical_services_outlined,
                       label: 'Terapija',
-                      onTap: () => _open(
-                        context,
-                        TherapyCalendarScreen(
-                          parentProfileId: widget.parentProfileId,
-                        ),
-                      ),
+                      onTap: () => _open(context, TherapyCalendarScreen()),
                     ),
                     _menu(
                       icon: Icons.chat_bubble_outline_rounded,
@@ -395,9 +371,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => BabyProfileCreateScreen(
-                                    parentProfileId: widget.parentProfileId,
-                                  ),
+                                  builder: (_) => BabyProfileCreateScreen(),
                                 ),
                               );
 

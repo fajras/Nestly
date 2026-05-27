@@ -3,24 +3,29 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
 {
     public class PregnancyService : IPregnancyService
     {
         private readonly NestlyDbContext _db;
-        public PregnancyService(NestlyDbContext db) => _db = db;
+        private readonly ICurrentUserService _currentUserService;
 
         private const int GestationDays = 280;
 
-        public PagedResult<PregnancyResponseDto> Get(PregnancySearchObject search)
+        public PregnancyService(
+            NestlyDbContext db,
+            ICurrentUserService currentUserService)
+        {
+            _db = db;
+            _currentUserService = currentUserService;
+        }
+
+        public async Task<PagedResult<PregnancyResponseDto>> Get(
+            PregnancySearchObject search)
         {
             IQueryable<Pregnancy> q = _db.Pregnancies.AsNoTracking();
-
-            if (search.UserId is not null)
-            {
-                q = q.Where(p => p.ParentProfileId == search.UserId);
-            }
 
             if (search.LmpFrom is not null)
             {
@@ -42,7 +47,8 @@ namespace Nestly.Services.Repository
                 q = q.Where(p => p.DueDate <= search.DueTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
+
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -50,11 +56,15 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
-                .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
-                .ThenByDescending(p => p.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+
+            var entities = await q
+            .OrderByDescending(p => p.LmpDate ?? DateTime.MinValue)
+            .ThenByDescending(p => p.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+            var items = entities
                 .Select(ToDto)
                 .ToList();
 
@@ -65,146 +75,177 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PregnancyResponseDto GetById(long id)
+        public async Task<PregnancyResponseDto> GetById(long id)
         {
-            var entity = _db.Pregnancies
+            var entity = await _db.Pregnancies
                 .AsNoTracking()
-                .FirstOrDefault(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (entity == null)
             {
-                throw new NotFoundException("Pregnancy not found.");
+                throw new NotFoundException(
+                    "Pregnancy not found.");
             }
 
             return ToDto(entity);
         }
 
-        public PregnancyResponseDto? GetByParentProfileId(long parentProfileId)
+        public async Task<PregnancyResponseDto?> GetByParentProfileId(
+            long parentProfileId)
         {
-            var entity = _db.Pregnancies
+            var entity = await _db.Pregnancies
                 .AsNoTracking()
                 .Where(p => p.ParentProfileId == parentProfileId)
                 .OrderByDescending(p => p.LmpDate ?? p.DueDate)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
-            return entity is null ? null : ToDto(entity);
+            return entity is null
+                ? null
+                : ToDto(entity);
         }
 
-        public PregnancyResponseDto Create(CreatePregnancyDto dto)
+        public async Task<PregnancyResponseDto> Create(
+            CreatePregnancyDto dto)
         {
             if (dto == null)
             {
-                throw new BusinessException("Request cannot be null.");
+                throw new BusinessException(
+                    "Request cannot be null.");
             }
 
-            if (!_db.ParentProfiles.Any(p => p.Id == dto.UserId))
-            {
-                throw new NotFoundException("Parent profile not found.");
-            }
-            var (lmp, due) = NormalizeDates(dto.LmpDate, dto.DueDate);
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
 
-            if (lmp.HasValue && due.HasValue && due < lmp)
+            if (parent == null)
             {
-                throw new BusinessException("Due date cannot be before LMP.");
+                throw new NotFoundException(
+                    "Parent profile not found.");
+            }
+
+            var (lmp, due) = NormalizeDates(
+                dto.LmpDate,
+                dto.DueDate);
+
+            if (lmp.HasValue &&
+                due.HasValue &&
+                due < lmp)
+            {
+                throw new BusinessException(
+                    "Due date cannot be before LMP.");
             }
 
             if (dto.CycleLengthDays.HasValue &&
-                (dto.CycleLengthDays < 20 || dto.CycleLengthDays > 40))
+                (dto.CycleLengthDays < 20 ||
+                 dto.CycleLengthDays > 40))
             {
-                throw new BusinessException("Cycle length must be between 20 and 40.");
+                throw new BusinessException(
+                    "Cycle length must be between 20 and 40.");
             }
-
 
             var entity = new Pregnancy
             {
-                ParentProfileId = dto.UserId,
+                ParentProfileId = parent.Id,
                 LmpDate = lmp,
                 DueDate = due,
                 CycleLengthDays = dto.CycleLengthDays
             };
 
-            _db.Pregnancies.Add(entity);
-            _db.SaveChanges();
+            await _db.Pregnancies.AddAsync(entity);
+
+            await _db.SaveChangesAsync();
 
             return ToDto(entity);
         }
 
-        public PregnancyResponseDto Patch(long id, PregnancyPatchDto patch)
+        public async Task<PregnancyResponseDto> Patch(
+            long id,
+            PregnancyPatchDto patch)
         {
-            var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.Pregnancies
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (entity == null)
             {
-                throw new NotFoundException("Pregnancy not found.");
-            }
-
-            if (patch.UserId is not null && patch.UserId != entity.ParentProfileId)
-            {
-                if (!_db.ParentProfiles.Any(p => p.Id == patch.UserId))
-                {
-                    throw new NotFoundException("Parent profile not found.");
-                }
-
-                entity.ParentProfileId = patch.UserId.Value;
+                throw new NotFoundException(
+                    "Pregnancy not found.");
             }
 
             var newLmp = patch.LmpDate ?? entity.LmpDate;
+
             var newDue = patch.DueDate ?? entity.DueDate;
 
-            (newLmp, newDue) = NormalizeDates(newLmp, newDue);
+            (newLmp, newDue) = NormalizeDates(
+                newLmp,
+                newDue);
 
-            if (newLmp.HasValue && newDue.HasValue && newDue < newLmp)
+            if (newLmp.HasValue &&
+                newDue.HasValue &&
+                newDue < newLmp)
             {
-                throw new BusinessException("Due date cannot be before LMP.");
+                throw new BusinessException(
+                    "Due date cannot be before LMP.");
             }
 
             entity.LmpDate = newLmp;
+
             entity.DueDate = newDue;
 
             if (patch.CycleLengthDays is not null)
             {
                 if (!newLmp.HasValue)
                 {
-                    throw new BusinessException("Cycle length requires LMP.");
+                    throw new BusinessException(
+                        "Cycle length requires LMP.");
                 }
 
-                if (patch.CycleLengthDays < 20 || patch.CycleLengthDays > 40)
+                if (patch.CycleLengthDays < 20 ||
+                    patch.CycleLengthDays > 40)
                 {
-                    throw new BusinessException("Cycle length must be between 20 and 40.");
+                    throw new BusinessException(
+                        "Cycle length must be between 20 and 40.");
                 }
 
-                entity.CycleLengthDays = patch.CycleLengthDays;
+                entity.CycleLengthDays =
+                    patch.CycleLengthDays;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+
             return ToDto(entity);
         }
 
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var entity = _db.Pregnancies.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.Pregnancies
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
-                throw new NotFoundException("Pregnancy not found.");
+                throw new NotFoundException(
+                    "Pregnancy not found.");
             }
 
             _db.Pregnancies.Remove(entity);
-            _db.SaveChanges();
+
+            await _db.SaveChangesAsync();
         }
 
-        public PregnancyStatusDto? GetStatus(long parentProfileId)
+        public async Task<PregnancyStatusDto?> GetStatus(
+            long parentProfileId)
         {
-            var pregnancy = _db.Pregnancies
+            var pregnancy = await _db.Pregnancies
                 .Where(p => p.ParentProfileId == parentProfileId)
                 .OrderByDescending(p => p.LmpDate ?? p.DueDate)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (pregnancy == null)
             {
                 return null;
             }
 
-            var (lmp, due) = NormalizeDates(pregnancy.LmpDate, pregnancy.DueDate);
+            var (lmp, due) = NormalizeDates(
+                pregnancy.LmpDate,
+                pregnancy.DueDate);
 
             if (!lmp.HasValue || !due.HasValue)
             {
@@ -213,9 +254,17 @@ namespace Nestly.Services.Repository
 
             var today = DateTime.UtcNow.Date;
 
-            var ageDays = Math.Max(0, (today - lmp.Value).Days);
-            var week = Math.Max(1, (ageDays / 7) + 1);
-            var remaining = Math.Max(0, (due.Value - today).Days);
+            var ageDays = Math.Max(
+                0,
+                (today - lmp.Value).Days);
+
+            var week = Math.Max(
+                1,
+                (ageDays / 7) + 1);
+
+            var remaining = Math.Max(
+                0,
+                (due.Value - today).Days);
 
             return new PregnancyStatusDto
             {
@@ -227,28 +276,34 @@ namespace Nestly.Services.Repository
             };
         }
 
-        private static (DateTime? lmp, DateTime? due) NormalizeDates(DateTime? lmp, DateTime? due)
+        private static (DateTime? lmp, DateTime? due)
+            NormalizeDates(DateTime? lmp, DateTime? due)
         {
             if (lmp.HasValue && !due.HasValue)
             {
-                return (lmp, lmp.Value.AddDays(GestationDays));
+                return (
+                    lmp,
+                    lmp.Value.AddDays(GestationDays));
             }
 
             if (!lmp.HasValue && due.HasValue)
             {
-                return (due.Value.AddDays(-GestationDays), due);
+                return (
+                    due.Value.AddDays(-GestationDays),
+                    due);
             }
 
             return (lmp, due);
         }
 
-        private static PregnancyResponseDto ToDto(Pregnancy p) => new()
-        {
-            Id = p.Id,
-            ParentProfileId = p.ParentProfileId,
-            LmpDate = p.LmpDate,
-            DueDate = p.DueDate,
-            CycleLengthDays = p.CycleLengthDays
-        };
+        private static PregnancyResponseDto ToDto(Pregnancy p)
+            => new()
+            {
+                Id = p.Id,
+                ParentProfileId = p.ParentProfileId,
+                LmpDate = p.LmpDate,
+                DueDate = p.DueDate,
+                CycleLengthDays = p.CycleLengthDays
+            };
     }
 }

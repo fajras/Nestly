@@ -38,9 +38,7 @@ abstract class QaService {
 }
 
 class ApiQaService implements QaService {
-  final int parentProfileId;
-
-  ApiQaService({required this.parentProfileId});
+  ApiQaService();
   @override
   Future<Question> updateQuestion(int id, String text) async {
     final res = await ApiClient.patch(
@@ -84,8 +82,7 @@ class ApiQaService implements QaService {
     while (true) {
       final res = await ApiClient.get(
         '/api/QaQuestion/my'
-        '?AskedById=$parentProfileId'
-        '&page=$page&pageSize=$pageSize',
+        '?page=$page&pageSize=$pageSize',
       );
 
       if (res.statusCode != 200) {
@@ -124,7 +121,6 @@ class ApiQaService implements QaService {
 
       page++;
     }
-
     return result;
   }
 
@@ -132,7 +128,7 @@ class ApiQaService implements QaService {
   Future<Question> createQuestion(String text) async {
     final res = await ApiClient.post(
       '/api/QaQuestion',
-      body: {'questionText': text, 'askedById': parentProfileId},
+      body: {'questionText': text},
     );
 
     if (res.statusCode != 201 && res.statusCode != 200) {
@@ -223,8 +219,7 @@ class _MyQuestionsScreenState extends State<MyQuestionsScreen> {
   @override
   void initState() {
     super.initState();
-    _service =
-        widget.service ?? ApiQaService(parentProfileId: widget.parentProfileId);
+    _service = widget.service ?? ApiQaService();
     _load();
   }
 

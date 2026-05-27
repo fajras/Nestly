@@ -67,12 +67,12 @@ class QaAdminService {
   Future<void> answerQuestion({
     required int questionId,
     required String answerText,
-    required int answeredById,
   }) async {
     final res = await ApiClient.post(
       '/api/QaQuestion/$questionId/answers',
-      body: {'answerText': answerText, 'answeredById': answeredById},
+      body: {'answerText': answerText},
     );
+
     if (res.statusCode != 200 && res.statusCode != 201) {
       final error = jsonDecode(res.body);
       throw Exception(error["message"] ?? "Greška pri spremanju odgovora");
@@ -253,21 +253,11 @@ class _QuestionCardState extends State<_QuestionCard> {
     }
     setState(() => _saving = true);
 
-    final userId = await AuthStorage.getUserId();
-    if (!mounted) return;
-
-    if (userId == null) {
-      setState(() => _saving = false);
-      NestlyToast.error(context, 'Greška identifikacije korisnika');
-      return;
-    }
-
     if (!mounted) return;
     try {
       await _service.answerQuestion(
         questionId: widget.question.id,
         answerText: text,
-        answeredById: userId,
       );
 
       NestlyToast.success(

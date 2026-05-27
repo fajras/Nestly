@@ -24,9 +24,9 @@ namespace Nestly.Services.Repository
         {
             IQueryable<QaQuestion> q = _db.QaQuestions.AsNoTracking();
 
-            if (search.AskedById is not null)
+            if (search.AskedByUserId is not null)
             {
-                q = q.Where(x => x.AskedById == search.AskedById.Value);
+                q = q.Where(x => x.AskedBy.UserId == search.AskedByUserId.Value);
             }
 
             if (search.From is not null)
@@ -165,22 +165,21 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Question text is required.");
             }
 
-            if (dto.AskedById.HasValue)
-            {
-                var parentExists = await _db.ParentProfiles
-                    .AsNoTracking()
-                    .AnyAsync(p => p.Id == dto.AskedById.Value, ct);
+            var parentProfile = await _db.ParentProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    p => p.UserId == dto.CurrentUserId,
+                    ct);
 
-                if (!parentExists)
-                {
-                    throw new NotFoundException("Parent profile not found.");
-                }
+            if (parentProfile == null)
+            {
+                throw new NotFoundException("Parent profile not found.");
             }
 
             var entity = new QaQuestion
             {
                 QuestionText = dto.QuestionText.Trim(),
-                AskedById = dto.AskedById,
+                AskedById = parentProfile.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -200,6 +199,7 @@ namespace Nestly.Services.Repository
                     Message = "Postavljeno je novo pitanje od strane roditelja."
                 });
             }
+
             return new QaQuestionDto
             {
                 Id = entity.Id,
@@ -230,25 +230,6 @@ namespace Nestly.Services.Repository
                     throw new BusinessException("Question text cannot be empty.");
                 }
                 q.QuestionText = text;
-            }
-
-            if (patch.AskedById is not null && patch.AskedById.Value != q.AskedById)
-            {
-                if (patch.AskedById.Value <= 0)
-                {
-                    throw new BusinessException("Invalid parent profile id.");
-                }
-
-                var parentExists = await _db.ParentProfiles
-                    .AsNoTracking()
-                    .AnyAsync(p => p.Id == patch.AskedById.Value, ct);
-
-                if (!parentExists)
-                {
-                    throw new NotFoundException("Parent profile not found.");
-                }
-
-                q.AskedById = patch.AskedById.Value;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -324,7 +305,10 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public async Task<QaAnswerDto> CreateAnswer(long questionId, CreateQaAnswerDto dto, CancellationToken ct = default)
+        public async Task<QaAnswerDto> CreateAnswer(
+     long questionId,
+     CreateQaAnswerDto dto,
+     CancellationToken ct = default)
         {
             if (dto is null)
             {
@@ -344,27 +328,23 @@ namespace Nestly.Services.Repository
             {
                 throw new NotFoundException("Question not found.");
             }
-            long? doctorProfileId = null;
 
-            if (dto.AnsweredById.HasValue)
+            var doctorProfile = await _db.DoctorProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    d => d.UserId == dto.CurrentUserId,
+                    ct);
+
+            if (doctorProfile == null)
             {
-                var doctorProfile = await _db.DoctorProfiles
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(d => d.UserId == dto.AnsweredById.Value, ct);
-
-                if (doctorProfile == null)
-                {
-                    throw new NotFoundException("Doctor profile not found.");
-                }
-
-                doctorProfileId = doctorProfile.Id;
+                throw new NotFoundException("Doctor profile not found.");
             }
 
             var entity = new QaAnswer
             {
                 QuestionId = questionId,
                 AnswerText = dto.AnswerText.Trim(),
-                AnsweredById = doctorProfileId,
+                AnsweredById = doctorProfile.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -385,6 +365,7 @@ namespace Nestly.Services.Repository
                     Message = "Doktor je odgovorio na vaše pitanje."
                 });
             }
+
             var answeredByName = await _db.QaAnswers
                 .AsNoTracking()
                 .Where(a => a.Id == entity.Id)
@@ -407,17 +388,17 @@ namespace Nestly.Services.Repository
         }
 
         public async Task<PagedResult<QaQuestionWithLatestAnswerDto>> GetWithLatestAnswerForUser(
-      QaQuestionSearchObject search,
-      CancellationToken ct = default)
+          QaQuestionSearchObject search,
+          CancellationToken ct = default)
         {
-            if (search.AskedById is null)
+            if (search.AskedByUserId is null)
             {
-                throw new BusinessException("AskedById is required.");
+                throw new BusinessException("User id is required.");
             }
 
             var q = _db.QaQuestions
                 .AsNoTracking()
-                .Where(x => x.AskedById == search.AskedById.Value);
+                .Where(x => x.AskedBy.UserId == search.AskedByUserId.Value);
 
             var totalCount = await q.CountAsync(ct);
             int page = search.Page < 1 ? 1 : search.Page;

@@ -45,15 +45,15 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpGet("my")]
         public async Task<ActionResult<PagedResult<QaQuestionWithLatestAnswerDto>>> GetMy(
-           [FromQuery] QaQuestionSearchObject search,
-           CancellationToken ct)
+            [FromQuery] QaQuestionSearchObject search,
+            CancellationToken ct)
         {
-            if (search.AskedById is null || search.AskedById.Value <= 0)
-            {
-                return BadRequest(new { message = "AskedById is required." });
-            }
+            var currentUserId = GetCurrentUserId();
+
+            search.AskedByUserId = currentUserId;
 
             var result = await _service.GetWithLatestAnswerForUser(search, ct);
+
             return Ok(result);
         }
 
@@ -110,6 +110,22 @@ namespace Nestly.WebAPI.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+        private long GetCurrentUserId()
+        {
+            var claim = User.FindFirst("userId")?.Value;
+
+            if (string.IsNullOrWhiteSpace(claim))
+            {
+                throw new UnauthorizedAccessException("User ID claim missing.");
+            }
+
+            return long.Parse(claim);
+        }
+
+        private bool IsDoctor()
+        {
+            return User.IsInRole("Doctor");
         }
     }
 }

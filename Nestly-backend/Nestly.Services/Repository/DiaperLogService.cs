@@ -170,4 +170,69 @@ public class DiaperLogService : IDiaperLogService
             Notes = x.Notes
         };
     }
+
+    public PagedResult<DiaperLogResponseDto> GetByParent(
+    long parentProfileId,
+    DiaperLogSearchObject search)
+    {
+        IQueryable<DiaperLog> q = _db.DiaperLogs
+            .Where(x =>
+                x.Baby.ParentProfileId ==
+                parentProfileId)
+            .AsQueryable();
+
+        if (search.BabyId is not null)
+        {
+            q = q.Where(x =>
+                x.BabyId == search.BabyId);
+        }
+
+        if (search.DateFrom is not null)
+        {
+            q = q.Where(x =>
+                x.ChangeDate >=
+                search.DateFrom.Value);
+        }
+
+        if (search.DateTo is not null)
+        {
+            q = q.Where(x =>
+                x.ChangeDate <=
+                search.DateTo.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            search.DiaperState))
+        {
+            q = q.Where(x =>
+                x.DiaperState ==
+                search.DiaperState);
+        }
+
+        var totalCount = q.Count();
+
+        int page = search.Page < 1
+            ? 1
+            : search.Page;
+
+        int pageSize = search.PageSize < 1
+            ? 10
+            : search.PageSize > 100
+                ? 100
+                : search.PageSize;
+
+        var items = q
+            .OrderByDescending(x => x.ChangeDate)
+            .ThenByDescending(x => x.ChangeTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(MapToDto)
+            .ToList();
+
+        return new PagedResult<DiaperLogResponseDto>
+        {
+            TotalCount = totalCount,
+            Items = items
+        };
+    }
 }

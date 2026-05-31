@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class MealRecommendation {
   final int id;
@@ -55,8 +56,7 @@ class MealPlanApiService {
           );
         }
 
-        final data = jsonDecode(res.body);
-        final List items = data['items'];
+        final List items = ApiResponseHelper.extractList(res.body);
 
         if (items.isEmpty) break;
 
@@ -92,7 +92,7 @@ class MealPlanApiService {
 
       while (true) {
         final res = await ApiClient.get(
-          '/api/MealPlan?BabyId=$babyId&page=$page&pageSize=$pageSize',
+          '/api/MealPlan/my?BabyId=$babyId&page=$page&pageSize=$pageSize',
         );
 
         if (res.statusCode != 200) {
@@ -100,8 +100,7 @@ class MealPlanApiService {
           throw Exception(error["message"] ?? "Greška pri učitavanju ocjena");
         }
 
-        final data = jsonDecode(res.body);
-        final List items = data['items'];
+        final List items = ApiResponseHelper.extractList(res.body);
 
         if (items.isEmpty) break;
 

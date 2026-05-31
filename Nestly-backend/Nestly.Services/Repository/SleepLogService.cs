@@ -163,5 +163,62 @@ namespace Nestly.Services.Repository
             _db.SleepLogs.Remove(entity);
             _db.SaveChanges();
         }
+
+        public PagedResult<SleepLogResponseDto> GetByParent(
+    long parentProfileId,
+    SleepLogSearchObject search)
+        {
+            IQueryable<SleepLog> q = _db.SleepLogs
+                .AsNoTracking()
+                .Where(x =>
+                    x.Baby.ParentProfileId ==
+                    parentProfileId);
+
+            if (search.BabyId is not null)
+            {
+                q = q.Where(x =>
+                    x.BabyId == search.BabyId);
+            }
+
+            if (search.DateFrom is not null)
+            {
+                q = q.Where(x =>
+                    x.SleepDate >=
+                    search.DateFrom.Value.Date);
+            }
+
+            if (search.DateTo is not null)
+            {
+                q = q.Where(x =>
+                    x.SleepDate <=
+                    search.DateTo.Value.Date);
+            }
+
+            var totalCount = q.Count();
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
+            var items = q
+                .OrderByDescending(x => x.SleepDate)
+                .ThenByDescending(x => x.StartTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => MapToDto(x))
+                .ToList();
+
+            return new PagedResult<SleepLogResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
     }
 }

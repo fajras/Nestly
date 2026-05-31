@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
@@ -63,8 +64,7 @@ class BlogAdminService {
         throw Exception("Failed to load blogs.");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'] ?? [];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 
@@ -91,7 +91,7 @@ class BlogAdminService {
         throw Exception("Failed to load blog categories.");
       }
 
-      final List data = jsonDecode(res.body);
+      final List data = ApiResponseHelper.extractList(res.body);
       return data.map((e) => BlogCategoryRow.fromJson(e)).toList();
     } catch (_) {
       throw Exception("Unable to retrieve blog categories.");
@@ -409,8 +409,10 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
       source: ImageSource.gallery,
       imageQuality: 85,
     );
+
     if (picked != null) {
-      setState(() => _image = File(picked.path));
+      final file = File(picked.path);
+      setState(() => _image = file);
     }
   }
 
@@ -521,8 +523,14 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
           categoryIds: _selectedCategoryIds.toList(),
         );
 
-        if (_image != null) {
-          await _service.uploadBlogImage(blogId: blogId, file: _image!);
+        try {
+          if (_image != null) {
+            await _service.uploadBlogImage(blogId: blogId, file: _image!);
+          }
+        } catch (e) {
+          await _service.deleteBlog(blogId);
+
+          throw Exception('Image upload failed');
         }
       }
 

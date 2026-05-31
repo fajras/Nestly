@@ -37,6 +37,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         public ActionResult<BlogCategoryDto> Create([FromBody] BlogCategoryInsertDto request)
         {
             var result = _service.Create(request);
@@ -45,6 +46,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPatch("{id}")]
+        [Authorize(Roles = "Doctor")]
         public ActionResult<BlogCategoryDto> Update(int id, [FromBody] BlogCategoryUpdateDto request)
         {
             var result = _service.Update(id, request);
@@ -58,6 +60,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Doctor")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);

@@ -36,6 +36,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         public ActionResult<WeeklyAdviceResponseDto> Create([FromBody] CreateWeeklyAdviceDto request)
         {
             try
@@ -54,6 +55,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPatch("{id:int}")]
+        [Authorize(Roles = "Doctor")]
         public ActionResult<WeeklyAdviceResponseDto> Patch(int id, [FromBody] WeeklyAdvicePatchDto patch)
         {
             try
@@ -68,6 +70,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Doctor")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);

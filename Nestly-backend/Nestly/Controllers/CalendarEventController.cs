@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
+using Nestly.Services.Interfaces;
 
 namespace Nestly.WebAPI.Controllers
 {
@@ -10,41 +11,109 @@ namespace Nestly.WebAPI.Controllers
     public class CalendarEventController : ControllerBase
     {
         private readonly ICalendarEventService _service;
-        public CalendarEventController(ICalendarEventService service) => _service = service;
+        private readonly ICurrentUserService _currentUserService;
 
-        [HttpGet]
-        public ActionResult<PagedResult<CalendarEventResponseDto>> Get([FromQuery] CalendarEventSearchObject search)
+        public CalendarEventController(
+            ICalendarEventService service,
+            ICurrentUserService currentUserService)
         {
-            return Ok(_service.Get(search));
+            _service = service;
+            _currentUserService = currentUserService;
+        }
+
+        [Authorize(Roles = "Doctor")]
+        [HttpGet]
+        public ActionResult<PagedResult<CalendarEventResponseDto>> Get(
+            [FromQuery] CalendarEventSearchObject search)
+        {
+            return Ok(
+                _service.Get(search));
+        }
+
+        [Authorize(Roles = "Parent")]
+        [HttpGet("my")]
+        public async Task<ActionResult<PagedResult<CalendarEventResponseDto>>> GetMy(
+            [FromQuery] CalendarEventSearchObject search)
+        {
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            if (search.BabyId.HasValue)
+            {
+                await _currentUserService
+                    .EnsureBabyOwnershipAsync(
+                        search.BabyId.Value);
+            }
+
+            return Ok(
+                _service.GetByParent(
+                    parent.Id,
+                    search));
         }
 
         [HttpGet("{id:long}")]
-        public ActionResult<CalendarEventResponseDto> GetById(long id)
+        public async Task<ActionResult<CalendarEventResponseDto>> GetById(
+            long id)
         {
-            var result = _service.GetById(id);
-            return result is null ? NotFound() : Ok(result);
+            await _currentUserService
+                .EnsureCalendarEventOwnershipAsync(id);
+
+            var result =
+                _service.GetById(id);
+
+            return Ok(result);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost]
-        public ActionResult<CalendarEventResponseDto> Create([FromBody] CreateCalendarEventDto request)
+        public async Task<ActionResult<CalendarEventResponseDto>> Create(
+            [FromBody] CreateCalendarEventDto request)
         {
-            var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            await _currentUserService
+                .EnsureBabyOwnershipAsync(
+                    request.BabyId);
+
+            var userId =
+                _currentUserService
+                    .GetCurrentAppUserId();
+
+            var created =
+                _service.Create(
+                    request,
+                    userId);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = created.Id },
+                created);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPatch("{id:long}")]
-        public ActionResult<CalendarEventResponseDto> Patch(long id, [FromBody] CalendarEventPatchDto patch)
+        public async Task<ActionResult<CalendarEventResponseDto>> Patch(
+            long id,
+            [FromBody] CalendarEventPatchDto patch)
         {
-            var updated = _service.Patch(id, patch);
-            return updated is null ? NotFound() : Ok(updated);
+            await _currentUserService
+                .EnsureCalendarEventOwnershipAsync(id);
+
+            var updated =
+                _service.Patch(id, patch);
+
+            return Ok(updated);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(
+            long id)
         {
+            await _currentUserService
+                .EnsureCalendarEventOwnershipAsync(id);
+
             _service.Delete(id);
+
             return NoContent();
         }
-
     }
 }

@@ -26,10 +26,6 @@ public class CreateAppUserDto
 
     [Required]
     public string Password { get; set; } = default!;
-
-    [Range(1, long.MaxValue)]
-    public long RoleId { get; set; }
-
     public DateTime? LmpDate { get; set; }
     public DateTime? DueDate { get; set; }
     public int? CycleLengthDays { get; set; }

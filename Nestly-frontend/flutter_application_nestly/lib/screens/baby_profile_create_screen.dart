@@ -8,7 +8,6 @@ class BabyProfileApiService {
   static const String _basePath = '/api/BabyProfile';
 
   Future<void> createBabyProfile({
-    required int parentProfileId,
     required String babyName,
     required String gender,
     required DateTime birthDate,
@@ -17,7 +16,6 @@ class BabyProfileApiService {
     int? pregnancyId,
   }) async {
     final body = {
-      'parentProfileId': parentProfileId,
       'babyName': babyName,
       'gender': gender,
       'birthDate': birthDate.toIso8601String(),
@@ -38,13 +36,8 @@ class BabyProfileApiService {
 }
 
 class BabyProfileCreateScreen extends StatefulWidget {
-  const BabyProfileCreateScreen({
-    super.key,
-    required this.parentProfileId,
-    this.pregnancyId,
-  });
+  const BabyProfileCreateScreen({super.key, this.pregnancyId});
 
-  final int parentProfileId;
   final int? pregnancyId;
 
   @override
@@ -122,7 +115,6 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
 
     try {
       await _service.createBabyProfile(
-        parentProfileId: widget.parentProfileId,
         babyName: _nameCtrl.text.trim(),
         gender: _gender == 'F' ? 'Female' : 'Male',
         birthDate: _birthDate,

@@ -44,9 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (role.toUpperCase() == 'PARENT' && parentId != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => HomeDashboardScreen(parentProfileId: parentId),
-        ),
+        MaterialPageRoute(builder: (_) => HomeDashboardScreen()),
       );
     } else if (role.toUpperCase() == 'DOCTOR') {
       Navigator.pushReplacement(

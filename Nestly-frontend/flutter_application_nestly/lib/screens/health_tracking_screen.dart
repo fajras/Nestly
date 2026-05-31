@@ -5,6 +5,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class HealthEntry {
   final int id;
@@ -74,7 +75,7 @@ class HealthEntryApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/HealthEntry'
+        '/api/HealthEntry/my'
         '?BabyId=$babyId'
         '&DateFrom=${from.toIso8601String()}'
         '&DateTo=${to.toIso8601String()}'
@@ -86,8 +87,7 @@ class HealthEntryApiService {
         throw Exception(error["message"] ?? "Greška pri učitavanju zapisa");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 
@@ -139,13 +139,11 @@ class HealthEntryApiService {
 class HealthTrackingScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
-  final int userId;
 
   const HealthTrackingScreen({
     super.key,
     required this.babyId,
     required this.babyName,
-    required this.userId,
   });
 
   @override

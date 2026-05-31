@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
@@ -60,7 +61,7 @@ class ChatApiService {
       throw Exception('Failed to load messages');
     }
 
-    final List data = jsonDecode(res.body);
+    final List data = ApiResponseHelper.extractList(res.body);
 
     return data.map((e) => ChatMessage.fromJson(e)).toList();
   }
@@ -162,7 +163,10 @@ class _ChatScreenState extends State<ChatScreen> {
       final data = Map<String, dynamic>.from(raw);
       final msg = ChatRealtimeMessage.fromJson(data);
 
-      if (msg.conversationId != widget.conversationId) return;
+      if (widget.conversationId != 0 &&
+          msg.conversationId != widget.conversationId) {
+        return;
+      }
       if (!mounted) return;
 
       setState(() {
@@ -189,20 +193,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
+
     if (text.isEmpty) return;
 
     _msgCtrl.clear();
-
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          id: 0,
-          senderId: widget.currentUserId,
-          content: text,
-          createdAt: DateTime.now(),
-        ),
-      );
-    });
 
     _scrollToBottom();
 
@@ -210,6 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await _api.sendMessage(receiverUserId: widget.otherUserId, content: text);
     } catch (_) {
       if (!mounted) return;
+
       NestlyToast.error(context, 'Poruka nije poslana');
     }
   }

@@ -334,5 +334,69 @@ namespace Nestly.Services.Repository
             _db.MealRecommendations.Remove(entity);
             _db.SaveChanges();
         }
+        public PagedResult<MealPlanResponseDto> GetMealPlansByParent(
+    long parentProfileId,
+    MealPlanSearchObject search)
+        {
+            IQueryable<MealPlan> q = _db.MealPlans
+                .Include(x => x.FoodType)
+                .Include(x => x.Baby)
+                .Where(x =>
+                    x.Baby.ParentProfileId ==
+                    parentProfileId)
+                .AsQueryable();
+
+            if (search.BabyId is not null)
+            {
+                q = q.Where(x =>
+                    x.BabyId == search.BabyId);
+            }
+
+            if (search.FoodTypeId is not null)
+            {
+                q = q.Where(x =>
+                    x.FoodTypeId ==
+                    search.FoodTypeId);
+            }
+
+            if (search.From is not null)
+            {
+                q = q.Where(x =>
+                    x.TriedAt >=
+                    search.From.Value);
+            }
+
+            if (search.To is not null)
+            {
+                q = q.Where(x =>
+                    x.TriedAt <=
+                    search.To.Value);
+            }
+
+            var totalCount = q.Count();
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
+            var items = q
+                .OrderByDescending(x => x.TriedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(MapToDto)
+                .ToList();
+
+            return new PagedResult<MealPlanResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
     }
 }

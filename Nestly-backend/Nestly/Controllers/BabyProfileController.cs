@@ -29,6 +29,7 @@ namespace Nestly.WebAPI.Controllers
             return Ok(await _service.Get(search));
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpGet("my-latest")]
         public async Task<ActionResult<BabyProfileSummaryDto>> GetMyLatest()
         {
@@ -43,15 +44,24 @@ namespace Nestly.WebAPI.Controllers
                 : Ok(result);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost]
         public async Task<ActionResult<BabyProfileSummaryDto>> Create(
             [FromBody] CreateBabyProfileDto request)
         {
+            if (request.PregnancyId.HasValue)
+            {
+                await _currentUserService
+                    .EnsurePregnancyOwnershipAsync(
+                        request.PregnancyId.Value);
+            }
+
             var created = await _service.Create(request);
 
             return Ok(created);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPatch("{id:long}")]
         public async Task<ActionResult<BabyProfileSummaryDto>> Patch(
             long id,
@@ -65,6 +75,7 @@ namespace Nestly.WebAPI.Controllers
             return Ok(updated);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id)
         {

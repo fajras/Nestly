@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -32,7 +33,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         );
       }
 
-      final all = jsonDecode(res.body) as List<dynamic>;
+      final all = ApiResponseHelper.extractList(res.body);
       final threeDaysAgo = DateTime.now().toUtc().subtract(
         const Duration(days: 3),
       );

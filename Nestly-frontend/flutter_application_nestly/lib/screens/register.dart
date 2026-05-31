@@ -208,7 +208,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           "gender": _gender,
           "username": _usernameCtrl.text.trim(),
           "password": _passwordCtrl.text,
-          "roleId": 1,
           "lmpDate": _lmpDate!.toUtc().toIso8601String(),
           "dueDate": _dueDate!.toUtc().toIso8601String(),
           "cycleLengthDays": int.parse(_cycleCtrl.text),

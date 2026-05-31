@@ -12,10 +12,12 @@ namespace Nestly.Services.Repository
     {
         private readonly NestlyDbContext _db;
         private readonly RabbitMqPublisher _publisher;
-        public QaQuestionService(NestlyDbContext db, RabbitMqPublisher publisher)
+        private readonly ICurrentUserService _currentUserService;
+        public QaQuestionService(NestlyDbContext db, RabbitMqPublisher publisher, ICurrentUserService currentUserService)
         {
             _db = db;
             _publisher = publisher;
+            _currentUserService = currentUserService;
         }
 
         public async Task<PagedResult<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(
@@ -96,6 +98,8 @@ namespace Nestly.Services.Repository
 
         public async Task<QaQuestionDto> GetById(long id, CancellationToken ct = default)
         {
+            await _currentUserService
+    .EnsureQaQuestionOwnershipAsync(id);
             var entity = await _db.QaQuestions
                 .AsNoTracking()
                 .Where(x => x.Id == id)
@@ -211,6 +215,8 @@ namespace Nestly.Services.Repository
 
         public async Task<QaQuestionDto> Patch(long id, QaQuestionPatchDto patch, CancellationToken ct = default)
         {
+            await _currentUserService
+    .EnsureQaQuestionOwnershipAsync(id);
             var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (q is null)
             {
@@ -245,6 +251,8 @@ namespace Nestly.Services.Repository
 
         public async Task Delete(long id, CancellationToken ct = default)
         {
+            await _currentUserService
+    .EnsureQaQuestionOwnershipAsync(id);
             var q = await _db.QaQuestions.FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (q is null)
@@ -261,6 +269,8 @@ namespace Nestly.Services.Repository
      QaQuestionSearchObject search,
      CancellationToken ct = default)
         {
+            await _currentUserService
+    .EnsureQaQuestionOwnershipAsync(questionId);
             var exists = await _db.QaQuestions.AnyAsync(x => x.Id == questionId, ct);
             if (!exists)
             {

@@ -10,28 +10,18 @@ namespace Nestly.WebAPI.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly INotificationService _notificationService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public NotificationController(INotificationService notificationService)
+        public NotificationController(INotificationService notificationService, ICurrentUserService currentUserService)
         {
             _notificationService = notificationService;
-        }
-
-        private int GetUserId()
-        {
-            var claim = User.FindFirst("userId")?.Value;
-
-            if (string.IsNullOrEmpty(claim))
-            {
-                throw new UnauthorizedAccessException("userId not found in token.");
-            }
-
-            return int.Parse(claim);
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetUserNotifications()
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetCurrentAppUserId();
 
             var notifications = await _notificationService
                 .GetUserNotificationsAsync(userId);
@@ -42,7 +32,7 @@ namespace Nestly.WebAPI.Controllers
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetCurrentAppUserId();
 
             var count = await _notificationService
                 .GetUnreadCountAsync(userId);
@@ -53,7 +43,7 @@ namespace Nestly.WebAPI.Controllers
         [HttpPost("mark-as-read/{id}")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetCurrentAppUserId();
 
             await _notificationService.MarkAsReadAsync(id, userId);
 
@@ -63,7 +53,7 @@ namespace Nestly.WebAPI.Controllers
         [HttpPost("mark-all-as-read")]
         public async Task<IActionResult> MarkAllAsRead()
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetCurrentAppUserId();
 
             await _notificationService.MarkAllAsReadAsync(userId);
 

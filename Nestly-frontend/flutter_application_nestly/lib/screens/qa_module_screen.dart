@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 enum QuestionStatus { pending, answered }
 
@@ -72,7 +73,6 @@ class ApiQaService implements QaService {
   }
 
   @override
-  @override
   Future<List<Question>> fetchMyQuestions() async {
     int page = 1;
     const pageSize = 100;
@@ -90,8 +90,7 @@ class ApiQaService implements QaService {
         throw Exception(error["message"] ?? "Greška pri učitavanju pitanja");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 
@@ -198,15 +197,9 @@ class InMemoryQaService implements QaService {
 }
 
 class MyQuestionsScreen extends StatefulWidget {
-  const MyQuestionsScreen({
-    super.key,
-    this.service,
-    required this.parentProfileId,
-  });
+  const MyQuestionsScreen({super.key, this.service});
 
   final QaService? service;
-  final int parentProfileId;
-
   @override
   State<MyQuestionsScreen> createState() => _MyQuestionsScreenState();
 }

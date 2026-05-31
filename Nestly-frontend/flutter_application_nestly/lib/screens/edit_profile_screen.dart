@@ -7,8 +7,6 @@ import 'package:flutter_application_nestly/main.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final int userId;
-
   const EditProfileScreen({super.key});
 
   @override
@@ -212,7 +210,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         try {
           final res = await ApiClient.post(
-            '/api/Auth/change-password/${widget.userId}',
+            '/api/Auth/change-password',
             body: {
               "oldPassword": _oldPasswordCtrl.text,
               "newPassword": _newPasswordCtrl.text,
@@ -249,10 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (userBody.isNotEmpty) {
         try {
-          final res = await ApiClient.patch(
-            '/AppUser/${widget.userId}',
-            body: userBody,
-          );
+          final res = await ApiClient.patch('/AppUser/me', body: userBody);
 
           if (res.statusCode != 200) {
             setState(() {
@@ -273,8 +268,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       final pregnancyBody = {
-        if (_lmpDate != null) "lmpDate": _lmpDate!.toUtc().toIso8601String(),
-        if (_dueDate != null) "dueDate": _dueDate!.toUtc().toIso8601String(),
+        if (_lmpDate != null)
+          "lmpDate":
+              "${_lmpDate!.year.toString().padLeft(4, '0')}-${_lmpDate!.month.toString().padLeft(2, '0')}-${_lmpDate!.day.toString().padLeft(2, '0')}",
+
+        if (_dueDate != null)
+          "dueDate":
+              "${_dueDate!.year.toString().padLeft(4, '0')}-${_dueDate!.month.toString().padLeft(2, '0')}-${_dueDate!.day.toString().padLeft(2, '0')}",
+
         if (_cycleCtrl.text.isNotEmpty && _lmpDate != null)
           "cycleLengthDays": int.tryParse(_cycleCtrl.text),
       };

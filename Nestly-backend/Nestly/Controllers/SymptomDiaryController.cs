@@ -11,87 +11,128 @@ namespace Nestly.WebAPI.Controllers
     public class SymptomDiaryController : ControllerBase
     {
         private readonly ISymptomDiaryService _service;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SymptomDiaryController(ISymptomDiaryService service)
+        public SymptomDiaryController(
+     ISymptomDiaryService service,
+     ICurrentUserService currentUserService)
         {
             _service = service;
+            _currentUserService = currentUserService;
         }
+        [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<SymptomDiaryResponseDto>> Get([FromQuery] SymptomDiarySearchObject search)
-            => Ok(_service.Get(search));
+        public ActionResult<PagedResult<SymptomDiaryResponseDto>> Get(
+     [FromQuery] SymptomDiarySearchObject search)
+        {
+            return Ok(_service.Get(search));
+        }
         [HttpPost]
-        public ActionResult<SymptomDiaryResponseDto> Create([FromBody] CreateSymptomDiaryDto request)
+        [Authorize(Roles = "Parent")]
+        public ActionResult<SymptomDiaryResponseDto> Create(
+     [FromBody] CreateSymptomDiaryDto request)
         {
             try
             {
                 var dto = _service.Create(request);
 
-                return CreatedAtRoute(
-                    "GetSymptomByDate",
-                    new
-                    {
-                        parentProfileId = dto.ParentProfileId,
-                        date = dto.Date.ToString("yyyy-MM-dd")
-                    },
-                    dto);
+                return Ok(dto);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(new { message = ex.Message });
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
-        [HttpGet("parent/{parentProfileId:long}")]
-        public ActionResult<PagedResult<SymptomDiaryResponseDto>> GetByParent(
-     long parentProfileId,
-     [FromQuery] SymptomDiarySearchObject search)
+        [HttpGet("my")]
+        [Authorize(Roles = "Parent")]
+        public async Task<ActionResult<PagedResult<SymptomDiaryResponseDto>>> GetMy(
+    [FromQuery] SymptomDiarySearchObject search)
         {
-            search.ParentProfileId = parentProfileId;
-            return Ok(_service.GetByParent(parentProfileId, search));
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            return Ok(
+                _service.GetByParent(parent.Id, search));
         }
 
-        [HttpGet("by-date", Name = "GetSymptomByDate")]
-        public ActionResult<SymptomDiaryResponseDto> GetByDate(
-            [FromQuery] long parentProfileId,
-            [FromQuery] DateTime date)
+        [HttpGet("by-date")]
+        [Authorize(Roles = "Parent")]
+        public async Task<ActionResult<SymptomDiaryResponseDto>> GetByDate(
+      [FromQuery] DateTime date)
         {
-            var dto = _service.GetByDate(parentProfileId, date);
-            return dto is null ? NotFound() : Ok(dto);
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            var dto = _service.GetByDate(
+                parent.Id,
+                date);
+
+            return dto is null
+                ? NotFound()
+                : Ok(dto);
         }
 
         [HttpPatch("{id:long}")]
-        public ActionResult<SymptomDiaryResponseDto> Patch(
-            long id,
-            [FromBody] SymptomDiaryPatchDto patch)
+        [Authorize(Roles = "Parent")]
+        public async Task<ActionResult<SymptomDiaryResponseDto>> Patch(
+         long id,
+         [FromBody] SymptomDiaryPatchDto patch)
         {
+            await _currentUserService
+                .EnsureSymptomDiaryOwnershipAsync(id);
+
             try
             {
                 var dto = _service.Patch(id, patch);
-                return dto is null ? NotFound() : Ok(dto);
+
+                return dto is null
+                    ? NotFound()
+                    : Ok(dto);
             }
             catch (ArgumentOutOfRangeException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        [Authorize(Roles = "Parent")]
+        public async Task<IActionResult> Delete(long id)
         {
+            await _currentUserService
+                .EnsureSymptomDiaryOwnershipAsync(id);
+
             _service.Delete(id);
+
             return NoContent();
         }
 
         [HttpGet("marked-days")]
-        public ActionResult<PagedResult<DateTime>> GetMarkedDays(
-     [FromQuery] long parentProfileId,
+        [Authorize(Roles = "Parent")]
+        public async Task<ActionResult<PagedResult<DateTime>>> GetMarkedDays(
      [FromQuery] SymptomDiarySearchObject search)
         {
-            return Ok(_service.GetMarkedDays(parentProfileId, search));
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            return Ok(
+                _service.GetMarkedDays(
+                    parent.Id,
+                    search));
         }
     }
 }

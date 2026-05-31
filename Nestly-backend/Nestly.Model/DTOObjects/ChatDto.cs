@@ -3,7 +3,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
 {
+    public class ChatUserDto
+    {
+        public long Id { get; set; }
 
+        public string FirstName { get; set; } = default!;
+
+        public string LastName { get; set; } = default!;
+
+        public string ParentStatus { get; set; } = default!;
+
+        public int? BabyAgeMonths { get; set; }
+
+        public int? PregnancyTrimester { get; set; }
+    }
     public class ChatMessageRealtimeDto
     {
         public long ConversationId { get; set; }

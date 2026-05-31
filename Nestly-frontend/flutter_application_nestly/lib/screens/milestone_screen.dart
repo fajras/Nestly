@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 String _formatDate(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}.';
@@ -63,7 +64,7 @@ class MilestoneApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/Milestone?BabyId=$babyId&page=$page&pageSize=$pageSize',
+        '/api/Milestone/my?BabyId=$babyId&page=$page&pageSize=$pageSize',
       );
 
       if (res.statusCode != 200) {
@@ -71,8 +72,7 @@ class MilestoneApiService {
         throw Exception(error["message"] ?? "Greška pri učitavanju dostignuća");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 

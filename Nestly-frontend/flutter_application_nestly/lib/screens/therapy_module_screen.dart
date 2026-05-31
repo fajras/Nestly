@@ -4,6 +4,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class MedicationIntakeLog {
   final int intakeLogId;
@@ -52,28 +53,32 @@ class TherapyPlan {
 }
 
 class MedicationPlanApiService {
-  final int parentProfileId;
+  MedicationPlanApiService();
 
-  MedicationPlanApiService(this.parentProfileId);
   Future<void> update({
     required int id,
     required String name,
     required String dose,
-    required DateTime start,
-    required DateTime end,
+    required List<TimeOfDay> times,
   }) async {
     final res = await ApiClient.patch(
       '/api/MedicationPlan/$id',
       body: {
         'medicineName': name,
         'dose': dose,
-        'startDate': start.toIso8601String(),
-        'endDate': end.toIso8601String(),
+        'intakeTimes': times
+            .map(
+              (t) =>
+                  '${t.hour.toString().padLeft(2, '0')}:'
+                  '${t.minute.toString().padLeft(2, '0')}:00',
+            )
+            .toList(),
       },
     );
 
     if (res.statusCode != 200) {
       final error = jsonDecode(res.body);
+
       throw Exception(error["message"] ?? "Greška pri ažuriranju terapije");
     }
   }
@@ -86,7 +91,7 @@ class MedicationPlanApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/MedicationPlan?ParentProfileId=$parentProfileId&page=$page&pageSize=$pageSize',
+        '/api/MedicationPlan/my?page=$page&pageSize=$pageSize',
       );
 
       if (res.statusCode != 200) {
@@ -94,8 +99,7 @@ class MedicationPlanApiService {
         throw Exception(error["message"] ?? "Greška pri učitavanju terapija");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 
@@ -139,9 +143,8 @@ class MedicationPlanApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/MedicationPlan/day'
-        '?parentProfileId=$parentProfileId'
-        '&date=$formattedDate'
+        '/api/MedicationPlan/my-day'
+        '?date=$formattedDate'
         '&page=$page&pageSize=$pageSize',
       );
 
@@ -150,8 +153,7 @@ class MedicationPlanApiService {
         throw Exception(error["message"] ?? "Greška pri učitavanju terapije");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 
@@ -203,7 +205,6 @@ class MedicationPlanApiService {
     final res = await ApiClient.post(
       '/api/MedicationPlan',
       body: {
-        'parentProfileId': parentProfileId,
         'medicineName': name,
         'dose': dose,
         'startDate': start.toIso8601String(),
@@ -233,9 +234,7 @@ class MedicationPlanApiService {
 }
 
 class TherapyCalendarScreen extends StatefulWidget {
-  const TherapyCalendarScreen({super.key, required this.parentProfileId});
-
-  final int parentProfileId;
+  const TherapyCalendarScreen({super.key});
 
   @override
   State<TherapyCalendarScreen> createState() => _TherapyCalendarScreenState();
@@ -254,7 +253,7 @@ class _TherapyCalendarScreenState extends State<TherapyCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _service = MedicationPlanApiService(widget.parentProfileId);
+    _service = MedicationPlanApiService();
 
     final today = DateTime.now();
     _selectedDay = DateTime(today.year, today.month, today.day);
@@ -701,18 +700,24 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
       hasError = true;
     }
 
-    if (_start == null || _end == null) {
-      _dateError = 'Odaberite period';
-      hasError = true;
-    }
+    if (widget.existingPlan == null) {
+      if (_start == null || _end == null) {
+        _dateError = 'Odaberite period';
+        hasError = true;
+      }
 
-    if (_start != null && _end != null && _end!.isBefore(_start!)) {
-      _dateError = 'Datum završetka ne može biti prije početka';
-      hasError = true;
+      if (_start != null && _end != null && _end!.isBefore(_start!)) {
+        _dateError = 'Datum završetka ne može biti prije početka';
+
+        hasError = true;
+      }
     }
 
     if (hasError) {
-      setState(() {});
+      setState(() {
+        _saving = false;
+      });
+
       return;
     }
 
@@ -732,8 +737,7 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
           id: widget.existingPlan!.id,
           name: _name.text.trim(),
           dose: _dose.text.trim(),
-          start: _start!,
-          end: _end!,
+          times: _times,
         );
 
         NestlyToast.success(context, 'Terapija ažurirana');
@@ -850,57 +854,58 @@ class _AddTherapyScreenState extends State<AddTherapyScreen> {
               cursorColor: AppColors.roseDark,
             ),
             const SizedBox(height: AppSpacing.md),
-
-            InkWell(
-              onTap: () => _pickDate(
-                current: _start,
-                onPicked: (d) => setState(() => _start = d),
-              ),
-              child: InputDecorator(
-                decoration: _decoration(
-                  label: 'Datum početka',
-                  icon: Icons.calendar_today_rounded,
+            if (widget.existingPlan == null) ...[
+              InkWell(
+                onTap: () => _pickDate(
+                  current: _start,
+                  onPicked: (d) => setState(() => _start = d),
                 ),
-                child: Text(
-                  _start == null ? 'Odaberite datum' : _fmt(_start!),
-                  style: TextStyle(
-                    color: _start == null
-                        ? AppColors.textSecondary
-                        : AppColors.textPrimary,
+                child: InputDecorator(
+                  decoration: _decoration(
+                    label: 'Datum početka',
+                    icon: Icons.calendar_today_rounded,
+                  ),
+                  child: Text(
+                    _start == null ? 'Odaberite datum' : _fmt(_start!),
+                    style: TextStyle(
+                      color: _start == null
+                          ? AppColors.textSecondary
+                          : AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (_dateError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  _dateError!,
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
+              if (_dateError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _dateError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
                 ),
-              ),
-            const SizedBox(height: AppSpacing.md),
-
-            InkWell(
-              onTap: () => _pickDate(
-                current: _end,
-                onPicked: (d) => setState(() => _end = d),
-              ),
-              child: InputDecorator(
-                decoration: _decoration(
-                  label: 'Datum završetka',
-                  icon: Icons.event_rounded,
+              const SizedBox(height: AppSpacing.md),
+              InkWell(
+                onTap: () => _pickDate(
+                  current: _end,
+                  onPicked: (d) => setState(() => _end = d),
                 ),
-                child: Text(
-                  _end == null ? 'Odaberite datum' : _fmt(_end!),
-                  style: TextStyle(
-                    color: _end == null
-                        ? AppColors.textSecondary
-                        : AppColors.textPrimary,
+                child: InputDecorator(
+                  decoration: _decoration(
+                    label: 'Datum završetka',
+                    icon: Icons.event_rounded,
+                  ),
+                  child: Text(
+                    _end == null ? 'Odaberite datum' : _fmt(_end!),
+                    style: TextStyle(
+                      color: _end == null
+                          ? AppColors.textSecondary
+                          : AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
+
             const SizedBox(height: 16),
 
             Align(

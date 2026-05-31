@@ -16,15 +16,18 @@ namespace Nestly.WebAPI.Controllers
         private readonly UserManager<IdentityUser> userManager;
         private readonly ITokenRepository tokenRepository;
         private readonly NestlyDbContext _db;
+        private readonly ICurrentUserService _currentUserService;
 
         public AuthController(
             UserManager<IdentityUser> userManager,
             ITokenRepository tokenRepository,
-            NestlyDbContext db)
+            NestlyDbContext db,
+            ICurrentUserService currentUserService)
         {
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
             _db = db;
+            _currentUserService = currentUserService;
         }
 
 
@@ -43,10 +46,11 @@ namespace Nestly.WebAPI.Controllers
                 return Unauthorized("Email or password is incorrect.");
             }
 
-            var appUser = _db.AppUsers
+            var appUser = await _db.AppUsers
                 .Include(u => u.ParentProfile)
                 .Include(u => u.DoctorProfile)
-                .FirstOrDefault(u => u.IdentityUserId == identityUser.Id);
+                .FirstOrDefaultAsync(
+                    u => u.IdentityUserId == identityUser.Id);
 
             if (appUser == null)
             {
@@ -86,15 +90,9 @@ namespace Nestly.WebAPI.Controllers
         }
         [Authorize]
         [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        public async Task<IActionResult> ChangePassword(
+    [FromBody] ChangePasswordDto dto)
         {
-            var userIdClaim = User.FindFirst("userId")?.Value;
-
-            if (string.IsNullOrWhiteSpace(userIdClaim))
-            {
-                return Unauthorized();
-            }
-
             if (dto.NewPassword != dto.ConfirmPassword)
             {
                 return BadRequest("Passwords do not match.");
@@ -105,32 +103,40 @@ namespace Nestly.WebAPI.Controllers
                 return BadRequest("Old password is required.");
             }
 
-            var currentUserId = long.Parse(userIdClaim);
+            var currentUserId =
+                _currentUserService
+                    .GetCurrentAppUserId();
 
             var appUser = await _db.AppUsers
-                .FirstOrDefaultAsync(x => x.Id == currentUserId);
+                .FirstOrDefaultAsync(
+                    x => x.Id == currentUserId);
 
             if (appUser == null)
             {
                 return NotFound("User not found.");
             }
 
-            var identityUser = await userManager.FindByIdAsync(appUser.IdentityUserId);
+            var identityUser =
+                await userManager.FindByIdAsync(
+                    appUser.IdentityUserId);
 
             if (identityUser == null)
             {
                 return NotFound("Identity user not found.");
             }
 
-            var result = await userManager.ChangePasswordAsync(
-                identityUser,
-                dto.OldPassword,
-                dto.NewPassword
-            );
+            var result =
+                await userManager.ChangePasswordAsync(
+                    identityUser,
+                    dto.OldPassword,
+                    dto.NewPassword
+                );
 
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors.Select(e => e.Description));
+                return BadRequest(
+                    result.Errors.Select(
+                        e => e.Description));
             }
 
             return Ok();

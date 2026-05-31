@@ -24,9 +24,6 @@ namespace Nestly.Model.DTOObjects
 
     public class CreateMedicationPlanDto
     {
-        [Range(1, long.MaxValue)]
-        public long ParentProfileId { get; set; }
-
         [Required]
         public string MedicineName { get; set; } = default!;
 
@@ -59,8 +56,7 @@ namespace Nestly.Model.DTOObjects
     {
         public string? MedicineName { get; set; }
         public string? Dose { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public List<TimeSpan>? IntakeTimes { get; set; }
     }
 
     public class MarkMedicationTakenDto
@@ -80,7 +76,6 @@ namespace Nestly.Model.DTOObjects
 
     public class MedicationIntakeLogSearchObject
     {
-        public long ParentProfileId { get; set; }
         public DateTime Date { get; set; }
 
         public int Page { get; set; } = 1;

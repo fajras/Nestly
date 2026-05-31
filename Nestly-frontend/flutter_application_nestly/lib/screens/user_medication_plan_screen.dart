@@ -1,13 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class UserMedicationPlanScreen extends StatefulWidget {
-  final int parentProfileId;
-
-  const UserMedicationPlanScreen({super.key, required this.parentProfileId});
+  const UserMedicationPlanScreen({super.key});
 
   @override
   State<UserMedicationPlanScreen> createState() =>
@@ -30,15 +28,13 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
     setState(() => _loading = true);
 
     try {
-      final res = await ApiClient.get(
-        '/api/MedicationPlan?ParentProfileId=${widget.parentProfileId}',
-      );
+      final res = await ApiClient.get('/api/MedicationPlan/my');
 
       if (res.statusCode != 200) {
         throw Exception('Failed to load medication plans');
       }
 
-      final List data = jsonDecode(res.body);
+      final List data = ApiResponseHelper.extractList(res.body);
 
       final plans = data
           .map((e) => MedicationPlanRow.fromJson(e as Map<String, dynamic>))

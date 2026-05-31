@@ -11,121 +11,195 @@ namespace Nestly.WebAPI.Controllers
     public class QaQuestionController : ControllerBase
     {
         private readonly IQaQuestionService _service;
+        private readonly ICurrentUserService _currentUserService;
 
-        public QaQuestionController(IQaQuestionService service)
+        public QaQuestionController(
+            IQaQuestionService service,
+            ICurrentUserService currentUserService)
         {
             _service = service;
+            _currentUserService = currentUserService;
         }
 
+        [Authorize(Roles = "Doctor")]
         [HttpGet]
         public async Task<ActionResult<PagedResult<QaQuestionWithLatestAnswerDto>>> Get(
-     [FromQuery] QaQuestionSearchObject search,
-     CancellationToken ct)
+            [FromQuery] QaQuestionSearchObject search,
+            CancellationToken ct)
         {
-            var result = await _service.GetAllWithLatestAnswer(search, ct);
+            var result =
+                await _service.GetAllWithLatestAnswer(
+                    search,
+                    ct);
+
             return Ok(result);
         }
-
         [HttpGet("{id:long}")]
-        public async Task<ActionResult<QaQuestionDto>> GetById(long id, CancellationToken ct)
+        public async Task<ActionResult<QaQuestionDto>> GetById(
+            long id,
+            CancellationToken ct)
         {
-            var dto = await _service.GetById(id, ct);
-            return dto is null ? NotFound() : Ok(dto);
+            await _currentUserService
+                .EnsureQaQuestionOwnershipAsync(id);
+
+            var dto =
+                await _service.GetById(id, ct);
+
+            return Ok(dto);
         }
 
+        [Authorize(Roles = "Doctor")]
         [HttpGet("user/{parentProfileId:long}")]
         public async Task<ActionResult<PagedResult<QaQuestionDto>>> GetByUser(
-      long parentProfileId,
-      [FromQuery] QaQuestionSearchObject search,
-      CancellationToken ct)
+            long parentProfileId,
+            [FromQuery] QaQuestionSearchObject search,
+            CancellationToken ct)
         {
-            var result = await _service.GetByUserAsync(parentProfileId, search, ct);
+            var result =
+                await _service.GetByUserAsync(
+                    parentProfileId,
+                    search,
+                    ct);
+
             return Ok(result);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpGet("my")]
         public async Task<ActionResult<PagedResult<QaQuestionWithLatestAnswerDto>>> GetMy(
             [FromQuery] QaQuestionSearchObject search,
             CancellationToken ct)
         {
-            var currentUserId = GetCurrentUserId();
+            var currentUserId =
+                _currentUserService
+                    .GetCurrentAppUserId();
 
-            search.AskedByUserId = currentUserId;
+            search.AskedByUserId =
+                currentUserId;
 
-            var result = await _service.GetWithLatestAnswerForUser(search, ct);
+            var result =
+                await _service
+                    .GetWithLatestAnswerForUser(
+                        search,
+                        ct);
 
             return Ok(result);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost]
-        public async Task<ActionResult<QaQuestionDto>> Create([FromBody] CreateQaQuestionDto request, CancellationToken ct)
+        public async Task<ActionResult<QaQuestionDto>> Create(
+            [FromBody] CreateQaQuestionDto request,
+            CancellationToken ct)
         {
-            var created = await _service.Create(request, ct);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            request.CurrentUserId =
+                _currentUserService
+                    .GetCurrentAppUserId();
+
+            var created =
+                await _service.Create(
+                    request,
+                    ct);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = created.Id },
+                created);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPatch("{id:long}")]
-        public async Task<ActionResult<QaQuestionDto>> Patch(long id, [FromBody] QaQuestionPatchDto patch, CancellationToken ct)
+        public async Task<ActionResult<QaQuestionDto>> Patch(
+            long id,
+            [FromBody] QaQuestionPatchDto patch,
+            CancellationToken ct)
         {
+            await _currentUserService
+                .EnsureQaQuestionOwnershipAsync(id);
+
             try
             {
-                var updated = await _service.Patch(id, patch, ct);
-                return updated is null ? NotFound() : Ok(updated);
+                var updated =
+                    await _service.Patch(
+                        id,
+                        patch,
+                        ct);
+
+                return Ok(updated);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Delete(long id, CancellationToken ct)
+        public async Task<IActionResult> Delete(
+            long id,
+            CancellationToken ct)
         {
+            await _currentUserService
+                .EnsureQaQuestionOwnershipAsync(id);
+
             await _service.Delete(id, ct);
+
             return NoContent();
         }
 
+        [Authorize(Roles = "Parent,Doctor")]
         [HttpGet("{questionId:long}/answers")]
         public async Task<ActionResult<PagedResult<QaAnswerDto>>> GetAnswers(
-        long questionId,
-        [FromQuery] QaQuestionSearchObject search,
-        CancellationToken ct)
+            long questionId,
+            [FromQuery] QaQuestionSearchObject search,
+            CancellationToken ct)
         {
-            var result = await _service.GetAnswers(questionId, search, ct);
+            await _currentUserService
+                .EnsureQaQuestionOwnershipAsync(questionId);
+
+            var result =
+                await _service.GetAnswers(
+                    questionId,
+                    search,
+                    ct);
+
             return Ok(result);
         }
 
+        [Authorize(Roles = "Doctor")]
         [HttpPost("{questionId:long}/answers")]
         public async Task<ActionResult<QaAnswerDto>> CreateAnswer(
             long questionId,
             [FromBody] CreateQaAnswerDto request,
             CancellationToken ct)
         {
+            request.CurrentUserId =
+                _currentUserService
+                    .GetCurrentAppUserId();
+
             try
             {
-                var created = await _service.CreateAnswer(questionId, request, ct);
-                return CreatedAtAction(nameof(GetAnswers), new { questionId = questionId }, created);
+                var created =
+                    await _service.CreateAnswer(
+                        questionId,
+                        request,
+                        ct);
+
+                return CreatedAtAction(
+                    nameof(GetAnswers),
+                    new { questionId },
+                    created);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
-        }
-        private long GetCurrentUserId()
-        {
-            var claim = User.FindFirst("userId")?.Value;
-
-            if (string.IsNullOrWhiteSpace(claim))
-            {
-                throw new UnauthorizedAccessException("User ID claim missing.");
-            }
-
-            return long.Parse(claim);
-        }
-
-        private bool IsDoctor()
-        {
-            return User.IsInRole("Doctor");
         }
     }
 }

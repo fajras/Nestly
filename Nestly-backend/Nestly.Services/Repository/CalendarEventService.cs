@@ -21,11 +21,6 @@ public class CalendarEventService : ICalendarEventService
             q = q.Where(e => e.BabyId == search.BabyId);
         }
 
-        if (search.UserId is not null)
-        {
-            q = q.Where(e => e.UserId == search.UserId);
-        }
-
         if (search.From is not null)
         {
             q = q.Where(e => e.StartAt >= search.From.Value);
@@ -70,7 +65,9 @@ public class CalendarEventService : ICalendarEventService
         return MapToDto(ev);
     }
 
-    public CalendarEventResponseDto Create(CreateCalendarEventDto dto)
+    public CalendarEventResponseDto Create(
+    CreateCalendarEventDto dto,
+    long currentUserId)
     {
         if (dto.BabyId <= 0)
         {
@@ -95,7 +92,7 @@ public class CalendarEventService : ICalendarEventService
         var entity = new CalendarEvent
         {
             BabyId = dto.BabyId,
-            UserId = dto.UserId,
+            UserId = currentUserId,
             Title = dto.Title.Trim(),
             Description = string.IsNullOrWhiteSpace(dto.Description)
                 ? null
@@ -163,6 +160,58 @@ public class CalendarEventService : ICalendarEventService
             Title = ev.Title,
             Description = ev.Description,
             StartAt = ev.StartAt
+        };
+    }
+    public PagedResult<CalendarEventResponseDto> GetByParent(
+    long parentProfileId,
+    CalendarEventSearchObject search)
+    {
+        IQueryable<CalendarEvent> q = _db.CalendarEvents
+            .Where(x =>
+                x.BabyProfile.ParentProfileId ==
+                parentProfileId);
+
+        if (search.BabyId is not null)
+        {
+            q = q.Where(x =>
+                x.BabyId == search.BabyId);
+        }
+
+        if (search.From is not null)
+        {
+            q = q.Where(x =>
+                x.StartAt >= search.From.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search.Title))
+        {
+            q = q.Where(x =>
+                x.Title.Contains(search.Title));
+        }
+
+        var totalCount = q.Count();
+
+        int page = search.Page < 1
+            ? 1
+            : search.Page;
+
+        int pageSize = search.PageSize < 1
+            ? 10
+            : search.PageSize > 100
+                ? 100
+                : search.PageSize;
+
+        var items = q
+            .OrderBy(x => x.StartAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(MapToDto)
+            .ToList();
+
+        return new PagedResult<CalendarEventResponseDto>
+        {
+            TotalCount = totalCount,
+            Items = items
         };
     }
 }

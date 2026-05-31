@@ -11,13 +11,16 @@ public class BlogPostController : ControllerBase
 {
     private readonly IBlogPostService _service;
     private readonly AzureBlobService _blob;
+    private readonly ICurrentUserService _currentUserService;
 
     public BlogPostController(
         IBlogPostService service,
-        AzureBlobService blob)
+        AzureBlobService blob,
+        ICurrentUserService currentUserService)
     {
         _service = service;
         _blob = blob;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -37,28 +40,21 @@ public class BlogPostController : ControllerBase
     [Authorize(Roles = "Doctor")]
     public ActionResult<BlogPostResponseDto> Create([FromBody] CreateBlogPostDto request)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
 
-        if (!long.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
+        var currentUserId = _currentUserService.GetCurrentAppUserId();
 
         var created = _service.Create(request, currentUserId);
 
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+
     }
 
     [HttpPatch("{id:long}")]
     [Authorize(Roles = "Doctor")]
     public ActionResult<BlogPostResponseDto> Patch(long id, [FromBody] BlogPostPatchDto patch)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-
-        if (!long.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
+        var currentUserId =
+    _currentUserService.GetCurrentAppUserId();
 
         var updated = _service.Patch(id, patch, currentUserId);
 
@@ -69,12 +65,8 @@ public class BlogPostController : ControllerBase
     [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> Delete(long id)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-
-        if (!long.TryParse(userIdClaim, out var currentUserId))
-        {
-            return Unauthorized();
-        }
+        var currentUserId =
+    _currentUserService.GetCurrentAppUserId();
 
         _service.Delete(id, currentUserId);
 

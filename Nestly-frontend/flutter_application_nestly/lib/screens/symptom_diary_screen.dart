@@ -4,6 +4,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class SymptomDiaryEntry {
   final int id;
@@ -37,14 +38,10 @@ class SymptomDiaryApiService {
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  Future<SymptomDiaryEntry?> getByDate(
-    int parentProfileId,
-    DateTime date,
-  ) async {
+  Future<SymptomDiaryEntry?> getByDate(DateTime date) async {
     final res = await ApiClient.get(
       '/api/SymptomDiary/by-date'
-      '?parentProfileId=$parentProfileId'
-      '&date=${_fmt(date)}',
+      '?date=${_fmt(date)}',
     );
 
     if (res.statusCode == 404) return null;
@@ -57,7 +54,7 @@ class SymptomDiaryApiService {
     return SymptomDiaryEntry.fromJson(jsonDecode(res.body));
   }
 
-  Future<Set<DateTime>> getMarkedDays(int parentProfileId) async {
+  Future<Set<DateTime>> getMarkedDays() async {
     int page = 1;
     const pageSize = 100;
 
@@ -66,14 +63,12 @@ class SymptomDiaryApiService {
     while (true) {
       final res = await ApiClient.get(
         '/api/SymptomDiary/marked-days'
-        '?parentProfileId=$parentProfileId&page=$page&pageSize=$pageSize',
+        '?page=$page&pageSize=$pageSize',
       );
 
       if (res.statusCode != 200) break;
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
-
+      final List items = ApiResponseHelper.extractList(res.body);
       if (items.isEmpty) break;
 
       final parsed = items
@@ -90,21 +85,13 @@ class SymptomDiaryApiService {
     return result;
   }
 
-  Future<int> create(
-    int parentProfileId,
-    DateTime date,
-    Map<String, int> values,
-  ) async {
+  Future<int> create(DateTime date, Map<String, int> values) async {
     final res = await ApiClient.post(
       '/api/SymptomDiary',
-      body: {
-        'parentProfileId': parentProfileId,
-        'date': _fmt(date),
-        ..._mapToApi(values),
-      },
+      body: {'date': _fmt(date), ..._mapToApi(values)},
     );
 
-    if (res.statusCode != 201) {
+    if (res.statusCode != 201 && res.statusCode != 200) {
       final error = jsonDecode(res.body);
       throw Exception(error["message"] ?? "Greška pri kreiranju unosa");
     }
@@ -134,10 +121,7 @@ class SymptomDiaryApiService {
 }
 
 class SymptomDiaryScreen extends StatefulWidget {
-  const SymptomDiaryScreen({super.key, required this.parentProfileId});
-
-  final int parentProfileId;
-
+  const SymptomDiaryScreen({super.key});
   @override
   State<SymptomDiaryScreen> createState() => _SymptomDiaryScreenState();
 }
@@ -182,15 +166,12 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
     try {
       if (_markedDays.isEmpty) {
-        _markedDays = await _service.getMarkedDays(widget.parentProfileId);
+        _markedDays = await _service.getMarkedDays();
       }
 
       if (!mounted) return;
 
-      final entry = await _service.getByDate(
-        widget.parentProfileId,
-        _selectedDay,
-      );
+      final entry = await _service.getByDate(_selectedDay);
 
       if (!mounted) return;
 
@@ -234,18 +215,14 @@ class _SymptomDiaryScreenState extends State<SymptomDiaryScreen> {
 
     try {
       if (_entryId == null) {
-        _entryId = await _service.create(
-          widget.parentProfileId,
-          _selectedDay,
-          _values,
-        );
+        _entryId = await _service.create(_selectedDay, _values);
         NestlyToast.success(context, 'Unos spremljen');
       } else {
         await _service.update(_entryId!, _values);
         NestlyToast.success(context, 'Izmjene sačuvane');
       }
 
-      _markedDays = await _service.getMarkedDays(widget.parentProfileId);
+      _markedDays = await _service.getMarkedDays();
     } catch (e) {
       final msg = e.toString();
 

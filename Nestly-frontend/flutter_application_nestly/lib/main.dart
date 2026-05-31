@@ -209,13 +209,6 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        final decoded = JwtDecoder.decode(token);
-        final userId = int.tryParse(decoded["userId"].toString());
-
-        if (userId == null) {
-          NestlyToast.error(context, 'JWT ne sadrži user ID');
-          return;
-        }
         await AuthStorage.saveLogin(
           token: token,
           role: role,
@@ -224,10 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (role.toUpperCase() == 'PARENT') {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) =>
-                  HomeDashboardScreen(parentProfileId: parentProfileId),
-            ),
+            MaterialPageRoute(builder: (_) => HomeDashboardScreen()),
           );
         } else if (role.toUpperCase() == 'DOCTOR') {
           Navigator.of(context).pushReplacement(

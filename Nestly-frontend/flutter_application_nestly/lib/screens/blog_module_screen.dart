@@ -4,6 +4,7 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 String _snippet(String text, {int max = 140}) {
   if (text.isEmpty) return '—';
@@ -68,9 +69,7 @@ class BlogPostDto {
 }
 
 class BlogScreen extends StatefulWidget {
-  const BlogScreen({super.key, required this.parentProfileId});
-  final int parentProfileId;
-
+  const BlogScreen({super.key});
   @override
   State<BlogScreen> createState() => _BlogScreenState();
 }
@@ -481,8 +480,7 @@ Future<List<BlogCategory>> fetchCategories() async {
     throw Exception('Fetch blog category failed');
   }
 
-  final data = jsonDecode(res.body);
-  final List items = data['items'] ?? [];
+  final List items = ApiResponseHelper.extractList(res.body);
 
   return items
       .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
@@ -507,8 +505,7 @@ Future<List<BlogPostDto>> fetchPosts({int? categoryId}) async {
       throw Exception('Failed to load posts');
     }
 
-    final data = jsonDecode(res.body);
-    final List items = data['items'];
+    final List items = ApiResponseHelper.extractList(res.body);
 
     if (items.isEmpty) break;
 
@@ -620,7 +617,7 @@ Future<List<BlogPostDto>> fetchRecommended({int take = 5}) async {
     throw Exception('Failed to load recommendations');
   }
 
-  final List data = jsonDecode(res.body);
+  final List data = ApiResponseHelper.extractList(res.body);
 
   return data.map((e) => BlogPostDto.fromJson(e)).toList();
 }

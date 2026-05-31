@@ -5,6 +5,7 @@ import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class FeedingLog {
   final int id;
@@ -89,15 +90,14 @@ class FeedingLogApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/FeedingLog?BabyId=$babyId&page=$page&pageSize=$pageSize',
+        '/api/FeedingLog/my?BabyId=$babyId&page=$page&pageSize=$pageSize',
       );
 
       if (res.statusCode != 200) {
         throw Exception('Load failed');
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 

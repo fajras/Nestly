@@ -9,5 +9,6 @@ namespace Nestly.Services.Interfaces
         Task Delete(long id);
         Task<AppUserResultDto?> GetById(long id);
         Task<PagedResult<AppUserResultDto>> Get(AppUserSearchObject search);
+        Task<AppUserResultDto> CreateDoctor(CreateAppUserDto dto);
     }
 }

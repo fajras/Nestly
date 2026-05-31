@@ -15,5 +15,7 @@ namespace Nestly.Services.Interfaces
         List<FoodTypeDto> GetFoodTypesWithoutRecommendation();
         MealRecommendationDto UpdateRecommendation(long id, CreateMealRecommendationDto dto);
         void DeleteRecommendation(long id);
+        PagedResult<MealPlanResponseDto> GetMealPlansByParent(long parentProfileId, MealPlanSearchObject search);
+
     }
 }

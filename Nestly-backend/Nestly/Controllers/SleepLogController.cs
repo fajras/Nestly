@@ -11,42 +11,94 @@ namespace Nestly.WebAPI.Controllers
     public class SleepLogController : ControllerBase
     {
         private readonly ISleepLogService _service;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SleepLogController(ISleepLogService service)
+        public SleepLogController(ISleepLogService service, ICurrentUserService currentUserService)
         {
             _service = service;
+            _currentUserService = currentUserService;
         }
 
+        [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<SleepLogResponseDto>> Get([FromQuery] SleepLogSearchObject search)
-       => Ok(_service.Get(search));
+        public ActionResult<PagedResult<SleepLogResponseDto>> Get(
+    [FromQuery] SleepLogSearchObject search)
+        {
+            return Ok(_service.Get(search));
+        }
 
         [HttpGet("{id:long}")]
-        public ActionResult<SleepLogResponseDto> GetById(long id)
+        public async Task<ActionResult<SleepLogResponseDto>> GetById(
+     long id)
         {
+            await _currentUserService
+                .EnsureSleepLogOwnershipAsync(id);
+
             var entity = _service.GetById(id);
-            return entity == null ? NotFound() : Ok(entity);
+
+            return Ok(entity);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost]
-        public ActionResult<SleepLogResponseDto> Create([FromBody] CreateSleepLogDto request)
+        public async Task<ActionResult<SleepLogResponseDto>> Create(
+    [FromBody] CreateSleepLogDto request)
         {
+            await _currentUserService
+                .EnsureBabyOwnershipAsync(request.BabyId);
+
             var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = created.Id },
+                created);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPatch("{id:long}")]
-        public ActionResult<SleepLogResponseDto> Patch(long id, [FromBody] SleepLogPatchDto patch)
+        public async Task<ActionResult<SleepLogResponseDto>> Patch(
+       long id,
+       [FromBody] SleepLogPatchDto patch)
         {
+            await _currentUserService
+                .EnsureSleepLogOwnershipAsync(id);
+
             var updated = _service.Patch(id, patch);
-            return updated == null ? NotFound() : Ok(updated);
+
+            return Ok(updated);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(long id)
         {
+            await _currentUserService
+                .EnsureSleepLogOwnershipAsync(id);
+
             _service.Delete(id);
+
             return NoContent();
+        }
+        [Authorize(Roles = "Parent")]
+        [HttpGet("my")]
+        public async Task<ActionResult<PagedResult<SleepLogResponseDto>>> GetMy(
+    [FromQuery] SleepLogSearchObject search)
+        {
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            if (search.BabyId.HasValue)
+            {
+                await _currentUserService
+                    .EnsureBabyOwnershipAsync(
+                        search.BabyId.Value);
+            }
+
+            return Ok(
+                _service.GetByParent(
+                    parent.Id,
+                    search));
         }
     }
 }

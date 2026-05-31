@@ -1,5 +1,4 @@
-﻿using Azure;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -84,8 +83,7 @@ namespace Nestly.Services.Repository
 
             return MapToDto(post);
         }
-
-        public BlogPostResponseDto Create(CreateBlogPostDto dto, long authorId)
+        public BlogPostResponseDto Create(CreateBlogPostDto dto, long appUserId)
         {
             if (string.IsNullOrWhiteSpace(dto.Title))
             {
@@ -97,16 +95,19 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Content is required.");
             }
 
-            if (!_db.AppUsers.Any(u => u.Id == authorId))
+            var doctorProfile = _db.DoctorProfiles
+                .FirstOrDefault(d => d.UserId == appUserId);
+
+            if (doctorProfile == null)
             {
-                throw new NotFoundException("Author not found.");
+                throw new NotFoundException("Doctor profile not found.");
             }
 
             var post = new BlogPost
             {
                 Title = dto.Title.Trim(),
                 Content = dto.Content,
-                AuthorId = authorId,
+                AuthorId = doctorProfile.Id,
                 CreatedAt = DateTime.UtcNow,
                 Phase = (UserPhase)dto.Phase,
                 WeekFrom = dto.WeekFrom,
@@ -160,7 +161,15 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Blog post not found.");
             }
 
-            if (post.AuthorId != currentUserId)
+            var doctorProfile = _db.DoctorProfiles
+                .FirstOrDefault(d => d.UserId == currentUserId);
+
+            if (doctorProfile == null)
+            {
+                throw new NotFoundException("Doctor profile not found.");
+            }
+
+            if (post.AuthorId != doctorProfile.Id)
             {
                 throw new BusinessException("You can only edit your own blog posts.");
             }
@@ -181,6 +190,7 @@ namespace Nestly.Services.Repository
 
             return MapToDto(post);
         }
+
         public void Delete(long id, long currentUserId)
         {
             var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
@@ -190,7 +200,15 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Blog post not found.");
             }
 
-            if (post.AuthorId != currentUserId)
+            var doctorProfile = _db.DoctorProfiles
+                .FirstOrDefault(d => d.UserId == currentUserId);
+
+            if (doctorProfile == null)
+            {
+                throw new NotFoundException("Doctor profile not found.");
+            }
+
+            if (post.AuthorId != doctorProfile.Id)
             {
                 throw new BusinessException("You can only delete your own blog posts.");
             }

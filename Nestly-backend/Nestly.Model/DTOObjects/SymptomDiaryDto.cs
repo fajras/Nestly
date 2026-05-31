@@ -5,8 +5,6 @@ namespace Nestly.Model.DTOObjects
 {
     public class CreateSymptomDiaryDto
     {
-        [Range(1, long.MaxValue)]
-        public long ParentProfileId { get; set; }
         public DateTime? Date { get; set; }
         [Range(1, 5)]
         public int? Nausea { get; set; }
@@ -32,7 +30,6 @@ namespace Nestly.Model.DTOObjects
     public class SymptomDiaryResponseDto
     {
         public long Id { get; set; }
-        public long ParentProfileId { get; set; }
         public DateTime Date { get; set; }
         public int? Nausea { get; set; }
         public int? Fatigue { get; set; }

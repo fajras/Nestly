@@ -5,6 +5,7 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
 import 'package:flutter_application_nestly/providers/admin_pdf_service.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
@@ -35,8 +36,8 @@ class AdminDashboardService {
 
       final decoded = jsonDecode(res.body);
 
-      final items = decoded['items'] as List;
-      final totalCount = decoded['totalCount'] as int;
+      final items = ApiResponseHelper.extractList(res.body);
+      final totalCount = decoded['totalCount'] as int? ?? 0;
 
       all.addAll(items);
 
@@ -95,7 +96,7 @@ class AdminDashboardService {
   }
 
   Future<List> getQuestions(int userId) async {
-    return _fetchAllPages('/api/qaquestion/my?AskedById=$userId');
+    return _fetchAllPages('/api/qaquestion/user/$userId');
   }
 }
 

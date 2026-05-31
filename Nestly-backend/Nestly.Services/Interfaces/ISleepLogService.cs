@@ -9,5 +9,8 @@ namespace Nestly.Services.Interfaces
         SleepLogResponseDto Create(CreateSleepLogDto dto);
         SleepLogResponseDto Patch(long id, SleepLogPatchDto patch);
         void Delete(long id);
+        PagedResult<SleepLogResponseDto> GetByParent(
+            long parentProfileId,
+            SleepLogSearchObject search);
     }
 }

@@ -14,7 +14,6 @@ namespace Nestly.Model.DTOObjects
     {
         [Range(1, long.MaxValue)]
         public long BabyId { get; set; }
-        public long? UserId { get; set; }
         [Required]
         [MaxLength(200)]
         public string Title { get; set; } = default!;
@@ -25,7 +24,6 @@ namespace Nestly.Model.DTOObjects
     public class CalendarEventSearchObject
     {
         public long? BabyId { get; set; }
-        public long? UserId { get; set; }
         public DateTime? From { get; set; }
         public string? Title { get; set; }
 

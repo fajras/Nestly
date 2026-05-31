@@ -10,55 +10,69 @@ namespace Nestly.WebAPI.Controllers
     [Authorize]
     public class AppUserController : ControllerBase
     {
-        protected readonly IAppUserService appUserService;
+        private readonly IAppUserService _appUserService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AppUserController(IAppUserService service)
+        public AppUserController(
+            IAppUserService service,
+            ICurrentUserService currentUserService)
         {
-            appUserService = service;
+            _appUserService = service;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
+        [Authorize(Roles = "Doctor")]
         public async Task<ActionResult<PagedResult<AppUserResultDto>>> Get(
             [FromQuery] AppUserSearchObject search)
         {
-            var result = await appUserService.Get(search);
+            var result = await _appUserService.Get(search);
 
             return Ok(result);
         }
 
         [HttpGet("{id:long}", Name = "GetAppUserById")]
+        [Authorize(Roles = "Doctor")]
         public async Task<ActionResult<AppUserResultDto>> GetById(long id)
         {
-            var dto = await appUserService.GetById(id);
+            var dto = await _appUserService.GetById(id);
 
-            return dto is not null ? Ok(dto) : NotFound();
+            return dto is not null
+                ? Ok(dto)
+                : NotFound();
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> Create(
-            [FromBody] CreateAppUserDto request)
+        [HttpGet("me")]
+        public async Task<ActionResult<AppUserResultDto>> GetMe()
         {
-            var dto = await appUserService.Create(request);
+            var appUserId =
+                _currentUserService.GetCurrentAppUserId();
 
-            return CreatedAtRoute(
-                "GetAppUserById",
-                new { id = dto.Id },
-                dto);
+            var dto =
+                await _appUserService.GetById(appUserId);
+
+            return dto is not null
+                ? Ok(dto)
+                : NotFound();
         }
 
-        [HttpPatch("{id:long}")]
-        public async Task<ActionResult<AppUserResultDto>> Patch(
-            long id,
+        [HttpPatch("me")]
+        public async Task<ActionResult<AppUserResultDto>> PatchMe(
             [FromBody] AppUserPatchDto patch)
         {
             try
             {
-                var updated = await appUserService.Patch(id, patch);
+                var appUserId =
+                    _currentUserService.GetCurrentAppUserId();
 
-                return updated is null
-                    ? NotFound()
-                    : Ok(updated);
+                var updated =
+                    await _appUserService.Patch(
+                        appUserId,
+                        patch);
+
+                return updated is not null
+                    ? Ok(updated)
+                    : NotFound();
             }
             catch (ArgumentException ex)
             {
@@ -69,12 +83,39 @@ namespace Nestly.WebAPI.Controllers
             }
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Create(
+            [FromBody] CreateAppUserDto request)
+        {
+            var dto = await _appUserService.Create(request);
+
+            return CreatedAtRoute(
+                "GetAppUserById",
+                new { id = dto.Id },
+                dto);
+        }
+
         [HttpDelete("{id:long}")]
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> Delete(long id)
         {
-            await appUserService.Delete(id);
+            await _appUserService.Delete(id);
 
             return NoContent();
+        }
+
+        [HttpPost("doctor")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> CreateDoctor(
+            [FromBody] CreateAppUserDto request)
+        {
+            var dto = await _appUserService.CreateDoctor(request);
+
+            return CreatedAtRoute(
+                "GetAppUserById",
+                new { id = dto.Id },
+                dto);
         }
     }
 }

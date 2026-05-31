@@ -4,6 +4,7 @@ using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
 using Nestly.Services.Interfaces;
 
+
 namespace Nestly.Services.Repository
 {
     public class BabyGrowthService : IBabyGrowthService
@@ -171,6 +172,66 @@ namespace Nestly.Services.Repository
                 WeightKg = entity.WeightKg,
                 HeightCm = entity.HeightCm,
                 HeadCircumferenceCm = entity.HeadCircumferenceCm
+            };
+        }
+
+        public PagedResult<BabyGrowthResponseDto> GetByParent(
+    long parentProfileId,
+    BabyGrowthSearchObject search)
+        {
+            IQueryable<BabyGrowth> q =
+                _db.BabyGrowths
+                    .Where(x =>
+                        x.Baby.ParentProfileId ==
+                        parentProfileId);
+
+            if (search.BabyId is not null)
+            {
+                q = q.Where(x =>
+                    x.BabyId == search.BabyId);
+            }
+
+            if (search.WeekNumber is not null)
+            {
+                q = q.Where(x =>
+                    x.WeekNumber == search.WeekNumber);
+            }
+
+            if (search.WeekFrom is not null)
+            {
+                q = q.Where(x =>
+                    x.WeekNumber >= search.WeekFrom.Value);
+            }
+
+            if (search.WeekTo is not null)
+            {
+                q = q.Where(x =>
+                    x.WeekNumber <= search.WeekTo.Value);
+            }
+
+            var totalCount = q.Count();
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
+            var items = q
+                .OrderBy(x => x.WeekNumber)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(MapToDto)
+                .ToList();
+
+            return new PagedResult<BabyGrowthResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
             };
         }
     }

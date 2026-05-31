@@ -9,6 +9,7 @@ namespace Nestly.Services.Interfaces
         BabyGrowthResponseDto Create(CreateBabyGrowthDto request);
         BabyGrowthResponseDto Patch(long id, BabyGrowthPatchDto patch);
         void Delete(long id);
+        PagedResult<BabyGrowthResponseDto> GetByParent(long parentProfileId, BabyGrowthSearchObject search);
 
     }
 }

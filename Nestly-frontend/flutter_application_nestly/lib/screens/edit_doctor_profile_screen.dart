@@ -109,7 +109,7 @@ class _EditDoctorProfileScreenState extends State<EditDoctorProfileScreen> {
           _newPasswordCtrl.text.isNotEmpty &&
           _confirmPasswordCtrl.text.isNotEmpty) {
         final res = await ApiClient.post(
-          '/api/Auth/change-password/${widget.userId}',
+          '/api/Auth/change-password',
           body: {
             "oldPassword": _oldPasswordCtrl.text,
             "newPassword": _newPasswordCtrl.text,

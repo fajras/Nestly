@@ -5,7 +5,7 @@ using Nestly.Services.Interfaces;
 
 namespace Nestly.WebAPI.Controllers
 {
-    [ApiController]
+    [Authorize(Roles = "Doctor")]
     [Route("api/[controller]")]
     [Authorize]
     public class RoleController : ControllerBase

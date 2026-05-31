@@ -3,6 +3,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class WeeklyAdviceRow {
   final int id;
@@ -38,9 +39,7 @@ class WeeklyAdviceAdminService {
       throw Exception(error["message"] ?? "Greška pri učitavanju savjeta");
     }
 
-    final data = jsonDecode(res.body);
-
-    final List items = data['items'];
+    final List items = ApiResponseHelper.extractList(res.body);
 
     return items.map((e) => WeeklyAdviceRow.fromJson(e)).toList();
   }

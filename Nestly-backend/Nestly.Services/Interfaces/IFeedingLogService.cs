@@ -7,4 +7,5 @@ public interface IFeedingLogService
     FeedingLogResponseDto Create(CreateFeedingLogDto entity);
     FeedingLogResponseDto Patch(long id, FeedingLogPatchDto patch);
     void Delete(long id);
+    PagedResult<FeedingLogResponseDto> GetByParent(long parentProfileId, FeedingLogSearchObject search);
 }

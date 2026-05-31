@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class SleepLogEntry {
   final int id;
@@ -90,7 +91,7 @@ class SleepLogApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/SleepLog'
+        '/api/SleepLog/my'
         '?BabyId=$babyId'
         '&DateFrom=${from.toIso8601String()}'
         '&DateTo=${now.toIso8601String()}'
@@ -101,10 +102,7 @@ class SleepLogApiService {
         final error = jsonDecode(res.body);
         throw Exception(error["message"] ?? "Greška pri učitavanju spavanja");
       }
-
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
-
+      final List items = ApiResponseHelper.extractList(res.body);
       if (items.isEmpty) break;
 
       final parsed = items

@@ -7,4 +7,5 @@ public interface IMilestoneService
     MilestoneResponseDto Create(CreateMilestoneDto entity);
     MilestoneResponseDto Patch(long id, MilestonePatchDto patch);
     void Delete(long id);
+    PagedResult<MilestoneResponseDto> GetByParent(long parentProfileId, MilestoneSearchObject search);
 }

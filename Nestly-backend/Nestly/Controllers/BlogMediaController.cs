@@ -1,22 +1,25 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Services.Data;
+using Nestly.Services.Interfaces;
 using Nestly.Services.Repository;
 
 [ApiController]
 [Route("api/blogmedia")]
-[Authorize(Roles = "Doctor,Admin")]
+[Authorize(Roles = "Doctor")]
 public class BlogMediaController : ControllerBase
 {
     private readonly AzureBlobService _blob;
     private readonly NestlyDbContext _db;
+    private readonly ICurrentUserService _currentUserService;
 
     public BlogMediaController(
         AzureBlobService blob,
-        NestlyDbContext db)
+        NestlyDbContext db, ICurrentUserService currentUserService)
     {
         _blob = blob;
         _db = db;
+        _currentUserService = currentUserService;
     }
 
     [HttpPost("upload/{blogId:long}")]
@@ -44,14 +47,9 @@ public class BlogMediaController : ControllerBase
             return BadRequest("Maximum allowed file size is 5 MB.");
         }
 
-        if (!IsAllowedContentType(file.ContentType))
-        {
-            return BadRequest("Only JPG and PNG images are allowed.");
-        }
-
         if (!await HasValidImageSignature(file))
         {
-            return BadRequest("Invalid image file.");
+            return BadRequest("Only valid JPG and PNG images are allowed.");
         }
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -100,25 +98,16 @@ public class BlogMediaController : ControllerBase
 
     private bool CanModifyPost(long? authorId)
     {
-        if (User.IsInRole("Admin"))
+        if (User.IsInRole("Doctor"))
         {
             return true;
         }
 
-        var userIdClaim = User.FindFirst("userId")?.Value;
-
-        if (!long.TryParse(userIdClaim, out var currentUserId))
-        {
-            return false;
-        }
+        var currentUserId =
+            _currentUserService
+                .GetCurrentAppUserId();
 
         return authorId == currentUserId;
-    }
-
-    private static bool IsAllowedContentType(string contentType)
-    {
-        return contentType == "image/jpeg" ||
-               contentType == "image/png";
     }
 
     private static async Task<bool> HasValidImageSignature(IFormFile file)

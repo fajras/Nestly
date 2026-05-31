@@ -4,6 +4,7 @@ import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class QaQuestionRow {
   final int id;
@@ -47,8 +48,7 @@ class QaAdminService {
         throw Exception(error["message"] ?? "Greška pri učitavanju pitanja");
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 

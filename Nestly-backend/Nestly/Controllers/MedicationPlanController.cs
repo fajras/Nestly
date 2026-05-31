@@ -11,63 +11,139 @@ namespace Nestly.WebAPI.Controllers
     public class MedicationPlanController : ControllerBase
     {
         private readonly IMedicationPlanService _service;
-        public MedicationPlanController(IMedicationPlanService service) => _service = service;
+        private readonly ICurrentUserService _currentUserService;
 
+        public MedicationPlanController(
+            IMedicationPlanService service,
+            ICurrentUserService currentUserService)
+        {
+            _service = service;
+            _currentUserService = currentUserService;
+        }
+
+        [Authorize(Roles = "Doctor")]
         [HttpGet]
         public ActionResult<PagedResult<MedicationPlanResponseDto>> Get(
-      [FromQuery] MedicationPlanSearchObject search)
-      => Ok(_service.Get(search));
+            [FromQuery] MedicationPlanSearchObject search)
+        {
+            return Ok(_service.Get(search));
+        }
 
         [HttpGet("{id:long}")]
-        public ActionResult<MedicationPlanResponseDto> GetById(long id)
+        public async Task<ActionResult<MedicationPlanResponseDto>> GetById(
+            long id)
         {
+            await _currentUserService
+                .EnsureMedicationPlanOwnershipAsync(id);
+
             var dto = _service.GetById(id);
-            return dto is null ? NotFound() : Ok(dto);
+
+            return Ok(dto);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost]
-        public ActionResult<MedicationPlanResponseDto> Create(
+        public async Task<ActionResult<MedicationPlanResponseDto>> Create(
             [FromBody] CreateMedicationPlanDto request)
         {
-            var created = _service.Create(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            var created = _service.Create(
+                parent.Id,
+                request);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = created.Id },
+                created);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPatch("{id:long}")]
-        public ActionResult<MedicationPlanResponseDto> Patch(
+        public async Task<ActionResult<MedicationPlanResponseDto>> Patch(
             long id,
             [FromBody] MedicationPlanPatchDto patch)
         {
+            await _currentUserService
+                .EnsureMedicationPlanOwnershipAsync(id);
+
             try
             {
                 var updated = _service.Patch(id, patch);
-                return updated is null ? NotFound() : Ok(updated);
+
+                return Ok(updated);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(long id)
         {
+            await _currentUserService
+                .EnsureMedicationPlanOwnershipAsync(id);
+
             _service.Delete(id);
+
             return NoContent();
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost("mark-taken")]
-        public IActionResult MarkTaken([FromBody] MarkMedicationTakenDto dto)
+        public async Task<IActionResult> MarkTaken(
+            [FromBody] MarkMedicationTakenDto dto)
         {
+            await _currentUserService
+                .EnsureMedicationIntakeOwnershipAsync(
+                    dto.IntakeLogId);
+
             _service.MarkAsTaken(dto.IntakeLogId);
+
             return NoContent();
         }
+
+        [Authorize(Roles = "Doctor")]
         [HttpGet("day")]
         public ActionResult<PagedResult<MedicationIntakeLogDto>> GetForDay(
-         [FromQuery] MedicationIntakeLogSearchObject search)
+            [FromQuery] MedicationIntakeLogSearchObject search)
         {
-            return Ok(_service.GetLogsForDay(search));
+            return Ok(
+                _service.GetLogsForDay(search));
         }
 
+        [Authorize(Roles = "Parent")]
+        [HttpGet("my-day")]
+        public async Task<ActionResult<PagedResult<MedicationIntakeLogDto>>> GetMyDay(
+            [FromQuery] MedicationIntakeLogSearchObject search)
+        {
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            return Ok(
+                _service.GetLogsForDayByParent(
+                    parent.Id,
+                    search));
+        }
+
+        [Authorize(Roles = "Parent")]
+        [HttpGet("my")]
+        public async Task<ActionResult<PagedResult<MedicationPlanResponseDto>>> GetMy(
+            [FromQuery] MedicationPlanSearchObject search)
+        {
+            var parent = await _currentUserService
+                .GetCurrentParentProfileAsync();
+
+            return Ok(
+                _service.GetByParent(
+                    parent.Id,
+                    search));
+        }
     }
 }

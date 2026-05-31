@@ -57,9 +57,26 @@ namespace Nestly.Services.Repository
         {
             return _context.ChatConversations
                 .Include(c => c.Messages)
+
                 .Include(c => c.User1)
+                    .ThenInclude(u => u.ParentProfile)
+                        .ThenInclude(p => p.Babies)
+
+                .Include(c => c.User1)
+                    .ThenInclude(u => u.ParentProfile)
+                        .ThenInclude(p => p.Pregnancies)
+
                 .Include(c => c.User2)
-                .Where(c => c.User1Id == userId || c.User2Id == userId)
+                    .ThenInclude(u => u.ParentProfile)
+                        .ThenInclude(p => p.Babies)
+
+                .Include(c => c.User2)
+                    .ThenInclude(u => u.ParentProfile)
+                        .ThenInclude(p => p.Pregnancies)
+
+                .Where(c =>
+                    c.User1Id == userId ||
+                    c.User2Id == userId)
                 .ToList();
         }
 

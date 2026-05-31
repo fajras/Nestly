@@ -11,18 +11,31 @@ namespace Nestly.WebAPI.Controllers
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ChatController(IChatService chatService)
+        public ChatController(
+            IChatService chatService,
+            ICurrentUserService currentUserService)
         {
             _chatService = chatService;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
+        public async Task<IActionResult> SendMessage(
+            [FromBody] SendMessageRequest request)
         {
-            var userId = long.Parse(User.FindFirst("userId")!.Value);
+            var userId =
+                _currentUserService
+                    .GetCurrentAppUserId();
 
-            await _chatService.SendMessage(userId, request);
+            await _currentUserService
+                .EnsureCanChatWithUserAsync(
+                    request.ReceiverUserId);
+
+            await _chatService.SendMessage(
+                userId,
+                request);
 
             return Ok();
         }
@@ -30,15 +43,46 @@ namespace Nestly.WebAPI.Controllers
         [HttpGet("conversations")]
         public async Task<IActionResult> GetConversations()
         {
-            var userId = long.Parse(User.FindFirst("userId")!.Value);
-            return Ok(await _chatService.GetUserChats(userId));
+            var userId =
+                _currentUserService
+                    .GetCurrentAppUserId();
+
+            return Ok(
+                await _chatService
+                    .GetUserChats(userId));
         }
 
         [HttpGet("messages/{conversationId}")]
-        public async Task<IActionResult> GetMessages(long conversationId)
+        public async Task<IActionResult> GetMessages(
+            long conversationId)
         {
-            var userId = long.Parse(User.FindFirst("userId")!.Value);
-            return Ok(await _chatService.GetMessages(conversationId, userId));
+            var userId =
+                _currentUserService
+                    .GetCurrentAppUserId();
+
+            await _currentUserService
+                .EnsureConversationOwnershipAsync(
+                    conversationId);
+
+            return Ok(
+                await _chatService
+                    .GetMessages(
+                        conversationId,
+                        userId));
+        }
+
+        [HttpGet("available-users")]
+        public async Task<IActionResult> GetAvailableUsers()
+        {
+            var currentUserId =
+                _currentUserService
+                    .GetCurrentAppUserId();
+
+            var result =
+                await _chatService
+                    .GetAvailableUsers(currentUserId);
+
+            return Ok(result);
         }
     }
 }

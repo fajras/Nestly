@@ -47,6 +47,8 @@ builder.Services.AddScoped<IPregnancyService, PregnancyService>();
 builder.Services.AddScoped<ISleepLogService, SleepLogService>();
 builder.Services.AddScoped<IWeeklyAdviceService, WeeklyAdviceService>();
 builder.Services.AddScoped<IQaQuestionService, QaQuestionService>();
+builder.Services.AddScoped<INotificationNotifier, SignalRNotificationNotifier>();
+builder.Services.AddScoped<IChatNotifier, SignalRChatNotifier>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ISymptomDiaryService, SymptomDiaryService>();
 builder.Services.AddScoped<IChatService, ChatService>();

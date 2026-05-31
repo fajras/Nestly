@@ -7,6 +7,7 @@ import 'package:flutter_application_nestly/network/api_client.dart'
     show ApiClient;
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class BabyGrowthEntry {
   final int id;
@@ -95,7 +96,7 @@ class BabyGrowthApiService {
 
     while (hasMore) {
       final resp = await ApiClient.get(
-        '$_basePath?BabyId=$babyId&Page=$page&PageSize=100',
+        '$_basePath/my?BabyId=$babyId&Page=$page&PageSize=100',
       );
 
       if (resp.statusCode != 200) {
@@ -104,8 +105,8 @@ class BabyGrowthApiService {
 
       final decoded = jsonDecode(resp.body);
 
-      final List<dynamic> items = decoded['items'];
-      final totalCount = decoded['totalCount'];
+      final List<dynamic> items = ApiResponseHelper.extractList(resp.body);
+      final totalCount = decoded['totalCount'] ?? 0;
 
       final list = items.map((e) => BabyGrowthEntry.fromJson(e)).toList();
 

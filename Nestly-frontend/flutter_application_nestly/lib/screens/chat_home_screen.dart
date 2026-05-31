@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'chat_screen.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 
@@ -82,37 +85,32 @@ class ChatHomeApiService {
       throw Exception('Failed to load conversations');
     }
 
-    final List data = jsonDecode(res.body);
+    final List data = ApiResponseHelper.extractList(res.body);
     return data.map((e) => ChatConversation.fromJson(e)).toList();
   }
 
   Future<List<AppUserFull>> getAllUsers() async {
-    final res = await ApiClient.get('/AppUser?RoleId=1&Page=1&PageSize=100');
+    final res = await ApiClient.get('/api/chat/available-users');
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load users');
     }
 
-    final decoded = jsonDecode(res.body);
-
-    final List data = decoded is List ? decoded : (decoded['items'] ?? []);
+    final List data = ApiResponseHelper.extractList(res.body);
 
     return data.map((e) => AppUserFull.fromJson(e)).toList();
   }
 }
 
 class ChatHomeScreen extends StatefulWidget {
-  final int currentUserId;
-
-  const ChatHomeScreen({super.key, required this.currentUserId});
-
+  const ChatHomeScreen({super.key});
   @override
   State<ChatHomeScreen> createState() => _ChatHomeScreenState();
 }
 
 class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final _api = ChatHomeApiService();
-
+  int? _currentUserId;
   bool _loading = true;
   String _search = '';
 
@@ -122,7 +120,20 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _load();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final token = await AuthStorage.getToken();
+
+    if (token == null) return;
+
+    final claims = JwtDecoder.decode(token);
+
+    setState(() {
+      _currentUserId = int.tryParse(claims["userId"].toString())!;
+    });
   }
 
   Future<void> _load() async {
@@ -241,7 +252,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   List<Widget> _buildUserList() {
     final filtered = _users.where((u) {
       final name = '${u.firstName} ${u.lastName}'.toLowerCase();
-      return name.contains(_search) && u.id != widget.currentUserId;
+      return name.contains(_search) && u.id != _currentUserId;
     }).toList();
 
     if (filtered.isEmpty) {
@@ -322,7 +333,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => ChatScreen(
-          currentUserId: widget.currentUserId,
+          currentUserId: _currentUserId ?? 0,
           otherUserId: otherUserId,
           conversationId: conversationId,
           otherUserName: name,

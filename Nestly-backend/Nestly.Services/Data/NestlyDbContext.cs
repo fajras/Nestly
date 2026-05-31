@@ -15,7 +15,6 @@ namespace Nestly.Services.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<BabyProfile> BabyProfiles { get; set; }
         public DbSet<BabyGrowth> BabyGrowths { get; set; }
-
         public DbSet<BlogCategory> BlogCategories { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogPostCategory> BlogPostCategories { get; set; }

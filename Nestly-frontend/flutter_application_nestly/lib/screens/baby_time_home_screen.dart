@@ -22,14 +22,12 @@ import 'package:flutter_application_nestly/screens/sleep_log_screen.dart';
 class BabyTimeHomeScreen extends StatefulWidget {
   final String babyName;
   final int babyId;
-  final int parentProfileId;
   final String gender;
 
   const BabyTimeHomeScreen({
     super.key,
     required this.babyName,
     required this.babyId,
-    required this.parentProfileId,
     required this.gender,
   });
 
@@ -64,12 +62,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
     try {
       final token = await AuthStorage.getToken();
       if (token == null) return;
-
-      final decoded = JwtDecoder.decode(token);
-      final userId = decoded["userId"];
-
       await _signalRService.connect(
-        userId.toString(),
         token,
         onNotification: () async {
           await notificationState.loadUnreadCount();
@@ -227,7 +220,6 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   HealthTrackingScreen(
                     babyId: widget.babyId,
                     babyName: _babyName ?? widget.babyName,
-                    userId: widget.parentProfileId,
                   ),
                 ),
               ),
@@ -272,10 +264,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                 AppColors.roseDark,
                 Icons.chat_bubble_outline_rounded,
                 'Chat',
-                () => _push(
-                  context,
-                  ChatHomeScreen(currentUserId: widget.parentProfileId),
-                ),
+                () => _push(context, ChatHomeScreen()),
               ),
 
               _menu(
@@ -287,7 +276,6 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   CalendarEventScreen(
                     babyId: widget.babyId,
                     babyName: _babyName ?? widget.babyName,
-                    userId: widget.parentProfileId,
                   ),
                 ),
               ),

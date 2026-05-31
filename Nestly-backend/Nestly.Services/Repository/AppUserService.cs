@@ -32,7 +32,7 @@ namespace Nestly.Services.Repository
 
             if (!string.IsNullOrWhiteSpace(search.Email))
             {
-                q = q.Where(x => x.Email == search.Email);
+                q = q.Where(x => x.Email.Contains(search.Email));
             }
 
             if (!string.IsNullOrWhiteSpace(search.FirstName))
@@ -133,7 +133,15 @@ namespace Nestly.Services.Repository
                 TotalCount = totalCount
             };
         }
+        public async Task<AppUserResultDto> Create(CreateAppUserDto dto)
+        {
+            return await CreateInternal(dto, "Parent");
+        }
 
+        public async Task<AppUserResultDto> CreateDoctor(CreateAppUserDto dto)
+        {
+            return await CreateInternal(dto, "Doctor");
+        }
         public async Task<AppUserResultDto?> GetById(long id)
         {
             var nowUtc = DateTime.UtcNow;
@@ -235,7 +243,9 @@ namespace Nestly.Services.Repository
             return (lmp, due);
         }
 
-        public async Task<AppUserResultDto> Create(CreateAppUserDto dto)
+        private async Task<AppUserResultDto> CreateInternal(
+    CreateAppUserDto dto,
+    string roleName)
         {
             if (dto == null)
             {
@@ -281,10 +291,19 @@ namespace Nestly.Services.Repository
             {
                 throw new BusinessException("Email already exists.");
             }
+            var existingUsername =
+    await _userManager.FindByNameAsync(
+        dto.Username.Trim());
+
+            if (existingUsername != null)
+            {
+                throw new BusinessException(
+                    "Username already exists.");
+            }
 
             var role = await _db.Roles
-                .FirstOrDefaultAsync(r => r.Id == dto.RoleId)
-                ?? throw new BusinessException("Role not found.");
+    .FirstOrDefaultAsync(r => r.Name == roleName)
+    ?? throw new BusinessException($"{roleName} role not found.");
 
             var roleExists =
                 await _roleManager.RoleExistsAsync(role.Name!);
@@ -356,7 +375,7 @@ namespace Nestly.Services.Repository
 
                 await _db.SaveChangesAsync();
 
-                if (role.Id == 1)
+                if (role.Name == "Parent")
                 {
                     var parentProfile = new ParentProfile
                     {
@@ -390,7 +409,7 @@ namespace Nestly.Services.Repository
                     }
                 }
 
-                if (role.Id == 2)
+                if (role.Name == "Doctor")
                 {
                     var doctorProfile = new DoctorProfile
                     {
@@ -412,7 +431,7 @@ namespace Nestly.Services.Repository
                     LastName = user.LastName,
                     RoleId = user.RoleId,
                     IdentityUserId = user.IdentityUserId,
-                    ParentStatus = role.Id == 1
+                    ParentStatus = role.Name == "Parent"
                         ? "PARENT"
                         : "UNKNOWN",
                     BabyAgeMonths = null,

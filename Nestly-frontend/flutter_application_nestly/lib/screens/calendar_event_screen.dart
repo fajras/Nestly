@@ -5,11 +5,11 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
     show NestlyToast;
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class CalendarEventEntry {
   final int id;
   final int babyId;
-  final int? userId;
   final String title;
   final String? description;
   final DateTime startAt;
@@ -18,7 +18,6 @@ class CalendarEventEntry {
   const CalendarEventEntry({
     required this.id,
     required this.babyId,
-    this.userId,
     required this.title,
     this.description,
     required this.startAt,
@@ -29,7 +28,6 @@ class CalendarEventEntry {
     return CalendarEventEntry(
       id: json['id'] as int,
       babyId: json['babyId'] as int,
-      userId: json['userId'] as int?,
       title: json['title'] as String,
       description: json['description'] as String?,
       startAt: DateTime.parse(json['startAt'] as String),
@@ -40,7 +38,6 @@ class CalendarEventEntry {
 
 class CreateCalendarEventRequest {
   final int babyId;
-  final int? userId;
   final String title;
   final String? description;
   final DateTime startAt;
@@ -48,7 +45,6 @@ class CreateCalendarEventRequest {
 
   const CreateCalendarEventRequest({
     required this.babyId,
-    this.userId,
     required this.title,
     this.description,
     required this.startAt,
@@ -57,7 +53,6 @@ class CreateCalendarEventRequest {
 
   Map<String, dynamic> toJson() => {
     'babyId': babyId,
-    'userId': userId,
     'title': title,
     'description': description,
     'startAt': startAt.toIso8601String(),
@@ -78,7 +73,7 @@ class CalendarEventApiService {
 
     while (true) {
       final resp = await ApiClient.get(
-        '/api/CalendarEvent'
+        '/api/CalendarEvent/my'
         '?BabyId=$babyId'
         '&From=${from.toIso8601String()}'
         '&To=${to.toIso8601String()}'
@@ -89,8 +84,7 @@ class CalendarEventApiService {
         throw Exception('Failed to fetch calendar events');
       }
 
-      final data = jsonDecode(resp.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(resp.body);
 
       if (items.isEmpty) break;
 
@@ -158,13 +152,11 @@ class CalendarEventApiService {
 class CalendarEventScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
-  final int? userId;
 
   const CalendarEventScreen({
     super.key,
     required this.babyId,
     required this.babyName,
-    this.userId,
   });
 
   @override
@@ -275,7 +267,6 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         await _service.create(
           request: CreateCalendarEventRequest(
             babyId: widget.babyId,
-            userId: widget.userId,
             title: _titleCtrl.text.trim(),
             description: _descriptionCtrl.text.trim().isEmpty
                 ? null

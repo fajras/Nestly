@@ -39,6 +39,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         public ActionResult<FetalDevelopmentWeekResponseDto> Create([FromBody] CreateFetalDevelopmentWeekDto request)
         {
             var created = _service.Create(request);
@@ -46,6 +47,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPatch("{id:int}")]
+        [Authorize(Roles = "Doctor")]
         public ActionResult<FetalDevelopmentWeekResponseDto> Patch(int id, [FromBody] FetalDevelopmentWeekPatchDto patch)
         {
             var updated = _service.Patch(id, patch);
@@ -53,6 +55,7 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Doctor")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);

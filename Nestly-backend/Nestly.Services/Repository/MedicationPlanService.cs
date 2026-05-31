@@ -24,10 +24,13 @@ namespace Nestly.Services.Repository
             Dose = m.Dose,
             StartDate = m.StartDate,
             EndDate = m.EndDate,
-            IntakeTimes = m.Times.Select(t => t.IntakeTime).ToList()
+            IntakeTimes = m.Times
+                .Select(t => t.IntakeTime)
+                .ToList()
         };
 
-        public PagedResult<MedicationPlanResponseDto> Get(MedicationPlanSearchObject search)
+        public PagedResult<MedicationPlanResponseDto> Get(
+            MedicationPlanSearchObject search)
         {
             var q = _db.MedicationPlans
                 .Include(x => x.Times)
@@ -36,43 +39,140 @@ namespace Nestly.Services.Repository
 
             if (search.ParentProfileId is not null)
             {
-                q = q.Where(x => x.ParentProfileId == search.ParentProfileId);
+                q = q.Where(x =>
+                    x.ParentProfileId ==
+                    search.ParentProfileId);
             }
 
-            if (!string.IsNullOrWhiteSpace(search.MedicineNameContains))
+            if (!string.IsNullOrWhiteSpace(
+                search.MedicineNameContains))
             {
-                var medicineName = search.MedicineNameContains.Trim();
-                q = q.Where(x => x.MedicineName.Contains(medicineName));
+                var medicineName =
+                    search.MedicineNameContains.Trim();
+
+                q = q.Where(x =>
+                    x.MedicineName.Contains(
+                        medicineName));
             }
 
             if (search.StartDateFrom is not null)
             {
-                q = q.Where(x => x.StartDate >= search.StartDateFrom.Value);
+                q = q.Where(x =>
+                    x.StartDate >=
+                    search.StartDateFrom.Value);
             }
 
             if (search.StartDateTo is not null)
             {
-                q = q.Where(x => x.StartDate <= search.StartDateTo.Value);
+                q = q.Where(x =>
+                    x.StartDate <=
+                    search.StartDateTo.Value);
             }
 
             if (search.EndDateFrom is not null)
             {
-                q = q.Where(x => x.EndDate >= search.EndDateFrom.Value);
+                q = q.Where(x =>
+                    x.EndDate >=
+                    search.EndDateFrom.Value);
             }
 
             if (search.EndDateTo is not null)
             {
-                q = q.Where(x => x.EndDate <= search.EndDateTo.Value);
+                q = q.Where(x =>
+                    x.EndDate <=
+                    search.EndDateTo.Value);
             }
 
             var totalCount = q.Count();
-            int page = search.Page < 1 ? 1 : search.Page;
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
 
             int pageSize = search.PageSize < 1
                 ? 10
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
+
+            var items = q
+                .OrderByDescending(x => x.StartDate)
+                .ThenByDescending(x => x.EndDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(ToDto)
+                .ToList();
+
+            return new PagedResult<MedicationPlanResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
+
+        public PagedResult<MedicationPlanResponseDto> GetByParent(
+            long parentProfileId,
+            MedicationPlanSearchObject search)
+        {
+            var q = _db.MedicationPlans
+                .Include(x => x.Times)
+                .AsNoTracking()
+                .Where(x =>
+                    x.ParentProfileId ==
+                    parentProfileId)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(
+                search.MedicineNameContains))
+            {
+                var medicineName =
+                    search.MedicineNameContains.Trim();
+
+                q = q.Where(x =>
+                    x.MedicineName.Contains(
+                        medicineName));
+            }
+
+            if (search.StartDateFrom is not null)
+            {
+                q = q.Where(x =>
+                    x.StartDate >=
+                    search.StartDateFrom.Value);
+            }
+
+            if (search.StartDateTo is not null)
+            {
+                q = q.Where(x =>
+                    x.StartDate <=
+                    search.StartDateTo.Value);
+            }
+
+            if (search.EndDateFrom is not null)
+            {
+                q = q.Where(x =>
+                    x.EndDate >=
+                    search.EndDateFrom.Value);
+            }
+
+            if (search.EndDateTo is not null)
+            {
+                q = q.Where(x =>
+                    x.EndDate <=
+                    search.EndDateTo.Value);
+            }
+
+            var totalCount = q.Count();
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
             var items = q
                 .OrderByDescending(x => x.StartDate)
                 .ThenByDescending(x => x.EndDate)
@@ -96,42 +196,53 @@ namespace Nestly.Services.Repository
 
             if (m == null)
             {
-                throw new NotFoundException("Medication plan not found.");
+                throw new NotFoundException(
+                    "Medication plan not found.");
             }
 
             return ToDto(m);
         }
 
-        public MedicationPlanResponseDto Create(CreateMedicationPlanDto dto)
+        public MedicationPlanResponseDto Create(
+            long parentProfileId,
+            CreateMedicationPlanDto dto)
         {
-            if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
+            if (!_db.ParentProfiles.Any(
+                p => p.Id == parentProfileId))
             {
-                throw new NotFoundException("Parent profile not found.");
+                throw new NotFoundException(
+                    "Parent profile not found.");
             }
 
             if (dto.StartDate > dto.EndDate)
             {
-                throw new BusinessException("Start date cannot be after end date.");
+                throw new BusinessException(
+                    "Start date cannot be after end date.");
             }
 
             if (!dto.IntakeTimes.Any())
             {
-                throw new BusinessException("At least one intake time is required.");
+                throw new BusinessException(
+                    "At least one intake time is required.");
             }
 
-            if (string.IsNullOrWhiteSpace(dto.MedicineName))
+            if (string.IsNullOrWhiteSpace(
+                dto.MedicineName))
             {
-                throw new BusinessException("Medicine name is required.");
+                throw new BusinessException(
+                    "Medicine name is required.");
             }
 
-            if (string.IsNullOrWhiteSpace(dto.Dose))
+            if (string.IsNullOrWhiteSpace(
+                dto.Dose))
             {
-                throw new BusinessException("Dose is required.");
+                throw new BusinessException(
+                    "Dose is required.");
             }
 
             var entity = new MedicationPlan
             {
-                ParentProfileId = dto.ParentProfileId,
+                ParentProfileId = parentProfileId,
                 MedicineName = dto.MedicineName.Trim(),
                 Dose = dto.Dose.Trim(),
                 StartDate = dto.StartDate,
@@ -140,13 +251,15 @@ namespace Nestly.Services.Repository
 
             foreach (var time in dto.IntakeTimes)
             {
-                entity.Times.Add(new MedicationScheduleTime
-                {
-                    IntakeTime = time
-                });
+                entity.Times.Add(
+                    new MedicationScheduleTime
+                    {
+                        IntakeTime = time
+                    });
             }
 
             _db.MedicationPlans.Add(entity);
+
             _db.SaveChanges();
 
             GenerateIntakeLogs(entity);
@@ -156,74 +269,112 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        private void GenerateIntakeLogs(MedicationPlan plan)
+        private void GenerateIntakeLogs(
+            MedicationPlan plan)
         {
-            var currentDate = plan.StartDate.Date;
+            var currentDate =
+                plan.StartDate.Date;
 
-            while (currentDate <= plan.EndDate.Date)
+            while (
+                currentDate <=
+                plan.EndDate.Date)
             {
                 foreach (var time in plan.Times)
                 {
-                    _db.MedicationIntakeLogs.Add(new MedicationIntakeLog
-                    {
-                        PlanId = plan.Id,
-                        ScheduledDate = currentDate,
-                        IntakeTime = time.IntakeTime,
-                        Taken = false
-                    });
+                    _db.MedicationIntakeLogs.Add(
+                        new MedicationIntakeLog
+                        {
+                            PlanId = plan.Id,
+                            ScheduledDate = currentDate,
+                            IntakeTime = time.IntakeTime,
+                            Taken = false
+                        });
                 }
 
-                currentDate = currentDate.AddDays(1);
+                currentDate =
+                    currentDate.AddDays(1);
             }
         }
 
-        public void MarkAsTaken(long intakeLogId)
+        public void MarkAsTaken(
+            long intakeLogId)
         {
-            var log = _db.MedicationIntakeLogs.FirstOrDefault(x => x.Id == intakeLogId);
+            var log = _db.MedicationIntakeLogs
+                .FirstOrDefault(x =>
+                    x.Id == intakeLogId);
+
             if (log == null)
             {
-                throw new NotFoundException("Medication log not found.");
+                throw new NotFoundException(
+                    "Medication log not found.");
             }
 
             log.Taken = true;
+
             log.TakenAt = DateTime.UtcNow;
 
             _db.SaveChanges();
         }
 
-        public MedicationPlanResponseDto? Patch(long id, MedicationPlanPatchDto patch)
+        public MedicationPlanResponseDto? Patch(
+     long id,
+     MedicationPlanPatchDto patch)
         {
             var m = _db.MedicationPlans
                 .Include(x => x.Times)
+                .Include(x => x.IntakeLogs)
                 .FirstOrDefault(x => x.Id == id);
 
             if (m == null)
             {
-                throw new NotFoundException("Medication plan not found.");
+                throw new NotFoundException(
+                    "Medication plan not found.");
             }
 
-            if (patch.StartDate.HasValue &&
-                patch.StartDate.Value.Date != m.StartDate.Date)
+            if (!string.IsNullOrWhiteSpace(
+                patch.MedicineName))
             {
-                throw new BusinessException(
-                    "Changing therapy start date is not allowed after creation.");
+                m.MedicineName =
+                    patch.MedicineName.Trim();
             }
 
-            if (patch.EndDate.HasValue &&
-                patch.EndDate.Value.Date != m.EndDate.Date)
+            if (!string.IsNullOrWhiteSpace(
+                patch.Dose))
             {
-                throw new BusinessException(
-                    "Changing therapy end date is not allowed after creation.");
+                m.Dose =
+                    patch.Dose.Trim();
             }
 
-            if (!string.IsNullOrWhiteSpace(patch.MedicineName))
+            if (patch.IntakeTimes != null &&
+                patch.IntakeTimes.Any())
             {
-                m.MedicineName = patch.MedicineName.Trim();
-            }
+                var now = DateTime.UtcNow;
 
-            if (!string.IsNullOrWhiteSpace(patch.Dose))
-            {
-                m.Dose = patch.Dose.Trim();
+                var futureLogs = _db.MedicationIntakeLogs
+                    .Where(x =>
+                        x.PlanId == m.Id &&
+                        !x.Taken &&
+                        x.ScheduledDate >= now.Date)
+                    .ToList();
+
+                _db.MedicationIntakeLogs
+                    .RemoveRange(futureLogs);
+
+                _db.MedicationScheduleTimes
+                    .RemoveRange(m.Times);
+
+                m.Times.Clear();
+
+                foreach (var time in patch.IntakeTimes)
+                {
+                    m.Times.Add(
+                        new MedicationScheduleTime
+                        {
+                            IntakeTime = time
+                        });
+                }
+
+                GenerateFutureIntakeLogs(m, now.Date);
             }
 
             _db.SaveChanges();
@@ -233,18 +384,30 @@ namespace Nestly.Services.Repository
 
         public void Delete(long id)
         {
-            var m = _db.MedicationPlans.FirstOrDefault(x => x.Id == id);
+            var m = _db.MedicationPlans
+                .FirstOrDefault(x => x.Id == id);
 
             if (m == null)
             {
-                throw new NotFoundException("Medication plan not found.");
+                throw new NotFoundException(
+                    "Medication plan not found.");
             }
+            var logs = _db.MedicationIntakeLogs
+    .Where(x => x.PlanId == id);
 
+            _db.MedicationIntakeLogs.RemoveRange(logs);
+
+            var times = _db.MedicationScheduleTimes
+                .Where(x => x.PlanId == id);
+
+            _db.MedicationScheduleTimes.RemoveRange(times);
             _db.MedicationPlans.Remove(m);
+
             _db.SaveChanges();
         }
 
-        public PagedResult<MedicationIntakeLogDto> GetLogsForDay(MedicationIntakeLogSearchObject search)
+        public PagedResult<MedicationIntakeLogDto> GetLogsForDay(
+            MedicationIntakeLogSearchObject search)
         {
             var day = search.Date.Date;
 
@@ -252,31 +415,38 @@ namespace Nestly.Services.Repository
                 .Include(x => x.Plan)
                 .AsNoTracking()
                 .Where(x =>
-                    x.Plan.ParentProfileId == search.ParentProfileId &&
                     x.ScheduledDate == day);
 
             var totalCount = q.Count();
-            int page = search.Page < 1 ? 1 : search.Page;
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
 
             int pageSize = search.PageSize < 1
                 ? 10
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
+
             var items = q
                 .OrderBy(x => x.IntakeTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => new MedicationIntakeLogDto
-                {
-                    IntakeLogId = x.Id,
-                    PlanId = x.PlanId,
-                    MedicineName = x.Plan.MedicineName,
-                    Dose = x.Plan.Dose,
-                    ScheduledDate = x.ScheduledDate,
-                    IntakeTime = x.IntakeTime,
-                    Taken = x.Taken
-                })
+                .Select(x =>
+                    new MedicationIntakeLogDto
+                    {
+                        IntakeLogId = x.Id,
+                        PlanId = x.PlanId,
+                        MedicineName =
+                            x.Plan.MedicineName,
+                        Dose = x.Plan.Dose,
+                        ScheduledDate =
+                            x.ScheduledDate,
+                        IntakeTime =
+                            x.IntakeTime,
+                        Taken = x.Taken
+                    })
                 .ToList();
 
             return new PagedResult<MedicationIntakeLogDto>
@@ -286,5 +456,83 @@ namespace Nestly.Services.Repository
             };
         }
 
+        public PagedResult<MedicationIntakeLogDto>
+            GetLogsForDayByParent(
+                long parentProfileId,
+                MedicationIntakeLogSearchObject search)
+        {
+            var day = search.Date.Date;
+
+            var q = _db.MedicationIntakeLogs
+                .Include(x => x.Plan)
+                .AsNoTracking()
+                .Where(x =>
+                    x.Plan.ParentProfileId ==
+                    parentProfileId &&
+                    x.ScheduledDate == day);
+
+            var totalCount = q.Count();
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
+            var items = q
+                .OrderBy(x => x.IntakeTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x =>
+                    new MedicationIntakeLogDto
+                    {
+                        IntakeLogId = x.Id,
+                        PlanId = x.PlanId,
+                        MedicineName =
+                            x.Plan.MedicineName,
+                        Dose = x.Plan.Dose,
+                        ScheduledDate =
+                            x.ScheduledDate,
+                        IntakeTime =
+                            x.IntakeTime,
+                        Taken = x.Taken
+                    })
+                .ToList();
+
+            return new PagedResult<MedicationIntakeLogDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
+
+        private void GenerateFutureIntakeLogs(
+    MedicationPlan plan,
+    DateTime fromDate)
+        {
+            var currentDate = fromDate.Date;
+
+            while (currentDate <= plan.EndDate.Date)
+            {
+                foreach (var time in plan.Times)
+                {
+                    _db.MedicationIntakeLogs.Add(
+                        new MedicationIntakeLog
+                        {
+                            PlanId = plan.Id,
+                            ScheduledDate = currentDate,
+                            IntakeTime = time.IntakeTime,
+                            Taken = false
+                        });
+                }
+
+                currentDate =
+                    currentDate.AddDays(1);
+            }
+        }
     }
 }

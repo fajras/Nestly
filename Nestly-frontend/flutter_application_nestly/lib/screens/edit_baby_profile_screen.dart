@@ -32,9 +32,15 @@ class _EditBabyProfileScreenState extends State<EditBabyProfileScreen> {
   Future<void> _loadBaby() async {
     try {
       final res = await ApiClient.get('/api/BabyProfile/${widget.babyId}');
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to load baby');
+      }
+
       final data = jsonDecode(res.body);
 
       _nameCtrl.text = data['babyName'] ?? '';
+
       final g = data['gender']?.toString().toLowerCase();
 
       if (g == 'male' || g == 'female') {
@@ -42,7 +48,10 @@ class _EditBabyProfileScreenState extends State<EditBabyProfileScreen> {
       } else {
         _gender = null;
       }
-      _birthDate = DateTime.parse(data['birthDate']);
+
+      if (data['birthDate'] != null) {
+        _birthDate = DateTime.tryParse(data['birthDate']);
+      }
     } catch (_) {
       NestlyToast.error(context, 'Greška pri učitavanju bebe');
     } finally {

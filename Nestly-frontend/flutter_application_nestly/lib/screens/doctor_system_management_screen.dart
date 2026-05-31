@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class SystemManagementScreen extends StatefulWidget {
   const SystemManagementScreen({super.key});
@@ -227,8 +228,8 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
 
       final decoded = jsonDecode(res.body);
 
-      final items = decoded['items'] as List;
-      final totalCount = decoded['totalCount'] as int;
+      final items = ApiResponseHelper.extractList(res.body);
+      final totalCount = decoded['totalCount'] as int? ?? 0;
 
       all.addAll(items);
 
@@ -237,8 +238,6 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
       } else {
         page++;
       }
-
-      page++;
     }
 
     return all;

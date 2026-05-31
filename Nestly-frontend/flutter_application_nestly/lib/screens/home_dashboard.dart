@@ -64,12 +64,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     try {
       final token = await AuthStorage.getToken();
       if (token == null) return;
-
-      final decoded = JwtDecoder.decode(token);
-      final userId = decoded["userId"];
-
       await _signalRService.connect(
-        userId.toString(),
         token,
         onNotification: () async {
           await notificationState.loadUnreadCount();
@@ -250,15 +245,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             onPressed: () async {
               final token = await AuthStorage.getToken();
               if (token == null) return;
-
-              final decoded = JwtDecoder.decode(token);
-              final userId = int.parse(decoded["userId"].toString());
-
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => EditProfileScreen(userId: userId),
-                ),
+                MaterialPageRoute(builder: (_) => EditProfileScreen()),
               );
             },
           ),
@@ -312,7 +301,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     _menu(
                       icon: Icons.article_outlined,
                       label: 'Blog',
-                      onTap: () => _open(context),
+                      onTap: () => _open(context, const BlogScreen()),
                     ),
                     _menu(
                       icon: Icons.help_outline_rounded,
@@ -327,15 +316,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     _menu(
                       icon: Icons.chat_bubble_outline_rounded,
                       label: 'Chat',
-                      onTap: () async {
-                        final userId = await AuthStorage.getUserId();
-
-                        if (userId == null) {
-                          debugPrint("userId je null!");
-                          return;
-                        }
-
-                        _open(context, ChatHomeScreen(currentUserId: userId));
+                      onTap: () {
+                        _open(context, ChatHomeScreen());
                       },
                     ),
                     _menu(

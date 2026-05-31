@@ -10,19 +10,19 @@ namespace Nestly.Services.Repository
     public class SymptomDiaryService : ISymptomDiaryService
     {
         private readonly NestlyDbContext _db;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SymptomDiaryService(NestlyDbContext db)
+        public SymptomDiaryService(
+    NestlyDbContext db,
+    ICurrentUserService currentUserService)
         {
             _db = db;
+            _currentUserService = currentUserService;
         }
         public PagedResult<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject search)
         {
             IQueryable<SymptomDiary> q = _db.SymptomDiaries.AsNoTracking();
 
-            if (search.ParentProfileId is not null)
-            {
-                q = q.Where(s => s.ParentProfileId == search.ParentProfileId);
-            }
 
             if (search.DateFrom is not null)
             {
@@ -60,7 +60,6 @@ namespace Nestly.Services.Repository
         private static SymptomDiaryResponseDto ToDto(SymptomDiary s) => new()
         {
             Id = s.Id,
-            ParentProfileId = s.ParentProfileId,
             Date = s.Date,
             Nausea = s.Nausea,
             Fatigue = s.Fatigue,
@@ -71,18 +70,23 @@ namespace Nestly.Services.Repository
 
         public SymptomDiaryResponseDto Create(CreateSymptomDiaryDto dto)
         {
-            if (!_db.ParentProfiles.Any(p => p.Id == dto.ParentProfileId))
+            var parent = _currentUserService
+                .GetCurrentParentProfile();
+
+            if (parent == null)
             {
-                throw new NotFoundException("Parent profile not found.");
+                throw new NotFoundException(
+                    "Parent profile not found.");
             }
 
             var date = (dto.Date ?? DateTime.Today).Date;
 
             if (_db.SymptomDiaries.Any(s =>
-                s.ParentProfileId == dto.ParentProfileId &&
+                s.ParentProfileId == parent.Id &&
                 s.Date == date))
             {
-                throw new BusinessException("Diary entry already exists for this date.");
+                throw new BusinessException(
+                    "Diary entry already exists for this date.");
             }
 
             ValidateRange(dto.Nausea, nameof(dto.Nausea));
@@ -93,7 +97,7 @@ namespace Nestly.Services.Repository
 
             var entity = new SymptomDiary
             {
-                ParentProfileId = dto.ParentProfileId,
+                ParentProfileId = parent.Id,
                 Date = date,
                 Nausea = dto.Nausea,
                 Fatigue = dto.Fatigue,
@@ -103,6 +107,7 @@ namespace Nestly.Services.Repository
             };
 
             _db.SymptomDiaries.Add(entity);
+
             _db.SaveChanges();
 
             return ToDto(entity);

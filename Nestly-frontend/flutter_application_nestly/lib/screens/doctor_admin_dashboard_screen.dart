@@ -4,6 +4,7 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'dart:convert';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/admin_blog_screen.dart';
@@ -46,8 +47,8 @@ class AdminDashboardService {
 
       final decoded = jsonDecode(res.body);
 
-      final items = decoded['items'] as List;
-      final totalCount = decoded['totalCount'] as int;
+      final items = ApiResponseHelper.extractList(res.body);
+      final totalCount = decoded['totalCount'] as int? ?? 0;
 
       all.addAll(items);
 
@@ -433,12 +434,7 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
     try {
       final token = await AuthStorage.getToken();
       if (token == null) return;
-
-      final decoded = JwtDecoder.decode(token);
-      final userId = decoded["userId"];
-
       await _signalRService.connect(
-        userId.toString(),
         token,
         onNotification: () async {
           await notificationState.loadUnreadCount();

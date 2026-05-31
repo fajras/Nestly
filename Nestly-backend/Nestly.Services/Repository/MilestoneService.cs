@@ -161,6 +161,68 @@ namespace Nestly.Services.Repository
             Notes = m.Notes,
             CreatedAt = m.CreatedAt
         };
+
+        public PagedResult<MilestoneResponseDto> GetByParent(
+    long parentProfileId,
+    MilestoneSearchObject search)
+        {
+            IQueryable<Milestone> q = _db.Milestones
+                .AsNoTracking()
+                .Where(x =>
+                    x.Baby.ParentProfileId ==
+                    parentProfileId);
+
+            if (search.BabyId is not null)
+            {
+                q = q.Where(x =>
+                    x.BabyId == search.BabyId);
+            }
+
+            if (search.DateFrom is not null)
+            {
+                q = q.Where(x =>
+                    x.AchievedDate >=
+                    search.DateFrom.Value);
+            }
+
+            if (search.DateTo is not null)
+            {
+                q = q.Where(x =>
+                    x.AchievedDate <=
+                    search.DateTo.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Title))
+            {
+                q = q.Where(x =>
+                    x.Title.Contains(search.Title));
+            }
+
+            var totalCount = q.Count();
+
+            int page = search.Page < 1
+                ? 1
+                : search.Page;
+
+            int pageSize = search.PageSize < 1
+                ? 10
+                : search.PageSize > 100
+                    ? 100
+                    : search.PageSize;
+
+            var items = q
+                .OrderByDescending(x => x.AchievedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(ToDto)
+                .ToList();
+
+            return new PagedResult<MilestoneResponseDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
+        }
     }
 }
 

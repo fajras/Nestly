@@ -127,12 +127,11 @@ namespace Nestly.Services.Repository
                     "Birth date is required.");
             }
 
-            if (dto.PregnancyId.HasValue &&
-                !await _db.Pregnancies.AnyAsync(
-                    x => x.Id == dto.PregnancyId.Value))
+            if (dto.PregnancyId.HasValue)
             {
-                throw new NotFoundException(
-                    "Pregnancy not found.");
+                await _currentUserService
+                    .EnsurePregnancyOwnershipAsync(
+                        dto.PregnancyId.Value);
             }
 
             var entity = new BabyProfile

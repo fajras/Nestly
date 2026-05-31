@@ -4,6 +4,7 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_calendar.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class DiaperLog {
   final int id;
@@ -98,7 +99,7 @@ class DiaperLogApiService {
 
     while (true) {
       final res = await ApiClient.get(
-        '/api/DiaperLog'
+        '/api/DiaperLog/my'
         '?BabyId=$babyId'
         '&DateFrom=${from.toIso8601String()}'
         '&DateTo=${to.toIso8601String()}'
@@ -109,8 +110,7 @@ class DiaperLogApiService {
         throw Exception('Failed to fetch diaper logs');
       }
 
-      final data = jsonDecode(res.body);
-      final List items = data['items'];
+      final List items = ApiResponseHelper.extractList(res.body);
 
       if (items.isEmpty) break;
 

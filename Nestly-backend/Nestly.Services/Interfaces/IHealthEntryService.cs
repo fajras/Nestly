@@ -9,5 +9,6 @@ namespace Nestly.Services.Interfaces
         HealthEntryResponseDto Create(CreateHealthEntryDto entity);
         HealthEntryResponseDto Patch(long id, HealthEntryPatchDto patch);
         void Delete(long id);
+        PagedResult<HealthEntryResponseDto> GetByParent(long parentProfileId, HealthEntrySearchObject search);
     }
 }

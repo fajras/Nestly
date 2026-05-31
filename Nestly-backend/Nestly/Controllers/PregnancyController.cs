@@ -21,6 +21,7 @@ namespace Nestly.WebAPI.Controllers
             _currentUserService = currentUserService;
         }
 
+        [Authorize(Roles = "Doctor")]
         [HttpGet]
         public async Task<ActionResult<PagedResult<PregnancyResponseDto>>> Get(
             [FromQuery] PregnancySearchObject search)
@@ -28,6 +29,7 @@ namespace Nestly.WebAPI.Controllers
             return Ok(await _service.Get(search));
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpGet("my")]
         public async Task<ActionResult<PregnancyResponseDto>> GetMy()
         {
@@ -42,6 +44,7 @@ namespace Nestly.WebAPI.Controllers
                 : Ok(entity);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPost]
         public async Task<ActionResult<PregnancyResponseDto>> Create(
             [FromBody] CreatePregnancyDto request)
@@ -51,6 +54,7 @@ namespace Nestly.WebAPI.Controllers
             return Ok(created);
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpPatch("{id:long}")]
         public async Task<ActionResult<PregnancyResponseDto>> Patch(
             long id,
@@ -75,6 +79,7 @@ namespace Nestly.WebAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id)
         {
@@ -86,6 +91,7 @@ namespace Nestly.WebAPI.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Parent")]
         [HttpGet("my-status")]
         public async Task<ActionResult<PregnancyStatusDto>> GetMyStatus()
         {

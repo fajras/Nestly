@@ -10,6 +10,8 @@ import 'package:flutter_application_nestly/main.dart';
 class ApiClient {
   static const String _baseUrl = String.fromEnvironment('API_URL');
 
+  static bool _isRedirecting = false;
+
   static String get baseUrl {
     if (_baseUrl.isEmpty) {
       throw Exception(
@@ -21,16 +23,25 @@ class ApiClient {
   }
 
   static Future<void> _handleUnauthorized() async {
+    if (_isRedirecting) return;
+
+    _isRedirecting = true;
+
     await AuthStorage.clear();
 
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
+
+    _isRedirecting = false;
   }
 
-  static Future<http.Response> _checkResponse(http.Response response) async {
-    if (response.statusCode == 401) {
+  static Future<http.Response> _checkResponse(
+    http.Response response, {
+    bool skipUnauthorizedHandler = false,
+  }) async {
+    if (response.statusCode == 401 && !skipUnauthorizedHandler) {
       await _handleUnauthorized();
     }
 
@@ -50,56 +61,86 @@ class ApiClient {
     return headers;
   }
 
-  static Future<http.Response> get(String path) async {
+  static Future<http.Response> get(
+    String path, {
+    bool skipUnauthorizedHandler = false,
+  }) async {
     final token = await AuthStorage.getToken();
 
     final response = await http.get(
-      Uri.parse('$_baseUrl$path'),
+      Uri.parse('$baseUrl$path'),
       headers: _headers(token),
     );
 
-    return _checkResponse(response);
+    return _checkResponse(
+      response,
+      skipUnauthorizedHandler: skipUnauthorizedHandler,
+    );
   }
 
-  static Future<http.Response> post(String path, {Object? body}) async {
+  static Future<http.Response> post(
+    String path, {
+    Object? body,
+    bool skipUnauthorizedHandler = false,
+  }) async {
     final token = await AuthStorage.getToken();
 
     final response = await http.post(
-      Uri.parse('$_baseUrl$path'),
+      Uri.parse('$baseUrl$path'),
       headers: _headers(token),
       body: body == null ? null : jsonEncode(body),
     );
 
-    return _checkResponse(response);
+    return _checkResponse(
+      response,
+      skipUnauthorizedHandler: skipUnauthorizedHandler,
+    );
   }
 
-  static Future<http.Response> patch(String path, {Object? body}) async {
+  static Future<http.Response> patch(
+    String path, {
+    Object? body,
+    bool skipUnauthorizedHandler = false,
+  }) async {
     final token = await AuthStorage.getToken();
 
     final response = await http.patch(
-      Uri.parse('$_baseUrl$path'),
+      Uri.parse('$baseUrl$path'),
       headers: _headers(token),
       body: body == null ? null : jsonEncode(body),
     );
 
-    return _checkResponse(response);
+    return _checkResponse(
+      response,
+      skipUnauthorizedHandler: skipUnauthorizedHandler,
+    );
   }
 
-  static Future<http.Response> delete(String path) async {
+  static Future<http.Response> delete(
+    String path, {
+    bool skipUnauthorizedHandler = false,
+  }) async {
     final token = await AuthStorage.getToken();
 
     final response = await http.delete(
-      Uri.parse('$_baseUrl$path'),
+      Uri.parse('$baseUrl$path'),
       headers: _headers(token),
     );
 
-    return _checkResponse(response);
+    return _checkResponse(
+      response,
+      skipUnauthorizedHandler: skipUnauthorizedHandler,
+    );
   }
 
-  static Future<void> multipart(String path, {required File file}) async {
+  static Future<void> multipart(
+    String path, {
+    required File file,
+    bool skipUnauthorizedHandler = false,
+  }) async {
     final token = await AuthStorage.getToken();
 
-    final req = http.MultipartRequest('POST', Uri.parse('$_baseUrl$path'));
+    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl$path'));
 
     if (token != null) {
       req.headers['Authorization'] = 'Bearer $token';
@@ -115,7 +156,7 @@ class ApiClient {
 
     final res = await req.send();
 
-    if (res.statusCode == 401) {
+    if (res.statusCode == 401 && !skipUnauthorizedHandler) {
       await _handleUnauthorized();
       return;
     }

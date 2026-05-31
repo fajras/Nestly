@@ -193,6 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'email': _emailCtrl.text.trim(),
           'password': _pwCtrl.text.trim(),
         },
+        skipUnauthorizedHandler: true,
       );
 
       if (!mounted) return;

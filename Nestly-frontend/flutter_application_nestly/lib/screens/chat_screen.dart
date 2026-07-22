@@ -6,6 +6,7 @@ import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/layouts/nestly_widgets.dart';
 
 class ChatMessage {
   final int id;
@@ -276,12 +277,23 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.roseDark),
-        title: Text(
-          widget.otherUserName,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
-          ),
+        titleSpacing: 0,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            NestlyAvatar(name: widget.otherUserName, radius: 18),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                widget.otherUserName,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.roseDark,
+                ),
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
       ),
@@ -315,10 +327,13 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.all(12),
             constraints: const BoxConstraints(maxWidth: 280),
             decoration: BoxDecoration(
-              color: mine
-                  ? AppColors.roseDark
-                  : AppColors.babyPink.withOpacity(.35),
-              borderRadius: BorderRadius.circular(AppRadius.lg),
+              color: mine ? AppColors.roseDark : AppColors.seed.withOpacity(.12),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(AppRadius.lg),
+                topRight: const Radius.circular(AppRadius.lg),
+                bottomLeft: Radius.circular(mine ? AppRadius.lg : 4),
+                bottomRight: Radius.circular(mine ? 4 : AppRadius.lg),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -327,7 +342,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Text(
                   m.content,
                   style: TextStyle(
-                    color: mine ? Colors.white : Colors.black87,
+                    color: mine ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -337,7 +352,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     fontSize: 10,
                     color: mine
                         ? Colors.white.withOpacity(.75)
-                        : Colors.black54,
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -380,10 +395,21 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
 
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.send_rounded),
+            Material(
               color: AppColors.roseDark,
-              onPressed: _send,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _send,
+                child: const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

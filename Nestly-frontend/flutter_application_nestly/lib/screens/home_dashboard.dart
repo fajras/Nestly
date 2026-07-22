@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/layouts/nestly_widgets.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/providers/notification_state.dart';
 import 'package:flutter_application_nestly/screens/advice_center_screen.dart';
@@ -180,6 +181,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -279,76 +281,21 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                       week: _week,
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _menu(
-                      icon: Icons.local_florist_rounded,
-                      label: 'Veličina ploda',
-                      onTap: () =>
-                          _open(context, BabyGrowthScreen(week: _week)),
-                    ),
-                    _menu(
-                      icon: Icons.fact_check_rounded,
-                      label: 'Dnevnik simptoma',
-                      onTap: () => _open(context, SymptomDiaryScreen()),
-                    ),
-                    _menu(
-                      icon: Icons.lightbulb_outline_rounded,
-                      label: 'Savjetni centar',
-                      onTap: () => _open(
-                        context,
-                        AdviceCenterScreen(gestationalWeek: _week),
-                      ),
-                    ),
-                    _menu(
-                      icon: Icons.article_outlined,
-                      label: 'Blog',
-                      onTap: () => _open(context, const BlogScreen()),
-                    ),
-                    _menu(
-                      icon: Icons.help_outline_rounded,
-                      label: 'Pitanja',
-                      onTap: () => _open(context, MyQuestionsScreen()),
-                    ),
-                    _menu(
-                      icon: Icons.medical_services_outlined,
-                      label: 'Terapija',
-                      onTap: () => _open(context, TherapyCalendarScreen()),
-                    ),
-                    _menu(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      label: 'Chat',
-                      onTap: () {
-                        _open(context, ChatHomeScreen());
-                      },
-                    ),
-                    _menu(
-                      icon: Icons.logout_rounded,
-                      label: 'Odjavi se',
-                      onTap: () async {
-                        await _signalRService.disconnect();
-                        notificationState.reset();
-                        await AuthStorage.clear();
-
-                        if (!context.mounted) return;
-
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
-                          ),
-                          (_) => false,
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: AppSpacing.xl),
                     _hasBaby
-                        ? _GradientPinkCard(
+                        ? _CtaBanner(
                             icon: Icons.child_friendly_rounded,
                             label: 'Vrijeme je za bebu',
+                            subtitle:
+                                'Praćenje rasta, ishrane, sna i još mnogo toga',
+                            gradient: AppGradients.brandCool,
                             onTap: _openBabyTime,
                           )
-                        : _GradientPinkCard(
+                        : _CtaBanner(
                             icon: Icons.favorite_rounded,
                             label: 'Beba je rođena',
+                            subtitle:
+                                'Kreirajte profil bebe i nastavite putovanje',
+                            gradient: AppGradients.brandCool,
                             onTap: () async {
                               await Navigator.push(
                                 context,
@@ -360,6 +307,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                               await _loadBabyStatus();
                             },
                           ),
+                    const SizedBox(height: AppSpacing.xl),
+                    const NestlySectionHeader(title: 'Vaš meni'),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildMenuGrid(context),
+                    const SizedBox(height: AppSpacing.lg),
+                    _logoutRow(context),
                   ],
                 ),
               ),
@@ -370,14 +323,97 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     );
   }
 
-  Widget _menu({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-    child: _GradientPinkCard(icon: icon, label: label, onTap: onTap),
-  );
+  Widget _buildMenuGrid(BuildContext context) {
+    final items = <_MenuItem>[
+      _MenuItem(
+        Icons.local_florist_rounded,
+        'Veličina ploda',
+        () => _open(context, BabyGrowthScreen(week: _week)),
+      ),
+      _MenuItem(
+        Icons.fact_check_rounded,
+        'Dnevnik simptoma',
+        () => _open(context, SymptomDiaryScreen()),
+      ),
+      _MenuItem(
+        Icons.lightbulb_outline_rounded,
+        'Savjetni centar',
+        () => _open(context, AdviceCenterScreen(gestationalWeek: _week)),
+      ),
+      _MenuItem(
+        Icons.article_outlined,
+        'Blog',
+        () => _open(context, const BlogScreen()),
+      ),
+      _MenuItem(
+        Icons.help_outline_rounded,
+        'Pitanja',
+        () => _open(context, MyQuestionsScreen()),
+      ),
+      _MenuItem(
+        Icons.medical_services_outlined,
+        'Terapija',
+        () => _open(context, TherapyCalendarScreen()),
+      ),
+      _MenuItem(
+        Icons.chat_bubble_outline_rounded,
+        'Chat',
+        () => _open(context, ChatHomeScreen()),
+      ),
+    ];
+
+    return Column(
+      // Simple list, one row under another, all in the brand rose color.
+      children: [
+        for (var i = 0; i < items.length; i++)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: i == items.length - 1 ? 0 : AppSpacing.sm,
+            ),
+            child: NestlyMenuRow(
+              icon: items[i].icon,
+              label: items[i].label,
+              color: AppColors.roseDark,
+              onTap: items[i].onTap,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _logoutRow(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () async {
+        await _signalRService.disconnect();
+        notificationState.reset();
+        await AuthStorage.clear();
+
+        if (!context.mounted) return;
+
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (_) => false,
+        );
+      },
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.textSecondary,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      ),
+      icon: const Icon(Icons.logout_rounded, size: 18),
+      label: const Text(
+        'Odjavi se',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  _MenuItem(this.icon, this.label, this.onTap);
 }
 
 class _HeaderSimple extends StatelessWidget {
@@ -397,94 +433,118 @@ class _HeaderSimple extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+    return NestlyHeroHeader(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        AppSpacing.xl,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.roseDark,
-                    ),
+      child: loading
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withOpacity(.9),
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  LinearProgressIndicator(
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: LinearProgressIndicator(
                     value: progress.clamp(0, 1),
                     minHeight: 10,
-                    color: AppColors.roseDark,
-                    backgroundColor: AppColors.babyPink.withOpacity(.3),
+                    color: Colors.white,
+                    backgroundColor: Colors.white.withOpacity(.25),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${week.clamp(1, 40)} / 40 sedmica • ${(progress * 100).round()}%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${week.clamp(1, 40)} / 40 sedmica • ${(progress * 100).round()}%',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withOpacity(.9),
                   ),
-                ],
-              ),
-      ),
+                ),
+              ],
+            ),
     );
   }
 }
 
-class _GradientPinkCard extends StatelessWidget {
-  const _GradientPinkCard({
+class _CtaBanner extends StatelessWidget {
+  const _CtaBanner({
     required this.icon,
     required this.label,
+    required this.subtitle,
     required this.onTap,
+    this.gradient = AppGradients.brandCool,
   });
 
   final IconData icon;
   final String label;
+  final String subtitle;
   final VoidCallback onTap;
+  final Gradient gradient;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.xl),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Ink(
+          decoration: BoxDecoration(gradient: gradient),
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.roseDark, size: 28),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.white, size: 28),
+              ),
               const SizedBox(width: AppSpacing.lg),
               Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.roseDark,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withOpacity(.9),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.roseDark,
-              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white),
             ],
           ),
         ),

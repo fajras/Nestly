@@ -507,7 +507,11 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               "Upravljanje sistemom",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: AppColors.roseDark,
+              ),
             ),
           ),
 

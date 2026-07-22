@@ -15,6 +15,7 @@ import 'package:flutter_application_nestly/screens/doctor_system_management_scre
 import 'package:flutter_application_nestly/screens/edit_doctor_profile_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
 import 'package:flutter_application_nestly/screens/user_detail_screen.dart';
+import 'package:flutter_application_nestly/layouts/nestly_widgets.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
@@ -379,22 +380,27 @@ class _SidebarItem extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.seed.withOpacity(.12)
+                ? AppColors.roseDark.withOpacity(.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: selected
+                ? const Border(
+                    left: BorderSide(color: AppColors.roseDark, width: 3),
+                  )
+                : null,
           ),
           child: Row(
             children: [
               Icon(
                 icon,
-                color: selected ? AppColors.seed : AppColors.textSecondary,
+                color: selected ? AppColors.roseDark : AppColors.textSecondary,
               ),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: selected ? AppColors.seed : AppColors.textSecondary,
+                  color: selected ? AppColors.roseDark : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -516,7 +522,11 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
       children: [
         const Text(
           'Admin upravljačka ploča',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: AppColors.roseDark,
+          ),
         ),
 
         const SizedBox(height: AppSpacing.xl),
@@ -527,12 +537,14 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
               title: 'Ukupno korisnica',
               value: _userCount.toString(),
               icon: Icons.people_outline,
+              color: AppColors.roseDark,
             ),
             const SizedBox(width: AppSpacing.lg),
             _StatCard(
               title: 'Ukupno pitanja',
               value: _questionCount.toString(),
               icon: Icons.question_answer_outlined,
+              color: AppColors.seed,
             ),
           ],
         ),
@@ -608,19 +620,7 @@ class _UsersTable extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.seed.withOpacity(.15),
-                    child: Text(
-                      u.firstName.isNotEmpty
-                          ? u.firstName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.seed,
-                      ),
-                    ),
-                  ),
+                  NestlyAvatar(name: u.fullName, radius: 20),
                   const SizedBox(width: 12),
 
                   Expanded(
@@ -764,11 +764,13 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
+  final Color color;
 
   const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
+    this.color = AppColors.seed,
   });
 
   @override
@@ -781,8 +783,8 @@ class _StatCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: AppColors.seed.withOpacity(.15),
-                child: Icon(icon, color: AppColors.seed),
+                backgroundColor: color.withOpacity(.15),
+                child: Icon(icon, color: color),
               ),
               const SizedBox(width: AppSpacing.md),
               Column(

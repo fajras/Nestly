@@ -169,7 +169,11 @@ class _EditDoctorProfileScreenState extends State<EditDoctorProfileScreen> {
           children: [
             const Text(
               'Uredi profil doktora',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: AppColors.roseDark,
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
 

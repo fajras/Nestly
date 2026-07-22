@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/main.dart';
+import 'package:flutter_application_nestly/layouts/nestly_widgets.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/providers/notification_signalr_service.dart';
 import 'package:flutter_application_nestly/providers/notification_state.dart';
@@ -177,108 +178,9 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
             children: [
               _HeaderCard(babyName: _babyName ?? '', isGirl: _isGirl),
               const SizedBox(height: AppSpacing.xl),
-
-              _menu(
-                AppColors.seed,
-                Icons.show_chart_rounded,
-                'Praćenje rasta',
-                () => _push(
-                  context,
-                  BabyGrowthTrackerScreen(
-                    babyId: widget.babyId,
-                    babyName: _babyName ?? widget.babyName,
-                  ),
-                ),
-              ),
-
-              _menu(
-                AppColors.roseDark,
-                Icons.restaurant_rounded,
-                'Plan ishrane',
-                () => _push(
-                  context,
-                  MealRecommendationScreen(babyId: widget.babyId),
-                ),
-              ),
-
-              _menu(
-                AppColors.seed,
-                Icons.local_drink_rounded,
-                'Dnevnik hranjenja',
-                () => _push(
-                  context,
-                  FeedingCalendarScreen(babyId: widget.babyId),
-                ),
-              ),
-
-              _menu(
-                AppColors.roseDark,
-                Icons.favorite_border_rounded,
-                'Praćenje zdravlja',
-                () => _push(
-                  context,
-                  HealthTrackingScreen(
-                    babyId: widget.babyId,
-                    babyName: _babyName ?? widget.babyName,
-                  ),
-                ),
-              ),
-
-              _menu(
-                AppColors.seed,
-                Icons.nights_stay_rounded,
-                'Dnevnik spavanja',
-                () => _push(
-                  context,
-                  SleepLogOverviewScreen(
-                    babyId: widget.babyId,
-                    babyName: _babyName ?? widget.babyName,
-                  ),
-                ),
-              ),
-
-              _menu(
-                AppColors.roseDark,
-                Icons.baby_changing_station_rounded,
-                'Praćenje pelena',
-                () => _push(
-                  context,
-                  DiaperLogCalendarScreen(babyId: widget.babyId),
-                ),
-              ),
-
-              _menu(
-                AppColors.seed,
-                Icons.emoji_events_rounded,
-                'Dostignuća',
-                () => _push(
-                  context,
-                  MilestoneScreen(
-                    babyId: widget.babyId,
-                    babyName: _babyName ?? widget.babyName,
-                  ),
-                ),
-              ),
-
-              _menu(
-                AppColors.roseDark,
-                Icons.chat_bubble_outline_rounded,
-                'Chat',
-                () => _push(context, ChatHomeScreen()),
-              ),
-
-              _menu(
-                AppColors.seed,
-                Icons.event_note_rounded,
-                'Kalendar termina',
-                () => _push(
-                  context,
-                  CalendarEventScreen(
-                    babyId: widget.babyId,
-                    babyName: _babyName ?? widget.babyName,
-                  ),
-                ),
-              ),
+              const NestlySectionHeader(title: 'Aktivnosti bebe'),
+              const SizedBox(height: AppSpacing.sm),
+              _buildMenuGrid(context),
 
               const SizedBox(height: AppSpacing.xl),
               _BackCard(onTap: () => Navigator.pop(context)),
@@ -289,40 +191,111 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
     );
   }
 
-  Widget _menu(Color color, IconData icon, String label, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          child: Ink(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                Icon(icon, color: color, size: 28),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: color),
-              ],
-            ),
+  Widget _buildMenuGrid(BuildContext context) {
+    final items = <_BabyMenuItem>[
+      _BabyMenuItem(
+        Icons.show_chart_rounded,
+        'Praćenje rasta',
+        () => _push(
+          context,
+          BabyGrowthTrackerScreen(
+            babyId: widget.babyId,
+            babyName: _babyName ?? widget.babyName,
           ),
         ),
       ),
+      _BabyMenuItem(
+        Icons.restaurant_rounded,
+        'Plan ishrane',
+        () => _push(context, MealRecommendationScreen(babyId: widget.babyId)),
+      ),
+      _BabyMenuItem(
+        Icons.local_drink_rounded,
+        'Dnevnik hranjenja',
+        () => _push(context, FeedingCalendarScreen(babyId: widget.babyId)),
+      ),
+      _BabyMenuItem(
+        Icons.favorite_border_rounded,
+        'Praćenje zdravlja',
+        () => _push(
+          context,
+          HealthTrackingScreen(
+            babyId: widget.babyId,
+            babyName: _babyName ?? widget.babyName,
+          ),
+        ),
+      ),
+      _BabyMenuItem(
+        Icons.nights_stay_rounded,
+        'Dnevnik spavanja',
+        () => _push(
+          context,
+          SleepLogOverviewScreen(
+            babyId: widget.babyId,
+            babyName: _babyName ?? widget.babyName,
+          ),
+        ),
+      ),
+      _BabyMenuItem(
+        Icons.baby_changing_station_rounded,
+        'Praćenje pelena',
+        () => _push(context, DiaperLogCalendarScreen(babyId: widget.babyId)),
+      ),
+      _BabyMenuItem(
+        Icons.emoji_events_rounded,
+        'Dostignuća',
+        () => _push(
+          context,
+          MilestoneScreen(
+            babyId: widget.babyId,
+            babyName: _babyName ?? widget.babyName,
+          ),
+        ),
+      ),
+      _BabyMenuItem(
+        Icons.chat_bubble_outline_rounded,
+        'Chat',
+        () => _push(context, ChatHomeScreen()),
+      ),
+      _BabyMenuItem(
+        Icons.event_note_rounded,
+        'Kalendar termina',
+        () => _push(
+          context,
+          CalendarEventScreen(
+            babyId: widget.babyId,
+            babyName: _babyName ?? widget.babyName,
+          ),
+        ),
+      ),
+    ];
+
+    return Column(
+      // Simple list, one row under another, all in the brand rose color.
+      children: [
+        for (var i = 0; i < items.length; i++)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: i == items.length - 1 ? 0 : AppSpacing.sm,
+            ),
+            child: NestlyMenuRow(
+              icon: items[i].icon,
+              label: items[i].label,
+              color: AppColors.roseDark,
+              onTap: items[i].onTap,
+            ),
+          ),
+      ],
     );
   }
+}
+
+class _BabyMenuItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  _BabyMenuItem(this.icon, this.label, this.onTap);
 }
 
 class _HeaderCard extends StatelessWidget {

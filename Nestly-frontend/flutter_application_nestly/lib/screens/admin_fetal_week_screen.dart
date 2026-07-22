@@ -124,7 +124,11 @@ class _AdminFetalDevelopmentScreenState
       children: [
         const Text(
           'Razvoj fetusa',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: AppColors.roseDark,
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
 

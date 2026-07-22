@@ -34,6 +34,46 @@ class AppColors {
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF475569);
   static const roseDark = Color.fromARGB(255, 168, 40, 89);
+  static const roseSoft = Color(0xFFD97FA0);
+  static const seedDeep = Color(0xFF00807F);
+}
+
+/// Shared brand gradients built from the two signature Nestly colors
+/// (roseDark + seed) so hero headers look consistent across screens.
+class AppGradients {
+  static const brand = LinearGradient(
+    colors: [AppColors.roseDark, AppColors.roseSoft],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const brandCool = LinearGradient(
+    colors: [AppColors.seedDeep, AppColors.seed],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const brandDuo = LinearGradient(
+    colors: [AppColors.roseDark, AppColors.seed],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+}
+
+/// A small deterministic palette used to give avatars/tiles some visual
+/// variety while always staying within the brand's color family.
+const List<Color> kAccentPalette = [
+  AppColors.roseDark,
+  AppColors.seed,
+  AppColors.roseSoft,
+  AppColors.seedDeep,
+];
+
+Color accentColorForKey(String key) {
+  if (key.isEmpty) return AppColors.roseDark;
+  final index = key.codeUnits.fold<int>(0, (a, b) => a + b) %
+      kAccentPalette.length;
+  return kAccentPalette[index];
 }
 
 const bool forceLoginOnStart = false;
@@ -59,6 +99,18 @@ ThemeData buildTheme() {
     textTheme: base.textTheme.apply(
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      iconTheme: const IconThemeData(color: AppColors.roseDark),
+      actionsIconTheme: const IconThemeData(color: AppColors.roseDark),
+      titleTextStyle: base.textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: AppColors.roseDark,
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       isDense: true,

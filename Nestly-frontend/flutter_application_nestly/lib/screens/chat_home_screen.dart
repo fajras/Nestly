@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/auth/auth_storage.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
+import 'package:flutter_application_nestly/layouts/nestly_widgets.dart';
 import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'chat_screen.dart';
@@ -185,28 +186,21 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           : ListView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                _sectionTitle('Moji razgovori'),
+                const NestlySectionHeader(
+                  title: 'Moji razgovori',
+                  color: AppColors.roseDark,
+                ),
                 ..._buildConversationList(),
                 const SizedBox(height: 24),
-                _sectionTitle('Pronađi roditelja'),
+                const NestlySectionHeader(
+                  title: 'Pronađi roditelja',
+                  color: AppColors.seed,
+                ),
                 _searchField(),
                 const SizedBox(height: 12),
                 ..._buildUserList(),
               ],
             ),
-    );
-  }
-
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: AppColors.roseDark,
-        ),
-      ),
     );
   }
 
@@ -244,6 +238,8 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           c.babyAgeMonths,
           c.pregnancyTrimester,
         ),
+        lastMessage: c.lastMessage,
+        lastMessageTime: c.lastMessageTime,
         onTap: () => _openChatSmart(c.otherUserId, c.firstName),
       );
     }).toList();
@@ -271,6 +267,8 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
   Widget _tile({
     required String name,
     required String subtitle,
+    String? lastMessage,
+    DateTime? lastMessageTime,
     VoidCallback? onTap,
   }) {
     return Container(
@@ -278,18 +276,56 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.lg),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: AppColors.babyPink,
-          child: Text(name.isNotEmpty ? name.characters.first : '?'),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 6,
         ),
-        title: Text(name),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chat_bubble_outline_rounded),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        onTap: onTap,
+        leading: NestlyAvatar(name: name),
+        title: Text(
+          name,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          lastMessage != null && lastMessage.isNotEmpty
+              ? lastMessage
+              : subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        trailing: lastMessageTime != null
+            ? Text(
+                _formatTime(lastMessageTime),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            : const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
       ),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final local = dt.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 
   Widget _emptyBox(String text) {

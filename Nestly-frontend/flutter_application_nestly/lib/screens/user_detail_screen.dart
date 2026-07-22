@@ -6,6 +6,7 @@ import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/model/app_user_row.dart';
 import 'package:flutter_application_nestly/providers/admin_pdf_service.dart';
 import 'package:flutter_application_nestly/providers/api_response_helper.dart';
+import 'package:flutter_application_nestly/layouts/nestly_widgets.dart';
 
 class AdminDashboardService {
   Future<List<AppUserRow>> getUsers() async {
@@ -351,30 +352,65 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                 children: [
                   const Text(
                     'Pregled korisnice',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.roseDark,
+                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
 
                   if (_selectedUser != null)
-                    Card(
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
+                        border: const Border(
+                          left: BorderSide(color: AppColors.roseDark, width: 4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              _selectedUser!.fullName,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
+                            Row(
+                              children: [
+                                NestlyAvatar(name: _selectedUser!.fullName),
+                                const SizedBox(width: AppSpacing.md),
+                                Text(
+                                  _selectedUser!.fullName,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              _selectedUser!.pregnancyInfo,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.seed.withOpacity(.12),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                _selectedUser!.pregnancyInfo,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.seed,
+                                ),
                               ),
                             ),
                           ],
@@ -551,6 +587,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                         title: 'Izvještaj o majci',
                         subtitle: 'Terapija, simptomi i pitanja',
                         icon: Icons.pregnant_woman,
+                        accentColor: AppColors.roseDark,
                         enabled: _selectedUser != null,
 
                         onDownload: () async {
@@ -946,6 +983,7 @@ class _ReportActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
+  final Color accentColor;
 
   final VoidCallback onDownload;
   final VoidCallback onPrint;
@@ -959,6 +997,7 @@ class _ReportActionCard extends StatelessWidget {
     required this.onDownload,
     required this.onPrint,
     required this.enabled,
+    this.accentColor = AppColors.seed,
   });
 
   @override
@@ -975,7 +1014,7 @@ class _ReportActionCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
 
-          border: Border.all(color: AppColors.seed.withOpacity(.15)),
+          border: Border.all(color: accentColor.withOpacity(.2)),
 
           boxShadow: [
             BoxShadow(
@@ -996,11 +1035,11 @@ class _ReportActionCard extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
 
                   decoration: BoxDecoration(
-                    color: AppColors.seed.withOpacity(.1),
+                    color: accentColor.withOpacity(.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
 
-                  child: Icon(icon, color: AppColors.seed),
+                  child: Icon(icon, color: accentColor),
                 ),
 
                 const SizedBox(width: 12),
@@ -1054,6 +1093,11 @@ class _ReportActionCard extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: enabled ? onPrint : null,
+
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.roseDark,
+                      foregroundColor: Colors.white,
+                    ),
 
                     icon: const Icon(Icons.print),
 

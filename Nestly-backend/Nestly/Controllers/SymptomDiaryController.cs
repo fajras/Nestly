@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -22,19 +22,19 @@ namespace Nestly.WebAPI.Controllers
         }
         [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<SymptomDiaryResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<SymptomDiaryResponseDto>>> Get(
      [FromQuery] SymptomDiarySearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
         [HttpPost]
         [Authorize(Roles = "Parent")]
-        public ActionResult<SymptomDiaryResponseDto> Create(
+        public async Task<ActionResult<SymptomDiaryResponseDto>> Create(
      [FromBody] CreateSymptomDiaryDto request)
         {
             try
             {
-                var dto = _service.Create(request);
+                var dto = await _service.Create(request);
 
                 return Ok(dto);
             }
@@ -63,7 +63,7 @@ namespace Nestly.WebAPI.Controllers
                 .GetCurrentParentProfileAsync();
 
             return Ok(
-                _service.GetByParent(parent.Id, search));
+                await _service.GetByParent(parent.Id, search));
         }
 
         [HttpGet("by-date")]
@@ -74,7 +74,7 @@ namespace Nestly.WebAPI.Controllers
             var parent = await _currentUserService
                 .GetCurrentParentProfileAsync();
 
-            var dto = _service.GetByDate(
+            var dto = await _service.GetByDate(
                 parent.Id,
                 date);
 
@@ -94,7 +94,7 @@ namespace Nestly.WebAPI.Controllers
 
             try
             {
-                var dto = _service.Patch(id, patch);
+                var dto = await _service.Patch(id, patch);
 
                 return dto is null
                     ? NotFound()
@@ -116,7 +116,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureSymptomDiaryOwnershipAsync(id);
 
-            _service.Delete(id);
+            await _service.Delete(id);
 
             return NoContent();
         }
@@ -130,7 +130,7 @@ namespace Nestly.WebAPI.Controllers
                 .GetCurrentParentProfileAsync();
 
             return Ok(
-                _service.GetMarkedDays(
+                await _service.GetMarkedDays(
                     parent.Id,
                     search));
         }

@@ -18,30 +18,30 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<PagedResult<WeeklyAdviceResponseDto>> Get([FromQuery] WeeklyAdviceSearchObject search)
-    => Ok(_service.Get(search));
+        public async Task<ActionResult<PagedResult<WeeklyAdviceResponseDto>>> Get([FromQuery] WeeklyAdviceSearchObject search)
+    => Ok(await _service.Get(search));
 
         [HttpGet("{id:int}")]
-        public ActionResult<WeeklyAdviceResponseDto> GetById(int id)
+        public async Task<ActionResult<WeeklyAdviceResponseDto>> GetById(int id)
         {
-            var dto = _service.GetById(id);
+            var dto = await _service.GetById(id);
             return dto is null ? NotFound() : Ok(dto);
         }
 
         [HttpGet("week/{weekNumber:int}")]
-        public ActionResult<WeeklyAdviceResponseDto> GetByWeek(short weekNumber)
+        public async Task<ActionResult<WeeklyAdviceResponseDto>> GetByWeek(short weekNumber)
         {
-            var dto = _service.GetByWeek(weekNumber);
+            var dto = await _service.GetByWeek(weekNumber);
             return dto is null ? NotFound() : Ok(dto);
         }
 
         [HttpPost]
         [Authorize(Roles = "Doctor")]
-        public ActionResult<WeeklyAdviceResponseDto> Create([FromBody] CreateWeeklyAdviceDto request)
+        public async Task<ActionResult<WeeklyAdviceResponseDto>> Create([FromBody] CreateWeeklyAdviceDto request)
         {
             try
             {
-                var dto = _service.Create(request);
+                var dto = await _service.Create(request);
                 return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
             }
             catch (ArgumentException ex)
@@ -56,11 +56,11 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpPatch("{id:int}")]
         [Authorize(Roles = "Doctor")]
-        public ActionResult<WeeklyAdviceResponseDto> Patch(int id, [FromBody] WeeklyAdvicePatchDto patch)
+        public async Task<ActionResult<WeeklyAdviceResponseDto>> Patch(int id, [FromBody] WeeklyAdvicePatchDto patch)
         {
             try
             {
-                var dto = _service.Patch(id, patch);
+                var dto = await _service.Patch(id, patch);
                 return dto is null ? NotFound() : Ok(dto);
             }
             catch (ArgumentException ex)
@@ -71,9 +71,9 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Doctor")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _service.Delete(id);
+            await _service.Delete(id);
             return NoContent();
         }
     }

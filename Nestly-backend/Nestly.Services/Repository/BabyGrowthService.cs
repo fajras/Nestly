@@ -1,4 +1,5 @@
-﻿using Nestly.Model.DTOObjects;
+using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
@@ -9,6 +10,13 @@ namespace Nestly.Services.Repository
 {
     public class BabyGrowthService : IBabyGrowthService
     {
+        private const decimal MinWeightKg = 0m;
+        private const decimal MaxWeightKg = 60m;
+        private const decimal MinHeightCm = 0m;
+        private const decimal MaxHeightCm = 200m;
+        private const decimal MinHeadCircumferenceCm = 0m;
+        private const decimal MaxHeadCircumferenceCm = 70m;
+
         private readonly NestlyDbContext _db;
 
         public BabyGrowthService(NestlyDbContext db)
@@ -16,7 +24,7 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public PagedResult<BabyGrowthResponseDto> Get(BabyGrowthSearchObject search)
+        public async Task<PagedResult<BabyGrowthResponseDto>> Get(BabyGrowthSearchObject search)
         {
             IQueryable<BabyGrowth> q = _db.BabyGrowths.AsQueryable();
 
@@ -40,7 +48,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.WeekNumber <= search.WeekTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -48,12 +56,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var growthEntities = await q
                 .OrderBy(x => x.WeekNumber)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = growthEntities.Select(MapToDto).ToList();
 
             return new PagedResult<BabyGrowthResponseDto>
             {
@@ -62,9 +71,9 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BabyGrowthResponseDto GetById(long id)
+        public async Task<BabyGrowthResponseDto> GetById(long id)
         {
-            var entity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.BabyGrowths.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -74,7 +83,7 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public BabyGrowthResponseDto Create(CreateBabyGrowthDto dto)
+        public async Task<BabyGrowthResponseDto> Create(CreateBabyGrowthDto dto)
         {
             if (dto is null)
             {
@@ -86,7 +95,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Baby is required.");
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+            if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
             {
                 throw new NotFoundException("Baby profile not found.");
             }
@@ -96,8 +105,10 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Week number must be greater than 0.");
             }
 
-            bool exists = _db.BabyGrowths
-                .Any(g => g.BabyId == dto.BabyId && g.WeekNumber == dto.WeekNumber);
+            ValidateMeasurements(dto.WeightKg, dto.HeightCm, dto.HeadCircumferenceCm);
+
+            bool exists = await _db.BabyGrowths
+                .AnyAsync(g => g.BabyId == dto.BabyId && g.WeekNumber == dto.WeekNumber);
 
             if (exists)
             {
@@ -115,19 +126,23 @@ namespace Nestly.Services.Repository
             };
 
             _db.BabyGrowths.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
-        public BabyGrowthResponseDto Patch(long id, BabyGrowthPatchDto patch)
+        public async Task<BabyGrowthResponseDto> Patch(long id, BabyGrowthPatchDto patch)
         {
-            var dbEntity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
+            var dbEntity = await _db.BabyGrowths.FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
                 throw new NotFoundException("Growth entry not found.");
             }
 
+            ValidateMeasurements(
+                patch.WeightKg ?? dbEntity.WeightKg,
+                patch.HeightCm ?? dbEntity.HeightCm,
+                patch.HeadCircumferenceCm ?? dbEntity.HeadCircumferenceCm);
 
             if (patch.WeightKg is not null)
             {
@@ -144,14 +159,14 @@ namespace Nestly.Services.Repository
                 dbEntity.HeadCircumferenceCm = patch.HeadCircumferenceCm.Value;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(dbEntity);
         }
 
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var dbEntity = _db.BabyGrowths.FirstOrDefault(x => x.Id == id);
+            var dbEntity = await _db.BabyGrowths.FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
@@ -159,7 +174,32 @@ namespace Nestly.Services.Repository
             }
 
             _db.BabyGrowths.Remove(dbEntity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+        }
+
+        private static void ValidateMeasurements(
+            decimal? weightKg,
+            decimal? heightCm,
+            decimal? headCircumferenceCm)
+        {
+            if (weightKg is not null && (weightKg < MinWeightKg || weightKg > MaxWeightKg))
+            {
+                throw new BusinessException(
+                    $"Weight must be between {MinWeightKg} and {MaxWeightKg} kg.");
+            }
+
+            if (heightCm is not null && (heightCm < MinHeightCm || heightCm > MaxHeightCm))
+            {
+                throw new BusinessException(
+                    $"Height must be between {MinHeightCm} and {MaxHeightCm} cm.");
+            }
+
+            if (headCircumferenceCm is not null &&
+                (headCircumferenceCm < MinHeadCircumferenceCm || headCircumferenceCm > MaxHeadCircumferenceCm))
+            {
+                throw new BusinessException(
+                    $"Head circumference must be between {MinHeadCircumferenceCm} and {MaxHeadCircumferenceCm} cm.");
+            }
         }
 
         private static BabyGrowthResponseDto MapToDto(BabyGrowth entity)
@@ -175,7 +215,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<BabyGrowthResponseDto> GetByParent(
+        public async Task<PagedResult<BabyGrowthResponseDto>> GetByParent(
     long parentProfileId,
     BabyGrowthSearchObject search)
         {
@@ -209,7 +249,7 @@ namespace Nestly.Services.Repository
                     x.WeekNumber <= search.WeekTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -221,12 +261,13 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var growthEntities = await q
                 .OrderBy(x => x.WeekNumber)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = growthEntities.Select(MapToDto).ToList();
 
             return new PagedResult<BabyGrowthResponseDto>
             {

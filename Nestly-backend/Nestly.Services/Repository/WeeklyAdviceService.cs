@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -9,6 +9,8 @@ namespace Nestly.Services.Repository
 {
     public class WeeklyAdviceService : IWeeklyAdviceService
     {
+        private const short MaxWeekNumber = 42;
+
         private readonly NestlyDbContext _db;
 
         public WeeklyAdviceService(NestlyDbContext db)
@@ -23,7 +25,7 @@ namespace Nestly.Services.Repository
             AdviceText = w.AdviceText
         };
 
-        public PagedResult<WeeklyAdviceResponseDto> Get(WeeklyAdviceSearchObject search)
+        public async Task<PagedResult<WeeklyAdviceResponseDto>> Get(WeeklyAdviceSearchObject search)
         {
             var query = _db.WeeklyAdvices
                 .AsNoTracking()
@@ -42,14 +44,15 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync();
 
-            var items = query
+            var entities = await query
                 .OrderBy(w => w.WeekNumber)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<WeeklyAdviceResponseDto>
             {
@@ -58,11 +61,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public WeeklyAdviceResponseDto GetById(int id)
+        public async Task<WeeklyAdviceResponseDto> GetById(int id)
         {
-            var entity = _db.WeeklyAdvices
+            var entity = await _db.WeeklyAdvices
                 .AsNoTracking()
-                .FirstOrDefault(w => w.Id == id);
+                .FirstOrDefaultAsync(w => w.Id == id);
 
             if (entity == null)
             {
@@ -72,11 +75,11 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public WeeklyAdviceResponseDto GetByWeek(short weekNumber)
+        public async Task<WeeklyAdviceResponseDto?> GetByWeek(short weekNumber)
         {
-            var entity = _db.WeeklyAdvices
+            var entity = await _db.WeeklyAdvices
                 .AsNoTracking()
-                .FirstOrDefault(w => w.WeekNumber == weekNumber);
+                .FirstOrDefaultAsync(w => w.WeekNumber == weekNumber);
 
             if (entity == null)
             {
@@ -86,11 +89,11 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public WeeklyAdviceResponseDto Create(CreateWeeklyAdviceDto dto)
+        public async Task<WeeklyAdviceResponseDto> Create(CreateWeeklyAdviceDto dto)
         {
-            if (dto.WeekNumber <= 0)
+            if (dto.WeekNumber <= 0 || dto.WeekNumber > MaxWeekNumber)
             {
-                throw new BusinessException("WeekNumber must be greater than 0.");
+                throw new BusinessException($"WeekNumber must be between 1 and {MaxWeekNumber}.");
             }
 
             if (string.IsNullOrWhiteSpace(dto.AdviceText))
@@ -98,7 +101,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("AdviceText is required.");
             }
 
-            if (_db.WeeklyAdvices.Any(w => w.WeekNumber == dto.WeekNumber))
+            if (await _db.WeeklyAdvices.AnyAsync(w => w.WeekNumber == dto.WeekNumber))
             {
                 throw new BusinessException($"Advice for week {dto.WeekNumber} already exists.");
             }
@@ -110,14 +113,14 @@ namespace Nestly.Services.Repository
             };
 
             _db.WeeklyAdvices.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return ToDto(entity);
         }
 
-        public WeeklyAdviceResponseDto Patch(int id, WeeklyAdvicePatchDto patch)
+        public async Task<WeeklyAdviceResponseDto?> Patch(int id, WeeklyAdvicePatchDto patch)
         {
-            var entity = _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
+            var entity = await _db.WeeklyAdvices.FirstOrDefaultAsync(w => w.Id == id);
 
             if (entity == null)
             {
@@ -126,12 +129,12 @@ namespace Nestly.Services.Repository
 
             if (patch.WeekNumber.HasValue)
             {
-                if (patch.WeekNumber <= 0)
+                if (patch.WeekNumber <= 0 || patch.WeekNumber > MaxWeekNumber)
                 {
-                    throw new BusinessException("WeekNumber must be greater than 0.");
+                    throw new BusinessException($"WeekNumber must be between 1 and {MaxWeekNumber}.");
                 }
 
-                bool exists = _db.WeeklyAdvices.Any(w =>
+                bool exists = await _db.WeeklyAdvices.AnyAsync(w =>
                     w.WeekNumber == patch.WeekNumber &&
                     w.Id != id);
 
@@ -153,13 +156,13 @@ namespace Nestly.Services.Repository
                 entity.AdviceText = patch.AdviceText.Trim();
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
             return ToDto(entity);
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
-            var entity = _db.WeeklyAdvices.FirstOrDefault(w => w.Id == id);
+            var entity = await _db.WeeklyAdvices.FirstOrDefaultAsync(w => w.Id == id);
 
             if (entity == null)
             {
@@ -167,7 +170,7 @@ namespace Nestly.Services.Repository
             }
 
             _db.WeeklyAdvices.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Messaging;
@@ -8,10 +9,14 @@ namespace Nestly.Worker.Messaging
     public class MedicationReminderService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<MedicationReminderService> _logger;
 
-        public MedicationReminderService(IServiceScopeFactory scopeFactory)
+        public MedicationReminderService(
+            IServiceScopeFactory scopeFactory,
+            ILogger<MedicationReminderService> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -25,7 +30,7 @@ namespace Nestly.Worker.Messaging
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"MedicationReminderService error: {ex.Message}");
+                    _logger.LogError(ex, "MedicationReminderService error.");
                 }
 
                 try

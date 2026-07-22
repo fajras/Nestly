@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -8,6 +9,9 @@ namespace Nestly.Services.Repository
 {
     public class HealthEntryService : IHealthEntryService
     {
+        private const decimal MinTemperatureC = 30m;
+        private const decimal MaxTemperatureC = 45m;
+
         private readonly NestlyDbContext _db;
 
         public HealthEntryService(NestlyDbContext db)
@@ -15,7 +19,7 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public PagedResult<HealthEntryResponseDto> Get(HealthEntrySearchObject search)
+        public async Task<PagedResult<HealthEntryResponseDto>> Get(HealthEntrySearchObject search)
         {
             IQueryable<HealthEntry> q = _db.HealthEntries.AsQueryable();
 
@@ -34,7 +38,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.EntryDate <= search.DateTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -42,12 +46,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.EntryDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<HealthEntryResponseDto>
             {
@@ -56,10 +61,10 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public HealthEntryResponseDto GetById(long id)
+        public async Task<HealthEntryResponseDto> GetById(long id)
         {
-            var entity = _db.HealthEntries
-                .FirstOrDefault(x => x.Id == id);
+            var entity = await _db.HealthEntries
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -69,7 +74,7 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public HealthEntryResponseDto Create(CreateHealthEntryDto dto)
+        public async Task<HealthEntryResponseDto> Create(CreateHealthEntryDto dto)
         {
             if (dto is null)
             {
@@ -81,7 +86,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Baby is required.");
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+            if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
             {
                 throw new NotFoundException("Baby profile not found.");
             }
@@ -90,6 +95,13 @@ namespace Nestly.Services.Repository
             {
                 throw new BusinessException("Entry date is required.");
             }
+
+            if (dto.EntryDate > DateTime.UtcNow)
+            {
+                throw new BusinessException("Entry date cannot be in the future.");
+            }
+
+            ValidateTemperature(dto.TemperatureC);
 
             var entity = new HealthEntry
             {
@@ -105,14 +117,14 @@ namespace Nestly.Services.Repository
             };
 
             _db.HealthEntries.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public HealthEntryResponseDto Patch(long id, HealthEntryPatchDto patch)
+        public async Task<HealthEntryResponseDto> Patch(long id, HealthEntryPatchDto patch)
         {
-            var entity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.HealthEntries.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -121,11 +133,17 @@ namespace Nestly.Services.Repository
 
             if (patch.EntryDate is not null)
             {
+                if (patch.EntryDate.Value > DateTime.UtcNow)
+                {
+                    throw new BusinessException("Entry date cannot be in the future.");
+                }
+
                 entity.EntryDate = patch.EntryDate.Value;
             }
 
             if (patch.TemperatureC is not null)
             {
+                ValidateTemperature(patch.TemperatureC);
                 entity.TemperatureC = patch.TemperatureC.Value;
             }
 
@@ -143,14 +161,14 @@ namespace Nestly.Services.Repository
                     : patch.DoctorVisit.Trim();
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var entity = _db.HealthEntries.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.HealthEntries.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -158,7 +176,17 @@ namespace Nestly.Services.Repository
             }
 
             _db.HealthEntries.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+        }
+
+        private static void ValidateTemperature(decimal? temperatureC)
+        {
+            if (temperatureC is not null &&
+                (temperatureC < MinTemperatureC || temperatureC > MaxTemperatureC))
+            {
+                throw new BusinessException(
+                    $"Temperature must be between {MinTemperatureC} and {MaxTemperatureC} °C.");
+            }
         }
 
         private static HealthEntryResponseDto MapToDto(HealthEntry x)
@@ -174,7 +202,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<HealthEntryResponseDto> GetByParent(
+        public async Task<PagedResult<HealthEntryResponseDto>> GetByParent(
     long parentProfileId,
     HealthEntrySearchObject search)
         {
@@ -204,7 +232,7 @@ namespace Nestly.Services.Repository
                     search.DateTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -216,12 +244,13 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.EntryDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<HealthEntryResponseDto>
             {

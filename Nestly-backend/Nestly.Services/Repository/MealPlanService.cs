@@ -16,7 +16,7 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public PagedResult<MealPlanResponseDto> GetMealPlans(MealPlanSearchObject search)
+        public async Task<PagedResult<MealPlanResponseDto>> GetMealPlans(MealPlanSearchObject search)
         {
             IQueryable<MealPlan> q = _db.MealPlans
                 .Include(x => x.FoodType)
@@ -42,7 +42,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.TriedAt <= search.To.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -50,12 +50,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.TriedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<MealPlanResponseDto>
             {
@@ -64,11 +65,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public MealPlanResponseDto GetById(long id)
+        public async Task<MealPlanResponseDto> GetById(long id)
         {
-            var entity = _db.MealPlans
+            var entity = await _db.MealPlans
                 .Include(x => x.FoodType)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -78,7 +79,7 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public MealPlanResponseDto Create(CreateMealPlanDto dto)
+        public async Task<MealPlanResponseDto> Create(CreateMealPlanDto dto)
         {
             if (dto is null)
             {
@@ -90,12 +91,12 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Baby is required.");
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+            if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
             {
                 throw new NotFoundException("Baby profile not found.");
             }
 
-            if (!_db.FoodTypes.Any(f => f.Id == dto.FoodTypeId))
+            if (!await _db.FoodTypes.AnyAsync(f => f.Id == dto.FoodTypeId))
             {
                 throw new NotFoundException("Food type not found.");
             }
@@ -103,6 +104,11 @@ namespace Nestly.Services.Repository
             if (dto.Rating is < 0 or > 5)
             {
                 throw new BusinessException("Rating must be between 0 and 5.");
+            }
+
+            if (dto.TriedAt is not null && dto.TriedAt.Value > DateTime.UtcNow)
+            {
+                throw new BusinessException("Tried date cannot be in the future.");
             }
 
             var entity = new MealPlan
@@ -114,19 +120,19 @@ namespace Nestly.Services.Repository
             };
 
             _db.MealPlans.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
-            var created = _db.MealPlans
+            var created = await _db.MealPlans
                 .Include(x => x.FoodType)
-                .First(x => x.Id == entity.Id);
+                .FirstAsync(x => x.Id == entity.Id);
 
             return MapToDto(created);
         }
-        public MealPlanResponseDto Patch(long id, MealPlanPatchDto patch)
+        public async Task<MealPlanResponseDto> Patch(long id, MealPlanPatchDto patch)
         {
-            var entity = _db.MealPlans
+            var entity = await _db.MealPlans
                 .Include(x => x.FoodType)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -145,16 +151,21 @@ namespace Nestly.Services.Repository
 
             if (patch.TriedAt is not null)
             {
+                if (patch.TriedAt.Value > DateTime.UtcNow)
+                {
+                    throw new BusinessException("Tried date cannot be in the future.");
+                }
+
                 entity.TriedAt = patch.TriedAt.Value;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var entity = _db.MealPlans.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.MealPlans.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -162,9 +173,9 @@ namespace Nestly.Services.Repository
             }
 
             _db.MealPlans.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
-        public PagedResult<MealRecommendationDto> GetMealRecommendations(MealRecommendationSearchObject search)
+        public async Task<PagedResult<MealRecommendationDto>> GetMealRecommendations(MealRecommendationSearchObject search)
         {
             IQueryable<MealRecommendation> q = _db.MealRecommendations
                 .Include(x => x.FoodType);
@@ -174,7 +185,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.WeekNumber == search.WeekNumber.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -182,7 +193,7 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var items = await q
                 .OrderBy(x => x.WeekNumber)
                 .ThenBy(x => x.FoodType.Name)
                 .Skip((page - 1) * pageSize)
@@ -194,7 +205,7 @@ namespace Nestly.Services.Repository
                     FoodTypeId = x.FoodTypeId,
                     FoodName = x.FoodType.Name
                 })
-                .ToList();
+                .ToListAsync();
 
             return new PagedResult<MealRecommendationDto>
             {
@@ -203,11 +214,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public MealRecommendationDto GetRecommendationById(long id)
+        public async Task<MealRecommendationDto> GetRecommendationById(long id)
         {
-            var entity = _db.MealRecommendations
+            var entity = await _db.MealRecommendations
                 .Include(x => x.FoodType)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -236,13 +247,13 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public List<FoodTypeDto> GetFoodTypesWithoutRecommendation()
+        public async Task<List<FoodTypeDto>> GetFoodTypesWithoutRecommendation()
         {
             var recommendedIds = _db.MealRecommendations
                 .Select(x => x.FoodTypeId)
                 .Distinct();
 
-            return _db.FoodTypes
+            return await _db.FoodTypes
                 .Where(x => !recommendedIds.Contains(x.Id))
                 .Select(x => new FoodTypeDto
                 {
@@ -250,11 +261,11 @@ namespace Nestly.Services.Repository
                     Name = x.Name
                 })
                 .OrderBy(x => x.Name)
-                .ToList();
+                .ToListAsync();
         }
-        public MealRecommendationDto CreateRecommendation(CreateMealRecommendationDto dto)
+        public async Task<MealRecommendationDto> CreateRecommendation(CreateMealRecommendationDto dto)
         {
-            if (!_db.FoodTypes.Any(x => x.Id == dto.FoodTypeId))
+            if (!await _db.FoodTypes.AnyAsync(x => x.Id == dto.FoodTypeId))
             {
                 throw new NotFoundException("Food type not found.");
             }
@@ -266,11 +277,11 @@ namespace Nestly.Services.Repository
             };
 
             _db.MealRecommendations.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
-            var created = _db.MealRecommendations
+            var created = await _db.MealRecommendations
                 .Include(x => x.FoodType)
-                .First(x => x.Id == entity.Id);
+                .FirstAsync(x => x.Id == entity.Id);
 
             return new MealRecommendationDto
             {
@@ -280,24 +291,24 @@ namespace Nestly.Services.Repository
                 FoodName = created.FoodType.Name
             };
         }
-        public MealRecommendationDto? UpdateRecommendation(long id, CreateMealRecommendationDto dto)
+        public async Task<MealRecommendationDto> UpdateRecommendation(long id, CreateMealRecommendationDto dto)
         {
-            var entity = _db.MealRecommendations
+            var entity = await _db.MealRecommendations
                 .Include(x => x.FoodType)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Recommendation not found.");
             }
 
-            if (!_db.FoodTypes.Any(x => x.Id == dto.FoodTypeId))
+            if (!await _db.FoodTypes.AnyAsync(x => x.Id == dto.FoodTypeId))
             {
                 throw new NotFoundException("Food type not found.");
             }
 
-            var existing = _db.MealRecommendations
-                .FirstOrDefault(x => x.FoodTypeId == dto.FoodTypeId && x.Id != id);
+            var existing = await _db.MealRecommendations
+                .FirstOrDefaultAsync(x => x.FoodTypeId == dto.FoodTypeId && x.Id != id);
 
             if (existing != null)
             {
@@ -307,11 +318,11 @@ namespace Nestly.Services.Repository
             entity.WeekNumber = dto.WeekNumber;
             entity.FoodTypeId = dto.FoodTypeId;
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
-            var updated = _db.MealRecommendations
+            var updated = await _db.MealRecommendations
                 .Include(x => x.FoodType)
-                .First(x => x.Id == id);
+                .FirstAsync(x => x.Id == id);
 
             return new MealRecommendationDto
             {
@@ -322,9 +333,9 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public void DeleteRecommendation(long id)
+        public async Task DeleteRecommendation(long id)
         {
-            var entity = _db.MealRecommendations.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.MealRecommendations.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -332,9 +343,9 @@ namespace Nestly.Services.Repository
             }
 
             _db.MealRecommendations.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
-        public PagedResult<MealPlanResponseDto> GetMealPlansByParent(
+        public async Task<PagedResult<MealPlanResponseDto>> GetMealPlansByParent(
     long parentProfileId,
     MealPlanSearchObject search)
         {
@@ -373,7 +384,7 @@ namespace Nestly.Services.Repository
                     search.To.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -385,12 +396,13 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.TriedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<MealPlanResponseDto>
             {

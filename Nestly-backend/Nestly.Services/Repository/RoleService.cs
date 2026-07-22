@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -8,6 +8,11 @@ namespace Nestly.Services.Repository
 {
     public class RoleService : IRoleService
     {
+        // Roles seeded by RoleSeeder: 1 = Parent, 2 = Doctor. These are
+        // system roles referenced throughout auth/authorization and cannot
+        // be renamed or removed.
+        private static readonly HashSet<long> SystemRoleIds = new() { 1, 2 };
+
         private readonly NestlyDbContext _db;
 
         public RoleService(NestlyDbContext db)
@@ -24,7 +29,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<RoleDto> Get(RoleSearchObject search)
+        public async Task<PagedResult<RoleDto>> Get(RoleSearchObject search)
         {
             IQueryable<Role> query = _db.Roles.AsNoTracking();
 
@@ -33,7 +38,7 @@ namespace Nestly.Services.Repository
                 query = query.Where(x => x.Name.Contains(search.Name));
             }
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -41,12 +46,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = query
+            var entities = await query
                 .OrderBy(x => x.Name)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => MapToDto(x))
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(x => MapToDto(x)).ToList();
 
             return new PagedResult<RoleDto>
             {
@@ -55,11 +61,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public RoleDto GetById(long id)
+        public async Task<RoleDto> GetById(long id)
         {
-            var entity = _db.Roles
+            var entity = await _db.Roles
                 .AsNoTracking()
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -69,32 +75,42 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public RoleDto Create(RoleInsertDto request)
+        public async Task<RoleDto> Create(RoleInsertDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 throw new BusinessException("Role name is required.");
             }
 
+            var name = request.Name.Trim();
+
+            bool duplicate = await _db.Roles
+                .AnyAsync(x => x.Name.ToLower() == name.ToLower());
+
+            if (duplicate)
+            {
+                throw new BusinessException("A role with this name already exists.");
+            }
+
             var entity = new Role
             {
-                Name = request.Name.Trim()
+                Name = name
             };
 
             _db.Roles.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public RoleDto Update(long id, RoleUpdateDto request)
+        public async Task<RoleDto> Update(long id, RoleUpdateDto request)
         {
-            if (id == 1 || id == 2)
+            if (SystemRoleIds.Contains(id))
             {
                 throw new BusinessException("System roles cannot be edited.");
             }
 
-            var entity = _db.Roles.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.Roles.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -103,22 +119,32 @@ namespace Nestly.Services.Repository
 
             if (!string.IsNullOrWhiteSpace(request.Name))
             {
-                entity.Name = request.Name.Trim();
+                var name = request.Name.Trim();
+
+                bool duplicate = await _db.Roles
+                    .AnyAsync(x => x.Id != id && x.Name.ToLower() == name.ToLower());
+
+                if (duplicate)
+                {
+                    throw new BusinessException("A role with this name already exists.");
+                }
+
+                entity.Name = name;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            if (id == 1 || id == 2)
+            if (SystemRoleIds.Contains(id))
             {
                 throw new BusinessException("System roles cannot be deleted.");
             }
 
-            var entity = _db.Roles.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.Roles.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -126,7 +152,7 @@ namespace Nestly.Services.Repository
             }
 
             _db.Roles.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
     }
 }

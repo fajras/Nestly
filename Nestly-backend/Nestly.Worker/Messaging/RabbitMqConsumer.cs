@@ -1,4 +1,5 @@
-﻿using Nestly.Model.DTOObjects;
+﻿using Microsoft.Extensions.Logging;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using RabbitMQ.Client;
@@ -12,6 +13,7 @@ namespace Nestly.Worker.Messaging
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _config;
+        private readonly ILogger<RabbitMqConsumer> _logger;
 
         private IConnection _connection;
         private IModel _channel;
@@ -21,10 +23,12 @@ namespace Nestly.Worker.Messaging
 
         public RabbitMqConsumer(
             IServiceScopeFactory scopeFactory,
-            IConfiguration config)
+            IConfiguration config,
+            ILogger<RabbitMqConsumer> logger)
         {
             _scopeFactory = scopeFactory;
             _config = config;
+            _logger = logger;
 
             _queueName = _config["RabbitMQ:Queue"];
             _deadLetterQueue = $"{_queueName}.deadletter";
@@ -143,6 +147,11 @@ namespace Nestly.Worker.Messaging
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(
+                            ex,
+                            "Failed to process notification message (delivery tag {DeliveryTag}).",
+                            ea.DeliveryTag);
+
                         _channel.BasicNack(
                             ea.DeliveryTag,
                             false,
@@ -161,8 +170,9 @@ namespace Nestly.Worker.Messaging
             }
             catch (Exception ex)
             {
-                Console.WriteLine(
-                    $"RabbitMQ fatal error: {ex}");
+                _logger.LogCritical(
+                    ex,
+                    "RabbitMQ fatal error.");
             }
         }
 

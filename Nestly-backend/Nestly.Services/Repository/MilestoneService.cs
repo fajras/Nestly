@@ -8,10 +8,12 @@ namespace Nestly.Services.Repository
 {
     public class MilestoneService : IMilestoneService
     {
+        private const int MaxTitleLength = 200;
+
         private readonly NestlyDbContext _db;
         public MilestoneService(NestlyDbContext db) => _db = db;
 
-        public PagedResult<MilestoneResponseDto> Get(MilestoneSearchObject search)
+        public async Task<PagedResult<MilestoneResponseDto>> Get(MilestoneSearchObject search)
         {
             IQueryable<Milestone> q = _db.Milestones.AsNoTracking();
 
@@ -35,7 +37,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.Title.Contains(search.Title));
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -43,12 +45,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderBy(x => x.AchievedDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<MilestoneResponseDto>
             {
@@ -57,11 +60,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public MilestoneResponseDto GetById(long id)
+        public async Task<MilestoneResponseDto> GetById(long id)
         {
-            var entity = _db.Milestones
+            var entity = await _db.Milestones
                 .AsNoTracking()
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -72,14 +75,14 @@ namespace Nestly.Services.Repository
         }
 
 
-        public MilestoneResponseDto Create(CreateMilestoneDto dto)
+        public async Task<MilestoneResponseDto> Create(CreateMilestoneDto dto)
         {
             if (dto is null)
             {
                 throw new BusinessException("Request cannot be null.");
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+            if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
             {
                 throw new NotFoundException("Baby profile not found.");
             }
@@ -89,24 +92,47 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Title is required.");
             }
 
+            var title = dto.Title.Trim();
+
+            if (title.Length > MaxTitleLength)
+            {
+                throw new BusinessException($"Title cannot exceed {MaxTitleLength} characters.");
+            }
+
+            if (dto.AchievedDate.Date > DateTime.UtcNow.Date)
+            {
+                throw new BusinessException("Achieved date cannot be in the future.");
+            }
+
+            bool duplicate = await _db.Milestones.AnyAsync(x =>
+                x.BabyId == dto.BabyId &&
+                x.AchievedDate.Date == dto.AchievedDate.Date &&
+                x.Title.ToLower() == title.ToLower());
+
+            if (duplicate)
+            {
+                throw new BusinessException(
+                    "This milestone was already recorded for this baby on this date.");
+            }
+
             var entity = new Milestone
             {
                 BabyId = dto.BabyId,
-                Title = dto.Title.Trim(),
+                Title = title,
                 AchievedDate = dto.AchievedDate,
                 Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
                 CreatedAt = DateTime.UtcNow
             };
 
             _db.Milestones.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return ToDto(entity);
         }
 
-        public MilestoneResponseDto Patch(long id, MilestonePatchDto patch)
+        public async Task<MilestoneResponseDto> Patch(long id, MilestonePatchDto patch)
         {
-            var entity = _db.Milestones.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.Milestones.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -120,11 +146,23 @@ namespace Nestly.Services.Repository
                     throw new BusinessException("Title cannot be empty.");
                 }
 
-                entity.Title = patch.Title.Trim();
+                var title = patch.Title.Trim();
+
+                if (title.Length > MaxTitleLength)
+                {
+                    throw new BusinessException($"Title cannot exceed {MaxTitleLength} characters.");
+                }
+
+                entity.Title = title;
             }
 
             if (patch.AchievedDate is not null)
             {
+                if (patch.AchievedDate.Value.Date > DateTime.UtcNow.Date)
+                {
+                    throw new BusinessException("Achieved date cannot be in the future.");
+                }
+
                 entity.AchievedDate = patch.AchievedDate.Value;
             }
 
@@ -135,13 +173,13 @@ namespace Nestly.Services.Repository
                     : patch.Notes.Trim();
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return ToDto(entity);
         }
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var dbEntity = _db.Milestones.FirstOrDefault(x => x.Id == id);
+            var dbEntity = await _db.Milestones.FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
@@ -149,7 +187,7 @@ namespace Nestly.Services.Repository
             }
 
             _db.Milestones.Remove(dbEntity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
         private static MilestoneResponseDto ToDto(Milestone m) => new()
@@ -162,7 +200,7 @@ namespace Nestly.Services.Repository
             CreatedAt = m.CreatedAt
         };
 
-        public PagedResult<MilestoneResponseDto> GetByParent(
+        public async Task<PagedResult<MilestoneResponseDto>> GetByParent(
     long parentProfileId,
     MilestoneSearchObject search)
         {
@@ -198,7 +236,7 @@ namespace Nestly.Services.Repository
                     x.Title.Contains(search.Title));
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -210,12 +248,13 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.AchievedDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<MilestoneResponseDto>
             {
@@ -225,4 +264,3 @@ namespace Nestly.Services.Repository
         }
     }
 }
-

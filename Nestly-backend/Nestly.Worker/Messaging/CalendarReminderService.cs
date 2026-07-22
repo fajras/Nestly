@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Messaging;
@@ -7,11 +8,18 @@ namespace Nestly.Worker.Messaging
 {
     public class CalendarReminderService : BackgroundService
     {
-        private readonly IServiceScopeFactory _scopeFactory;
+        private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(15);
+        private static readonly TimeSpan ReminderWindow = TimeSpan.FromHours(24);
 
-        public CalendarReminderService(IServiceScopeFactory scopeFactory)
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<CalendarReminderService> _logger;
+
+        public CalendarReminderService(
+            IServiceScopeFactory scopeFactory,
+            ILogger<CalendarReminderService> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -21,41 +29,41 @@ namespace Nestly.Worker.Messaging
             {
                 try
                 {
-                    var now = DateTime.UtcNow;
-
-                    var nextRun = now.Date.AddHours(12);
-
-                    if (now >= nextRun)
-                    {
-                        nextRun = nextRun.AddDays(1);
-                    }
-
-                    var delay = nextRun - now;
-
-                    await Task.Delay(delay, stoppingToken);
-
-                    await CheckTomorrowEvents(stoppingToken);
+                    await CheckUpcomingEvents(stoppingToken);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"CalendarReminderService error: {ex.Message}");
-                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                    _logger.LogError(ex, "CalendarReminderService error.");
+                }
+
+                try
+                {
+                    await Task.Delay(CheckInterval, stoppingToken);
+                }
+                catch (TaskCanceledException)
+                {
                 }
             }
         }
 
-        private async Task CheckTomorrowEvents(CancellationToken ct)
+        // Runs every 15 minutes and reminds about any event starting within
+        // the next 24 hours that hasn't been reminded about yet - this gives
+        // an accurate "~24h before" notification regardless of the event's
+        // time of day, unlike a once-a-day check that only compares dates.
+        private async Task CheckUpcomingEvents(CancellationToken ct)
         {
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<NestlyDbContext>();
             var publisher = scope.ServiceProvider.GetRequiredService<RabbitMqPublisher>();
 
-            var tomorrow = DateTime.UtcNow.Date.AddDays(1);
+            var now = DateTime.UtcNow;
+            var horizon = now.Add(ReminderWindow);
 
             var events = await db.CalendarEvents
                 .Where(e =>
                     !e.Reminder24hSent &&
-                    e.StartAt.Date == tomorrow)
+                    e.StartAt > now &&
+                    e.StartAt <= horizon)
                 .ToListAsync(ct);
 
             foreach (var ev in events)
@@ -65,8 +73,8 @@ namespace Nestly.Worker.Messaging
                     publisher.Publish(new NotificationEvent
                     {
                         UserId = ev.UserId.Value,
-                        Title = "Podsjetnik za sutrašnji termin",
-                        Message = $"Sutra imate zakazan termin: {ev.Title}"
+                        Title = "Podsjetnik za termin",
+                        Message = $"Uskoro imate zakazan termin: {ev.Title}"
                     });
 
                     ev.Reminder24hSent = true;
@@ -77,4 +85,3 @@ namespace Nestly.Worker.Messaging
         }
     }
 }
-

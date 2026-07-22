@@ -23,10 +23,10 @@ namespace Nestly.WebAPI.Controllers
 
         [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<MilestoneResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<MilestoneResponseDto>>> Get(
             [FromQuery] MilestoneSearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
 
         [HttpGet("{id:long}")]
@@ -36,7 +36,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureMilestoneOwnershipAsync(id);
 
-            var entity = _service.GetById(id);
+            var entity = await _service.GetById(id);
 
             return Ok(entity);
         }
@@ -49,7 +49,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureBabyOwnershipAsync(request.BabyId);
 
-            var created = _service.Create(request);
+            var created = await _service.Create(request);
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -66,7 +66,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureMilestoneOwnershipAsync(id);
 
-            var updated = _service.Patch(id, patch);
+            var updated = await _service.Patch(id, patch);
 
             return Ok(updated);
         }
@@ -78,7 +78,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureMilestoneOwnershipAsync(id);
 
-            _service.Delete(id);
+            await _service.Delete(id);
 
             return NoContent();
         }
@@ -99,7 +99,7 @@ namespace Nestly.WebAPI.Controllers
             }
 
             return Ok(
-                _service.GetByParent(
+                await _service.GetByParent(
                     parent.Id,
                     search));
         }

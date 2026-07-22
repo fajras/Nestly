@@ -566,8 +566,15 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
                     return 'Unesite količinu';
                   }
                   final normalized = value.replaceAll(',', '.');
-                  if (double.tryParse(normalized) == null) {
+                  final parsed = double.tryParse(normalized);
+                  if (parsed == null) {
                     return 'Dozvoljeni su samo brojevi';
+                  }
+                  if (parsed <= 0) {
+                    return 'Količina mora biti veća od 0';
+                  }
+                  if (parsed > 1000) {
+                    return 'Količina ne može biti veća od 1000';
                   }
                   return null;
                 },

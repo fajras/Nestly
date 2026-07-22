@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -19,7 +19,7 @@ namespace Nestly.Services.Repository
             _db = db;
             _currentUserService = currentUserService;
         }
-        public PagedResult<SymptomDiaryResponseDto> Get(SymptomDiarySearchObject search)
+        public async Task<PagedResult<SymptomDiaryResponseDto>> Get(SymptomDiarySearchObject search)
         {
             IQueryable<SymptomDiary> q = _db.SymptomDiaries.AsNoTracking();
 
@@ -42,14 +42,15 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(s => s.Date)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<SymptomDiaryResponseDto>
             {
@@ -68,7 +69,7 @@ namespace Nestly.Services.Repository
             LegSwelling = s.LegSwelling
         };
 
-        public SymptomDiaryResponseDto Create(CreateSymptomDiaryDto dto)
+        public async Task<SymptomDiaryResponseDto> Create(CreateSymptomDiaryDto dto)
         {
             var parent = _currentUserService
                 .GetCurrentParentProfile();
@@ -81,7 +82,13 @@ namespace Nestly.Services.Repository
 
             var date = (dto.Date ?? DateTime.Today).Date;
 
-            if (_db.SymptomDiaries.Any(s =>
+            if (date > DateTime.UtcNow.Date)
+            {
+                throw new BusinessException(
+                    "Diary date cannot be in the future.");
+            }
+
+            if (await _db.SymptomDiaries.AnyAsync(s =>
                 s.ParentProfileId == parent.Id &&
                 s.Date == date))
             {
@@ -108,18 +115,28 @@ namespace Nestly.Services.Repository
 
             _db.SymptomDiaries.Add(entity);
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return ToDto(entity);
         }
 
-        public PagedResult<SymptomDiaryResponseDto> GetByParent(long parentProfileId, SymptomDiarySearchObject search)
+        public async Task<PagedResult<SymptomDiaryResponseDto>> GetByParent(long parentProfileId, SymptomDiarySearchObject search)
         {
             var query = _db.SymptomDiaries
                 .AsNoTracking()
                 .Where(s => s.ParentProfileId == parentProfileId);
 
-            var totalCount = query.Count();
+            if (search.DateFrom is not null)
+            {
+                query = query.Where(s => s.Date >= search.DateFrom.Value.Date);
+            }
+
+            if (search.DateTo is not null)
+            {
+                query = query.Where(s => s.Date <= search.DateTo.Value.Date);
+            }
+
+            var totalCount = await query.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -127,12 +144,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = query
+            var entities = await query
                 .OrderByDescending(s => s.Date)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<SymptomDiaryResponseDto>
             {
@@ -141,11 +159,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public SymptomDiaryResponseDto GetByDate(long parentProfileId, DateTime date)
+        public async Task<SymptomDiaryResponseDto> GetByDate(long parentProfileId, DateTime date)
         {
-            var entity = _db.SymptomDiaries
+            var entity = await _db.SymptomDiaries
                 .AsNoTracking()
-                .FirstOrDefault(s =>
+                .FirstOrDefaultAsync(s =>
                     s.ParentProfileId == parentProfileId &&
                     s.Date == date.Date);
 
@@ -157,9 +175,9 @@ namespace Nestly.Services.Repository
             return ToDto(entity);
         }
 
-        public SymptomDiaryResponseDto? Patch(long id, SymptomDiaryPatchDto patch)
+        public async Task<SymptomDiaryResponseDto?> Patch(long id, SymptomDiaryPatchDto patch)
         {
-            var entity = _db.SymptomDiaries.FirstOrDefault(s => s.Id == id);
+            var entity = await _db.SymptomDiaries.FirstOrDefaultAsync(s => s.Id == id);
             if (entity == null)
             {
                 throw new NotFoundException("Symptom diary entry not found.");
@@ -195,13 +213,13 @@ namespace Nestly.Services.Repository
                 entity.LegSwelling = patch.LegSwelling.Value;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
             return ToDto(entity);
         }
 
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var entity = _db.SymptomDiaries.FirstOrDefault(s => s.Id == id);
+            var entity = await _db.SymptomDiaries.FirstOrDefaultAsync(s => s.Id == id);
 
             if (entity == null)
             {
@@ -209,10 +227,10 @@ namespace Nestly.Services.Repository
             }
 
             _db.SymptomDiaries.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
-        public PagedResult<DateTime> GetMarkedDays(long parentProfileId, SymptomDiarySearchObject search)
+        public async Task<PagedResult<DateTime>> GetMarkedDays(long parentProfileId, SymptomDiarySearchObject search)
         {
             var query = _db.SymptomDiaries
                 .AsNoTracking()
@@ -220,7 +238,7 @@ namespace Nestly.Services.Repository
                 .Select(s => s.Date)
                 .Distinct();
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -228,11 +246,11 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = query
+            var items = await query
                 .OrderByDescending(d => d)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
             return new PagedResult<DateTime>
             {

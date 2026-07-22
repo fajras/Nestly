@@ -8,6 +8,8 @@ namespace Nestly.Services.Repository
 {
     public class FeedingLogService : IFeedingLogService
     {
+        private const decimal MaxAmountMl = 1000m;
+
         private readonly NestlyDbContext _db;
 
         public FeedingLogService(NestlyDbContext db)
@@ -15,7 +17,7 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public PagedResult<FeedingLogResponseDto> Get(FeedingLogSearchObject search)
+        public async Task<PagedResult<FeedingLogResponseDto>> Get(FeedingLogSearchObject search)
         {
             IQueryable<FeedingLog> q = _db.FeedingLogs
                 .Include(f => f.FoodType)
@@ -36,7 +38,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.FeedDate <= search.DateTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -44,13 +46,14 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.FeedDate)
                 .ThenByDescending(x => x.FeedTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => MapToDto(x))
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<FeedingLogResponseDto>
             {
@@ -59,11 +62,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public FeedingLogResponseDto GetById(long id)
+        public async Task<FeedingLogResponseDto> GetById(long id)
         {
-            var entity = _db.FeedingLogs
+            var entity = await _db.FeedingLogs
                 .Include(f => f.FoodType)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -73,7 +76,7 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public FeedingLogResponseDto Create(CreateFeedingLogDto dto)
+        public async Task<FeedingLogResponseDto> Create(CreateFeedingLogDto dto)
         {
             if (dto is null)
             {
@@ -85,7 +88,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Baby is required.");
             }
 
-            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+            if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
             {
                 throw new NotFoundException("Baby profile not found.");
             }
@@ -95,13 +98,15 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Feed date is required.");
             }
 
-            if (dto.AmountMl is < 0)
+            if (dto.FeedDate.Date > DateTime.UtcNow.Date)
             {
-                throw new BusinessException("Amount cannot be negative.");
+                throw new BusinessException("Feed date cannot be in the future.");
             }
 
+            ValidateAmount(dto.AmountMl);
+
             if (dto.FoodTypeId.HasValue &&
-                !_db.FoodTypes.Any(f => f.Id == dto.FoodTypeId.Value))
+                !await _db.FoodTypes.AnyAsync(f => f.Id == dto.FoodTypeId.Value))
             {
                 throw new NotFoundException("Food type not found.");
             }
@@ -119,15 +124,15 @@ namespace Nestly.Services.Repository
             };
 
             _db.FeedingLogs.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
-        public FeedingLogResponseDto Patch(long id, FeedingLogPatchDto patch)
+        public async Task<FeedingLogResponseDto> Patch(long id, FeedingLogPatchDto patch)
         {
-            var dbEntity = _db.FeedingLogs
+            var dbEntity = await _db.FeedingLogs
                 .Include(f => f.FoodType)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
@@ -136,6 +141,11 @@ namespace Nestly.Services.Repository
 
             if (patch.FeedDate is not null)
             {
+                if (patch.FeedDate.Value.Date > DateTime.UtcNow.Date)
+                {
+                    throw new BusinessException("Feed date cannot be in the future.");
+                }
+
                 dbEntity.FeedDate = patch.FeedDate.Value.Date;
             }
 
@@ -146,17 +156,14 @@ namespace Nestly.Services.Repository
 
             if (patch.AmountMl is not null)
             {
-                if (patch.AmountMl < 0)
-                {
-                    throw new BusinessException("Amount cannot be negative.");
-                }
+                ValidateAmount(patch.AmountMl.Value);
 
                 dbEntity.AmountMl = patch.AmountMl.Value;
             }
 
             if (patch.FoodTypeId is not null)
             {
-                if (!_db.FoodTypes.Any(f => f.Id == patch.FoodTypeId.Value))
+                if (!await _db.FoodTypes.AnyAsync(f => f.Id == patch.FoodTypeId.Value))
                 {
                     throw new NotFoundException("Food type not found.");
                 }
@@ -171,13 +178,13 @@ namespace Nestly.Services.Repository
                     : patch.Notes.Trim();
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(dbEntity);
         }
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var dbEntity = _db.FeedingLogs.FirstOrDefault(x => x.Id == id);
+            var dbEntity = await _db.FeedingLogs.FirstOrDefaultAsync(x => x.Id == id);
 
             if (dbEntity is null)
             {
@@ -185,7 +192,25 @@ namespace Nestly.Services.Repository
             }
 
             _db.FeedingLogs.Remove(dbEntity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+        }
+
+        private static void ValidateAmount(decimal? amountMl)
+        {
+            if (amountMl is null)
+            {
+                return;
+            }
+
+            if (amountMl <= 0)
+            {
+                throw new BusinessException("Amount must be greater than 0.");
+            }
+
+            if (amountMl > MaxAmountMl)
+            {
+                throw new BusinessException($"Amount cannot exceed {MaxAmountMl} ml.");
+            }
         }
 
         private static FeedingLogResponseDto MapToDto(FeedingLog x)
@@ -203,7 +228,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<FeedingLogResponseDto> GetByParent(
+        public async Task<PagedResult<FeedingLogResponseDto>> GetByParent(
     long parentProfileId,
     FeedingLogSearchObject search)
         {
@@ -234,7 +259,7 @@ namespace Nestly.Services.Repository
                     search.DateTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -246,13 +271,14 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.FeedDate)
                 .ThenByDescending(x => x.FeedTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<FeedingLogResponseDto>
             {

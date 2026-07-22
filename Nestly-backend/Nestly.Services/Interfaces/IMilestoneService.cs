@@ -2,10 +2,10 @@ using Nestly.Model.DTOObjects;
 
 public interface IMilestoneService
 {
-    PagedResult<MilestoneResponseDto> Get(MilestoneSearchObject search);
-    MilestoneResponseDto GetById(long id);
-    MilestoneResponseDto Create(CreateMilestoneDto entity);
-    MilestoneResponseDto Patch(long id, MilestonePatchDto patch);
-    void Delete(long id);
-    PagedResult<MilestoneResponseDto> GetByParent(long parentProfileId, MilestoneSearchObject search);
+    Task<PagedResult<MilestoneResponseDto>> Get(MilestoneSearchObject search);
+    Task<MilestoneResponseDto> GetById(long id);
+    Task<MilestoneResponseDto> Create(CreateMilestoneDto entity);
+    Task<MilestoneResponseDto> Patch(long id, MilestonePatchDto patch);
+    Task Delete(long id);
+    Task<PagedResult<MilestoneResponseDto>> GetByParent(long parentProfileId, MilestoneSearchObject search);
 }

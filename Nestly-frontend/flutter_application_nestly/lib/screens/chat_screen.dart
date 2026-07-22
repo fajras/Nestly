@@ -66,7 +66,10 @@ class ChatApiService {
     return data.map((e) => ChatMessage.fromJson(e)).toList();
   }
 
-  Future<void> sendMessage({
+  /// Sends a message and returns the conversation id the backend
+  /// created/used for it, so a brand-new conversation (conversationId
+  /// starting at 0) can start being filtered correctly right away.
+  Future<int?> sendMessage({
     required int receiverUserId,
     required String content,
   }) async {
@@ -78,6 +81,17 @@ class ChatApiService {
     if (res.statusCode != 200) {
       throw Exception('Failed to send message');
     }
+
+    try {
+      final decoded = jsonDecode(res.body);
+      if (decoded is Map<String, dynamic> && decoded['conversationId'] != null) {
+        return decoded['conversationId'] as int;
+      }
+    } catch (_) {
+      // Older/empty response body - caller just keeps its current id.
+    }
+
+    return null;
   }
 }
 
@@ -109,17 +123,23 @@ class _ChatScreenState extends State<ChatScreen> {
   HubConnection? _hub;
   bool _loading = true;
 
+  // Mirrors widget.conversationId but can be updated once a brand-new
+  // conversation (id 0) gets its real id from the first sent/received
+  // message, so subsequent real-time messages can be filtered by id too.
+  late int _conversationId;
+
   @override
   void initState() {
     super.initState();
+    _conversationId = widget.conversationId;
     _loadMessages();
     _connectRealtime();
   }
 
   Future<void> _loadMessages() async {
     try {
-      if (widget.conversationId != 0) {
-        final list = await _api.getMessages(widget.conversationId);
+      if (_conversationId != 0) {
+        final list = await _api.getMessages(_conversationId);
 
         if (!mounted) return;
 
@@ -163,10 +183,22 @@ class _ChatScreenState extends State<ChatScreen> {
       final data = Map<String, dynamic>.from(raw);
       final msg = ChatRealtimeMessage.fromJson(data);
 
-      if (widget.conversationId != 0 &&
-          msg.conversationId != widget.conversationId) {
+      // Until we know the real conversationId (brand-new conversation),
+      // fall back to matching by sender: since a chat is only ever between
+      // these two specific users, any message from the other participant
+      // is guaranteed to belong to this conversation.
+      final belongsToThisChat = _conversationId != 0
+          ? msg.conversationId == _conversationId
+          : msg.senderId == widget.otherUserId;
+
+      if (!belongsToThisChat) {
         return;
       }
+
+      if (_conversationId == 0 && msg.conversationId != 0) {
+        _conversationId = msg.conversationId;
+      }
+
       if (!mounted) return;
 
       setState(() {
@@ -201,9 +233,20 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
-      await _api.sendMessage(receiverUserId: widget.otherUserId, content: text);
+      final conversationId = await _api.sendMessage(
+        receiverUserId: widget.otherUserId,
+        content: text,
+      );
+
+      if (conversationId != null) {
+        _conversationId = conversationId;
+      }
     } catch (_) {
       if (!mounted) return;
+
+      // Restore the text so the user doesn't lose what they typed.
+      _msgCtrl.text = text;
+      _msgCtrl.selection = TextSelection.collapsed(offset: text.length);
 
       NestlyToast.error(context, 'Poruka nije poslana');
     }
@@ -262,6 +305,9 @@ class _ChatScreenState extends State<ChatScreen> {
         final m = _messages[i];
         final mine = m.senderId == widget.currentUserId;
 
+        final timeText =
+            '${m.createdAt.hour.toString().padLeft(2, '0')}:${m.createdAt.minute.toString().padLeft(2, '0')}';
+
         return Align(
           alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
@@ -274,9 +320,27 @@ class _ChatScreenState extends State<ChatScreen> {
                   : AppColors.babyPink.withOpacity(.35),
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
-            child: Text(
-              m.content,
-              style: TextStyle(color: mine ? Colors.white : Colors.black87),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  m.content,
+                  style: TextStyle(
+                    color: mine ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  timeText,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: mine
+                        ? Colors.white.withOpacity(.75)
+                        : Colors.black54,
+                  ),
+                ),
+              ],
             ),
           ),
         );

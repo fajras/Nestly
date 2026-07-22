@@ -23,10 +23,10 @@ namespace Nestly.WebAPI.Controllers
 
         [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<MedicationPlanResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<MedicationPlanResponseDto>>> Get(
             [FromQuery] MedicationPlanSearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
 
         [HttpGet("{id:long}")]
@@ -36,7 +36,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureMedicationPlanOwnershipAsync(id);
 
-            var dto = _service.GetById(id);
+            var dto = await _service.GetById(id);
 
             return Ok(dto);
         }
@@ -49,7 +49,7 @@ namespace Nestly.WebAPI.Controllers
             var parent = await _currentUserService
                 .GetCurrentParentProfileAsync();
 
-            var created = _service.Create(
+            var created = await _service.Create(
                 parent.Id,
                 request);
 
@@ -70,7 +70,7 @@ namespace Nestly.WebAPI.Controllers
 
             try
             {
-                var updated = _service.Patch(id, patch);
+                var updated = await _service.Patch(id, patch);
 
                 return Ok(updated);
             }
@@ -90,7 +90,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureMedicationPlanOwnershipAsync(id);
 
-            _service.Delete(id);
+            await _service.Delete(id);
 
             return NoContent();
         }
@@ -104,18 +104,18 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureMedicationIntakeOwnershipAsync(
                     dto.IntakeLogId);
 
-            _service.MarkAsTaken(dto.IntakeLogId);
+            await _service.MarkAsTaken(dto.IntakeLogId);
 
             return NoContent();
         }
 
         [Authorize(Roles = "Doctor")]
         [HttpGet("day")]
-        public ActionResult<PagedResult<MedicationIntakeLogDto>> GetForDay(
+        public async Task<ActionResult<PagedResult<MedicationIntakeLogDto>>> GetForDay(
             [FromQuery] MedicationIntakeLogSearchObject search)
         {
             return Ok(
-                _service.GetLogsForDay(search));
+                await _service.GetLogsForDay(search));
         }
 
         [Authorize(Roles = "Parent")]
@@ -127,7 +127,7 @@ namespace Nestly.WebAPI.Controllers
                 .GetCurrentParentProfileAsync();
 
             return Ok(
-                _service.GetLogsForDayByParent(
+                await _service.GetLogsForDayByParent(
                     parent.Id,
                     search));
         }
@@ -141,7 +141,7 @@ namespace Nestly.WebAPI.Controllers
                 .GetCurrentParentProfileAsync();
 
             return Ok(
-                _service.GetByParent(
+                await _service.GetByParent(
                     parent.Id,
                     search));
         }

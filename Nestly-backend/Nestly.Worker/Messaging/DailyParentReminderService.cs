@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Data;
 using Nestly.Services.Messaging;
@@ -7,10 +8,14 @@ namespace Nestly.Worker.Messaging
     public class DailyParentReminderService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<DailyParentReminderService> _logger;
 
-        public DailyParentReminderService(IServiceScopeFactory scopeFactory)
+        public DailyParentReminderService(
+            IServiceScopeFactory scopeFactory,
+            ILogger<DailyParentReminderService> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,7 +41,7 @@ namespace Nestly.Worker.Messaging
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"DailyParentReminderService error: {ex.Message}");
+                    _logger.LogError(ex, "DailyParentReminderService error.");
                     await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
                 }
             }

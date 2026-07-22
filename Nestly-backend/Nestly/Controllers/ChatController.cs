@@ -33,11 +33,11 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureCanChatWithUserAsync(
                     request.ReceiverUserId);
 
-            await _chatService.SendMessage(
+            var conversationId = await _chatService.SendMessage(
                 userId,
                 request);
 
-            return Ok();
+            return Ok(new { conversationId });
         }
 
         [HttpGet("conversations")]

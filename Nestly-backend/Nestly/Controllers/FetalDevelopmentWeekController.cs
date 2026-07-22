@@ -18,47 +18,47 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<PagedResult<FetalDevelopmentWeekResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<FetalDevelopmentWeekResponseDto>>> Get(
     [FromQuery] FetalDevelopmentWeekSearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<FetalDevelopmentWeekResponseDto> GetById(int id)
+        public async Task<ActionResult<FetalDevelopmentWeekResponseDto>> GetById(int id)
         {
-            var entity = _service.GetById(id);
+            var entity = await _service.GetById(id);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpGet("week/{weekNumber:int}")]
-        public ActionResult<FetalDevelopmentWeekResponseDto> GetByWeekNumber(int weekNumber)
+        public async Task<ActionResult<FetalDevelopmentWeekResponseDto>> GetByWeekNumber(int weekNumber)
         {
-            var entity = _service.GetByWeekNumber(weekNumber);
+            var entity = await _service.GetByWeekNumber(weekNumber);
             return entity is null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
         [Authorize(Roles = "Doctor")]
-        public ActionResult<FetalDevelopmentWeekResponseDto> Create([FromBody] CreateFetalDevelopmentWeekDto request)
+        public async Task<ActionResult<FetalDevelopmentWeekResponseDto>> Create([FromBody] CreateFetalDevelopmentWeekDto request)
         {
-            var created = _service.Create(request);
+            var created = await _service.Create(request);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPatch("{id:int}")]
         [Authorize(Roles = "Doctor")]
-        public ActionResult<FetalDevelopmentWeekResponseDto> Patch(int id, [FromBody] FetalDevelopmentWeekPatchDto patch)
+        public async Task<ActionResult<FetalDevelopmentWeekResponseDto>> Patch(int id, [FromBody] FetalDevelopmentWeekPatchDto patch)
         {
-            var updated = _service.Patch(id, patch);
+            var updated = await _service.Patch(id, patch);
             return updated is null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Doctor")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _service.Delete(id);
+            await _service.Delete(id);
             return NoContent();
         }
     }

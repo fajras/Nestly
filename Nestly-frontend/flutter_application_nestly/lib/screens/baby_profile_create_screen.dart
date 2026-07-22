@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
@@ -30,7 +32,16 @@ class BabyProfileApiService {
     ).timeout(const Duration(seconds: 10));
 
     if (res.statusCode != 201 && res.statusCode != 200) {
-      throw Exception('Failed to create baby profile. Please try again.');
+      String message = 'Failed to create baby profile. Please try again.';
+      try {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map && decoded['message'] is String) {
+          message = decoded['message'];
+        }
+      } catch (_) {
+        // Keep the generic fallback message above.
+      }
+      throw Exception(message);
     }
   }
 }
@@ -126,12 +137,14 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
 
       NestlyToast.success(context, 'Profil bebe je uspješno spremljen.');
       if (mounted) Navigator.of(context).pop();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      NestlyToast.error(
-        context,
-        'Došlo je do greške pri spremanju profila bebe.',
-      );
+
+      final message = e.toString().contains('already exists')
+          ? 'Profil sa istim imenom i datumom rođenja već postoji.'
+          : 'Došlo je do greške pri spremanju profila bebe.';
+
+      NestlyToast.error(context, message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -183,9 +196,15 @@ class _BabyProfileCreateScreenState extends State<BabyProfileCreateScreen> {
                       TextFormField(
                         controller: _nameCtrl,
                         decoration: const InputDecoration(labelText: 'Ime'),
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Unesite ime bebe'
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Unesite ime bebe';
+                          }
+                          if (v.trim().length < 2) {
+                            return 'Ime mora imati bar 2 karaktera';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: AppSpacing.lg),
 

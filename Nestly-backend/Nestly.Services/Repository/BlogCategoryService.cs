@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -8,6 +8,10 @@ namespace Nestly.Services.Repository
 {
     public class BlogCategoryService : IBlogCategoryService
     {
+        // Categories seeded by BlogCategorySeeder (ids 1-6) are considered
+        // system categories and cannot be renamed or deleted.
+        private const int SystemCategoryMaxId = 6;
+
         private readonly NestlyDbContext _db;
 
         public BlogCategoryService(NestlyDbContext db)
@@ -24,7 +28,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<BlogCategoryDto> Get(BlogCategorySearchObject search)
+        public async Task<PagedResult<BlogCategoryDto>> Get(BlogCategorySearchObject search)
         {
             IQueryable<BlogCategory> query = _db.BlogCategories.AsNoTracking();
 
@@ -33,7 +37,7 @@ namespace Nestly.Services.Repository
                 query = query.Where(x => x.Name.Contains(search.Name));
             }
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -41,12 +45,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = query
+            var entities = await query
                 .OrderBy(x => x.Name)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<BlogCategoryDto>
             {
@@ -55,11 +60,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BlogCategoryDto GetById(int id)
+        public async Task<BlogCategoryDto> GetById(int id)
         {
-            var entity = _db.BlogCategories
+            var entity = await _db.BlogCategories
                 .AsNoTracking()
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -69,32 +74,42 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public BlogCategoryDto Create(BlogCategoryInsertDto request)
+        public async Task<BlogCategoryDto> Create(BlogCategoryInsertDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 throw new BusinessException("Category name is required.");
             }
 
+            var name = request.Name.Trim();
+
+            bool duplicate = await _db.BlogCategories
+                .AnyAsync(x => x.Name.ToLower() == name.ToLower());
+
+            if (duplicate)
+            {
+                throw new BusinessException("A category with this name already exists.");
+            }
+
             var entity = new BlogCategory
             {
-                Name = request.Name.Trim()
+                Name = name
             };
 
             _db.BlogCategories.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public BlogCategoryDto Update(int id, BlogCategoryUpdateDto request)
+        public async Task<BlogCategoryDto> Update(int id, BlogCategoryUpdateDto request)
         {
-            if (id <= 6)
+            if (id <= SystemCategoryMaxId)
             {
                 throw new BusinessException("System categories cannot be edited.");
             }
 
-            var entity = _db.BlogCategories.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.BlogCategories.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -103,29 +118,39 @@ namespace Nestly.Services.Repository
 
             if (!string.IsNullOrWhiteSpace(request.Name))
             {
-                entity.Name = request.Name.Trim();
+                var name = request.Name.Trim();
+
+                bool duplicate = await _db.BlogCategories
+                    .AnyAsync(x => x.Id != id && x.Name.ToLower() == name.ToLower());
+
+                if (duplicate)
+                {
+                    throw new BusinessException("A category with this name already exists.");
+                }
+
+                entity.Name = name;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
-            if (id <= 6)
+            if (id <= SystemCategoryMaxId)
             {
                 throw new BusinessException("System categories cannot be deleted.");
             }
 
-            var entity = _db.BlogCategories.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.BlogCategories.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Category not found.");
             }
 
-            bool isUsed = _db.BlogPostCategories.Any(x => x.CategoryId == id);
+            bool isUsed = await _db.BlogPostCategories.AnyAsync(x => x.CategoryId == id);
 
             if (isUsed)
             {
@@ -133,7 +158,7 @@ namespace Nestly.Services.Repository
             }
 
             _db.BlogCategories.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
     }
 }

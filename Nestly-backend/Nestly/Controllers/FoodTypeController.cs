@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -18,15 +18,15 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<PagedResult<FoodTypeDto>> Get([FromQuery] FoodTypeSearchObject search)
+        public async Task<ActionResult<PagedResult<FoodTypeDto>>> Get([FromQuery] FoodTypeSearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
 
         [HttpGet("{id}")]
-        public ActionResult<FoodTypeDto> GetById(int id)
+        public async Task<ActionResult<FoodTypeDto>> GetById(int id)
         {
-            var result = _service.GetById(id);
+            var result = await _service.GetById(id);
 
             if (result == null)
             {
@@ -38,18 +38,18 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Doctor")]
-        public ActionResult<FoodTypeDto> Create([FromBody] FoodTypeInsertDto request)
+        public async Task<ActionResult<FoodTypeDto>> Create([FromBody] FoodTypeInsertDto request)
         {
-            var result = _service.Create(request);
+            var result = await _service.Create(request);
 
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpPatch("{id}")]
         [Authorize(Roles = "Doctor")]
-        public ActionResult<FoodTypeDto> Update(int id, [FromBody] FoodTypeUpdateDto request)
+        public async Task<ActionResult<FoodTypeDto>> Update(int id, [FromBody] FoodTypeUpdateDto request)
         {
-            var result = _service.Update(id, request);
+            var result = await _service.Update(id, request);
 
             if (result == null)
             {
@@ -61,9 +61,9 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Doctor")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _service.Delete(id);
+            await _service.Delete(id);
             return NoContent();
         }
     }

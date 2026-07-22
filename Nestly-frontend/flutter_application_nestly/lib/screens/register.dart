@@ -20,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   DateTime? _lmpDate;
   final _cycleCtrl = TextEditingController();
   DateTime? _dob;
@@ -38,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneCtrl.dispose();
     _usernameCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
@@ -362,6 +364,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   setState(() => _obscure = !_obscure),
                             ),
                           ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    TextFormField(
+                      controller: _confirmPasswordCtrl,
+                      obscureText: _obscure,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return 'Potvrdite lozinku';
+                        }
+                        if (v != _passwordCtrl.text) {
+                          return 'Lozinke se ne poklapaju';
+                        }
+                        return null;
+                      },
+                      decoration: _decoration(
+                        label: 'Potvrdite lozinku',
+                        icon: Icons.lock_rounded,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
 

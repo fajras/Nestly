@@ -4,12 +4,12 @@ namespace Nestly.Services.Interfaces
 {
     public interface IBabyGrowthService
     {
-        PagedResult<BabyGrowthResponseDto> Get(BabyGrowthSearchObject search);
-        BabyGrowthResponseDto GetById(long id);
-        BabyGrowthResponseDto Create(CreateBabyGrowthDto request);
-        BabyGrowthResponseDto Patch(long id, BabyGrowthPatchDto patch);
-        void Delete(long id);
-        PagedResult<BabyGrowthResponseDto> GetByParent(long parentProfileId, BabyGrowthSearchObject search);
+        Task<PagedResult<BabyGrowthResponseDto>> Get(BabyGrowthSearchObject search);
+        Task<BabyGrowthResponseDto> GetById(long id);
+        Task<BabyGrowthResponseDto> Create(CreateBabyGrowthDto request);
+        Task<BabyGrowthResponseDto> Patch(long id, BabyGrowthPatchDto patch);
+        Task Delete(long id);
+        Task<PagedResult<BabyGrowthResponseDto>> GetByParent(long parentProfileId, BabyGrowthSearchObject search);
 
     }
 }

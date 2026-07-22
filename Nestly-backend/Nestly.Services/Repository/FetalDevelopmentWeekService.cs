@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -8,6 +9,8 @@ namespace Nestly.Services.Repository
 {
     public class FetalDevelopmentWeekService : IFetalDevelopmentWeekService
     {
+        private const int MaxWeekNumber = 42;
+
         private readonly NestlyDbContext _db;
 
         public FetalDevelopmentWeekService(NestlyDbContext db)
@@ -15,7 +18,7 @@ namespace Nestly.Services.Repository
             _db = db;
         }
 
-        public PagedResult<FetalDevelopmentWeekResponseDto> Get(FetalDevelopmentWeekSearchObject search)
+        public async Task<PagedResult<FetalDevelopmentWeekResponseDto>> Get(FetalDevelopmentWeekSearchObject search)
         {
             IQueryable<FetalDevelopmentWeek> q = _db.FetalDevelopmentWeeks.AsQueryable();
 
@@ -24,7 +27,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.WeekNumber == search.WeekNumber.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -32,12 +35,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderBy(x => x.WeekNumber)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<FetalDevelopmentWeekResponseDto>
             {
@@ -46,10 +50,10 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public FetalDevelopmentWeekResponseDto GetById(int id)
+        public async Task<FetalDevelopmentWeekResponseDto> GetById(int id)
         {
-            var entity = _db.FetalDevelopmentWeeks
-                .FirstOrDefault(x => x.Id == id);
+            var entity = await _db.FetalDevelopmentWeeks
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -59,27 +63,29 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public FetalDevelopmentWeekResponseDto? GetByWeekNumber(int weekNumber)
+        public async Task<FetalDevelopmentWeekResponseDto?> GetByWeekNumber(int weekNumber)
         {
-            var entity = _db.FetalDevelopmentWeeks
-                .FirstOrDefault(x => x.WeekNumber == weekNumber);
+            var entity = await _db.FetalDevelopmentWeeks
+                .FirstOrDefaultAsync(x => x.WeekNumber == weekNumber);
 
             return entity is null ? null : MapToDto(entity);
         }
 
-        public FetalDevelopmentWeekResponseDto Create(CreateFetalDevelopmentWeekDto dto)
+        public async Task<FetalDevelopmentWeekResponseDto> Create(CreateFetalDevelopmentWeekDto dto)
         {
             if (dto is null)
             {
                 throw new BusinessException("Request cannot be null.");
             }
 
-            if (dto.WeekNumber <= 0)
+            if (dto.WeekNumber <= 0 || dto.WeekNumber > MaxWeekNumber)
             {
-                throw new BusinessException("Week number must be greater than 0.");
+                throw new BusinessException($"Week number must be between 1 and {MaxWeekNumber}.");
             }
 
-            if (_db.FetalDevelopmentWeeks.Any(x => x.WeekNumber == dto.WeekNumber))
+            ValidateImageUrl(dto.ImageUrl);
+
+            if (await _db.FetalDevelopmentWeeks.AnyAsync(x => x.WeekNumber == dto.WeekNumber))
             {
                 throw new BusinessException($"Week {dto.WeekNumber} already exists.");
             }
@@ -93,13 +99,13 @@ namespace Nestly.Services.Repository
             };
 
             _db.FetalDevelopmentWeeks.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
-        public FetalDevelopmentWeekResponseDto Patch(int id, FetalDevelopmentWeekPatchDto patch)
+        public async Task<FetalDevelopmentWeekResponseDto> Patch(int id, FetalDevelopmentWeekPatchDto patch)
         {
-            var entity = _db.FetalDevelopmentWeeks.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.FetalDevelopmentWeeks.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -116,14 +122,20 @@ namespace Nestly.Services.Repository
                 entity.MotherChanges = patch.MotherChanges.Trim();
             }
 
-            _db.SaveChanges();
+            if (patch.ImageUrl is not null)
+            {
+                ValidateImageUrl(patch.ImageUrl);
+                entity.ImageUrl = patch.ImageUrl.Trim();
+            }
+
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
-            var entity = _db.FetalDevelopmentWeeks.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.FetalDevelopmentWeeks.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity is null)
             {
@@ -131,7 +143,21 @@ namespace Nestly.Services.Repository
             }
 
             _db.FetalDevelopmentWeeks.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+        }
+
+        private static void ValidateImageUrl(string? imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return;
+            }
+
+            if (!Uri.TryCreate(imageUrl.Trim(), UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                throw new BusinessException("Image URL must be a valid absolute http(s) URL.");
+            }
         }
 
         private static FetalDevelopmentWeekResponseDto MapToDto(FetalDevelopmentWeek x)

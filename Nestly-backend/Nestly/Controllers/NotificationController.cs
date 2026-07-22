@@ -19,12 +19,14 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUserNotifications()
+        public async Task<IActionResult> GetUserNotifications(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 50)
         {
             var userId = _currentUserService.GetCurrentAppUserId();
 
             var notifications = await _notificationService
-                .GetUserNotificationsAsync(userId);
+                .GetUserNotificationsAsync(userId, page, pageSize);
 
             return Ok(notifications);
         }

@@ -4,18 +4,18 @@ namespace Nestly.Services.Interfaces
 {
     public interface IMealPlanService
     {
-        MealPlanResponseDto GetById(long id);
-        MealPlanResponseDto Create(CreateMealPlanDto entity);
-        MealPlanResponseDto Patch(long id, MealPlanPatchDto patch);
-        void Delete(long id);
-        PagedResult<MealPlanResponseDto> GetMealPlans(MealPlanSearchObject search);
-        PagedResult<MealRecommendationDto> GetMealRecommendations(MealRecommendationSearchObject search);
-        MealRecommendationDto GetRecommendationById(long id);
-        MealRecommendationDto CreateRecommendation(CreateMealRecommendationDto request);
-        List<FoodTypeDto> GetFoodTypesWithoutRecommendation();
-        MealRecommendationDto UpdateRecommendation(long id, CreateMealRecommendationDto dto);
-        void DeleteRecommendation(long id);
-        PagedResult<MealPlanResponseDto> GetMealPlansByParent(long parentProfileId, MealPlanSearchObject search);
+        Task<MealPlanResponseDto> GetById(long id);
+        Task<MealPlanResponseDto> Create(CreateMealPlanDto entity);
+        Task<MealPlanResponseDto> Patch(long id, MealPlanPatchDto patch);
+        Task Delete(long id);
+        Task<PagedResult<MealPlanResponseDto>> GetMealPlans(MealPlanSearchObject search);
+        Task<PagedResult<MealRecommendationDto>> GetMealRecommendations(MealRecommendationSearchObject search);
+        Task<MealRecommendationDto> GetRecommendationById(long id);
+        Task<MealRecommendationDto> CreateRecommendation(CreateMealRecommendationDto request);
+        Task<List<FoodTypeDto>> GetFoodTypesWithoutRecommendation();
+        Task<MealRecommendationDto> UpdateRecommendation(long id, CreateMealRecommendationDto dto);
+        Task DeleteRecommendation(long id);
+        Task<PagedResult<MealPlanResponseDto>> GetMealPlansByParent(long parentProfileId, MealPlanSearchObject search);
 
     }
 }

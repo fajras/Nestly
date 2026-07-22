@@ -23,11 +23,11 @@ namespace Nestly.WebAPI.Controllers
 
         [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<CalendarEventResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<CalendarEventResponseDto>>> Get(
             [FromQuery] CalendarEventSearchObject search)
         {
             return Ok(
-                _service.Get(search));
+                await _service.Get(search));
         }
 
         [Authorize(Roles = "Parent")]
@@ -46,7 +46,7 @@ namespace Nestly.WebAPI.Controllers
             }
 
             return Ok(
-                _service.GetByParent(
+                await _service.GetByParent(
                     parent.Id,
                     search));
         }
@@ -59,7 +59,7 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureCalendarEventOwnershipAsync(id);
 
             var result =
-                _service.GetById(id);
+                await _service.GetById(id);
 
             return Ok(result);
         }
@@ -78,7 +78,7 @@ namespace Nestly.WebAPI.Controllers
                     .GetCurrentAppUserId();
 
             var created =
-                _service.Create(
+                await _service.Create(
                     request,
                     userId);
 
@@ -98,7 +98,7 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureCalendarEventOwnershipAsync(id);
 
             var updated =
-                _service.Patch(id, patch);
+                await _service.Patch(id, patch);
 
             return Ok(updated);
         }
@@ -111,7 +111,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureCalendarEventOwnershipAsync(id);
 
-            _service.Delete(id);
+            await _service.Delete(id);
 
             return NoContent();
         }

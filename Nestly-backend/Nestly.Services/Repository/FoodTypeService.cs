@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -24,7 +24,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<FoodTypeDto> Get(FoodTypeSearchObject search)
+        public async Task<PagedResult<FoodTypeDto>> Get(FoodTypeSearchObject search)
         {
             IQueryable<FoodType> query = _db.FoodTypes.AsNoTracking();
 
@@ -33,7 +33,7 @@ namespace Nestly.Services.Repository
                 query = query.Where(x => x.Name.Contains(search.Name));
             }
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -41,12 +41,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = query
+            var entities = await query
                 .OrderBy(x => x.Name)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => MapToDto(x))
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<FoodTypeDto>
             {
@@ -55,11 +56,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public FoodTypeDto GetById(int id)
+        public async Task<FoodTypeDto> GetById(int id)
         {
-            var entity = _db.FoodTypes
+            var entity = await _db.FoodTypes
                 .AsNoTracking()
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -69,27 +70,37 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public FoodTypeDto Create(FoodTypeInsertDto request)
+        public async Task<FoodTypeDto> Create(FoodTypeInsertDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
-                throw new ArgumentException("Name is required");
+                throw new BusinessException("Name is required.");
+            }
+
+            var name = request.Name.Trim();
+
+            bool duplicate = await _db.FoodTypes
+                .AnyAsync(x => x.Name.ToLower() == name.ToLower());
+
+            if (duplicate)
+            {
+                throw new BusinessException("A food type with this name already exists.");
             }
 
             var entity = new FoodType
             {
-                Name = request.Name.Trim()
+                Name = name
             };
 
             _db.FoodTypes.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public FoodTypeDto Update(int id, FoodTypeUpdateDto request)
+        public async Task<FoodTypeDto> Update(int id, FoodTypeUpdateDto request)
         {
-            var entity = _db.FoodTypes.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.FoodTypes.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -98,32 +109,49 @@ namespace Nestly.Services.Repository
 
             if (!string.IsNullOrWhiteSpace(request.Name))
             {
-                entity.Name = request.Name.Trim();
+                var name = request.Name.Trim();
+
+                bool duplicate = await _db.FoodTypes
+                    .AnyAsync(x => x.Id != id && x.Name.ToLower() == name.ToLower());
+
+                if (duplicate)
+                {
+                    throw new BusinessException("A food type with this name already exists.");
+                }
+
+                entity.Name = name;
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
-            var entity = _db.FoodTypes.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.FoodTypes.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Food type not found.");
             }
 
-            bool usedInMealPlan = _db.MealPlans.Any(x => x.FoodTypeId == id);
+            bool usedInMealPlan = await _db.MealPlans.AnyAsync(x => x.FoodTypeId == id);
 
             if (usedInMealPlan)
             {
                 throw new BusinessException("Food type is used in meal plans and cannot be deleted.");
             }
 
+            bool usedInFeedingLog = await _db.FeedingLogs.AnyAsync(x => x.FoodTypeId == id);
+
+            if (usedInFeedingLog)
+            {
+                throw new BusinessException("Food type is used in feeding logs and cannot be deleted.");
+            }
+
             _db.FoodTypes.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
     }
 }

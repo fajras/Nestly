@@ -228,6 +228,11 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
       return;
     }
 
+    if (_titleCtrl.text.trim().length > 200) {
+      setState(() => _titleError = 'Naziv ne može imati više od 200 karaktera');
+      return;
+    }
+
     setState(() => _saving = true);
 
     try {
@@ -277,6 +282,13 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
 
       if (msg.contains("Title is required")) {
         setState(() => _titleError = 'Naziv je obavezan');
+      } else if (msg.contains("already been recorded")) {
+        NestlyToast.error(
+          context,
+          'Ovo dostignuće je već zabilježeno za taj datum',
+        );
+      } else if (msg.contains("cannot be in the future")) {
+        NestlyToast.error(context, 'Datum ne može biti u budućnosti');
       } else if (msg.contains("not found")) {
         NestlyToast.error(context, 'Zapis ne postoji');
       } else {
@@ -460,6 +472,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
           children: [
             TextField(
               controller: _titleCtrl,
+              maxLength: 200,
               decoration: deco('Naziv').copyWith(errorText: _titleError),
             ),
             const SizedBox(height: 12),

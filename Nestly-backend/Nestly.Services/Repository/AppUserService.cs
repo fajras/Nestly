@@ -4,6 +4,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -111,18 +112,10 @@ namespace Nestly.Services.Repository
                     ParentProfileId = r.ParentProfileId
                 };
 
-                if (r.LatestBabyBirthDate.HasValue)
-                {
-                    dto.ParentStatus = "PARENT";
-                    dto.BabyAgeMonths =
-                        CalculateBabyAgeInMonths(r.LatestBabyBirthDate.Value);
-                }
-                else if (r.LatestPregnancyDueDate.HasValue)
-                {
-                    dto.ParentStatus = "PREGNANT";
-                    dto.PregnancyTrimester =
-                        CalculatePregnancyTrimester(r.LatestPregnancyDueDate.Value);
-                }
+                (dto.ParentStatus, dto.BabyAgeMonths, dto.PregnancyTrimester) =
+                    ParentStatusCalculator.Resolve(
+                        r.LatestBabyBirthDate,
+                        r.LatestPregnancyDueDate);
 
                 return dto;
             }).ToList();
@@ -206,23 +199,10 @@ namespace Nestly.Services.Repository
                 PregnancyTrimester = null
             };
 
-            if (row.LatestBabyBirthDate.HasValue)
-            {
-                dto.ParentStatus = "PARENT";
-                dto.BabyAgeMonths =
-                    CalculateBabyAgeInMonths(row.LatestBabyBirthDate.Value);
-
-                return dto;
-            }
-
-            if (row.LatestPregnancyDueDate.HasValue)
-            {
-                dto.ParentStatus = "PREGNANT";
-                dto.PregnancyTrimester =
-                    CalculatePregnancyTrimester(row.LatestPregnancyDueDate.Value);
-
-                return dto;
-            }
+            (dto.ParentStatus, dto.BabyAgeMonths, dto.PregnancyTrimester) =
+                ParentStatusCalculator.Resolve(
+                    row.LatestBabyBirthDate,
+                    row.LatestPregnancyDueDate);
 
             return dto;
         }
@@ -290,6 +270,17 @@ namespace Nestly.Services.Repository
             if (await _db.AppUsers.AnyAsync(u => u.Email == dto.Email))
             {
                 throw new BusinessException("Email already exists.");
+            }
+
+            if (dto.LmpDate.HasValue && dto.DueDate.HasValue)
+            {
+                var gapDays = (dto.DueDate.Value - dto.LmpDate.Value).Days;
+
+                if (gapDays < 200 || gapDays > 320)
+                {
+                    throw new BusinessException(
+                        "Due date and LMP must be roughly 200-320 days apart.");
+                }
             }
             var existingUsername =
     await _userManager.FindByNameAsync(
@@ -551,39 +542,6 @@ namespace Nestly.Services.Repository
             }
         }
 
-        private static int CalculateBabyAgeInMonths(
-            DateTime birthDate)
-        {
-            var now = DateTime.UtcNow;
-
-            return (now.Year - birthDate.Year) * 12 +
-                   now.Month - birthDate.Month;
-        }
-
-        private static int CalculatePregnancyTrimester(
-            DateTime dueDate)
-        {
-            const int totalWeeks = 40;
-
-            var weeksLeft =
-                (dueDate - DateTime.UtcNow).Days / 7;
-
-            var currentWeek =
-                totalWeeks - weeksLeft;
-
-            if (currentWeek <= 13)
-            {
-                return 1;
-            }
-
-            if (currentWeek <= 27)
-            {
-                return 2;
-            }
-
-            return 3;
-        }
-
         private sealed class AppUserRow
         {
             public long Id { get; set; }
@@ -631,35 +589,23 @@ namespace Nestly.Services.Repository
 
             if (u.ParentProfile != null)
             {
-                var latestBaby = u.ParentProfile.Babies?
+                var latestBabyBirthDate = u.ParentProfile.Babies?
                     .OrderByDescending(b => b.BirthDate)
+                    .Select(b => (DateTime?)b.BirthDate)
                     .FirstOrDefault();
 
-                if (latestBaby != null)
-                {
-                    dto.ParentStatus = "PARENT";
-
-                    dto.BabyAgeMonths =
-                        CalculateBabyAgeInMonths(latestBaby.BirthDate);
-
-                    return dto;
-                }
-
-                var latestPregnancy = u.ParentProfile.Pregnancies?
+                var latestPregnancyDueDate = u.ParentProfile.Pregnancies?
                     .Where(p =>
                         p.DueDate != null &&
                         p.DueDate > DateTime.UtcNow)
                     .OrderByDescending(p => p.DueDate)
+                    .Select(p => p.DueDate)
                     .FirstOrDefault();
 
-                if (latestPregnancy?.DueDate != null)
-                {
-                    dto.ParentStatus = "PREGNANT";
-
-                    dto.PregnancyTrimester =
-                        CalculatePregnancyTrimester(
-                            latestPregnancy.DueDate.Value);
-                }
+                (dto.ParentStatus, dto.BabyAgeMonths, dto.PregnancyTrimester) =
+                    ParentStatusCalculator.Resolve(
+                        latestBabyBirthDate,
+                        latestPregnancyDueDate);
             }
 
             return dto;

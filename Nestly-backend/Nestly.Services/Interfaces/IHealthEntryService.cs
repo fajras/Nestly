@@ -4,11 +4,11 @@ namespace Nestly.Services.Interfaces
 {
     public interface IHealthEntryService
     {
-        PagedResult<HealthEntryResponseDto> Get(HealthEntrySearchObject search);
-        HealthEntryResponseDto GetById(long id);
-        HealthEntryResponseDto Create(CreateHealthEntryDto entity);
-        HealthEntryResponseDto Patch(long id, HealthEntryPatchDto patch);
-        void Delete(long id);
-        PagedResult<HealthEntryResponseDto> GetByParent(long parentProfileId, HealthEntrySearchObject search);
+        Task<PagedResult<HealthEntryResponseDto>> Get(HealthEntrySearchObject search);
+        Task<HealthEntryResponseDto> GetById(long id);
+        Task<HealthEntryResponseDto> Create(CreateHealthEntryDto entity);
+        Task<HealthEntryResponseDto> Patch(long id, HealthEntryPatchDto patch);
+        Task Delete(long id);
+        Task<PagedResult<HealthEntryResponseDto>> GetByParent(long parentProfileId, HealthEntrySearchObject search);
     }
 }

@@ -71,7 +71,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         throw Exception(error["message"] ?? "Greška pri označavanju");
       }
 
-      await _load();
+      if (!mounted) return;
+
+      setState(() {
+        final index = _notifications.indexWhere((n) => n["id"] == id);
+        if (index != -1) {
+          _notifications[index] = {..._notifications[index], "isRead": true};
+        }
+      });
     } catch (e) {
       final msg = e.toString();
 
@@ -92,7 +99,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         throw Exception(error["message"] ?? "Greška pri označavanju svih");
       }
 
-      await _load();
+      if (!mounted) return;
+
+      setState(() {
+        _notifications = _notifications
+            .map((n) => {...n, "isRead": true})
+            .toList();
+      });
     } catch (e) {
       NestlyToast.error(context, 'Greška pri označavanju svih notifikacija');
     }

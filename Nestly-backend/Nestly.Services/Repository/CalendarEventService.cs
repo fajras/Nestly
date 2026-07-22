@@ -1,4 +1,5 @@
-﻿using Nestly.Model.DTOObjects;
+using Microsoft.EntityFrameworkCore;
+using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
@@ -12,7 +13,7 @@ public class CalendarEventService : ICalendarEventService
         _db = db;
     }
 
-    public PagedResult<CalendarEventResponseDto> Get(CalendarEventSearchObject search)
+    public async Task<PagedResult<CalendarEventResponseDto>> Get(CalendarEventSearchObject search)
     {
         IQueryable<CalendarEvent> q = _db.CalendarEvents.AsQueryable();
 
@@ -31,7 +32,7 @@ public class CalendarEventService : ICalendarEventService
             q = q.Where(e => e.Title.Contains(search.Title));
         }
 
-        var totalCount = q.Count();
+        var totalCount = await q.CountAsync();
         int page = search.Page < 1 ? 1 : search.Page;
 
         int pageSize = search.PageSize < 1
@@ -39,12 +40,13 @@ public class CalendarEventService : ICalendarEventService
             : search.PageSize > 100
                 ? 100
                 : search.PageSize;
-        var items = q
+        var entities = await q
             .OrderBy(e => e.StartAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-            .Select(MapToDto)
-            .ToList();
+            .ToListAsync();
+
+        var items = entities.Select(MapToDto).ToList();
 
         return new PagedResult<CalendarEventResponseDto>
         {
@@ -53,9 +55,9 @@ public class CalendarEventService : ICalendarEventService
         };
     }
 
-    public CalendarEventResponseDto GetById(long id)
+    public async Task<CalendarEventResponseDto> GetById(long id)
     {
-        var ev = _db.CalendarEvents.FirstOrDefault(e => e.Id == id);
+        var ev = await _db.CalendarEvents.FirstOrDefaultAsync(e => e.Id == id);
 
         if (ev is null)
         {
@@ -65,7 +67,7 @@ public class CalendarEventService : ICalendarEventService
         return MapToDto(ev);
     }
 
-    public CalendarEventResponseDto Create(
+    public async Task<CalendarEventResponseDto> Create(
     CreateCalendarEventDto dto,
     long currentUserId)
     {
@@ -74,7 +76,7 @@ public class CalendarEventService : ICalendarEventService
             throw new BusinessException("Baby is required.");
         }
 
-        if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+        if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
         {
             throw new NotFoundException("Baby profile not found.");
         }
@@ -89,6 +91,11 @@ public class CalendarEventService : ICalendarEventService
             throw new BusinessException("Start date is required.");
         }
 
+        if (dto.StartAt < DateTime.UtcNow)
+        {
+            throw new BusinessException("Start date cannot be in the past.");
+        }
+
         var entity = new CalendarEvent
         {
             BabyId = dto.BabyId,
@@ -101,13 +108,13 @@ public class CalendarEventService : ICalendarEventService
         };
 
         _db.CalendarEvents.Add(entity);
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
 
         return MapToDto(entity);
     }
-    public CalendarEventResponseDto Patch(long id, CalendarEventPatchDto patch)
+    public async Task<CalendarEventResponseDto> Patch(long id, CalendarEventPatchDto patch)
     {
-        var ev = _db.CalendarEvents.FirstOrDefault(x => x.Id == id);
+        var ev = await _db.CalendarEvents.FirstOrDefaultAsync(x => x.Id == id);
 
         if (ev is null)
         {
@@ -128,17 +135,22 @@ public class CalendarEventService : ICalendarEventService
 
         if (patch.StartAt is not null)
         {
+            if (patch.StartAt.Value < DateTime.UtcNow)
+            {
+                throw new BusinessException("Start date cannot be in the past.");
+            }
+
             ev.StartAt = patch.StartAt.Value;
             ev.Reminder24hSent = false;
         }
 
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
 
         return MapToDto(ev);
     }
-    public void Delete(long id)
+    public async Task Delete(long id)
     {
-        var ev = _db.CalendarEvents.FirstOrDefault(x => x.Id == id);
+        var ev = await _db.CalendarEvents.FirstOrDefaultAsync(x => x.Id == id);
 
         if (ev is null)
         {
@@ -146,7 +158,7 @@ public class CalendarEventService : ICalendarEventService
         }
 
         _db.CalendarEvents.Remove(ev);
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
     }
 
 
@@ -162,7 +174,7 @@ public class CalendarEventService : ICalendarEventService
             StartAt = ev.StartAt
         };
     }
-    public PagedResult<CalendarEventResponseDto> GetByParent(
+    public async Task<PagedResult<CalendarEventResponseDto>> GetByParent(
     long parentProfileId,
     CalendarEventSearchObject search)
     {
@@ -189,7 +201,7 @@ public class CalendarEventService : ICalendarEventService
                 x.Title.Contains(search.Title));
         }
 
-        var totalCount = q.Count();
+        var totalCount = await q.CountAsync();
 
         int page = search.Page < 1
             ? 1
@@ -201,12 +213,13 @@ public class CalendarEventService : ICalendarEventService
                 ? 100
                 : search.PageSize;
 
-        var items = q
+        var entities = await q
             .OrderBy(x => x.StartAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(MapToDto)
-            .ToList();
+            .ToListAsync();
+
+        var items = entities.Select(MapToDto).ToList();
 
         return new PagedResult<CalendarEventResponseDto>
         {

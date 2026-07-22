@@ -4,11 +4,11 @@ namespace Nestly.Services.Interfaces
 {
     public interface IWeeklyAdviceService
     {
-        PagedResult<WeeklyAdviceResponseDto> Get(WeeklyAdviceSearchObject search);
-        WeeklyAdviceResponseDto GetById(int id);
-        WeeklyAdviceResponseDto? GetByWeek(short weekNumber);
-        WeeklyAdviceResponseDto Create(CreateWeeklyAdviceDto dto);
-        WeeklyAdviceResponseDto? Patch(int id, WeeklyAdvicePatchDto patch);
-        void Delete(int id);
+        Task<PagedResult<WeeklyAdviceResponseDto>> Get(WeeklyAdviceSearchObject search);
+        Task<WeeklyAdviceResponseDto> GetById(int id);
+        Task<WeeklyAdviceResponseDto?> GetByWeek(short weekNumber);
+        Task<WeeklyAdviceResponseDto> Create(CreateWeeklyAdviceDto dto);
+        Task<WeeklyAdviceResponseDto?> Patch(int id, WeeklyAdvicePatchDto patch);
+        Task Delete(int id);
     }
 }

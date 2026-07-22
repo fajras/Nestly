@@ -23,11 +23,11 @@ namespace Nestly.WebAPI.Controllers
 
         [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<HealthEntryResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<HealthEntryResponseDto>>> Get(
             [FromQuery] HealthEntrySearchObject search)
         {
             return Ok(
-                _service.Get(search));
+                await _service.Get(search));
         }
 
         [Authorize(Roles = "Parent")]
@@ -46,7 +46,7 @@ namespace Nestly.WebAPI.Controllers
             }
 
             return Ok(
-                _service.GetByParent(
+                await _service.GetByParent(
                     parent.Id,
                     search));
         }
@@ -59,7 +59,7 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureHealthEntryOwnershipAsync(id);
 
             var entity =
-                _service.GetById(id);
+                await _service.GetById(id);
 
             return Ok(entity);
         }
@@ -74,7 +74,7 @@ namespace Nestly.WebAPI.Controllers
                     request.BabyId);
 
             var created =
-                _service.Create(request);
+                await _service.Create(request);
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -92,7 +92,7 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureHealthEntryOwnershipAsync(id);
 
             var updated =
-                _service.Patch(id, patch);
+                await _service.Patch(id, patch);
 
             return Ok(updated);
         }
@@ -105,7 +105,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureHealthEntryOwnershipAsync(id);
 
-            _service.Delete(id);
+            await _service.Delete(id);
 
             return NoContent();
         }

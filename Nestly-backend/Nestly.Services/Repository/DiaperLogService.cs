@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -5,6 +6,11 @@ using Nestly.Services.Exceptions;
 
 public class DiaperLogService : IDiaperLogService
 {
+    private static readonly HashSet<string> AllowedDiaperStates = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "mokra", "stolica", "kombinovano"
+    };
+
     private readonly NestlyDbContext _db;
 
     public DiaperLogService(NestlyDbContext db)
@@ -12,7 +18,7 @@ public class DiaperLogService : IDiaperLogService
         _db = db;
     }
 
-    public PagedResult<DiaperLogResponseDto> Get(DiaperLogSearchObject search)
+    public async Task<PagedResult<DiaperLogResponseDto>> Get(DiaperLogSearchObject search)
     {
         IQueryable<DiaperLog> q = _db.DiaperLogs.AsQueryable();
 
@@ -36,7 +42,7 @@ public class DiaperLogService : IDiaperLogService
             q = q.Where(x => x.DiaperState == search.DiaperState);
         }
 
-        var totalCount = q.Count();
+        var totalCount = await q.CountAsync();
         int page = search.Page < 1 ? 1 : search.Page;
 
         int pageSize = search.PageSize < 1
@@ -44,13 +50,14 @@ public class DiaperLogService : IDiaperLogService
             : search.PageSize > 100
                 ? 100
                 : search.PageSize;
-        var items = q
+        var entities = await q
             .OrderByDescending(x => x.ChangeDate)
             .ThenByDescending(x => x.ChangeTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-            .Select(MapToDto)
-            .ToList();
+            .ToListAsync();
+
+        var items = entities.Select(MapToDto).ToList();
 
         return new PagedResult<DiaperLogResponseDto>
         {
@@ -59,9 +66,9 @@ public class DiaperLogService : IDiaperLogService
         };
     }
 
-    public DiaperLogResponseDto GetById(long id)
+    public async Task<DiaperLogResponseDto> GetById(long id)
     {
-        var entity = _db.DiaperLogs.FirstOrDefault(x => x.Id == id);
+        var entity = await _db.DiaperLogs.FirstOrDefaultAsync(x => x.Id == id);
 
         if (entity is null)
         {
@@ -71,14 +78,14 @@ public class DiaperLogService : IDiaperLogService
         return MapToDto(entity);
     }
 
-    public DiaperLogResponseDto Create(CreateDiaperLogDto dto)
+    public async Task<DiaperLogResponseDto> Create(CreateDiaperLogDto dto)
     {
         if (dto.BabyId <= 0)
         {
             throw new BusinessException("Baby is required.");
         }
 
-        if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+        if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
         {
             throw new NotFoundException("Baby profile not found.");
         }
@@ -88,9 +95,20 @@ public class DiaperLogService : IDiaperLogService
             throw new BusinessException("Change date is required.");
         }
 
+        if (dto.ChangeDate.Date > DateTime.UtcNow.Date)
+        {
+            throw new BusinessException("Change date cannot be in the future.");
+        }
+
         if (string.IsNullOrWhiteSpace(dto.DiaperState))
         {
             throw new BusinessException("Diaper state is required.");
+        }
+
+        if (!AllowedDiaperStates.Contains(dto.DiaperState.Trim()))
+        {
+            throw new BusinessException(
+                $"Diaper state must be one of: {string.Join(", ", AllowedDiaperStates)}.");
         }
 
         var entity = new DiaperLog
@@ -105,13 +123,13 @@ public class DiaperLogService : IDiaperLogService
         };
 
         _db.DiaperLogs.Add(entity);
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
 
         return MapToDto(entity);
     }
-    public DiaperLogResponseDto Patch(long id, DiaperLogPatchDto patch)
+    public async Task<DiaperLogResponseDto> Patch(long id, DiaperLogPatchDto patch)
     {
-        var entity = _db.DiaperLogs.FirstOrDefault(x => x.Id == id);
+        var entity = await _db.DiaperLogs.FirstOrDefaultAsync(x => x.Id == id);
 
         if (entity is null)
         {
@@ -120,6 +138,11 @@ public class DiaperLogService : IDiaperLogService
 
         if (patch.ChangeDate is not null)
         {
+            if (patch.ChangeDate.Value.Date > DateTime.UtcNow.Date)
+            {
+                throw new BusinessException("Change date cannot be in the future.");
+            }
+
             entity.ChangeDate = patch.ChangeDate.Value.Date;
         }
 
@@ -130,6 +153,12 @@ public class DiaperLogService : IDiaperLogService
 
         if (patch.DiaperState is not null)
         {
+            if (!AllowedDiaperStates.Contains(patch.DiaperState.Trim()))
+            {
+                throw new BusinessException(
+                    $"Diaper state must be one of: {string.Join(", ", AllowedDiaperStates)}.");
+            }
+
             entity.DiaperState = patch.DiaperState.Trim();
         }
 
@@ -140,14 +169,14 @@ public class DiaperLogService : IDiaperLogService
                 : patch.Notes.Trim();
         }
 
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
 
         return MapToDto(entity);
     }
 
-    public void Delete(long id)
+    public async Task Delete(long id)
     {
-        var entity = _db.DiaperLogs.FirstOrDefault(x => x.Id == id);
+        var entity = await _db.DiaperLogs.FirstOrDefaultAsync(x => x.Id == id);
 
         if (entity is null)
         {
@@ -155,7 +184,7 @@ public class DiaperLogService : IDiaperLogService
         }
 
         _db.DiaperLogs.Remove(entity);
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
     }
 
     private static DiaperLogResponseDto MapToDto(DiaperLog x)
@@ -171,7 +200,7 @@ public class DiaperLogService : IDiaperLogService
         };
     }
 
-    public PagedResult<DiaperLogResponseDto> GetByParent(
+    public async Task<PagedResult<DiaperLogResponseDto>> GetByParent(
     long parentProfileId,
     DiaperLogSearchObject search)
     {
@@ -209,7 +238,7 @@ public class DiaperLogService : IDiaperLogService
                 search.DiaperState);
         }
 
-        var totalCount = q.Count();
+        var totalCount = await q.CountAsync();
 
         int page = search.Page < 1
             ? 1
@@ -221,13 +250,14 @@ public class DiaperLogService : IDiaperLogService
                 ? 100
                 : search.PageSize;
 
-        var items = q
+        var entities = await q
             .OrderByDescending(x => x.ChangeDate)
             .ThenByDescending(x => x.ChangeTime)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(MapToDto)
-            .ToList();
+            .ToListAsync();
+
+        var items = entities.Select(MapToDto).ToList();
 
         return new PagedResult<DiaperLogResponseDto>
         {

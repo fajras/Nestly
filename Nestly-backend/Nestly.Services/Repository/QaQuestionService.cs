@@ -10,6 +10,9 @@ namespace Nestly.Services.Repository
 {
     public class QaQuestionService : IQaQuestionService
     {
+        private const int MaxQuestionLength = 2000;
+        private const int MaxAnswerLength = 4000;
+
         private readonly NestlyDbContext _db;
         private readonly RabbitMqPublisher _publisher;
         private readonly ICurrentUserService _currentUserService;
@@ -169,6 +172,11 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Question text is required.");
             }
 
+            if (dto.QuestionText.Trim().Length > MaxQuestionLength)
+            {
+                throw new BusinessException($"Question text cannot exceed {MaxQuestionLength} characters.");
+            }
+
             var parentProfile = await _db.ParentProfiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
@@ -228,6 +236,11 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Question text cannot be empty.");
             }
 
+            if (await _db.QaAnswers.AnyAsync(a => a.QuestionId == id, ct))
+            {
+                throw new BusinessException("This question has already been answered and can no longer be edited.");
+            }
+
             if (patch.QuestionText is not null)
             {
                 var text = patch.QuestionText.Trim();
@@ -235,6 +248,12 @@ namespace Nestly.Services.Repository
                 {
                     throw new BusinessException("Question text cannot be empty.");
                 }
+
+                if (text.Length > MaxQuestionLength)
+                {
+                    throw new BusinessException($"Question text cannot exceed {MaxQuestionLength} characters.");
+                }
+
                 q.QuestionText = text;
             }
 
@@ -258,6 +277,11 @@ namespace Nestly.Services.Repository
             if (q is null)
             {
                 throw new NotFoundException("Question not found.");
+            }
+
+            if (await _db.QaAnswers.AnyAsync(a => a.QuestionId == id, ct))
+            {
+                throw new BusinessException("This question has already been answered and can no longer be deleted.");
             }
 
             _db.QaQuestions.Remove(q);
@@ -330,6 +354,11 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Answer text is required.");
             }
 
+            if (dto.AnswerText.Trim().Length > MaxAnswerLength)
+            {
+                throw new BusinessException($"Answer text cannot exceed {MaxAnswerLength} characters.");
+            }
+
             var qExists = await _db.QaQuestions
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == questionId, ct);
@@ -337,6 +366,11 @@ namespace Nestly.Services.Repository
             if (!qExists)
             {
                 throw new NotFoundException("Question not found.");
+            }
+
+            if (await _db.QaAnswers.AnyAsync(a => a.QuestionId == questionId, ct))
+            {
+                throw new BusinessException("This question has already been answered.");
             }
 
             var doctorProfile = await _db.DoctorProfiles

@@ -29,7 +29,16 @@ namespace Nestly.Services.Repository
                 .ToList()
         };
 
-        public PagedResult<MedicationPlanResponseDto> Get(
+        private static void ValidateIntakeTimes(List<TimeSpan> intakeTimes)
+        {
+            if (intakeTimes.Count != intakeTimes.Distinct().Count())
+            {
+                throw new BusinessException(
+                    "Intake times cannot contain duplicates.");
+            }
+        }
+
+        public async Task<PagedResult<MedicationPlanResponseDto>> Get(
             MedicationPlanSearchObject search)
         {
             var q = _db.MedicationPlans
@@ -83,7 +92,7 @@ namespace Nestly.Services.Repository
                     search.EndDateTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -95,13 +104,14 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.StartDate)
                 .ThenByDescending(x => x.EndDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<MedicationPlanResponseDto>
             {
@@ -110,7 +120,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<MedicationPlanResponseDto> GetByParent(
+        public async Task<PagedResult<MedicationPlanResponseDto>> GetByParent(
             long parentProfileId,
             MedicationPlanSearchObject search)
         {
@@ -161,7 +171,7 @@ namespace Nestly.Services.Repository
                     search.EndDateTo.Value);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -173,13 +183,14 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.StartDate)
                 .ThenByDescending(x => x.EndDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(ToDto).ToList();
 
             return new PagedResult<MedicationPlanResponseDto>
             {
@@ -188,11 +199,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public MedicationPlanResponseDto GetById(long id)
+        public async Task<MedicationPlanResponseDto> GetById(long id)
         {
-            var m = _db.MedicationPlans
+            var m = await _db.MedicationPlans
                 .Include(x => x.Times)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (m == null)
             {
@@ -203,11 +214,11 @@ namespace Nestly.Services.Repository
             return ToDto(m);
         }
 
-        public MedicationPlanResponseDto Create(
+        public async Task<MedicationPlanResponseDto> Create(
             long parentProfileId,
             CreateMedicationPlanDto dto)
         {
-            if (!_db.ParentProfiles.Any(
+            if (!await _db.ParentProfiles.AnyAsync(
                 p => p.Id == parentProfileId))
             {
                 throw new NotFoundException(
@@ -220,11 +231,19 @@ namespace Nestly.Services.Repository
                     "Start date cannot be after end date.");
             }
 
+            if (dto.EndDate.Date < DateTime.UtcNow.Date)
+            {
+                throw new BusinessException(
+                    "End date cannot be in the past.");
+            }
+
             if (!dto.IntakeTimes.Any())
             {
                 throw new BusinessException(
                     "At least one intake time is required.");
             }
+
+            ValidateIntakeTimes(dto.IntakeTimes);
 
             if (string.IsNullOrWhiteSpace(
                 dto.MedicineName))
@@ -260,11 +279,11 @@ namespace Nestly.Services.Repository
 
             _db.MedicationPlans.Add(entity);
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             GenerateIntakeLogs(entity);
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return ToDto(entity);
         }
@@ -296,11 +315,11 @@ namespace Nestly.Services.Repository
             }
         }
 
-        public void MarkAsTaken(
+        public async Task MarkAsTaken(
             long intakeLogId)
         {
-            var log = _db.MedicationIntakeLogs
-                .FirstOrDefault(x =>
+            var log = await _db.MedicationIntakeLogs
+                .FirstOrDefaultAsync(x =>
                     x.Id == intakeLogId);
 
             if (log == null)
@@ -309,21 +328,27 @@ namespace Nestly.Services.Repository
                     "Medication log not found.");
             }
 
+            if (log.Taken)
+            {
+                throw new BusinessException(
+                    "This dose has already been marked as taken.");
+            }
+
             log.Taken = true;
 
             log.TakenAt = DateTime.UtcNow;
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
-        public MedicationPlanResponseDto? Patch(
+        public async Task<MedicationPlanResponseDto> Patch(
      long id,
      MedicationPlanPatchDto patch)
         {
-            var m = _db.MedicationPlans
+            var m = await _db.MedicationPlans
                 .Include(x => x.Times)
                 .Include(x => x.IntakeLogs)
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (m == null)
             {
@@ -348,14 +373,16 @@ namespace Nestly.Services.Repository
             if (patch.IntakeTimes != null &&
                 patch.IntakeTimes.Any())
             {
+                ValidateIntakeTimes(patch.IntakeTimes);
+
                 var now = DateTime.UtcNow;
 
-                var futureLogs = _db.MedicationIntakeLogs
+                var futureLogs = await _db.MedicationIntakeLogs
                     .Where(x =>
                         x.PlanId == m.Id &&
                         !x.Taken &&
                         x.ScheduledDate >= now.Date)
-                    .ToList();
+                    .ToListAsync();
 
                 _db.MedicationIntakeLogs
                     .RemoveRange(futureLogs);
@@ -377,15 +404,15 @@ namespace Nestly.Services.Repository
                 GenerateFutureIntakeLogs(m, now.Date);
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return ToDto(m);
         }
 
-        public void Delete(long id)
+        public async Task Delete(long id)
         {
-            var m = _db.MedicationPlans
-                .FirstOrDefault(x => x.Id == id);
+            var m = await _db.MedicationPlans
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (m == null)
             {
@@ -403,10 +430,10 @@ namespace Nestly.Services.Repository
             _db.MedicationScheduleTimes.RemoveRange(times);
             _db.MedicationPlans.Remove(m);
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
-        public PagedResult<MedicationIntakeLogDto> GetLogsForDay(
+        public async Task<PagedResult<MedicationIntakeLogDto>> GetLogsForDay(
             MedicationIntakeLogSearchObject search)
         {
             var day = search.Date.Date;
@@ -417,7 +444,7 @@ namespace Nestly.Services.Repository
                 .Where(x =>
                     x.ScheduledDate == day);
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -429,7 +456,7 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var items = await q
                 .OrderBy(x => x.IntakeTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -447,7 +474,7 @@ namespace Nestly.Services.Repository
                             x.IntakeTime,
                         Taken = x.Taken
                     })
-                .ToList();
+                .ToListAsync();
 
             return new PagedResult<MedicationIntakeLogDto>
             {
@@ -456,7 +483,7 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<MedicationIntakeLogDto>
+        public async Task<PagedResult<MedicationIntakeLogDto>>
             GetLogsForDayByParent(
                 long parentProfileId,
                 MedicationIntakeLogSearchObject search)
@@ -471,7 +498,7 @@ namespace Nestly.Services.Repository
                     parentProfileId &&
                     x.ScheduledDate == day);
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -483,7 +510,7 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var items = await q
                 .OrderBy(x => x.IntakeTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -501,7 +528,7 @@ namespace Nestly.Services.Repository
                             x.IntakeTime,
                         Taken = x.Taken
                     })
-                .ToList();
+                .ToListAsync();
 
             return new PagedResult<MedicationIntakeLogDto>
             {

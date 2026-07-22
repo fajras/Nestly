@@ -9,11 +9,13 @@ class FetalWeekRow {
   final int id;
   final String babyDevelopment;
   final String motherChanges;
+  final String imageUrl;
 
   FetalWeekRow({
     required this.id,
     required this.babyDevelopment,
     required this.motherChanges,
+    required this.imageUrl,
   });
 
   factory FetalWeekRow.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class FetalWeekRow {
       id: json['id'],
       babyDevelopment: json['babyDevelopment'] ?? '',
       motherChanges: json['motherChanges'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
     );
   }
 }
@@ -172,6 +175,15 @@ class _EditSheetState extends State<_EditSheet> {
 
     _baby.text = widget.item.babyDevelopment;
     _mother.text = widget.item.motherChanges;
+    _image.text = widget.item.imageUrl;
+  }
+
+  @override
+  void dispose() {
+    _baby.dispose();
+    _mother.dispose();
+    _image.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {
@@ -242,6 +254,15 @@ class _EditSheetState extends State<_EditSheet> {
                   maxLines: 5,
                   decoration: const InputDecoration(
                     labelText: 'Promjene kod majke',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: _image,
+                  decoration: const InputDecoration(
+                    labelText: 'URL slike',
                   ),
                 ),
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
@@ -14,26 +14,26 @@ namespace Nestly.Services.Repository
             _context = context;
         }
 
-        public ChatConversation GetConversation(long user1Id, long user2Id)
+        public async Task<ChatConversation?> GetConversation(long user1Id, long user2Id)
         {
-            return _context.ChatConversations
+            return await _context.ChatConversations
                 .Include(c => c.Messages)
                 .Include(c => c.User1)
                 .Include(c => c.User2)
-                .FirstOrDefault(c =>
+                .FirstOrDefaultAsync(c =>
                     (c.User1Id == user1Id && c.User2Id == user2Id) ||
                     (c.User1Id == user2Id && c.User2Id == user1Id));
         }
 
-        public ChatConversation GetConversationById(long conversationId)
+        public async Task<ChatConversation?> GetConversationById(long conversationId)
         {
-            return _context.ChatConversations
+            return await _context.ChatConversations
                 .Include(c => c.User1)
                 .Include(c => c.User2)
-                .FirstOrDefault(c => c.Id == conversationId);
+                .FirstOrDefaultAsync(c => c.Id == conversationId);
         }
 
-        public ChatConversation CreateConversation(long user1Id, long user2Id)
+        public async Task<ChatConversation> CreateConversation(long user1Id, long user2Id)
         {
             var conversation = new ChatConversation
             {
@@ -43,7 +43,7 @@ namespace Nestly.Services.Repository
             };
 
             _context.ChatConversations.Add(conversation);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return conversation;
         }
@@ -53,9 +53,9 @@ namespace Nestly.Services.Repository
             _context.ChatMessages.Add(message);
         }
 
-        public List<ChatConversation> GetUserConversations(long userId)
+        public async Task<List<ChatConversation>> GetUserConversations(long userId)
         {
-            return _context.ChatConversations
+            return await _context.ChatConversations
                 .Include(c => c.Messages)
 
                 .Include(c => c.User1)
@@ -77,20 +77,27 @@ namespace Nestly.Services.Repository
                 .Where(c =>
                     c.User1Id == userId ||
                     c.User2Id == userId)
-                .ToList();
+                .ToListAsync();
         }
 
-        public List<ChatMessage> GetMessages(long conversationId)
+        public async Task<List<ChatMessage>> GetMessages(long conversationId, int maxCount = 200)
         {
-            return _context.ChatMessages
+            // Keep only the most recent `maxCount` messages so a very long
+            // conversation doesn't load its entire history in one request.
+            var recentDescending = await _context.ChatMessages
                 .Where(m => m.ConversationId == conversationId)
-                .OrderBy(m => m.CreatedAt)
-                .ToList();
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(maxCount)
+                .ToListAsync();
+
+            recentDescending.Reverse();
+
+            return recentDescending;
         }
 
-        public void Save()
+        public async Task Save()
         {
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

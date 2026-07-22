@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.WebAPI.Hubs
@@ -9,23 +10,40 @@ namespace Nestly.WebAPI.Hubs
     {
         private readonly ICurrentUserService
             _currentUserService;
+        private readonly ILogger<ChatHub> _logger;
 
         public ChatHub(
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            ILogger<ChatHub> logger)
         {
             _currentUserService =
                 currentUserService;
+            _logger = logger;
         }
 
         public override async Task OnConnectedAsync()
         {
-            var userId =
-                _currentUserService
-                    .GetCurrentAppUserId(
-                        Context.User);
-            await Groups.AddToGroupAsync(
-                Context.ConnectionId,
-                GetUserGroup(userId));
+            try
+            {
+                var userId =
+                    _currentUserService
+                        .GetCurrentAppUserId(
+                            Context.User);
+                await Groups.AddToGroupAsync(
+                    Context.ConnectionId,
+                    GetUserGroup(userId));
+
+                _logger.LogInformation(
+                    "User {UserId} connected to ChatHub (connection {ConnectionId}).",
+                    userId, Context.ConnectionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error while connecting to ChatHub (connection {ConnectionId}).",
+                    Context.ConnectionId);
+            }
 
             await base.OnConnectedAsync();
         }
@@ -34,13 +52,27 @@ namespace Nestly.WebAPI.Hubs
             OnDisconnectedAsync(
                 Exception? exception)
         {
-            var userId =
-                _currentUserService
-                    .GetCurrentAppUserId(
-                        Context.User);
-            await Groups.RemoveFromGroupAsync(
-                Context.ConnectionId,
-                GetUserGroup(userId));
+            try
+            {
+                var userId =
+                    _currentUserService
+                        .GetCurrentAppUserId(
+                            Context.User);
+                await Groups.RemoveFromGroupAsync(
+                    Context.ConnectionId,
+                    GetUserGroup(userId));
+
+                _logger.LogInformation(
+                    "User {UserId} disconnected from ChatHub (connection {ConnectionId}).",
+                    userId, Context.ConnectionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error while disconnecting from ChatHub (connection {ConnectionId}).",
+                    Context.ConnectionId);
+            }
 
             await base.OnDisconnectedAsync(
                 exception);

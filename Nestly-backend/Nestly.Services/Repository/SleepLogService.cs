@@ -29,7 +29,21 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public PagedResult<SleepLogResponseDto> Get(SleepLogSearchObject search)
+        // Sleep can span midnight (EndTime < StartTime wraps to the next
+        // day), so overlap detection needs the absolute start/end instant
+        // rather than comparing raw TimeSpans.
+        private static (DateTime Start, DateTime End) GetAbsoluteInterval(
+            DateTime date, TimeSpan start, TimeSpan end)
+        {
+            var absStart = date.Date + start;
+            var absEnd = end >= start
+                ? date.Date + end
+                : date.Date.AddDays(1) + end;
+
+            return (absStart, absEnd);
+        }
+
+        public async Task<PagedResult<SleepLogResponseDto>> Get(SleepLogSearchObject search)
         {
             IQueryable<SleepLog> q = _db.SleepLogs.AsNoTracking();
 
@@ -48,7 +62,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => x.SleepDate <= search.DateTo.Value.Date);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -56,13 +70,14 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.SleepDate)
                 .ThenByDescending(x => x.StartTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => MapToDto(x))
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<SleepLogResponseDto>
             {
@@ -70,11 +85,11 @@ namespace Nestly.Services.Repository
                 Items = items
             };
         }
-        public SleepLogResponseDto GetById(long id)
+        public async Task<SleepLogResponseDto> GetById(long id)
         {
-            var entity = _db.SleepLogs
+            var entity = await _db.SleepLogs
                 .AsNoTracking()
-                .FirstOrDefault(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -84,11 +99,16 @@ namespace Nestly.Services.Repository
             return MapToDto(entity);
         }
 
-        public SleepLogResponseDto Create(CreateSleepLogDto dto)
+        public async Task<SleepLogResponseDto> Create(CreateSleepLogDto dto)
         {
-            if (!_db.BabyProfiles.Any(b => b.Id == dto.BabyId))
+            if (!await _db.BabyProfiles.AnyAsync(b => b.Id == dto.BabyId))
             {
                 throw new NotFoundException("Baby profile not found.");
+            }
+
+            if (dto.SleepDate.Date > DateTime.UtcNow.Date)
+            {
+                throw new BusinessException("Sleep date cannot be in the future.");
             }
 
             if (!TimeSpan.TryParse(dto.StartTime, out var start))
@@ -101,6 +121,13 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Invalid end time format.");
             }
 
+            if (start == end)
+            {
+                throw new BusinessException("Start time and end time cannot be the same.");
+            }
+
+            await EnsureNoOverlap(dto.BabyId, dto.SleepDate.Date, start, end, excludeId: null);
+
             var entity = new SleepLog
             {
                 BabyId = dto.BabyId,
@@ -110,50 +137,94 @@ namespace Nestly.Services.Repository
             };
 
             _db.SleepLogs.Add(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(entity);
         }
-        public SleepLogResponseDto Patch(long id, SleepLogPatchDto patch)
+        public async Task<SleepLogResponseDto> Patch(long id, SleepLogPatchDto patch)
         {
-            var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
+            var entity = await _db.SleepLogs.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Sleep log not found.");
             }
 
+            var newDate = entity.SleepDate;
+            var newStart = entity.StartTime;
+            var newEnd = entity.EndTime;
+
             if (patch.SleepDate is not null)
             {
-                entity.SleepDate = patch.SleepDate.Value.Date;
+                if (patch.SleepDate.Value.Date > DateTime.UtcNow.Date)
+                {
+                    throw new BusinessException("Sleep date cannot be in the future.");
+                }
+
+                newDate = patch.SleepDate.Value.Date;
             }
 
             if (patch.StartTime is not null)
             {
-                if (!TimeSpan.TryParse(patch.StartTime, out var start))
+                if (!TimeSpan.TryParse(patch.StartTime, out newStart))
                 {
                     throw new BusinessException("Invalid start time format.");
                 }
-
-                entity.StartTime = start;
             }
 
             if (patch.EndTime is not null)
             {
-                if (!TimeSpan.TryParse(patch.EndTime, out var end))
+                if (!TimeSpan.TryParse(patch.EndTime, out newEnd))
                 {
                     throw new BusinessException("Invalid end time format.");
                 }
-
-                entity.EndTime = end;
             }
 
-            _db.SaveChanges();
+            if (newStart == newEnd)
+            {
+                throw new BusinessException("Start time and end time cannot be the same.");
+            }
+
+            await EnsureNoOverlap(entity.BabyId, newDate, newStart, newEnd, excludeId: entity.Id);
+
+            entity.SleepDate = newDate;
+            entity.StartTime = newStart;
+            entity.EndTime = newEnd;
+
+            await _db.SaveChangesAsync();
             return MapToDto(entity);
         }
-        public void Delete(long id)
+
+        private async Task EnsureNoOverlap(
+            long babyId, DateTime date, TimeSpan start, TimeSpan end, long? excludeId)
         {
-            var entity = _db.SleepLogs.FirstOrDefault(x => x.Id == id);
+            var (newStart, newEnd) = GetAbsoluteInterval(date, start, end);
+
+            // Only nearby days can possibly overlap a (potentially
+            // overnight-spanning) new entry.
+            var others = await _db.SleepLogs
+                .Where(x => x.BabyId == babyId &&
+                    x.SleepDate >= date.AddDays(-1) &&
+                    x.SleepDate <= date.AddDays(1) &&
+                    (excludeId == null || x.Id != excludeId.Value))
+                .ToListAsync();
+
+            foreach (var other in others)
+            {
+                var (otherStart, otherEnd) = GetAbsoluteInterval(
+                    other.SleepDate, other.StartTime, other.EndTime);
+
+                if (newStart < otherEnd && otherStart < newEnd)
+                {
+                    throw new BusinessException(
+                        "This sleep entry overlaps with an existing entry for this baby.");
+                }
+            }
+        }
+
+        public async Task Delete(long id)
+        {
+            var entity = await _db.SleepLogs.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
@@ -161,10 +232,10 @@ namespace Nestly.Services.Repository
             }
 
             _db.SleepLogs.Remove(entity);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
-        public PagedResult<SleepLogResponseDto> GetByParent(
+        public async Task<PagedResult<SleepLogResponseDto>> GetByParent(
     long parentProfileId,
     SleepLogSearchObject search)
         {
@@ -194,7 +265,7 @@ namespace Nestly.Services.Repository
                     search.DateTo.Value.Date);
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
             int page = search.Page < 1
                 ? 1
@@ -206,13 +277,14 @@ namespace Nestly.Services.Repository
                     ? 100
                     : search.PageSize;
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(x => x.SleepDate)
                 .ThenByDescending(x => x.StartTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => MapToDto(x))
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<SleepLogResponseDto>
             {

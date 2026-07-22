@@ -13,6 +13,9 @@ namespace Nestly.Services.Repository
         private readonly ICurrentUserService _currentUserService;
 
         private const int GestationDays = 280;
+        private const int MinGestationDays = 200;
+        private const int MaxGestationDays = 320;
+        private const int MaxGestationalWeek = 42;
 
         public PregnancyService(
             NestlyDbContext db,
@@ -134,12 +137,27 @@ namespace Nestly.Services.Repository
                     "Due date cannot be before LMP.");
             }
 
+            if (dto.LmpDate.HasValue && dto.DueDate.HasValue)
+            {
+                ValidateGestationGap(dto.LmpDate.Value, dto.DueDate.Value);
+            }
+
             if (dto.CycleLengthDays.HasValue &&
                 (dto.CycleLengthDays < 20 ||
                  dto.CycleLengthDays > 40))
             {
                 throw new BusinessException(
                     "Cycle length must be between 20 and 40.");
+            }
+
+            bool hasActivePregnancy = await _db.Pregnancies.AnyAsync(p =>
+                p.ParentProfileId == parent.Id &&
+                (p.DueDate == null || p.DueDate >= DateTime.UtcNow.Date));
+
+            if (hasActivePregnancy)
+            {
+                throw new BusinessException(
+                    "This parent already has an active pregnancy. Update or remove it before adding a new one.");
             }
 
             var entity = new Pregnancy
@@ -184,6 +202,11 @@ namespace Nestly.Services.Repository
             {
                 throw new BusinessException(
                     "Due date cannot be before LMP.");
+            }
+
+            if (patch.LmpDate.HasValue && patch.DueDate.HasValue)
+            {
+                ValidateGestationGap(patch.LmpDate.Value, patch.DueDate.Value);
             }
 
             entity.LmpDate = newLmp;
@@ -258,9 +281,11 @@ namespace Nestly.Services.Repository
                 0,
                 (today - lmp.Value).Days);
 
-            var week = Math.Max(
-                1,
-                (ageDays / 7) + 1);
+            var week = Math.Min(
+                MaxGestationalWeek,
+                Math.Max(
+                    1,
+                    (ageDays / 7) + 1));
 
             var remaining = Math.Max(
                 0,
@@ -274,6 +299,17 @@ namespace Nestly.Services.Repository
                 GestationalWeek = week,
                 DaysRemaining = remaining
             };
+        }
+
+        private static void ValidateGestationGap(DateTime lmp, DateTime due)
+        {
+            var gapDays = (due - lmp).Days;
+
+            if (gapDays < MinGestationDays || gapDays > MaxGestationDays)
+            {
+                throw new BusinessException(
+                    $"Due date and LMP must be roughly {MinGestationDays}-{MaxGestationDays} days apart.");
+            }
         }
 
         private static (DateTime? lmp, DateTime? due)

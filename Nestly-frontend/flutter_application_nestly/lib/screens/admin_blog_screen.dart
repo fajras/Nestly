@@ -513,6 +513,10 @@ class _BlogEditorSheetState extends State<_BlogEditorSheet> {
           title: title,
           content: content,
         );
+
+        if (_image != null) {
+          await _service.uploadBlogImage(blogId: widget.blog!.id, file: _image!);
+        }
       } else {
         final blogId = await _service.createBlogWithoutImage(
           title: title,

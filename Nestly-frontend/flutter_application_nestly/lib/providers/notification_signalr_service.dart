@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_application_nestly/layouts/nestly_top_notification.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
@@ -12,6 +13,10 @@ class NotificationSignalRService {
   VoidCallback? _onNotification;
 
   Timer? _pollingTimer;
+
+  bool _isConnected = false;
+
+  bool get isConnected => _isConnected;
 
   Future<void> connect(String token, {VoidCallback? onNotification}) async {
     try {
@@ -29,11 +34,20 @@ class NotificationSignalRService {
           .withAutomaticReconnect()
           .build();
 
-      _connection!.onclose(({error}) async {});
+      _connection!.onclose(({error}) async {
+        _isConnected = false;
+        debugPrint("NotificationSignalR connection closed: $error");
+      });
 
-      _connection!.onreconnecting(({error}) async {});
+      _connection!.onreconnecting(({error}) async {
+        _isConnected = false;
+        debugPrint("NotificationSignalR reconnecting: $error");
+      });
 
-      _connection!.onreconnected(({connectionId}) async {});
+      _connection!.onreconnected(({connectionId}) async {
+        _isConnected = true;
+        debugPrint("NotificationSignalR reconnected: $connectionId");
+      });
 
       _connection!.on("ReceiveNotification", (arguments) {
         if (arguments == null || arguments.isEmpty) {
@@ -59,13 +73,21 @@ class NotificationSignalRService {
 
       await _connection!.start();
 
+      _isConnected = true;
+
       _startPolling();
-    } catch (e) {}
+    } catch (e) {
+      _isConnected = false;
+      debugPrint("NotificationSignalR connect error: $e");
+    }
   }
 
   void _startPolling() {
     _pollingTimer?.cancel();
 
+    // Kept as a fallback alongside SignalR: if a push is silently missed
+    // (e.g. the socket drops without firing onclose in time), the unread
+    // count/list still catches up within 30s instead of going stale.
     _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
       if (_onNotification != null) {
         _onNotification!();
@@ -77,5 +99,6 @@ class NotificationSignalRService {
     _pollingTimer?.cancel();
 
     await _connection?.stop();
+    _isConnected = false;
   }
 }

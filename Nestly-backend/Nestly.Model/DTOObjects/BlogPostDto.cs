@@ -9,6 +9,7 @@ namespace Nestly.Model.DTOObjects
     {
         public string? Title { get; set; }
         public string? Content { get; set; }
+        public List<int>? CategoryIds { get; set; }
     }
     public class BlogPostResponseDto
     {

@@ -4,12 +4,12 @@ namespace Nestly.Services.Interfaces
 {
     public interface ISleepLogService
     {
-        PagedResult<SleepLogResponseDto> Get(SleepLogSearchObject search);
-        SleepLogResponseDto GetById(long id);
-        SleepLogResponseDto Create(CreateSleepLogDto dto);
-        SleepLogResponseDto Patch(long id, SleepLogPatchDto patch);
-        void Delete(long id);
-        PagedResult<SleepLogResponseDto> GetByParent(
+        Task<PagedResult<SleepLogResponseDto>> Get(SleepLogSearchObject search);
+        Task<SleepLogResponseDto> GetById(long id);
+        Task<SleepLogResponseDto> Create(CreateSleepLogDto dto);
+        Task<SleepLogResponseDto> Patch(long id, SleepLogPatchDto patch);
+        Task Delete(long id);
+        Task<PagedResult<SleepLogResponseDto>> GetByParent(
             long parentProfileId,
             SleepLogSearchObject search);
     }

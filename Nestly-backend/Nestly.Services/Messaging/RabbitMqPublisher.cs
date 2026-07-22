@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Nestly.Model.DTOObjects;
 using RabbitMQ.Client;
 using System.Text;
@@ -9,13 +10,15 @@ namespace Nestly.Services.Messaging
     public class RabbitMqPublisher : IDisposable
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<RabbitMqPublisher> _logger;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _queueName;
 
-        public RabbitMqPublisher(IConfiguration config)
+        public RabbitMqPublisher(IConfiguration config, ILogger<RabbitMqPublisher> logger)
         {
             _config = config;
+            _logger = logger;
 
             _queueName = _config["RabbitMQ:Queue"];
 
@@ -53,18 +56,31 @@ namespace Nestly.Services.Messaging
 
         public void Publish(NotificationEvent notificationEvent)
         {
-            var body = Encoding.UTF8.GetBytes(
-                JsonSerializer.Serialize(notificationEvent));
+            try
+            {
+                var body = Encoding.UTF8.GetBytes(
+                    JsonSerializer.Serialize(notificationEvent));
 
-            var properties = _channel.CreateBasicProperties();
+                var properties = _channel.CreateBasicProperties();
 
-            properties.Persistent = true;
+                properties.Persistent = true;
 
-            _channel.BasicPublish(
-                exchange: "",
-                routingKey: _queueName,
-                basicProperties: properties,
-                body: body);
+                _channel.BasicPublish(
+                    exchange: "",
+                    routingKey: _queueName,
+                    basicProperties: properties,
+                    body: body);
+            }
+            catch (Exception ex)
+            {
+                // Notification delivery is best-effort: a broker outage
+                // must not fail the caller's primary business operation
+                // (e.g. creating a blog post or a Q&A answer).
+                _logger.LogError(
+                    ex,
+                    "Failed to publish notification for user {UserId}.",
+                    notificationEvent.UserId);
+            }
         }
 
         public void Dispose()

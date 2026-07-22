@@ -24,26 +24,26 @@ public class BlogPostController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<PagedResult<BlogPostResponseDto>> Get([FromQuery] BlogPostSearchObject search)
+    public async Task<ActionResult<PagedResult<BlogPostResponseDto>>> Get([FromQuery] BlogPostSearchObject search)
     {
-        return Ok(_service.Get(search));
+        return Ok(await _service.Get(search));
     }
 
     [HttpGet("{id:long}")]
-    public ActionResult<BlogPostResponseDto> GetById(long id)
+    public async Task<ActionResult<BlogPostResponseDto>> GetById(long id)
     {
-        var result = _service.GetById(id);
+        var result = await _service.GetById(id);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
     [Authorize(Roles = "Doctor")]
-    public ActionResult<BlogPostResponseDto> Create([FromBody] CreateBlogPostDto request)
+    public async Task<ActionResult<BlogPostResponseDto>> Create([FromBody] CreateBlogPostDto request)
     {
 
         var currentUserId = _currentUserService.GetCurrentAppUserId();
 
-        var created = _service.Create(request, currentUserId);
+        var created = await _service.Create(request, currentUserId);
 
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
 
@@ -51,12 +51,12 @@ public class BlogPostController : ControllerBase
 
     [HttpPatch("{id:long}")]
     [Authorize(Roles = "Doctor")]
-    public ActionResult<BlogPostResponseDto> Patch(long id, [FromBody] BlogPostPatchDto patch)
+    public async Task<ActionResult<BlogPostResponseDto>> Patch(long id, [FromBody] BlogPostPatchDto patch)
     {
         var currentUserId =
     _currentUserService.GetCurrentAppUserId();
 
-        var updated = _service.Patch(id, patch, currentUserId);
+        var updated = await _service.Patch(id, patch, currentUserId);
 
         return Ok(updated);
     }
@@ -68,18 +68,18 @@ public class BlogPostController : ControllerBase
         var currentUserId =
     _currentUserService.GetCurrentAppUserId();
 
-        _service.Delete(id, currentUserId);
+        await _service.Delete(id, currentUserId);
 
         await _blob.DeleteBlogImageAsync(id);
 
         return NoContent();
     }
     [HttpGet("category/{categoryId:int}")]
-    public ActionResult<PagedResult<BlogPostResponseDto>> GetByCategoryId(
+    public async Task<ActionResult<PagedResult<BlogPostResponseDto>>> GetByCategoryId(
         int categoryId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        return Ok(_service.GetByCategoryId(categoryId, page, pageSize));
+        return Ok(await _service.GetByCategoryId(categoryId, page, pageSize));
     }
 }

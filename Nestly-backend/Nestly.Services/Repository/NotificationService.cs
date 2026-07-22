@@ -18,11 +18,21 @@ namespace Nestly.Services.Repository
             _notifier = notifier;
         }
 
-        public async Task<List<NotificationDto>> GetUserNotificationsAsync(long userId)
+        public async Task<PagedResult<NotificationDto>> GetUserNotificationsAsync(
+            long userId, int page = 1, int pageSize = 50)
         {
-            return await _db.Notifications
+            var query = _db.Notifications
                 .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.CreatedAt)
+                .OrderByDescending(n => n.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 50 : pageSize > 200 ? 200 : pageSize;
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(n => new NotificationDto
                 {
                     Id = n.Id,
@@ -32,6 +42,12 @@ namespace Nestly.Services.Repository
                     CreatedAt = n.CreatedAt
                 })
                 .ToListAsync();
+
+            return new PagedResult<NotificationDto>
+            {
+                TotalCount = totalCount,
+                Items = items
+            };
         }
 
         public async Task MarkAsReadAsync(int notificationId, long userId)
@@ -55,16 +71,9 @@ namespace Nestly.Services.Repository
         }
         public async Task MarkAllAsReadAsync(long userId)
         {
-            var notifications = await _db.Notifications
+            await _db.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
-                .ToListAsync();
-
-            foreach (var notification in notifications)
-            {
-                notification.IsRead = true;
-            }
-
-            await _db.SaveChangesAsync();
+                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
         }
         public async Task CreateNotificationAsync(NotificationEvent notificationEvent)
         {

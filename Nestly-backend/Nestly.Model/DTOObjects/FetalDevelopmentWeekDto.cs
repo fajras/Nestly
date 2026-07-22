@@ -19,6 +19,7 @@ namespace Nestly.Model.DTOObjects
     {
         public string? BabyDevelopment { get; set; }
         public string? MotherChanges { get; set; }
+        public string? ImageUrl { get; set; }
     }
 
     public class FetalDevelopmentWeekResponseDto

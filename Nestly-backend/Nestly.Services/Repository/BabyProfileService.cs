@@ -127,11 +127,34 @@ namespace Nestly.Services.Repository
                     "Birth date is required.");
             }
 
+            if (dto.BirthDate.Date > DateTime.UtcNow.Date)
+            {
+                throw new BusinessException(
+                    "Birth date cannot be in the future.");
+            }
+
+            if (!IsValidGender(dto.Gender))
+            {
+                throw new BusinessException(
+                    "Gender must be either 'Male' or 'Female'.");
+            }
+
             if (dto.PregnancyId.HasValue)
             {
                 await _currentUserService
                     .EnsurePregnancyOwnershipAsync(
                         dto.PregnancyId.Value);
+            }
+
+            bool duplicate = await _db.BabyProfiles.AnyAsync(x =>
+                x.ParentProfileId == parent.Id &&
+                x.BirthDate == dto.BirthDate &&
+                x.BabyName.ToLower() == dto.BabyName.Trim().ToLower());
+
+            if (duplicate)
+            {
+                throw new BusinessException(
+                    "A baby profile with the same name and birth date already exists.");
             }
 
             var entity = new BabyProfile
@@ -170,11 +193,23 @@ namespace Nestly.Services.Repository
 
             if (patch.Gender is not null)
             {
+                if (!IsValidGender(patch.Gender))
+                {
+                    throw new BusinessException(
+                        "Gender must be either 'Male' or 'Female'.");
+                }
+
                 dbEntity.Gender = patch.Gender.Trim();
             }
 
             if (patch.BirthDate is not null)
             {
+                if (patch.BirthDate.Value.Date > DateTime.UtcNow.Date)
+                {
+                    throw new BusinessException(
+                        "Birth date cannot be in the future.");
+                }
+
                 dbEntity.BirthDate = patch.BirthDate.Value;
             }
 
@@ -210,6 +245,13 @@ namespace Nestly.Services.Repository
             return entity is null
                 ? null
                 : MapToDto(entity);
+        }
+
+        private static bool IsValidGender(string? gender)
+        {
+            return gender is not null &&
+                (gender.Trim().Equals("Male", StringComparison.OrdinalIgnoreCase) ||
+                 gender.Trim().Equals("Female", StringComparison.OrdinalIgnoreCase));
         }
 
         private static BabyProfileSummaryDto MapToDto(

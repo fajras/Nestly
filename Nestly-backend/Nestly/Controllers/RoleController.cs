@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nestly.Model.DTOObjects;
 using Nestly.Services.Interfaces;
@@ -18,15 +18,15 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<PagedResult<RoleDto>> Get([FromQuery] RoleSearchObject search)
+        public async Task<ActionResult<PagedResult<RoleDto>>> Get([FromQuery] RoleSearchObject search)
         {
-            return Ok(_service.Get(search));
+            return Ok(await _service.Get(search));
         }
 
         [HttpGet("{id}")]
-        public ActionResult<RoleDto> GetById(long id)
+        public async Task<ActionResult<RoleDto>> GetById(long id)
         {
-            var result = _service.GetById(id);
+            var result = await _service.GetById(id);
 
             if (result == null)
             {
@@ -37,17 +37,17 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult<RoleDto> Create([FromBody] RoleInsertDto request)
+        public async Task<ActionResult<RoleDto>> Create([FromBody] RoleInsertDto request)
         {
-            var result = _service.Create(request);
+            var result = await _service.Create(request);
 
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         [HttpPatch("{id}")]
-        public ActionResult<RoleDto> Update(long id, [FromBody] RoleUpdateDto request)
+        public async Task<ActionResult<RoleDto>> Update(long id, [FromBody] RoleUpdateDto request)
         {
-            var result = _service.Update(id, request);
+            var result = await _service.Update(id, request);
 
             if (result == null)
             {
@@ -57,9 +57,9 @@ namespace Nestly.WebAPI.Controllers
             return Ok(result);
         }
         [HttpDelete("{id}")]
-        public IActionResult Delete(long id)
+        public async Task<IActionResult> Delete(long id)
         {
-            _service.Delete(id);
+            await _service.Delete(id);
             return NoContent();
         }
     }

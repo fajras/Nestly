@@ -1,13 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
+using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 using Nestly.Services.Messaging;
 namespace Nestly.Services.Repository
 {
     public class ChatService : IChatService
     {
+        private const int MaxMessageLength = 4000;
+
         private readonly IChatRepository _chatRepository;
         private readonly RabbitMqPublisher _publisher;
         private readonly IChatNotifier _chatNotifier;
@@ -28,23 +32,35 @@ namespace Nestly.Services.Repository
         }
 
 
-        public async Task SendMessage(
+        public async Task<long> SendMessage(
             long senderId,
             SendMessageRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                throw new BusinessException("Message cannot be empty.");
+            }
+
+            var content = request.Content.Trim();
+
+            if (content.Length > MaxMessageLength)
+            {
+                throw new BusinessException($"Message cannot exceed {MaxMessageLength} characters.");
+            }
+
             await _currentUserService
                 .EnsureCanChatWithUserAsync(
                     request.ReceiverUserId);
 
             var conversation =
-                _chatRepository.GetConversation(
+                await _chatRepository.GetConversation(
                     senderId,
                     request.ReceiverUserId);
 
             if (conversation == null)
             {
                 conversation =
-                    _chatRepository.CreateConversation(
+                    await _chatRepository.CreateConversation(
                         senderId,
                         request.ReceiverUserId);
             }
@@ -60,13 +76,13 @@ namespace Nestly.Services.Repository
             {
                 ConversationId = conversation.Id,
                 SenderId = senderId,
-                Content = request.Content,
+                Content = content,
                 CreatedAt = DateTime.UtcNow
             };
 
             _chatRepository.AddMessage(message);
 
-            _chatRepository.Save();
+            await _chatRepository.Save();
 
             var realtimeMessage =
                 new ChatMessageRealtimeDto
@@ -91,46 +107,32 @@ namespace Nestly.Services.Repository
                 Title = "Nova poruka",
                 Message = "Imate novu poruku od korisnika."
             });
+
+            return conversation.Id;
         }
 
-        public Task<List<ChatConversationResponse>> GetUserChats(long userId)
+        public async Task<List<ChatConversationResponse>> GetUserChats(long userId)
         {
-            var chats = _chatRepository.GetUserConversations(userId);
+            var chats = await _chatRepository.GetUserConversations(userId);
 
             var result = chats.Select(c =>
             {
                 var otherUser = c.User1Id == userId ? c.User2 : c.User1;
                 var parentProfile = otherUser.ParentProfile;
 
-                string parentStatus;
-                int? babyAgeMonths = null;
-                int? pregnancyTrimester = null;
-
-                var latestBaby = parentProfile?.Babies?
+                var latestBabyBirthDate = parentProfile?.Babies?
                     .OrderByDescending(b => b.BirthDate)
+                    .Select(b => (DateTime?)b.BirthDate)
                     .FirstOrDefault();
 
-                if (latestBaby != null)
-                {
-                    parentStatus = "PARENT";
-                    babyAgeMonths = CalculateBabyAgeInMonths(latestBaby.BirthDate);
-                }
-                else
-                {
-                    var pregnancy = parentProfile?.Pregnancies?
-                        .OrderByDescending(p => p.DueDate)
-                        .FirstOrDefault(p => p.DueDate != null && p.DueDate > DateTime.UtcNow);
+                var latestPregnancyDueDate = parentProfile?.Pregnancies?
+                    .Where(p => p.DueDate != null && p.DueDate > DateTime.UtcNow)
+                    .OrderByDescending(p => p.DueDate)
+                    .Select(p => p.DueDate)
+                    .FirstOrDefault();
 
-                    if (pregnancy != null && pregnancy.DueDate.HasValue)
-                    {
-                        parentStatus = "PREGNANT";
-                        pregnancyTrimester = CalculatePregnancyTrimester(pregnancy.DueDate.Value);
-                    }
-                    else
-                    {
-                        parentStatus = "UNKNOWN";
-                    }
-                }
+                var (parentStatus, babyAgeMonths, pregnancyTrimester) =
+                    ParentStatusCalculator.Resolve(latestBabyBirthDate, latestPregnancyDueDate);
 
                 var lastMessage = c.Messages
                     .OrderByDescending(m => m.CreatedAt)
@@ -154,19 +156,20 @@ namespace Nestly.Services.Repository
 
             }).ToList();
 
-            return Task.FromResult(result);
+            return result;
         }
 
-        public Task<List<ChatMessageResponse>> GetMessages(long conversationId, long userId)
+        public async Task<List<ChatMessageResponse>> GetMessages(long conversationId, long userId)
         {
-            var conversation = _chatRepository.GetConversationById(conversationId);
+            var conversation = await _chatRepository.GetConversationById(conversationId);
 
-            if (conversation.User1Id != userId && conversation.User2Id != userId)
+            if (conversation == null ||
+                (conversation.User1Id != userId && conversation.User2Id != userId))
             {
                 throw new UnauthorizedAccessException();
             }
 
-            var messages = _chatRepository.GetMessages(conversationId);
+            var messages = await _chatRepository.GetMessages(conversationId);
 
             var result = messages.Select(m => new ChatMessageResponse
             {
@@ -176,35 +179,7 @@ namespace Nestly.Services.Repository
                 CreatedAt = m.CreatedAt
             }).ToList();
 
-            return Task.FromResult(result);
-        }
-
-
-        private static int CalculateBabyAgeInMonths(DateTime birthDate)
-        {
-            var now = DateTime.UtcNow;
-
-            return (now.Year - birthDate.Year) * 12
-                   + now.Month - birthDate.Month;
-        }
-
-        private static int CalculatePregnancyTrimester(DateTime dueDate)
-        {
-            var totalWeeks = 40;
-            var weeksLeft = (dueDate - DateTime.UtcNow).Days / 7;
-            var currentWeek = totalWeeks - weeksLeft;
-
-            if (currentWeek <= 13)
-            {
-                return 1;
-            }
-
-            if (currentWeek <= 27)
-            {
-                return 2;
-            }
-
-            return 3;
+            return result;
         }
 
         public async Task<List<ChatUserDto>> GetAvailableUsers(
@@ -239,7 +214,8 @@ namespace Nestly.Services.Repository
                             .Select(b =>
                                 ((DateTime.UtcNow.Year - b.BirthDate.Year) * 12)
                                 + DateTime.UtcNow.Month
-                                - b.BirthDate.Month)
+                                - b.BirthDate.Month
+                                - (DateTime.UtcNow.Day < b.BirthDate.Day ? 1 : 0))
                             .FirstOrDefault(),
 
                     PregnancyTrimester =
@@ -250,12 +226,12 @@ namespace Nestly.Services.Repository
                             .OrderByDescending(p => p.DueDate)
                             .Select(p =>
                                 (
-                                    40 -
+                                    ParentStatusCalculator.TotalGestationWeeks -
                                     ((p.DueDate!.Value - DateTime.UtcNow).Days / 7)
                                 ) <= 13
                                     ? 1
                                     : (
-                                        40 -
+                                        ParentStatusCalculator.TotalGestationWeeks -
                                         ((p.DueDate!.Value - DateTime.UtcNow).Days / 7)
                                       ) <= 27
                                         ? 2

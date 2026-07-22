@@ -4,11 +4,11 @@ namespace Nestly.Services.Interfaces
 {
     public interface IFetalDevelopmentWeekService
     {
-        PagedResult<FetalDevelopmentWeekResponseDto> Get(FetalDevelopmentWeekSearchObject search);
-        FetalDevelopmentWeekResponseDto GetById(int id);
-        FetalDevelopmentWeekResponseDto GetByWeekNumber(int weekNumber);
-        FetalDevelopmentWeekResponseDto Create(CreateFetalDevelopmentWeekDto entity);
-        FetalDevelopmentWeekResponseDto Patch(int id, FetalDevelopmentWeekPatchDto patch);
-        void Delete(int id);
+        Task<PagedResult<FetalDevelopmentWeekResponseDto>> Get(FetalDevelopmentWeekSearchObject search);
+        Task<FetalDevelopmentWeekResponseDto> GetById(int id);
+        Task<FetalDevelopmentWeekResponseDto?> GetByWeekNumber(int weekNumber);
+        Task<FetalDevelopmentWeekResponseDto> Create(CreateFetalDevelopmentWeekDto entity);
+        Task<FetalDevelopmentWeekResponseDto> Patch(int id, FetalDevelopmentWeekPatchDto patch);
+        Task Delete(int id);
     }
 }

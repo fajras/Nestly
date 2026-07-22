@@ -1,20 +1,20 @@
-﻿using Nestly.Model.Entity;
+using Nestly.Model.Entity;
 
 namespace Nestly.Services.Interfaces
 {
     public interface IChatRepository
     {
-        ChatConversation GetConversation(long user1Id, long user2Id);
-        ChatConversation GetConversationById(long conversationId);
+        Task<ChatConversation?> GetConversation(long user1Id, long user2Id);
+        Task<ChatConversation?> GetConversationById(long conversationId);
 
-        ChatConversation CreateConversation(long user1Id, long user2Id);
+        Task<ChatConversation> CreateConversation(long user1Id, long user2Id);
 
         void AddMessage(ChatMessage message);
 
-        List<ChatConversation> GetUserConversations(long userId);
+        Task<List<ChatConversation>> GetUserConversations(long userId);
 
-        List<ChatMessage> GetMessages(long conversationId);
+        Task<List<ChatMessage>> GetMessages(long conversationId, int maxCount = 200);
 
-        void Save();
+        Task Save();
     }
 }

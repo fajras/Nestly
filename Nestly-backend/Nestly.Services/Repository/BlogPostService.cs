@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
@@ -9,6 +9,10 @@ namespace Nestly.Services.Repository
 {
     public class BlogPostService : IBlogPostService
     {
+        // Posts seeded by BlogPostSeeder (ids 1-12) are considered system
+        // posts and cannot be deleted.
+        private const int SystemPostMaxId = 12;
+
         private readonly NestlyDbContext _db;
         private readonly RabbitMqPublisher _publisher;
         public BlogPostService(NestlyDbContext db, RabbitMqPublisher publisher)
@@ -17,7 +21,7 @@ namespace Nestly.Services.Repository
             _publisher = publisher;
         }
 
-        public PagedResult<BlogPostResponseDto> Get(BlogPostSearchObject search)
+        public async Task<PagedResult<BlogPostResponseDto>> Get(BlogPostSearchObject search)
         {
             IQueryable<BlogPost> q = _db.BlogPosts
                 .Include(p => p.BlogPostCategories)
@@ -48,7 +52,7 @@ namespace Nestly.Services.Repository
                 q = q.Where(p => p.BlogPostCategories.Any(c => c.CategoryId == search.CategoryId));
             }
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -56,12 +60,13 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = q
+            var entities = await q
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<BlogPostResponseDto>
             {
@@ -70,11 +75,11 @@ namespace Nestly.Services.Repository
             };
         }
 
-        public BlogPostResponseDto GetById(long id)
+        public async Task<BlogPostResponseDto> GetById(long id)
         {
-            var post = _db.BlogPosts
+            var post = await _db.BlogPosts
                 .Include(p => p.BlogPostCategories)
-                .FirstOrDefault(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (post is null)
             {
@@ -83,7 +88,7 @@ namespace Nestly.Services.Repository
 
             return MapToDto(post);
         }
-        public BlogPostResponseDto Create(CreateBlogPostDto dto, long appUserId)
+        public async Task<BlogPostResponseDto> Create(CreateBlogPostDto dto, long appUserId)
         {
             if (string.IsNullOrWhiteSpace(dto.Title))
             {
@@ -95,8 +100,14 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Content is required.");
             }
 
-            var doctorProfile = _db.DoctorProfiles
-                .FirstOrDefault(d => d.UserId == appUserId);
+            if (dto.WeekFrom is not null && dto.WeekTo is not null &&
+                dto.WeekFrom.Value > dto.WeekTo.Value)
+            {
+                throw new BusinessException("WeekFrom cannot be greater than WeekTo.");
+            }
+
+            var doctorProfile = await _db.DoctorProfiles
+                .FirstOrDefaultAsync(d => d.UserId == appUserId);
 
             if (doctorProfile == null)
             {
@@ -120,7 +131,7 @@ namespace Nestly.Services.Repository
             {
                 foreach (var cid in dto.CategoryIds)
                 {
-                    if (!_db.BlogCategories.Any(c => c.Id == cid))
+                    if (!await _db.BlogCategories.AnyAsync(c => c.Id == cid))
                     {
                         throw new NotFoundException($"Category {cid} not found.");
                     }
@@ -133,15 +144,18 @@ namespace Nestly.Services.Repository
                 }
             }
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
-            var parentIds = _db.AppUsers
+            var parentIds = await _db.AppUsers
                 .Where(u => u.ParentProfile != null)
                 .Select(u => u.Id)
-                .ToList();
+                .ToListAsync();
 
             foreach (var parentId in parentIds)
             {
+                // Best-effort notification: RabbitMqPublisher.Publish swallows
+                // and logs broker errors so a messaging outage never rolls
+                // back or fails an already-saved blog post.
                 _publisher.Publish(new NotificationEvent
                 {
                     UserId = parentId,
@@ -152,17 +166,19 @@ namespace Nestly.Services.Repository
 
             return MapToDto(post);
         }
-        public BlogPostResponseDto Patch(long id, BlogPostPatchDto patch, long currentUserId)
+        public async Task<BlogPostResponseDto> Patch(long id, BlogPostPatchDto patch, long currentUserId)
         {
-            var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
+            var post = await _db.BlogPosts
+                .Include(p => p.BlogPostCategories)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (post is null)
             {
                 throw new NotFoundException("Blog post not found.");
             }
 
-            var doctorProfile = _db.DoctorProfiles
-                .FirstOrDefault(d => d.UserId == currentUserId);
+            var doctorProfile = await _db.DoctorProfiles
+                .FirstOrDefaultAsync(d => d.UserId == currentUserId);
 
             if (doctorProfile == null)
             {
@@ -184,24 +200,46 @@ namespace Nestly.Services.Repository
                 post.Content = patch.Content;
             }
 
+            if (patch.CategoryIds is not null)
+            {
+                foreach (var cid in patch.CategoryIds)
+                {
+                    if (!await _db.BlogCategories.AnyAsync(c => c.Id == cid))
+                    {
+                        throw new NotFoundException($"Category {cid} not found.");
+                    }
+                }
+
+                _db.BlogPostCategories.RemoveRange(post.BlogPostCategories);
+
+                foreach (var cid in patch.CategoryIds)
+                {
+                    _db.BlogPostCategories.Add(new BlogPostCategory
+                    {
+                        PostId = post.Id,
+                        CategoryId = cid
+                    });
+                }
+            }
+
             post.UpdatedAt = DateTime.UtcNow;
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return MapToDto(post);
         }
 
-        public void Delete(long id, long currentUserId)
+        public async Task Delete(long id, long currentUserId)
         {
-            var post = _db.BlogPosts.FirstOrDefault(p => p.Id == id);
+            var post = await _db.BlogPosts.FirstOrDefaultAsync(p => p.Id == id);
 
             if (post is null)
             {
                 throw new NotFoundException("Blog post not found.");
             }
 
-            var doctorProfile = _db.DoctorProfiles
-                .FirstOrDefault(d => d.UserId == currentUserId);
+            var doctorProfile = await _db.DoctorProfiles
+                .FirstOrDefaultAsync(d => d.UserId == currentUserId);
 
             if (doctorProfile == null)
             {
@@ -213,29 +251,30 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("You can only delete your own blog posts.");
             }
 
-            if (id <= 12)
+            if (id <= SystemPostMaxId)
             {
                 throw new BusinessException("System blog posts cannot be deleted.");
             }
 
             _db.BlogPosts.Remove(post);
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
-        public PagedResult<BlogPostResponseDto> GetByCategoryId(int categoryId, int page, int pageSize)
+        public async Task<PagedResult<BlogPostResponseDto>> GetByCategoryId(int categoryId, int page, int pageSize)
         {
             IQueryable<BlogPost> q = _db.BlogPosts
                 .Include(p => p.BlogPostCategories)
                 .Where(p => p.BlogPostCategories.Any(c => c.CategoryId == categoryId));
 
-            var totalCount = q.Count();
+            var totalCount = await q.CountAsync();
 
-            var items = q
+            var entities = await q
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
+
+            var items = entities.Select(MapToDto).ToList();
 
             return new PagedResult<BlogPostResponseDto>
             {

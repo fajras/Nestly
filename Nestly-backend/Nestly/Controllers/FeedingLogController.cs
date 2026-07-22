@@ -23,11 +23,11 @@ namespace Nestly.WebAPI.Controllers
 
         [Authorize(Roles = "Doctor")]
         [HttpGet]
-        public ActionResult<PagedResult<FeedingLogResponseDto>> Get(
+        public async Task<ActionResult<PagedResult<FeedingLogResponseDto>>> Get(
             [FromQuery] FeedingLogSearchObject search)
         {
             return Ok(
-                _service.Get(search));
+                await _service.Get(search));
         }
 
         [Authorize(Roles = "Parent")]
@@ -46,7 +46,7 @@ namespace Nestly.WebAPI.Controllers
             }
 
             return Ok(
-                _service.GetByParent(
+                await _service.GetByParent(
                     parent.Id,
                     search));
         }
@@ -59,7 +59,7 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureFeedingLogOwnershipAsync(id);
 
             var entity =
-                _service.GetById(id);
+                await _service.GetById(id);
 
             return Ok(entity);
         }
@@ -74,7 +74,7 @@ namespace Nestly.WebAPI.Controllers
                     request.BabyId);
 
             var created =
-                _service.Create(request);
+                await _service.Create(request);
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -94,7 +94,7 @@ namespace Nestly.WebAPI.Controllers
             try
             {
                 var updated =
-                    _service.Patch(id, patch);
+                    await _service.Patch(id, patch);
 
                 return Ok(updated);
             }
@@ -115,7 +115,7 @@ namespace Nestly.WebAPI.Controllers
             await _currentUserService
                 .EnsureFeedingLogOwnershipAsync(id);
 
-            _service.Delete(id);
+            await _service.Delete(id);
 
             return NoContent();
         }

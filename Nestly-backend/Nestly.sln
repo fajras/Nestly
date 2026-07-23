@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nestly.Model", "Nestly.Mode
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nestly.Worker", "Nestly.Worker\Nestly.Worker.csproj", "{B4B4A59C-CAC1-4B8F-99C4-F1850B087853}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nestly.ML", "Nestly.ML\Nestly.ML.csproj", "{8DD8864E-B943-47E2-B494-7570A876D280}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nestly.MLTraining", "Nestly.MLTraining\Nestly.MLTraining.csproj", "{D5F890AD-3EC0-4BAC-8148-E0A82ECC29EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{B4B4A59C-CAC1-4B8F-99C4-F1850B087853}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4B4A59C-CAC1-4B8F-99C4-F1850B087853}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4B4A59C-CAC1-4B8F-99C4-F1850B087853}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DD8864E-B943-47E2-B494-7570A876D280}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DD8864E-B943-47E2-B494-7570A876D280}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DD8864E-B943-47E2-B494-7570A876D280}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DD8864E-B943-47E2-B494-7570A876D280}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5F890AD-3EC0-4BAC-8148-E0A82ECC29EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5F890AD-3EC0-4BAC-8148-E0A82ECC29EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5F890AD-3EC0-4BAC-8148-E0A82ECC29EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5F890AD-3EC0-4BAC-8148-E0A82ECC29EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Nestly.Services.Data;
+using Nestly.Services.Interfaces;
+using Nestly.Services.MachineLearning;
 using Nestly.Services.Messaging;
+using Nestly.Services.Repository;
 using Nestly.Worker.Messaging;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -15,10 +18,14 @@ builder.Services.AddDbContext<NestlyDbContext>(options =>
 
 builder.Services.AddSignalRCore();
 
+builder.Services.AddScoped<IBabyHealthMonitoringService, BabyHealthMonitoringService>();
+builder.Services.AddPediatricMLModels();
+
 builder.Services.AddHostedService<RabbitMqConsumer>();
 builder.Services.AddHostedService<CalendarReminderService>();
 builder.Services.AddHostedService<DailyParentReminderService>();
 builder.Services.AddHostedService<MedicationReminderService>();
+builder.Services.AddHostedService<HealthDeviationMonitoringService>();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 
 var host = builder.Build();

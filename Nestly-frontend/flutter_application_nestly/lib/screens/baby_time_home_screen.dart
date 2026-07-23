@@ -15,6 +15,7 @@ import 'package:flutter_application_nestly/screens/calendar_event_screen.dart';
 import 'package:flutter_application_nestly/screens/chat_home_screen.dart';
 import 'package:flutter_application_nestly/screens/diaper_log_calendar_screen.dart';
 import 'package:flutter_application_nestly/screens/feeding_calendar_screen.dart';
+import 'package:flutter_application_nestly/screens/health_alerts_screen.dart';
 import 'package:flutter_application_nestly/screens/health_tracking_screen.dart';
 import 'package:flutter_application_nestly/screens/meal_plan_screen.dart';
 import 'package:flutter_application_nestly/screens/milestone_screen.dart';
@@ -240,6 +241,17 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
         Icons.baby_changing_station_rounded,
         'Praćenje pelena',
         () => _push(context, DiaperLogCalendarScreen(babyId: widget.babyId)),
+      ),
+      _BabyMenuItem(
+        Icons.health_and_safety_rounded,
+        'Zdravstvena upozorenja',
+        () => _push(
+          context,
+          HealthAlertsScreen(
+            babyId: widget.babyId,
+            babyName: _babyName ?? widget.babyName,
+          ),
+        ),
       ),
       _BabyMenuItem(
         Icons.emoji_events_rounded,

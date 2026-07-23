@@ -44,6 +44,7 @@ namespace Nestly.Services.Data
         public DbSet<QaAnswer> QaAnswers { get; set; }
         public DbSet<RecommendationModelState> RecommendationModelStates { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<HealthDeviationAlert> HealthDeviationAlerts { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -58,6 +59,7 @@ namespace Nestly.Services.Data
             ConfigureQA(modelBuilder);
             ConfigureMeals(modelBuilder);
             ConfigureSymptoms(modelBuilder);
+            ConfigureHealthMonitoring(modelBuilder);
 
 
             modelBuilder.Entity<AppUser>().SeedData();
@@ -73,6 +75,24 @@ namespace Nestly.Services.Data
             modelBuilder.Entity<Pregnancy>().SeedData();
             modelBuilder.Entity<Role>().SeedData();
             modelBuilder.Entity<WeeklyAdvice>().SeedData();
+        }
+
+        private static void ConfigureHealthMonitoring(ModelBuilder model)
+        {
+            model.Entity<HealthDeviationAlert>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Title).IsRequired().HasMaxLength(200);
+                e.Property(x => x.Message).IsRequired().HasMaxLength(1000);
+                e.Property(x => x.Recommendation).IsRequired().HasMaxLength(1000);
+
+                e.HasOne(x => x.Baby)
+                 .WithMany(b => b.HealthDeviationAlerts)
+                 .HasForeignKey(x => x.BabyId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BabyId, x.ParameterType, x.IsResolved });
+            });
         }
 
         private void ConfigureSymptoms(ModelBuilder model)

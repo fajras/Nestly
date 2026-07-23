@@ -3,21 +3,24 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nestly.Services.Data;
 
 #nullable disable
 
-namespace Nestly.Services.Data.Migrations
+namespace Nestly.Services.Migrations.NestlyDb
 {
     [DbContext(typeof(NestlyDbContext))]
-    partial class NestlyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722193803_AddHealthDeviationAlerts")]
+    partial class AddHealthDeviationAlerts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.24")
+                .HasAnnotation("ProductVersion", "8.0.27")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

@@ -542,6 +542,31 @@ namespace Nestly.Services.Repository
             }
 
         }
+        public async Task EnsureHealthDeviationAlertOwnershipAsync(
+            long alertId)
+        {
+            if (await IsDoctorAsync())
+            {
+                return;
+            }
+
+            var parent =
+                await GetCurrentParentProfileAsync();
+
+            var exists =
+                await _db.HealthDeviationAlerts
+                    .AnyAsync(x =>
+                        x.Id == alertId &&
+                        x.Baby.ParentProfileId ==
+                        parent.Id);
+
+            if (!exists)
+            {
+                throw new UnauthorizedAccessException(
+                    "You do not have access to this health alert.");
+            }
+        }
+
         public long GetCurrentAppUserId(
             ClaimsPrincipal user)
         {

@@ -56,5 +56,7 @@ namespace Nestly.Services.Interfaces
         Task EnsureConversationOwnershipAsync(long conversationId);
         long GetCurrentAppUserId(ClaimsPrincipal user);
 
+        Task EnsureHealthDeviationAlertOwnershipAsync(long alertId);
+
     }
 }

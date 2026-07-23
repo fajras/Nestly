@@ -39,5 +39,7 @@ namespace Nestly.Model.Entity
         public ICollection<HealthEntry> HealthEntries { get; set; } = new List<HealthEntry>();
         [JsonIgnore]
         public ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
+        [JsonIgnore]
+        public ICollection<HealthDeviationAlert> HealthDeviationAlerts { get; set; } = new List<HealthDeviationAlert>();
     }
 }

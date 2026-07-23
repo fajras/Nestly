@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Interfaces;
+using Nestly.Services.MachineLearning;
 using Nestly.Services.Messaging;
 using Nestly.Services.Repository;
 using Nestly.WebAPI.Hubs;
@@ -59,6 +60,9 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IBlogCategoryService, BlogCategoryService>();
 builder.Services.AddScoped<IFoodTypeService, FoodTypeService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IHealthDeviationAlertService, HealthDeviationAlertService>();
+builder.Services.AddScoped<IBabyHealthMonitoringService, BabyHealthMonitoringService>();
+builder.Services.AddPediatricMLModels();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 
 builder.Services.AddSignalR();

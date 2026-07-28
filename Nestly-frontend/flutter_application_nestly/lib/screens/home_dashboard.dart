@@ -161,6 +161,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     return 'Termin je prošao';
   }
 
+  bool get _isGirl => _normalizeGender(_gender) == 'female';
+
   void _open(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
@@ -273,44 +275,46 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _HeaderSimple(
-                      title: 'Sedmica $_week',
-                      subtitle: _subtitle,
-                      progress: _progress,
-                      loading: _loading,
-                      week: _week,
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
                     _hasBaby
-                        ? _CtaBanner(
-                            icon: Icons.child_friendly_rounded,
-                            label: 'Vrijeme je za bebu',
-                            subtitle:
-                                'Praćenje rasta, ishrane, sna i još mnogo toga',
-                            gradient: AppGradients.brandCool,
-                            onTap: _openBabyTime,
+                        ? _HeaderSimple(
+                            title: '${_babyName ?? 'Vaša beba'} je tu! 🎉',
+                            subtitle: 'Pratite rast, ishranu, san i još mnogo toga',
+                            loading: _loading || _checkingBaby,
+                            showProgress: false,
                           )
-                        : _CtaBanner(
-                            icon: Icons.favorite_rounded,
-                            label: 'Beba je rođena',
-                            subtitle:
-                                'Kreirajte profil bebe i nastavite putovanje',
-                            gradient: AppGradients.brandCool,
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BabyProfileCreateScreen(),
-                                ),
-                              );
-
-                              await _loadBabyStatus();
-                            },
+                        : _HeaderSimple(
+                            title: 'Sedmica $_week',
+                            subtitle: _subtitle,
+                            progress: _progress,
+                            loading: _loading,
+                            week: _week,
                           ),
                     const SizedBox(height: AppSpacing.xl),
+                    if (!_hasBaby)
+                      _CtaBanner(
+                        icon: Icons.favorite_rounded,
+                        label: 'Beba je rođena',
+                        subtitle: 'Kreirajte profil bebe i nastavite putovanje',
+                        gradient: AppGradients.brandCool,
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BabyProfileCreateScreen(),
+                            ),
+                          );
+
+                          await _loadBabyStatus();
+                        },
+                      ),
+                    if (!_hasBaby) const SizedBox(height: AppSpacing.xl),
                     const NestlySectionHeader(title: 'Vaš meni'),
                     const SizedBox(height: AppSpacing.sm),
                     _buildMenuGrid(context),
+                    if (_hasBaby) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      _BabyTimeNavRow(isGirl: _isGirl, onTap: _openBabyTime),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     _logoutRow(context),
                   ],
@@ -420,9 +424,10 @@ class _HeaderSimple extends StatelessWidget {
   const _HeaderSimple({
     required this.title,
     required this.subtitle,
-    required this.progress,
     required this.loading,
-    required this.week,
+    this.progress = 0,
+    this.week = 1,
+    this.showProgress = true,
   });
 
   final String title;
@@ -430,6 +435,7 @@ class _HeaderSimple extends StatelessWidget {
   final double progress;
   final bool loading;
   final int week;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -462,25 +468,63 @@ class _HeaderSimple extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: LinearProgressIndicator(
-                    value: progress.clamp(0, 1),
-                    minHeight: 10,
-                    color: Colors.white,
-                    backgroundColor: Colors.white.withOpacity(.25),
+                if (showProgress) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: LinearProgressIndicator(
+                      value: progress.clamp(0, 1),
+                      minHeight: 10,
+                      color: Colors.white,
+                      backgroundColor: Colors.white.withOpacity(.25),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${week.clamp(1, 40)} / 40 sedmica • ${(progress * 100).round()}%',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(.9),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${week.clamp(1, 40)} / 40 sedmica • ${(progress * 100).round()}%',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white.withOpacity(.9),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
+    );
+  }
+}
+
+class _BabyTimeNavRow extends StatelessWidget {
+  const _BabyTimeNavRow({required this.isGirl, required this.onTap});
+
+  final bool isGirl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = isGirl ? AppColors.roseDark : AppColors.seed;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Icon(Icons.child_friendly_rounded, color: accent, size: 20),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'Idi na BabyTime',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: accent,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: accent),
+          ],
+        ),
+      ),
     );
   }
 }

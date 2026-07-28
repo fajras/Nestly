@@ -4,6 +4,7 @@ using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
 using Nestly.Services.Extensions;
+using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
 {
@@ -12,10 +13,12 @@ namespace Nestly.Services.Repository
         private const decimal MaxAmountMl = 1000m;
 
         private readonly NestlyDbContext _db;
+        private readonly IBabyHealthMonitoringService _healthMonitoring;
 
-        public FeedingLogService(NestlyDbContext db)
+        public FeedingLogService(NestlyDbContext db, IBabyHealthMonitoringService healthMonitoring)
         {
             _db = db;
+            _healthMonitoring = healthMonitoring;
         }
 
         public async Task<PagedResult<FeedingLogResponseDto>> Get(FeedingLogSearchObject search)
@@ -105,6 +108,7 @@ namespace Nestly.Services.Repository
             }
 
             ValidateAmount(dto.AmountMl);
+            var amountUnit = NormalizeUnit(dto.AmountUnit);
 
             if (dto.FoodTypeId.HasValue &&
                 !await _db.FoodTypes.AnyAsync(f => f.Id == dto.FoodTypeId.Value))
@@ -118,6 +122,7 @@ namespace Nestly.Services.Repository
                 FeedDate = dto.FeedDate.Date,
                 FeedTime = dto.FeedTime,
                 AmountMl = dto.AmountMl,
+                AmountUnit = amountUnit,
                 FoodTypeId = dto.FoodTypeId,
                 Notes = string.IsNullOrWhiteSpace(dto.Notes)
                     ? null
@@ -126,6 +131,8 @@ namespace Nestly.Services.Repository
 
             _db.FeedingLogs.Add(entity);
             await _db.SaveChangesAsync();
+
+            await _healthMonitoring.RunCheckForBabyAsync(dto.BabyId);
 
             return MapToDto(entity);
         }
@@ -160,6 +167,11 @@ namespace Nestly.Services.Repository
                 ValidateAmount(patch.AmountMl.Value);
 
                 dbEntity.AmountMl = patch.AmountMl.Value;
+            }
+
+            if (patch.AmountUnit is not null)
+            {
+                dbEntity.AmountUnit = NormalizeUnit(patch.AmountUnit);
             }
 
             if (patch.FoodTypeId is not null)
@@ -214,6 +226,18 @@ namespace Nestly.Services.Repository
             }
         }
 
+        private static string NormalizeUnit(string? unit)
+        {
+            var trimmed = unit?.Trim().ToLowerInvariant();
+
+            return trimmed switch
+            {
+                "g" => "g",
+                "ml" or null or "" => "ml",
+                _ => throw new BusinessException("Amount unit must be either 'ml' or 'g'.")
+            };
+        }
+
         private static FeedingLogResponseDto MapToDto(FeedingLog x)
         {
             return new FeedingLogResponseDto
@@ -223,6 +247,7 @@ namespace Nestly.Services.Repository
                 FeedDate = x.FeedDate,
                 FeedTime = x.FeedTime,
                 AmountMl = x.AmountMl,
+                AmountUnit = x.AmountUnit,
                 FoodTypeId = x.FoodTypeId,
                 FoodTypeName = x.FoodType != null ? x.FoodType.Name : null,
                 Notes = x.Notes

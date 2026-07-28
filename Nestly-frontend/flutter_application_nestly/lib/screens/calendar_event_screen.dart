@@ -152,11 +152,13 @@ class CalendarEventApiService {
 class CalendarEventScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
+  final String gender;
 
   const CalendarEventScreen({
     super.key,
     required this.babyId,
     required this.babyName,
+    required this.gender,
   });
 
   @override
@@ -165,6 +167,14 @@ class CalendarEventScreen extends StatefulWidget {
 
 class _CalendarEventScreenState extends State<CalendarEventScreen> {
   final _service = CalendarEventApiService();
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
 
   bool _loading = true;
   bool _saving = false;
@@ -291,7 +301,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       NestlyToast.success(
         context,
         isEdit ? 'Termin je ažuriran.' : 'Termin je uspješno sačuvan.',
-        accentColor: AppColors.seed,
+        accentColor: _accent,
       );
     } catch (_) {
       if (!mounted) return;
@@ -337,7 +347,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       NestlyToast.success(
         context,
         'Termin obrisan.',
-        accentColor: AppColors.seed,
+        accentColor: _accent,
       );
     } catch (_) {
       if (!mounted) return;
@@ -352,12 +362,12 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.seed),
+        iconTheme: IconThemeData(color: _accent),
         title: Text(
           'Kalendar termina',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.seed,
+            color: _accent,
           ),
         ),
         centerTitle: true,
@@ -393,7 +403,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       focusedDay: _focusedDay,
       selectedDay: _selectedDay,
 
-      accentColor: AppColors.seed,
+      accentColor: _accent,
 
       markerIcon: Icons.event_note_rounded,
 
@@ -426,10 +436,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       children: [
         Text(
           'Termini za $label',
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: AppColors.seed,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w700, color: _accent),
         ),
         const SizedBox(height: 8),
         if (events.isEmpty)
@@ -456,7 +463,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
-            const Icon(Icons.event_note_rounded, color: AppColors.seed),
+            Icon(Icons.event_note_rounded, color: _accent),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -476,7 +483,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.seed),
+              icon: Icon(Icons.edit, color: _accent),
               onPressed: () {
                 setState(() {
                   _editingEvent = ev;
@@ -512,6 +519,10 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: BorderSide(color: _accent, width: 1.6),
+      ),
     );
 
     return Card(
@@ -527,7 +538,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
               _editingEvent == null ? 'Novi termin' : 'Uređivanje termina',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: AppColors.seed,
+                color: _accent,
               ),
             ),
             const SizedBox(height: 12),
@@ -547,10 +558,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(timeLabel),
-                    const Icon(
-                      Icons.access_time_rounded,
-                      color: AppColors.babyBlue,
-                    ),
+                    Icon(Icons.access_time_rounded, color: _soft),
                   ],
                 ),
               ),
@@ -561,7 +569,7 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
               child: ElevatedButton(
                 onPressed: _saving ? null : _saveEvent,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.seed,
+                  backgroundColor: _accent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -586,8 +594,8 @@ class _CalendarEventScreenState extends State<CalendarEventScreen> {
                 child: OutlinedButton(
                   onPressed: _cancelEdit,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.seed,
-                    side: const BorderSide(color: AppColors.seed),
+                    foregroundColor: _accent,
+                    side: BorderSide(color: _accent),
                   ),
                   child: const Text(
                     'Odustani',

@@ -396,7 +396,7 @@ class _IntensityTile extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: selected
-                          ? AppColors.babyPink
+                          ? AppColors.roseDark
                           : AppColors.babyBlue.withOpacity(.18),
                       borderRadius: BorderRadius.circular(10),
                     ),

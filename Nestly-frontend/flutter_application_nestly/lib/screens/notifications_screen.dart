@@ -6,7 +6,14 @@ import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+  final Color accent;
+  final Color soft;
+
+  const NotificationsScreen({
+    super.key,
+    this.accent = AppColors.roseDark,
+    this.soft = AppColors.babyPink,
+  });
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -34,24 +41,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
 
       final all = ApiResponseHelper.extractList(res.body);
-      final threeDaysAgo = DateTime.now().toUtc().subtract(
-        const Duration(days: 3),
-      );
-
-      final filtered = all.where((n) {
-        if (n["createdAt"] == null) return false;
-
-        final raw = n["createdAt"].toString();
-        final date = DateTime.tryParse(raw);
-        if (date == null) return false;
-
-        return date.isAfter(threeDaysAgo);
-      }).toList();
 
       if (!mounted) return;
 
       setState(() {
-        _notifications = filtered;
+        _notifications = all;
         _loading = false;
       });
     } catch (e) {
@@ -121,13 +115,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: IconThemeData(color: widget.accent),
         centerTitle: true,
         title: Text(
           'Notifikacije',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: widget.accent,
           ),
         ),
         actions: [
@@ -142,14 +136,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.babyBlue.withOpacity(.2),
+                    color: widget.soft.withOpacity(.2),
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Sve pročitano',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.roseDark,
+                      color: widget.accent,
                     ),
                   ),
                 ),
@@ -158,13 +152,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.roseDark),
-            )
+          ? Center(child: CircularProgressIndicator(color: widget.accent))
           : _notifications.isEmpty
-          ? const _EmptyState()
+          ? _EmptyState(accent: widget.accent, soft: widget.soft)
           : RefreshIndicator(
-              color: AppColors.roseDark,
+              color: widget.accent,
               onRefresh: _load,
               child: ListView.builder(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -178,6 +170,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     message: n["message"] ?? "",
                     createdAt: n["createdAt"],
                     isRead: isRead,
+                    accent: widget.accent,
+                    soft: widget.soft,
                     onTap: () {
                       if (!isRead) {
                         _markAsRead(n["id"]);
@@ -198,6 +192,8 @@ class _NotificationCard extends StatelessWidget {
     required this.isRead,
     required this.onTap,
     required this.createdAt,
+    required this.accent,
+    required this.soft,
   });
 
   final String title;
@@ -205,6 +201,8 @@ class _NotificationCard extends StatelessWidget {
   final bool isRead;
   final VoidCallback onTap;
   final String? createdAt;
+  final Color accent;
+  final Color soft;
 
   @override
   Widget build(BuildContext context) {
@@ -221,9 +219,7 @@ class _NotificationCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.xl),
-            color: isRead
-                ? AppColors.card
-                : AppColors.babyBlue.withOpacity(.15),
+            color: isRead ? AppColors.card : soft.withOpacity(.15),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,13 +229,11 @@ class _NotificationCard extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isRead
-                      ? AppColors.babyBlue.withOpacity(.25)
-                      : AppColors.babyPink,
+                  color: isRead ? soft.withOpacity(.25) : soft,
                 ),
                 child: Icon(
                   Icons.notifications_rounded,
-                  color: isRead ? AppColors.roseDark : Colors.white,
+                  color: isRead ? accent : Colors.white,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -277,9 +271,9 @@ class _NotificationCard extends StatelessWidget {
                   width: 10,
                   height: 10,
                   margin: const EdgeInsets.only(top: 6),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.roseDark,
+                    color: accent,
                   ),
                 ),
             ],
@@ -298,7 +292,10 @@ String _formatDate(String raw) {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  final Color accent;
+  final Color soft;
+
+  const _EmptyState({required this.accent, required this.soft});
 
   @override
   Widget build(BuildContext context) {
@@ -314,19 +311,12 @@ class _EmptyState extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.notifications_none_rounded,
-                  size: 60,
-                  color: AppColors.babyBlue,
-                ),
-                SizedBox(height: 16),
+              children: [
+                Icon(Icons.notifications_none_rounded, size: 60, color: soft),
+                const SizedBox(height: 16),
                 Text(
                   'Nemate notifikacija',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.roseDark,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: accent),
                 ),
               ],
             ),

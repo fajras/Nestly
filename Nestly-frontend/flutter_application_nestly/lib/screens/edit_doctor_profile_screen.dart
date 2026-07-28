@@ -41,7 +41,7 @@ class _EditDoctorProfileScreenState extends State<EditDoctorProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
-      final res = await ApiClient.get('/AppUser/${widget.userId}');
+      final res = await ApiClient.get('/AppUser/me');
 
       if (res.statusCode != 200) {
         throw Exception("API error");
@@ -132,7 +132,7 @@ class _EditDoctorProfileScreenState extends State<EditDoctorProfileScreen> {
       };
 
       final res = await ApiClient.patch(
-        '/AppUser/${widget.userId}',
+        '/AppUser/me',
         body: body,
       );
 
@@ -172,7 +172,7 @@ class _EditDoctorProfileScreenState extends State<EditDoctorProfileScreen> {
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: AppColors.roseDark,
+                color: AppColors.seed,
               ),
             ),
             const SizedBox(height: AppSpacing.xl),

@@ -101,6 +101,7 @@ class ChatScreen extends StatefulWidget {
   final int otherUserId;
   final int conversationId;
   final String otherUserName;
+  final String gender;
 
   const ChatScreen({
     super.key,
@@ -108,6 +109,7 @@ class ChatScreen extends StatefulWidget {
     required this.otherUserId,
     required this.conversationId,
     required this.otherUserName,
+    this.gender = 'female',
   });
 
   @override
@@ -116,6 +118,13 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _api = ChatApiService();
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
 
   final _messages = <ChatMessage>[];
   final _msgCtrl = TextEditingController();
@@ -276,7 +285,7 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: IconThemeData(color: _accent),
         titleSpacing: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -289,7 +298,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.roseDark,
+                  color: _accent,
                 ),
               ),
             ),
@@ -327,7 +336,7 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.all(12),
             constraints: const BoxConstraints(maxWidth: 280),
             decoration: BoxDecoration(
-              color: mine ? AppColors.roseDark : AppColors.seed.withOpacity(.12),
+              color: mine ? _accent : AppColors.seed.withOpacity(.12),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(AppRadius.lg),
                 topRight: const Radius.circular(AppRadius.lg),
@@ -372,7 +381,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: TextField(
                 controller: _msgCtrl,
-                cursorColor: AppColors.roseDark,
+                cursorColor: _accent,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
@@ -385,10 +394,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
-                    borderSide: const BorderSide(
-                      color: AppColors.roseDark,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: _accent, width: 2),
                   ),
                 ),
               ),
@@ -396,7 +402,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
             const SizedBox(width: 8),
             Material(
-              color: AppColors.roseDark,
+              color: _accent,
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),

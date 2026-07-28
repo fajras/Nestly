@@ -162,11 +162,13 @@ class SleepLogApiService {
 class SleepLogOverviewScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
+  final String gender;
 
   const SleepLogOverviewScreen({
     super.key,
     required this.babyId,
     required this.babyName,
+    required this.gender,
   });
 
   @override
@@ -175,6 +177,14 @@ class SleepLogOverviewScreen extends StatefulWidget {
 
 class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
   final SleepLogApiService _service = SleepLogApiService();
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
 
   bool _loading = true;
   bool _saving = false;
@@ -344,7 +354,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
         NestlyToast.success(
           context,
           'Zapis sačuvan',
-          accentColor: AppColors.seed,
+          accentColor: _accent,
         );
       } else {
         await _service.update(
@@ -357,7 +367,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
         NestlyToast.success(
           context,
           'Zapis ažuriran',
-          accentColor: AppColors.seed,
+          accentColor: _accent,
         );
       }
 
@@ -392,7 +402,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: AppColors.seed,
+          color: _accent,
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
@@ -400,7 +410,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
           'Dnevnik spavanja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.seed,
+            color: _accent,
           ),
         ),
       ),
@@ -437,10 +447,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
           child: ListTile(
             title: Text(
               '${e.sleepDate.day}.${e.sleepDate.month}.',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppColors.seed,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700, color: _accent),
             ),
             subtitle: Text(
               '${_formatDuration(e.startTime)} - ${_formatDuration(e.endTime)}',
@@ -449,7 +456,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.seed),
+                  icon: Icon(Icons.edit, color: _accent),
                   onPressed: () {
                     setState(() {
                       _editingEntry = e;
@@ -504,7 +511,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
       NestlyToast.success(
         context,
         'Zapis obrisan',
-        accentColor: AppColors.seed,
+        accentColor: _accent,
       );
     } catch (e) {
       final msg = e.toString();
@@ -554,7 +561,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                 drawVerticalLine: false,
                 horizontalInterval: 2,
                 getDrawingHorizontalLine: (value) => FlLine(
-                  color: AppColors.seed.withOpacity(0.08),
+                  color: _accent.withOpacity(0.08),
                   strokeWidth: 1,
                 ),
               ),
@@ -587,9 +594,9 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         const ['P', 'U', 'S', 'C', 'P', 'S', 'N'][v.toInt()],
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.seed,
+                          color: _accent,
                         ),
                       ),
                     ),
@@ -610,10 +617,10 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: isToday
-                            ? [AppColors.seed, AppColors.seed.withOpacity(0.7)]
+                            ? [_accent, _accent.withOpacity(0.7)]
                             : [
-                                AppColors.babyBlue,
-                                AppColors.babyBlue.withOpacity(0.6),
+                                _soft,
+                                _soft.withOpacity(0.6),
                               ],
                       ),
                     ),
@@ -636,6 +643,10 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
       fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: BorderSide(color: _accent, width: 1.6),
       ),
     );
 
@@ -677,7 +688,7 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                   child: ElevatedButton(
                     onPressed: _saving ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.seed,
+                      backgroundColor: _accent,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -705,8 +716,8 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                     child: OutlinedButton(
                       onPressed: _saving ? null : _cancelEdit,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.seed,
-                        side: const BorderSide(color: AppColors.seed),
+                        foregroundColor: _accent,
+                        side: BorderSide(color: _accent),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.lg),

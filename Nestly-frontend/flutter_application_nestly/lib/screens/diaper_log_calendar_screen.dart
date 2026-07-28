@@ -155,8 +155,13 @@ class DiaperLogApiService {
 
 class DiaperLogCalendarScreen extends StatefulWidget {
   final int babyId;
+  final String gender;
 
-  const DiaperLogCalendarScreen({super.key, required this.babyId});
+  const DiaperLogCalendarScreen({
+    super.key,
+    required this.babyId,
+    required this.gender,
+  });
 
   @override
   State<DiaperLogCalendarScreen> createState() =>
@@ -165,6 +170,14 @@ class DiaperLogCalendarScreen extends StatefulWidget {
 
 class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
   late final DiaperLogApiService _service;
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
   final _notesCtrl = TextEditingController();
   DiaperLog? _editingLog;
   DateTime _focusedDay = DateTime.now();
@@ -221,10 +234,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
       children: [
         Text(
           'Zapisi za $label',
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w700, color: _accent),
         ),
         const SizedBox(height: 8),
         if (logs.isEmpty)
@@ -325,20 +335,20 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
       labelText: label,
       prefixIcon: Icon(icon),
       filled: true,
-      fillColor: AppColors.babyPink.withOpacity(.15),
+      fillColor: _soft.withOpacity(.15),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        borderSide: const BorderSide(color: AppColors.roseDark, width: 1.6),
+        borderSide: BorderSide(color: _accent, width: 1.6),
       ),
-      floatingLabelStyle: const TextStyle(
-        color: AppColors.roseDark,
+      floatingLabelStyle: TextStyle(
+        color: _accent,
         fontWeight: FontWeight.w600,
       ),
-      prefixIconColor: AppColors.roseDark,
+      prefixIconColor: _accent,
     );
   }
 
@@ -356,7 +366,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
               _editingLog == null ? 'Novi zapis pelena' : 'Uređivanje zapisa',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.roseDark,
+                color: _accent,
               ),
             ),
 
@@ -373,15 +383,15 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                     builder: (context, child) {
                       return Theme(
                         data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(
-                            primary: AppColors.roseDark,
+                          colorScheme: ColorScheme.light(
+                            primary: _accent,
                             onPrimary: Colors.white,
-                            onSurface: AppColors.roseDark,
+                            onSurface: _accent,
                           ),
-                          timePickerTheme: const TimePickerThemeData(
-                            hourMinuteTextColor: AppColors.roseDark,
-                            dialHandColor: AppColors.roseDark,
-                            dialTextColor: AppColors.roseDark,
+                          timePickerTheme: TimePickerThemeData(
+                            hourMinuteTextColor: _accent,
+                            dialHandColor: _accent,
+                            dialTextColor: _accent,
                           ),
                         ),
                         child: child!,
@@ -392,10 +402,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                 },
                 child: Text(
                   _time.format(context),
-                  style: const TextStyle(
-                    color: AppColors.roseDark,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: _accent, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -420,7 +427,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
 
             TextField(
               controller: _notesCtrl,
-              cursorColor: AppColors.roseDark,
+              cursorColor: _accent,
               maxLines: 2,
               decoration: _fieldDecoration(
                 label: 'Napomena (opcionalno)',
@@ -435,7 +442,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
               child: ElevatedButton(
                 onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.roseDark,
+                  backgroundColor: _accent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -470,8 +477,8 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                 child: OutlinedButton(
                   onPressed: _cancelEdit,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.roseDark,
-                    side: const BorderSide(color: AppColors.roseDark),
+                    foregroundColor: _accent,
+                    side: BorderSide(color: _accent),
                   ),
                   child: const Text(
                     'Odustani',
@@ -525,20 +532,20 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: IconThemeData(color: _accent),
         title: Text(
           'Praćenje pelena',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: _accent,
           ),
         ),
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.roseDark),
+                valueColor: AlwaysStoppedAnimation<Color>(_accent),
               ),
             )
           : Column(
@@ -546,7 +553,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
                 NestlyCalendar(
                   focusedDay: _focusedDay,
                   selectedDay: _selectedDay,
-                  accentColor: AppColors.roseDark,
+                  accentColor: _accent,
                   markerIcon: Icons.baby_changing_station,
                   onPageChanged: (focused) {
                     setState(() {
@@ -594,7 +601,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
-            const Icon(Icons.baby_changing_station, color: AppColors.roseDark),
+            Icon(Icons.baby_changing_station, color: _accent),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -613,7 +620,7 @@ class _DiaperLogCalendarScreenState extends State<DiaperLogCalendarScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.roseDark),
+              icon: Icon(Icons.edit, color: _accent),
               onPressed: () {
                 setState(() {
                   _editingLog = log;

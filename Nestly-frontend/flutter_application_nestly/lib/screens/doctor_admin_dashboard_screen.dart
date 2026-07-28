@@ -113,7 +113,10 @@ class _DoctorAdminDashboardScreenState
                 onPressed: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const NotificationsScreen(),
+                      builder: (_) => const NotificationsScreen(
+                        accent: AppColors.seed,
+                        soft: AppColors.babyBlue,
+                      ),
                     ),
                   );
 
@@ -137,7 +140,7 @@ class _DoctorAdminDashboardScreenState
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.roseDark,
+                        color: AppColors.seed,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       constraints: const BoxConstraints(
@@ -380,12 +383,12 @@ class _SidebarItem extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.roseDark.withOpacity(.1)
+                ? AppColors.seed.withOpacity(.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.lg),
             border: selected
                 ? const Border(
-                    left: BorderSide(color: AppColors.roseDark, width: 3),
+                    left: BorderSide(color: AppColors.seed, width: 3),
                   )
                 : null,
           ),
@@ -393,14 +396,14 @@ class _SidebarItem extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: selected ? AppColors.roseDark : AppColors.textSecondary,
+                color: selected ? AppColors.seed : AppColors.textSecondary,
               ),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: selected ? AppColors.roseDark : AppColors.textSecondary,
+                  color: selected ? AppColors.seed : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -525,7 +528,7 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
-            color: AppColors.roseDark,
+            color: AppColors.seed,
           ),
         ),
 
@@ -537,7 +540,7 @@ class _DashboardOverviewState extends State<_DashboardOverview> {
               title: 'Ukupno korisnica',
               value: _userCount.toString(),
               icon: Icons.people_outline,
-              color: AppColors.roseDark,
+              color: AppColors.seed,
             ),
             const SizedBox(width: AppSpacing.lg),
             _StatCard(
@@ -711,7 +714,7 @@ class _UsersTable extends StatelessWidget {
                                       ? 'Trudnica'
                                       : 'Roditelj',
                                   color: u.parentStatus == 'PREGNANT'
-                                      ? AppColors.babyPink
+                                      ? AppColors.babyBlue
                                       : AppColors.babyBlue,
                                 ),
                               ],

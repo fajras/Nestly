@@ -11,10 +11,12 @@ namespace Nestly.Services.Repository
     public class SleepLogService : ISleepLogService
     {
         private readonly NestlyDbContext _db;
+        private readonly IBabyHealthMonitoringService _healthMonitoring;
 
-        public SleepLogService(NestlyDbContext db)
+        public SleepLogService(NestlyDbContext db, IBabyHealthMonitoringService healthMonitoring)
         {
             _db = db;
+            _healthMonitoring = healthMonitoring;
         }
 
         private static SleepLogResponseDto MapToDto(SleepLog entity)
@@ -139,6 +141,8 @@ namespace Nestly.Services.Repository
 
             _db.SleepLogs.Add(entity);
             await _db.SaveChangesAsync();
+
+            await _healthMonitoring.RunCheckForBabyAsync(dto.BabyId);
 
             return MapToDto(entity);
         }

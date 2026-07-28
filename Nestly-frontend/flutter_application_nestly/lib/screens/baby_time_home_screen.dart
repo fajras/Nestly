@@ -46,6 +46,8 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
     return g == 'female' || g == 'f';
   }
 
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+
   @override
   void initState() {
     super.initState();
@@ -96,7 +98,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: IconThemeData(color: _accent),
         actions: [
           Stack(
             children: [
@@ -106,7 +108,10 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const NotificationsScreen(),
+                      builder: (_) => NotificationsScreen(
+                        accent: _accent,
+                        soft: _isGirl ? AppColors.babyPink : AppColors.babyBlue,
+                      ),
                     ),
                   );
 
@@ -130,7 +135,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.roseDark,
+                        color: _accent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       constraints: const BoxConstraints(
@@ -177,14 +182,18 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _HeaderCard(babyName: _babyName ?? '', isGirl: _isGirl),
+              _HeaderCard(
+                babyName: _babyName ?? '',
+                accent: _accent,
+                soft: _isGirl ? AppColors.babyPink : AppColors.babyBlue,
+              ),
               const SizedBox(height: AppSpacing.xl),
               const NestlySectionHeader(title: 'Aktivnosti bebe'),
               const SizedBox(height: AppSpacing.sm),
               _buildMenuGrid(context),
 
               const SizedBox(height: AppSpacing.xl),
-              _BackCard(onTap: () => Navigator.pop(context)),
+              _BackCard(accent: _accent, onTap: () => Navigator.pop(context)),
             ],
           ),
         ),
@@ -202,18 +211,28 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           BabyGrowthTrackerScreen(
             babyId: widget.babyId,
             babyName: _babyName ?? widget.babyName,
+            gender: widget.gender,
           ),
         ),
       ),
       _BabyMenuItem(
         Icons.restaurant_rounded,
         'Plan ishrane',
-        () => _push(context, MealRecommendationScreen(babyId: widget.babyId)),
+        () => _push(
+          context,
+          MealRecommendationScreen(
+            babyId: widget.babyId,
+            gender: widget.gender,
+          ),
+        ),
       ),
       _BabyMenuItem(
         Icons.local_drink_rounded,
         'Dnevnik hranjenja',
-        () => _push(context, FeedingCalendarScreen(babyId: widget.babyId)),
+        () => _push(
+          context,
+          FeedingCalendarScreen(babyId: widget.babyId, gender: widget.gender),
+        ),
       ),
       _BabyMenuItem(
         Icons.favorite_border_rounded,
@@ -223,6 +242,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           HealthTrackingScreen(
             babyId: widget.babyId,
             babyName: _babyName ?? widget.babyName,
+            gender: widget.gender,
           ),
         ),
       ),
@@ -234,13 +254,20 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           SleepLogOverviewScreen(
             babyId: widget.babyId,
             babyName: _babyName ?? widget.babyName,
+            gender: widget.gender,
           ),
         ),
       ),
       _BabyMenuItem(
         Icons.baby_changing_station_rounded,
         'Praćenje pelena',
-        () => _push(context, DiaperLogCalendarScreen(babyId: widget.babyId)),
+        () => _push(
+          context,
+          DiaperLogCalendarScreen(
+            babyId: widget.babyId,
+            gender: widget.gender,
+          ),
+        ),
       ),
       _BabyMenuItem(
         Icons.health_and_safety_rounded,
@@ -250,6 +277,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           HealthAlertsScreen(
             babyId: widget.babyId,
             babyName: _babyName ?? widget.babyName,
+            gender: widget.gender,
           ),
         ),
       ),
@@ -261,13 +289,14 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           MilestoneScreen(
             babyId: widget.babyId,
             babyName: _babyName ?? widget.babyName,
+            gender: widget.gender,
           ),
         ),
       ),
       _BabyMenuItem(
         Icons.chat_bubble_outline_rounded,
         'Chat',
-        () => _push(context, ChatHomeScreen()),
+        () => _push(context, ChatHomeScreen(gender: widget.gender)),
       ),
       _BabyMenuItem(
         Icons.event_note_rounded,
@@ -277,13 +306,15 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
           CalendarEventScreen(
             babyId: widget.babyId,
             babyName: _babyName ?? widget.babyName,
+            gender: widget.gender,
           ),
         ),
       ),
     ];
 
     return Column(
-      // Simple list, one row under another, all in the brand rose color.
+      // Simple list, one row under another, all in the baby's accent color
+      // (dark rose for a girl, dark blue for a boy).
       children: [
         for (var i = 0; i < items.length; i++)
           Padding(
@@ -293,7 +324,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
             child: NestlyMenuRow(
               icon: items[i].icon,
               label: items[i].label,
-              color: AppColors.roseDark,
+              color: _accent,
               onTap: items[i].onTap,
             ),
           ),
@@ -312,14 +343,17 @@ class _BabyMenuItem {
 
 class _HeaderCard extends StatelessWidget {
   final String babyName;
-  final bool isGirl;
+  final Color accent;
+  final Color soft;
 
-  const _HeaderCard({required this.babyName, required this.isGirl});
+  const _HeaderCard({
+    required this.babyName,
+    required this.accent,
+    required this.soft,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final headerColor = isGirl ? AppColors.babyPink : AppColors.babyBlue;
-
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(
@@ -329,7 +363,7 @@ class _HeaderCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.xl),
           gradient: LinearGradient(
-            colors: [headerColor.withOpacity(.18), AppColors.card],
+            colors: [soft.withOpacity(.18), AppColors.card],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -341,10 +375,7 @@ class _HeaderCard extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(
-                  color: headerColor,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
                 child: const Icon(
                   Icons.child_care_rounded,
                   color: Colors.white,
@@ -360,7 +391,7 @@ class _HeaderCard extends StatelessWidget {
                       babyName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: headerColor,
+                        color: accent,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -382,9 +413,10 @@ class _HeaderCard extends StatelessWidget {
 }
 
 class _BackCard extends StatelessWidget {
+  final Color accent;
   final VoidCallback onTap;
 
-  const _BackCard({required this.onTap});
+  const _BackCard({required this.accent, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -404,13 +436,10 @@ class _BackCard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: AppColors.roseDark.withOpacity(.12),
+                  color: accent.withOpacity(.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppColors.roseDark,
-                ),
+                child: Icon(Icons.arrow_back_rounded, color: accent),
               ),
               const SizedBox(width: AppSpacing.lg),
               Expanded(
@@ -418,7 +447,7 @@ class _BackCard extends StatelessWidget {
                   'Povratak u mamin svijet',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.roseDark,
+                    color: accent,
                   ),
                 ),
               ),

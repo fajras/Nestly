@@ -62,12 +62,12 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: const IconThemeData(color: AppColors.seed),
         title: Text(
           'Terapija',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: AppColors.seed,
           ),
         ),
         centerTitle: true,
@@ -81,13 +81,13 @@ class _UserMedicationPlanScreenState extends State<UserMedicationPlanScreen> {
               child: _loading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.roseDark,
+                        color: AppColors.seed,
                       ),
                     )
                   : _plans.isEmpty
                   ? const _EmptyState()
                   : RefreshIndicator(
-                      color: AppColors.roseDark,
+                      color: AppColors.seed,
                       onRefresh: _load,
                       child: ListView.separated(
                         itemCount: _plans.length,
@@ -145,10 +145,10 @@ class _MedicationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              backgroundColor: AppColors.roseDark.withOpacity(.15),
+              backgroundColor: AppColors.seed.withOpacity(.15),
               child: const Icon(
                 Icons.medication_outlined,
-                color: AppColors.roseDark,
+                color: AppColors.seed,
               ),
             ),
             const SizedBox(width: AppSpacing.lg),
@@ -161,7 +161,7 @@ class _MedicationCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.roseDark,
+                      color: AppColors.seed,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -206,7 +206,7 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.medication_outlined,
                 size: 48,
-                color: AppColors.roseDark,
+                color: AppColors.seed,
               ),
               SizedBox(height: 12),
               Text(

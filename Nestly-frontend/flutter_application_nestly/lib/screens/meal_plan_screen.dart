@@ -149,9 +149,14 @@ class MealPlanApiService {
 }
 
 class MealRecommendationScreen extends StatefulWidget {
-  const MealRecommendationScreen({super.key, required this.babyId});
+  const MealRecommendationScreen({
+    super.key,
+    required this.babyId,
+    required this.gender,
+  });
 
   final int babyId;
+  final String gender;
 
   @override
   State<MealRecommendationScreen> createState() =>
@@ -160,6 +165,14 @@ class MealRecommendationScreen extends StatefulWidget {
 
 class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
   late final MealPlanApiService _service;
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
 
   bool _loading = true;
   bool _saving = false;
@@ -260,23 +273,20 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.roseDark,
-          ),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: _accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Plan ishrane',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: _accent,
           ),
         ),
         centerTitle: true,
       ),
       body: RefreshIndicator(
-        color: AppColors.roseDark,
+        color: _accent,
         onRefresh: _load,
         child: _buildBody(),
       ),
@@ -293,9 +303,9 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
             child: ElevatedButton(
               onPressed: !_saving && hasChanges ? _saveChanges : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.roseDark,
+                backgroundColor: _accent,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.roseDark.withOpacity(0.35),
+                disabledBackgroundColor: _accent.withOpacity(0.35),
                 disabledForegroundColor: Colors.white.withOpacity(0.8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -374,7 +384,7 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.roseDark.withOpacity(.08),
+              color: _accent.withOpacity(.08),
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
             child: Text(
@@ -396,7 +406,13 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
       if (currentWeek != rec.weekNumber) {
         currentWeek = rec.weekNumber;
         children.add(const SizedBox(height: AppSpacing.lg));
-        children.add(_WeekHeader(weekNumber: rec.weekNumber));
+        children.add(
+          _WeekHeader(
+            weekNumber: rec.weekNumber,
+            accent: _accent,
+            soft: _soft,
+          ),
+        );
       }
 
       children.add(
@@ -404,12 +420,12 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
           recommendation: rec,
           rating: _ratings[rec.foodTypeId],
           onRatingChanged: (v) => _onRatingChanged(rec.foodTypeId, v),
+          accent: _accent,
+          soft: _soft,
         ),
       );
 
-      children.add(
-        Divider(height: 1, color: AppColors.babyPink.withOpacity(0.25)),
-      );
+      children.add(Divider(height: 1, color: _soft.withOpacity(0.25)));
     }
 
     return ListView(
@@ -421,31 +437,33 @@ class _MealRecommendationScreenState extends State<MealRecommendationScreen> {
 }
 
 class _WeekHeader extends StatelessWidget {
-  const _WeekHeader({required this.weekNumber});
+  const _WeekHeader({
+    required this.weekNumber,
+    required this.accent,
+    required this.soft,
+  });
 
   final int weekNumber;
+  final Color accent;
+  final Color soft;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.babyPink.withOpacity(0.18),
+        color: soft.withOpacity(0.18),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.restaurant_rounded,
-            size: 16,
-            color: AppColors.roseDark,
-          ),
+          Icon(Icons.restaurant_rounded, size: 16, color: accent),
           const SizedBox(width: 6),
           Text(
             '$weekNumber. sedmica',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.roseDark,
+              color: accent,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -460,11 +478,15 @@ class _FoodRow extends StatelessWidget {
     required this.recommendation,
     required this.rating,
     required this.onRatingChanged,
+    required this.accent,
+    required this.soft,
   });
 
   final MealRecommendation recommendation;
   final int? rating;
   final ValueChanged<int> onRatingChanged;
+  final Color accent;
+  final Color soft;
 
   @override
   Widget build(BuildContext context) {
@@ -479,7 +501,7 @@ class _FoodRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: [
             BoxShadow(
-              color: AppColors.roseDark.withOpacity(0.06),
+              color: accent.withOpacity(0.06),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -491,14 +513,10 @@ class _FoodRow extends StatelessWidget {
               height: 34,
               width: 34,
               decoration: BoxDecoration(
-                color: AppColors.babyPink.withOpacity(.20),
+                color: soft.withOpacity(.20),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
-                Icons.local_dining_rounded,
-                size: 20,
-                color: AppColors.roseDark,
-              ),
+              child: Icon(Icons.local_dining_rounded, size: 20, color: accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -507,7 +525,7 @@ class _FoodRow extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: AppColors.roseDark,
+                  color: accent,
                 ),
               ),
             ),
@@ -525,9 +543,7 @@ class _FoodRow extends StatelessWidget {
                     child: Icon(
                       Icons.favorite_rounded,
                       size: 20,
-                      color: filled
-                          ? AppColors.roseDark
-                          : AppColors.roseDark.withOpacity(0.20),
+                      color: filled ? accent : accent.withOpacity(0.20),
                     ),
                   ),
                 );

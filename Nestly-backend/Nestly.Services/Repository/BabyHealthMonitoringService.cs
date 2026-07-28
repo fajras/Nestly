@@ -93,12 +93,19 @@ namespace Nestly.Services.Repository
 
             foreach (var result in results)
             {
-                var alreadyActive = await _db.HealthDeviationAlerts.AnyAsync(a =>
+                // Skip if there's already an unresolved alert for this
+                // parameter, or if this exact evidence (same period) was
+                // already surfaced and resolved before - otherwise resolving
+                // an alert would just have it reappear the next time any log
+                // entry (even an unrelated one) triggers a re-check, since
+                // the same underlying data is still there.
+                var alreadySurfaced = await _db.HealthDeviationAlerts.AnyAsync(a =>
                     a.BabyId == babyId &&
                     a.ParameterType == result.ParameterType &&
-                    !a.IsResolved);
+                    (!a.IsResolved ||
+                        (a.PeriodFrom == result.PeriodFrom && a.PeriodTo == result.PeriodTo)));
 
-                if (alreadyActive)
+                if (alreadySurfaced)
                 {
                     continue;
                 }

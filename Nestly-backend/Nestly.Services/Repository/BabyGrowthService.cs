@@ -18,10 +18,12 @@ namespace Nestly.Services.Repository
         private const decimal MaxHeadCircumferenceCm = 70m;
 
         private readonly NestlyDbContext _db;
+        private readonly IBabyHealthMonitoringService _healthMonitoring;
 
-        public BabyGrowthService(NestlyDbContext db)
+        public BabyGrowthService(NestlyDbContext db, IBabyHealthMonitoringService healthMonitoring)
         {
             _db = db;
+            _healthMonitoring = healthMonitoring;
         }
 
         public async Task<PagedResult<BabyGrowthResponseDto>> Get(BabyGrowthSearchObject search)
@@ -127,6 +129,8 @@ namespace Nestly.Services.Repository
 
             _db.BabyGrowths.Add(entity);
             await _db.SaveChangesAsync();
+
+            await _healthMonitoring.RunCheckForBabyAsync(dto.BabyId);
 
             return MapToDto(entity);
         }

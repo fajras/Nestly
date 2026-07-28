@@ -13,6 +13,7 @@ class FeedingLog {
   final DateTime feedDate;
   final Duration feedTime;
   final double? amountMl;
+  final String amountUnit;
   final int? foodTypeId;
   final String? notes;
 
@@ -22,6 +23,7 @@ class FeedingLog {
     required this.feedDate,
     required this.feedTime,
     this.amountMl,
+    this.amountUnit = 'ml',
     this.foodTypeId,
     this.notes,
   });
@@ -39,6 +41,7 @@ class FeedingLog {
       feedDate: DateTime.parse(json['feedDate']),
       feedTime: _parseTime(json['feedTime']?.toString()),
       amountMl: json['amountMl']?.toDouble(),
+      amountUnit: json['amountUnit'] ?? 'ml',
       foodTypeId: json['foodTypeId'],
       notes: json['notes'],
     );
@@ -64,6 +67,7 @@ class FeedingLogApiService {
     required DateTime date,
     required Duration time,
     required double amountMl,
+    required String amountUnit,
     String? notes,
   }) async {
     final res = await ApiClient.patch(
@@ -73,6 +77,7 @@ class FeedingLogApiService {
         'feedTime':
             '${time.inHours.toString().padLeft(2, '0')}:${(time.inMinutes % 60).toString().padLeft(2, '0')}:00',
         'amountMl': amountMl,
+        'amountUnit': amountUnit,
         'notes': notes,
       },
     );
@@ -120,6 +125,7 @@ class FeedingLogApiService {
     required DateTime date,
     required Duration time,
     double? amountMl,
+    String amountUnit = 'ml',
     int? foodTypeId,
     String? notes,
   }) async {
@@ -131,6 +137,7 @@ class FeedingLogApiService {
         'feedTime':
             '${time.inHours.toString().padLeft(2, '0')}:${(time.inMinutes % 60).toString().padLeft(2, '0')}:00',
         'amountMl': amountMl,
+        'amountUnit': amountUnit,
         'foodTypeId': foodTypeId,
         'notes': notes,
       },
@@ -151,9 +158,14 @@ class FeedingLogApiService {
 }
 
 class FeedingCalendarScreen extends StatefulWidget {
-  const FeedingCalendarScreen({super.key, required this.babyId});
+  const FeedingCalendarScreen({
+    super.key,
+    required this.babyId,
+    required this.gender,
+  });
 
   final int babyId;
+  final String gender;
 
   @override
   State<FeedingCalendarScreen> createState() => _FeedingCalendarScreenState();
@@ -161,6 +173,13 @@ class FeedingCalendarScreen extends StatefulWidget {
 
 class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
   late final FeedingLogApiService _service;
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -206,12 +225,12 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.seed),
+        iconTheme: IconThemeData(color: _accent),
         title: Text(
           'Dnevnik hranjenja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.seed,
+            color: _accent,
           ),
         ),
         centerTitle: true,
@@ -224,7 +243,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                   focusedDay: _focusedDay,
                   selectedDay: _selectedDay,
                   markerIcon: Icons.restaurant_rounded,
-                  accentColor: AppColors.seed,
+                  accentColor: _accent,
                   eventLoader: (day) => _forDay(day),
                   onDaySelected: (selected, focused) {
                     setState(() {
@@ -277,7 +296,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
-            const Icon(Icons.restaurant_rounded, color: AppColors.seed),
+            Icon(Icons.restaurant_rounded, color: _accent),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -285,20 +304,20 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                 children: [
                   Text(
                     _formatTime(log.feedTime),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.seed,
+                      color: _accent,
                     ),
                   ),
                   if (log.amountMl != null)
-                    Text('Količina: ${log.amountMl} ml'),
+                    Text('Količina: ${log.amountMl} ${log.amountUnit}'),
                   if (log.notes != null && log.notes!.isNotEmpty)
                     Text(log.notes!),
                 ],
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.seed),
+              icon: Icon(Icons.edit, color: _accent),
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -306,6 +325,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                     builder: (_) => AddFeedingLogScreen(
                       service: _service,
                       initialDate: log.feedDate,
+                      gender: widget.gender,
                       existingLog: log,
                     ),
                   ),
@@ -347,7 +367,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                   NestlyToast.success(
                     context,
                     'Unos uspješno obrisan',
-                    accentColor: AppColors.seed,
+                    accentColor: _accent,
                   );
 
                   _load();
@@ -368,7 +388,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.seed,
+            backgroundColor: _accent,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(52),
           ),
@@ -381,6 +401,7 @@ class _FeedingCalendarScreenState extends State<FeedingCalendarScreen> {
                 builder: (_) => AddFeedingLogScreen(
                   service: _service,
                   initialDate: dateToUse,
+                  gender: widget.gender,
                 ),
               ),
             );
@@ -406,11 +427,13 @@ class AddFeedingLogScreen extends StatefulWidget {
     super.key,
     required this.service,
     required this.initialDate,
+    required this.gender,
     this.existingLog,
   });
 
   final FeedingLogApiService service;
   final DateTime initialDate;
+  final String gender;
   final FeedingLog? existingLog;
 
   @override
@@ -418,6 +441,14 @@ class AddFeedingLogScreen extends StatefulWidget {
 }
 
 class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
+
   late DateTime _date;
   final _formKey = GlobalKey<FormState>();
   Duration _time = Duration(
@@ -427,6 +458,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
 
   final _amount = TextEditingController();
   final _notes = TextEditingController();
+  String _unit = 'ml';
 
   bool _saving = false;
   @override
@@ -445,6 +477,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
       _date = log.feedDate;
       _time = log.feedTime;
       _amount.text = log.amountMl?.toString() ?? '';
+      _unit = log.amountUnit;
       _notes.text = log.notes ?? '';
     } else {
       _date = DateTime(
@@ -485,23 +518,25 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
           date: _date,
           time: _time,
           amountMl: amount,
+          amountUnit: _unit,
           notes: _notes.text,
         );
         if (!mounted) return;
-        NestlyToast.success(context, 'Unos dodan', accentColor: AppColors.seed);
+        NestlyToast.success(context, 'Unos dodan', accentColor: _accent);
       } else {
         await widget.service.update(
           id: widget.existingLog!.id,
           date: _date,
           time: _time,
           amountMl: amount,
+          amountUnit: _unit,
           notes: _notes.text,
         );
         if (!mounted) return;
         NestlyToast.success(
           context,
           'Unos ažuriran',
-          accentColor: AppColors.seed,
+          accentColor: _accent,
         );
       }
 
@@ -521,12 +556,12 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.seed),
+        iconTheme: IconThemeData(color: _accent),
         title: Text(
           widget.existingLog == null ? 'Dodaj unos' : 'Uredi unos',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.seed,
+            color: _accent,
           ),
         ),
         centerTitle: true,
@@ -544,48 +579,90 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
                   decoration: _decoration(
                     label: 'Vrijeme',
                     icon: Icons.schedule,
+                    accent: _accent,
+                    soft: _soft,
                   ),
                   child: Text(_formatTime(_time)),
                 ),
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _amount,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$')),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextFormField(
+                      controller: _amount,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}$'),
+                        ),
+                      ],
+                      decoration: _decoration(
+                    label: 'Količina',
+                    icon: Icons.scale,
+                    accent: _accent,
+                    soft: _soft,
+                  ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Unesite količinu';
+                        }
+                        final normalized = value.replaceAll(',', '.');
+                        final parsed = double.tryParse(normalized);
+                        if (parsed == null) {
+                          return 'Dozvoljeni su samo brojevi';
+                        }
+                        if (parsed <= 0) {
+                          return 'Količina mora biti veća od 0';
+                        }
+                        if (parsed > 1000) {
+                          return 'Količina ne može biti veća od 1000';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'ml', label: Text('ml')),
+                        ButtonSegment(value: 'g', label: Text('g')),
+                      ],
+                      selected: {_unit},
+                      onSelectionChanged: (selection) {
+                        setState(() => _unit = selection.first);
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith(
+                          (states) => states.contains(WidgetState.selected)
+                              ? _accent
+                              : _accent.withOpacity(.1),
+                        ),
+                        foregroundColor: WidgetStateProperty.resolveWith(
+                          (states) => states.contains(WidgetState.selected)
+                              ? Colors.white
+                              : _accent,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
-                decoration: _decoration(
-                  label: 'Količina (ml/g)',
-                  icon: Icons.scale,
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Unesite količinu';
-                  }
-                  final normalized = value.replaceAll(',', '.');
-                  final parsed = double.tryParse(normalized);
-                  if (parsed == null) {
-                    return 'Dozvoljeni su samo brojevi';
-                  }
-                  if (parsed <= 0) {
-                    return 'Količina mora biti veća od 0';
-                  }
-                  if (parsed > 1000) {
-                    return 'Količina ne može biti veća od 1000';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _notes,
                 decoration: _decoration(
-                  label: 'Napomena (opcionalno)',
-                  icon: Icons.note,
-                ),
+                    label: 'Napomena (opcionalno)',
+                    icon: Icons.note,
+                    accent: _accent,
+                    soft: _soft,
+                  ),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -594,7 +671,7 @@ class _AddFeedingLogScreenState extends State<AddFeedingLogScreen> {
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.seed,
+                    backgroundColor: _accent,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -637,24 +714,26 @@ String _formatTime(Duration d) {
   return '$h:$m';
 }
 
-InputDecoration _decoration({required String label, required IconData icon}) {
+InputDecoration _decoration({
+  required String label,
+  required IconData icon,
+  required Color accent,
+  required Color soft,
+}) {
   return InputDecoration(
     labelText: label,
     prefixIcon: Icon(icon),
     filled: true,
-    fillColor: AppColors.babyPink.withOpacity(.15),
+    fillColor: soft.withOpacity(.15),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.lg),
       borderSide: BorderSide.none,
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.lg),
-      borderSide: const BorderSide(color: AppColors.seed, width: 1.6),
+      borderSide: BorderSide(color: accent, width: 1.6),
     ),
-    floatingLabelStyle: const TextStyle(
-      color: AppColors.seed,
-      fontWeight: FontWeight.w600,
-    ),
-    prefixIconColor: AppColors.seed,
+    floatingLabelStyle: TextStyle(color: accent, fontWeight: FontWeight.w600),
+    prefixIconColor: accent,
   );
 }

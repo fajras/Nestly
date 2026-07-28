@@ -13,6 +13,8 @@ namespace Nestly.Model.Entity
         public DateTime FeedDate { get; set; }
         public TimeSpan FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
+        [MaxLength(2)]
+        public string AmountUnit { get; set; } = "ml";
         [ForeignKey(nameof(FoodType))]
         public int? FoodTypeId { get; set; }
         public string? Notes { get; set; }

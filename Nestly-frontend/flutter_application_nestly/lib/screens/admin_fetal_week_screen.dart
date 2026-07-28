@@ -127,7 +127,7 @@ class _AdminFetalDevelopmentScreenState
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
-            color: AppColors.roseDark,
+            color: AppColors.seed,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),

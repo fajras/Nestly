@@ -355,7 +355,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.roseDark,
+                      color: AppColors.seed,
                     ),
                   ),
 
@@ -367,7 +367,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                         color: AppColors.card,
                         borderRadius: BorderRadius.circular(AppRadius.xl),
                         border: const Border(
-                          left: BorderSide(color: AppColors.roseDark, width: 4),
+                          left: BorderSide(color: AppColors.seed, width: 4),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -587,7 +587,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                         title: 'Izvještaj o majci',
                         subtitle: 'Terapija, simptomi i pitanja',
                         icon: Icons.pregnant_woman,
-                        accentColor: AppColors.roseDark,
+                        accentColor: AppColors.seed,
                         enabled: _selectedUser != null,
 
                         onDownload: () async {
@@ -1095,7 +1095,7 @@ class _ReportActionCard extends StatelessWidget {
                     onPressed: enabled ? onPrint : null,
 
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.roseDark,
+                      backgroundColor: AppColors.seed,
                       foregroundColor: Colors.white,
                     ),
 

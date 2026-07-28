@@ -11,11 +11,13 @@ import 'package:flutter_application_nestly/providers/api_response_helper.dart';
 class HealthAlertsScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
+  final String gender;
 
   const HealthAlertsScreen({
     super.key,
     required this.babyId,
     required this.babyName,
+    required this.gender,
   });
 
   @override
@@ -25,7 +27,14 @@ class HealthAlertsScreen extends StatefulWidget {
 class _HealthAlertsScreenState extends State<HealthAlertsScreen> {
   List<dynamic> _alerts = [];
   bool _loading = true;
-  bool _checking = false;
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
 
   @override
   void initState() {
@@ -88,41 +97,6 @@ class _HealthAlertsScreenState extends State<HealthAlertsScreen> {
     }
   }
 
-  Future<void> _checkNow() async {
-    setState(() => _checking = true);
-
-    try {
-      final res = await ApiClient.post(
-        '/api/health-alerts/run/${widget.babyId}',
-      );
-
-      if (res.statusCode != 200 && res.statusCode != 204) {
-        final error = jsonDecode(res.body);
-        throw Exception(error["message"] ?? "Greška pri provjeri");
-      }
-
-      final created = ApiResponseHelper.extractList(res.body);
-
-      if (!mounted) return;
-
-      if (created.isEmpty) {
-        NestlyToast.info(context, 'Nema novih odstupanja u ovom trenutku.');
-      } else {
-        NestlyToast.warning(
-          context,
-          'Pronađeno ${created.length} novo(a) odstupanje(a).',
-        );
-      }
-
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      NestlyToast.error(context, 'Greška pri pokretanju provjere.');
-    } finally {
-      if (mounted) setState(() => _checking = false);
-    }
-  }
-
   int get _activeCount =>
       _alerts.where((a) => a["isResolved"] == false).length;
 
@@ -133,22 +107,20 @@ class _HealthAlertsScreenState extends State<HealthAlertsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: IconThemeData(color: _accent),
         centerTitle: true,
         title: Text(
           'Zdravstvena upozorenja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: _accent,
           ),
         ),
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.roseDark),
-            )
+          ? Center(child: CircularProgressIndicator(color: _accent))
           : RefreshIndicator(
-              color: AppColors.roseDark,
+              color: _accent,
               onRefresh: _load,
               child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -156,12 +128,11 @@ class _HealthAlertsScreenState extends State<HealthAlertsScreen> {
                   _IntroCard(
                     babyName: widget.babyName,
                     activeCount: _activeCount,
-                    checking: _checking,
-                    onCheckNow: _checkNow,
+                    accent: _accent,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   if (_alerts.isEmpty)
-                    const _EmptyState()
+                    _EmptyState(accent: _accent, soft: _soft)
                   else
                     for (final alert in _alerts)
                       Padding(
@@ -185,14 +156,12 @@ class _HealthAlertsScreenState extends State<HealthAlertsScreen> {
 class _IntroCard extends StatelessWidget {
   final String babyName;
   final int activeCount;
-  final bool checking;
-  final VoidCallback onCheckNow;
+  final Color accent;
 
   const _IntroCard({
     required this.babyName,
     required this.activeCount,
-    required this.checking,
-    required this.onCheckNow,
+    required this.accent,
   });
 
   @override
@@ -220,32 +189,9 @@ class _IntroCard extends StatelessWidget {
             Text(
               'Ovdje se prikazuju odstupanja unosa (rast, hranjenje, spavanje, '
               'pelene, temperatura) u odnosu na preporučene pedijatrijske '
-              'standarde, otkrivena tokom nekoliko dana praćenja.',
+              'standarde. Provjera se pokreće automatski čim dodate novi unos.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: checking ? null : onCheckNow,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.roseDark,
-                  side: const BorderSide(color: AppColors.roseDark),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                icon: checking
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.fact_check_rounded),
-                label: Text(checking ? 'Provjera u toku...' : 'Provjeri sada'),
               ),
             ),
           ],
@@ -380,7 +326,10 @@ String _formatDate(String? raw) {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  final Color accent;
+  final Color soft;
+
+  const _EmptyState({required this.accent, required this.soft});
 
   @override
   Widget build(BuildContext context) {
@@ -396,19 +345,12 @@ class _EmptyState extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.verified_rounded,
-                  size: 60,
-                  color: AppColors.babyBlue,
-                ),
-                SizedBox(height: 16),
+              children: [
+                Icon(Icons.verified_rounded, size: 60, color: soft),
+                const SizedBox(height: 16),
                 Text(
                   'Nema zabilježenih odstupanja',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.roseDark,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: accent),
                 ),
               ],
             ),

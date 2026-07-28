@@ -24,8 +24,9 @@ class NestlyTopNotification {
         child: Material(
           color: Colors.transparent,
           child: TweenAnimationBuilder<double>(
-            duration: const Duration(seconds: 4),
-            tween: Tween(begin: -100, end: 0),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            tween: Tween(begin: -120, end: 0),
             builder: (context, value, child) {
               return Transform.translate(
                 offset: Offset(0, value),

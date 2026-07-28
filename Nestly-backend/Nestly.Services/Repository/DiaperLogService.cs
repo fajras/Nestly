@@ -4,6 +4,7 @@ using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
 using Nestly.Services.Extensions;
+using Nestly.Services.Interfaces;
 
 public class DiaperLogService : IDiaperLogService
 {
@@ -12,11 +13,15 @@ public class DiaperLogService : IDiaperLogService
         "mokra", "stolica", "kombinovano"
     };
 
-    private readonly NestlyDbContext _db;
+    private const int MinMinutesBetweenEntries = 1;
 
-    public DiaperLogService(NestlyDbContext db)
+    private readonly NestlyDbContext _db;
+    private readonly IBabyHealthMonitoringService _healthMonitoring;
+
+    public DiaperLogService(NestlyDbContext db, IBabyHealthMonitoringService healthMonitoring)
     {
         _db = db;
+        _healthMonitoring = healthMonitoring;
     }
 
     public async Task<PagedResult<DiaperLogResponseDto>> Get(DiaperLogSearchObject search)
@@ -112,6 +117,24 @@ public class DiaperLogService : IDiaperLogService
                 $"Diaper state must be one of: {string.Join(", ", AllowedDiaperStates)}.");
         }
 
+        var newMoment = dto.ChangeDate.Date + dto.ChangeTime;
+
+        var sameDayLogs = await _db.DiaperLogs
+            .Where(x => x.BabyId == dto.BabyId &&
+                        x.ChangeDate >= dto.ChangeDate.Date.AddDays(-1) &&
+                        x.ChangeDate <= dto.ChangeDate.Date.AddDays(1))
+            .Select(x => new { x.ChangeDate, x.ChangeTime })
+            .ToListAsync();
+
+        var tooClose = sameDayLogs.Any(x =>
+            Math.Abs((x.ChangeDate + x.ChangeTime - newMoment).TotalMinutes) < MinMinutesBetweenEntries);
+
+        if (tooClose)
+        {
+            throw new BusinessException(
+                $"A diaper log already exists within {MinMinutesBetweenEntries} minute(s) of this time.");
+        }
+
         var entity = new DiaperLog
         {
             BabyId = dto.BabyId,
@@ -125,6 +148,8 @@ public class DiaperLogService : IDiaperLogService
 
         _db.DiaperLogs.Add(entity);
         await _db.SaveChangesAsync();
+
+        await _healthMonitoring.RunCheckForBabyAsync(dto.BabyId);
 
         return MapToDto(entity);
     }

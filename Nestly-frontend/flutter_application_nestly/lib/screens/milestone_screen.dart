@@ -138,11 +138,13 @@ class MilestoneApiService {
 class MilestoneScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
+  final String gender;
 
   const MilestoneScreen({
     super.key,
     required this.babyId,
     required this.babyName,
+    required this.gender,
   });
 
   @override
@@ -151,6 +153,13 @@ class MilestoneScreen extends StatefulWidget {
 
 class _MilestoneScreenState extends State<MilestoneScreen> {
   final _service = MilestoneApiService();
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
   MilestoneEntry? _editingItem;
   bool _loading = true;
   bool _saving = false;
@@ -275,7 +284,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
       NestlyToast.success(
         context,
         isEdit ? 'Dostignuće je ažurirano' : 'Dostignuće je sačuvano',
-        accentColor: AppColors.seed,
+        accentColor: _accent,
       );
     } catch (e) {
       final msg = e.toString();
@@ -341,7 +350,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
       NestlyToast.success(
         context,
         'Dostignuće obrisano',
-        accentColor: AppColors.seed,
+        accentColor: _accent,
       );
     } catch (e) {
       final msg = e.toString();
@@ -366,13 +375,13 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
           'Dostignuća',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.seed,
+            color: _accent,
           ),
         ),
 
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: AppColors.seed,
+          color: _accent,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -413,8 +422,8 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
         children: _items.map((e) {
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppColors.seed.withOpacity(0.1),
-              child: const Icon(Icons.star_rounded, color: AppColors.seed),
+              backgroundColor: _accent.withOpacity(0.1),
+              child: Icon(Icons.star_rounded, color: _accent),
             ),
             title: Text(
               e.title,
@@ -424,12 +433,9 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _formatDate(e.achievedDate),
-                  style: const TextStyle(color: AppColors.seed),
-                ),
+                Text(_formatDate(e.achievedDate), style: TextStyle(color: _accent)),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.seed),
+                  icon: Icon(Icons.edit, color: _accent),
                   onPressed: () {
                     setState(() {
                       _editingItem = e;
@@ -459,6 +465,10 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
       fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderSide: BorderSide(color: _accent, width: 1.6),
       ),
     );
 
@@ -497,7 +507,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
               child: ElevatedButton(
                 onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.seed,
+                  backgroundColor: _accent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -519,8 +529,8 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
                 child: OutlinedButton(
                   onPressed: _cancelEdit,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.seed,
-                    side: const BorderSide(color: AppColors.seed),
+                    foregroundColor: _accent,
+                    side: BorderSide(color: _accent),
                   ),
                   child: const Text(
                     'Odustani',

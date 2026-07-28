@@ -104,13 +104,22 @@ class ChatHomeApiService {
 }
 
 class ChatHomeScreen extends StatefulWidget {
-  const ChatHomeScreen({super.key});
+  final String gender;
+
+  const ChatHomeScreen({super.key, this.gender = 'female'});
   @override
   State<ChatHomeScreen> createState() => _ChatHomeScreenState();
 }
 
 class _ChatHomeScreenState extends State<ChatHomeScreen> {
   final _api = ChatHomeApiService();
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
   int? _currentUserId;
   bool _loading = true;
   String _search = '';
@@ -167,29 +176,24 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.roseDark),
+          icon: Icon(Icons.arrow_back_rounded, color: _accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Chat',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: _accent,
           ),
         ),
       ),
 
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.roseDark),
-            )
+          ? Center(child: CircularProgressIndicator(color: _accent))
           : ListView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                const NestlySectionHeader(
-                  title: 'Moji razgovori',
-                  color: AppColors.roseDark,
-                ),
+                NestlySectionHeader(title: 'Moji razgovori', color: _accent),
                 ..._buildConversationList(),
                 const SizedBox(height: 24),
                 const NestlySectionHeader(
@@ -206,7 +210,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
 
   Widget _searchField() {
     return TextField(
-      cursorColor: AppColors.roseDark,
+      cursorColor: _accent,
       decoration: InputDecoration(
         hintText: 'Pretraži roditelje...',
         filled: true,
@@ -218,7 +222,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          borderSide: const BorderSide(color: AppColors.roseDark, width: 2),
+          borderSide: BorderSide(color: _accent, width: 2),
         ),
       ),
       onChanged: (v) => setState(() => _search = v.toLowerCase()),
@@ -373,6 +377,7 @@ class _ChatHomeScreenState extends State<ChatHomeScreen> {
           otherUserId: otherUserId,
           conversationId: conversationId,
           otherUserName: name,
+          gender: widget.gender,
         ),
       ),
     );

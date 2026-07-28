@@ -513,6 +513,41 @@ namespace Nestly.Services.Repository
 
             try
             {
+                // Chat conversations/messages and (for parents) pregnancies
+                // and calendar events are configured with a Restrict delete
+                // behavior (to avoid multiple-cascade-path errors on the
+                // Baby-owned relations), so they don't get cleaned up
+                // automatically when the user is removed - do it explicitly.
+                var conversationIds = await _db.ChatConversations
+                    .Where(c => c.User1Id == id || c.User2Id == id)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                if (conversationIds.Count > 0)
+                {
+                    _db.ChatMessages.RemoveRange(
+                        _db.ChatMessages.Where(m => conversationIds.Contains(m.ConversationId)));
+
+                    _db.ChatConversations.RemoveRange(
+                        _db.ChatConversations.Where(c => conversationIds.Contains(c.Id)));
+                }
+
+                var parentProfileId = await _db.ParentProfiles
+                    .Where(p => p.UserId == id)
+                    .Select(p => (long?)p.Id)
+                    .FirstOrDefaultAsync();
+
+                if (parentProfileId is not null)
+                {
+                    _db.Pregnancies.RemoveRange(
+                        _db.Pregnancies.Where(p => p.ParentProfileId == parentProfileId.Value));
+
+                    _db.CalendarEvents.RemoveRange(
+                        _db.CalendarEvents.Where(c => c.UserId == parentProfileId.Value));
+                }
+
+                await _db.SaveChangesAsync();
+
                 if (identityUser != null)
                 {
                     var del =

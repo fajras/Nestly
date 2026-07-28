@@ -8,6 +8,7 @@ namespace Nestly.Model.DTOObjects
         public DateTime? FeedDate { get; set; }
         public TimeSpan? FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
+        public string? AmountUnit { get; set; }
         public int? FoodTypeId { get; set; }
         [MaxLength(1000)]
         public string? Notes { get; set; }
@@ -21,6 +22,7 @@ namespace Nestly.Model.DTOObjects
         [Required]
         public TimeSpan FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
+        public string? AmountUnit { get; set; }
         public int? FoodTypeId { get; set; }
         [MaxLength(1000)]
         public string? Notes { get; set; }
@@ -47,6 +49,7 @@ namespace Nestly.Model.DTOObjects
         public DateTime FeedDate { get; set; }
         public TimeSpan FeedTime { get; set; }
         public decimal? AmountMl { get; set; }
+        public string AmountUnit { get; set; } = "ml";
         public int? FoodTypeId { get; set; }
         public string? FoodTypeName { get; set; }
         public string? Notes { get; set; }

@@ -14,10 +14,12 @@ namespace Nestly.Services.Repository
         private const decimal MaxTemperatureC = 45m;
 
         private readonly NestlyDbContext _db;
+        private readonly IBabyHealthMonitoringService _healthMonitoring;
 
-        public HealthEntryService(NestlyDbContext db)
+        public HealthEntryService(NestlyDbContext db, IBabyHealthMonitoringService healthMonitoring)
         {
             _db = db;
+            _healthMonitoring = healthMonitoring;
         }
 
         public async Task<PagedResult<HealthEntryResponseDto>> Get(HealthEntrySearchObject search)
@@ -119,6 +121,8 @@ namespace Nestly.Services.Repository
 
             _db.HealthEntries.Add(entity);
             await _db.SaveChangesAsync();
+
+            await _healthMonitoring.RunCheckForBabyAsync(dto.BabyId);
 
             return MapToDto(entity);
         }

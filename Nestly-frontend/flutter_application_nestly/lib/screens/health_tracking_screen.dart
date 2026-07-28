@@ -139,11 +139,13 @@ class HealthEntryApiService {
 class HealthTrackingScreen extends StatefulWidget {
   final int babyId;
   final String babyName;
+  final String gender;
 
   const HealthTrackingScreen({
     super.key,
     required this.babyId,
     required this.babyName,
+    required this.gender,
   });
 
   @override
@@ -152,6 +154,14 @@ class HealthTrackingScreen extends StatefulWidget {
 
 class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
   final _service = HealthEntryApiService();
+
+  bool get _isGirl {
+    final g = widget.gender.toLowerCase();
+    return g == 'female' || g == 'f';
+  }
+
+  Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
+  Color get _soft => _isGirl ? AppColors.babyPink : AppColors.babyBlue;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -270,14 +280,14 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                 Expanded(
                   child: Text(
                     _fmt(e.entryDate),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.roseDark,
+                      color: _accent,
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.roseDark),
+                  icon: Icon(Icons.edit, color: _accent),
                   onPressed: () {
                     setState(() {
                       _editingEntry = e;
@@ -448,7 +458,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       hintText: hint,
       prefixIcon: Icon(icon),
       filled: true,
-      fillColor: AppColors.babyPink.withOpacity(.15),
+      fillColor: _soft.withOpacity(.15),
 
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -462,13 +472,13 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        borderSide: const BorderSide(color: AppColors.roseDark, width: 1.6),
+        borderSide: BorderSide(color: _accent, width: 1.6),
       ),
 
-      prefixIconColor: AppColors.roseDark,
+      prefixIconColor: _accent,
 
-      floatingLabelStyle: const TextStyle(
-        color: AppColors.roseDark,
+      floatingLabelStyle: TextStyle(
+        color: _accent,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -491,7 +501,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                   : 'Uređivanje zapisa zdravlja',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.roseDark,
+                color: _accent,
               ),
             ),
 
@@ -502,7 +512,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,1}$')),
               ],
-              cursorColor: AppColors.roseDark,
+              cursorColor: _accent,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -517,7 +527,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
             TextField(
               controller: _medCtrl,
-              cursorColor: AppColors.roseDark,
+              cursorColor: _accent,
               decoration: _fieldDecoration(
                 label: 'Lijekovi (opcionalno)',
                 icon: Icons.medical_services_rounded,
@@ -529,7 +539,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
 
             TextField(
               controller: _checkCtrl,
-              cursorColor: AppColors.roseDark,
+              cursorColor: _accent,
               decoration: _fieldDecoration(
                 label: 'Pregledi (opcionalno)',
                 icon: Icons.vaccines_rounded,
@@ -551,7 +561,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
               child: ElevatedButton(
                 onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.roseDark,
+                  backgroundColor: _accent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -559,19 +569,17 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                   ),
                 ),
                 child: _saving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.roseDark,
-                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(_accent),
                         ),
                       )
                     : Text(
                         _editingEntry == null ? 'Sačuvaj' : 'Sačuvaj izmjene',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
@@ -592,8 +600,8 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                     });
                   },
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.roseDark,
-                    side: const BorderSide(color: AppColors.roseDark),
+                    foregroundColor: _accent,
+                    side: BorderSide(color: _accent),
                   ),
                   child: const Text(
                     'Odustani uređivanje',
@@ -615,20 +623,20 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.roseDark),
+        iconTheme: IconThemeData(color: _accent),
         title: Text(
           'Praćenje zdravlja',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.roseDark,
+            color: _accent,
           ),
         ),
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.roseDark),
+                valueColor: AlwaysStoppedAnimation<Color>(_accent),
               ),
             )
           : Column(
@@ -636,7 +644,7 @@ class _HealthTrackingScreenState extends State<HealthTrackingScreen> {
                 NestlyCalendar(
                   focusedDay: _focusedDay,
                   selectedDay: _selectedDay,
-                  accentColor: AppColors.roseDark,
+                  accentColor: _accent,
                   markerIcon: Icons.favorite_rounded,
                   eventLoader: (day) => _forDay(day),
                   onDaySelected: (selected, focused) {

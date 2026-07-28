@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -106,7 +107,7 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Baby profile not found.");
             }
 
-            if (dto.SleepDate.Date > DateTime.UtcNow.Date)
+            if (DateValidation.IsFutureDate(dto.SleepDate))
             {
                 throw new BusinessException("Sleep date cannot be in the future.");
             }
@@ -156,7 +157,7 @@ namespace Nestly.Services.Repository
 
             if (patch.SleepDate is not null)
             {
-                if (patch.SleepDate.Value.Date > DateTime.UtcNow.Date)
+                if (DateValidation.IsFutureDate(patch.SleepDate.Value))
                 {
                     throw new BusinessException("Sleep date cannot be in the future.");
                 }

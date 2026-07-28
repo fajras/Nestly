@@ -16,11 +16,17 @@ namespace Nestly.Services.Repository
         private readonly NestlyDbContext _db;
         private readonly RabbitMqPublisher _publisher;
         private readonly ICurrentUserService _currentUserService;
-        public QaQuestionService(NestlyDbContext db, RabbitMqPublisher publisher, ICurrentUserService currentUserService)
+        private readonly IQaTriageService _triageService;
+        public QaQuestionService(
+            NestlyDbContext db,
+            RabbitMqPublisher publisher,
+            ICurrentUserService currentUserService,
+            IQaTriageService triageService)
         {
             _db = db;
             _publisher = publisher;
             _currentUserService = currentUserService;
+            _triageService = triageService;
         }
 
         public async Task<PagedResult<QaQuestionWithLatestAnswerDto>> GetAllWithLatestAnswer(
@@ -54,7 +60,6 @@ namespace Nestly.Services.Repository
                 q = q.Where(x => !x.Answers.Any());
             }
 
-            var totalCount = await q.CountAsync(ct);
             int page = search.Page < 1 ? 1 : search.Page;
 
             int pageSize = search.PageSize < 1
@@ -62,10 +67,47 @@ namespace Nestly.Services.Repository
                 : search.PageSize > 100
                     ? 100
                     : search.PageSize;
-            var items = await q
-                .OrderByDescending(x => x.CreatedAt)
+
+            // Urgency has to be ranked across the *entire* filtered set before
+            // paging - otherwise an urgent question sitting on page 2 would
+            // never bubble above older, non-urgent questions on page 1. So we
+            // first pull just the columns needed to rank (cheap), run triage
+            // and sort in memory, then fetch the full joined DTO only for the
+            // page that's actually returned.
+            var rankable = await q
+                .Select(x => new
+                {
+                    x.Id,
+                    x.QuestionText,
+                    x.CreatedAt,
+                    IsAnswered = x.Answers.Any()
+                })
+                .ToListAsync(ct);
+
+            var ranked = rankable
+                .Select(x => new
+                {
+                    x.Id,
+                    x.CreatedAt,
+                    x.IsAnswered,
+                    Urgency = _triageService.PredictUrgency(x.QuestionText)
+                })
+                .OrderBy(x => x.IsAnswered)
+                .ThenByDescending(x => x.Urgency.IsUrgent)
+                .ThenByDescending(x => x.CreatedAt)
+                .ToList();
+
+            var totalCount = ranked.Count;
+
+            var pageSlice = ranked
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .ToList();
+
+            var pageIds = pageSlice.Select(x => x.Id).ToList();
+
+            var itemsById = await q
+                .Where(x => pageIds.Contains(x.Id))
                 .Select(x => new QaQuestionWithLatestAnswerDto
                 {
                     Id = x.Id,
@@ -90,7 +132,17 @@ namespace Nestly.Services.Repository
                             : null)
                         .FirstOrDefault()
                 })
-                .ToListAsync(ct);
+                .ToDictionaryAsync(x => x.Id, ct);
+
+            var items = pageSlice
+                .Select(r =>
+                {
+                    var dto = itemsById[r.Id];
+                    dto.IsUrgent = r.Urgency.IsUrgent;
+                    dto.UrgencyConfidence = r.Urgency.Confidence;
+                    return dto;
+                })
+                .ToList();
 
             return new PagedResult<QaQuestionWithLatestAnswerDto>
             {

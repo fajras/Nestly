@@ -248,7 +248,11 @@ namespace Nestly.Services.Repository
 
             var midpoint = (guideline.Value.MinFeedsPerDay + guideline.Value.MaxFeedsPerDay) / 2.0;
             var halfWidth = Math.Max(0.5, (guideline.Value.MaxFeedsPerDay - guideline.Value.MinFeedsPerDay) / 2.0);
-            var avgFeeds = byDay.Average(d => d.Count);
+            // Clamped to the same [1, 20] range the training data was generated
+            // in (see SyntheticPediatricDatasetGenerator.GenerateFeedingSamples)
+            // so real, erratic logs can't push RelativeDeviation outside the
+            // range the model's NormalizeMinMax transform was fit on.
+            var avgFeeds = Math.Clamp(byDay.Average(d => d.Count), 1, 20);
             var relativeDeviation = (float)((avgFeeds - midpoint) / halfWidth);
             var feedsStdDev = (float)StdDev(byDay.Select(d => (double)d.Count));
             var pctDaysOutOfRange = (float)byDay.Count(d => d.Count < guideline.Value.MinFeedsPerDay || d.Count > guideline.Value.MaxFeedsPerDay) / byDay.Count;
@@ -316,7 +320,11 @@ namespace Nestly.Services.Repository
 
             var midpointHours = (guideline.Value.MinHours + guideline.Value.MaxHours) / 2.0;
             var halfWidthHours = Math.Max(0.5, (guideline.Value.MaxHours - guideline.Value.MinHours) / 2.0);
-            var avgHours = byDay.Average(d => d.TotalMinutes) / 60.0;
+            // Clamped to the same [4, 20] range the training data was generated
+            // in (see SyntheticPediatricDatasetGenerator.GenerateSleepSamples)
+            // so real, erratic logs can't push RelativeDeviation outside the
+            // range the model's NormalizeMinMax transform was fit on.
+            var avgHours = Math.Clamp(byDay.Average(d => d.TotalMinutes) / 60.0, 4, 20);
             var relativeDeviation = (float)((avgHours - midpointHours) / halfWidthHours);
             var stdDevMinutes = (float)StdDev(byDay.Select(d => (double)d.TotalMinutes));
             var pctDaysOutOfRange = (float)byDay.Count(d =>

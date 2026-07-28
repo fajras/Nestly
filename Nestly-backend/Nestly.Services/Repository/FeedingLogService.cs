@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 
 namespace Nestly.Services.Repository
 {
@@ -98,7 +99,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Feed date is required.");
             }
 
-            if (dto.FeedDate.Date > DateTime.UtcNow.Date)
+            if (DateValidation.IsFutureDate(dto.FeedDate))
             {
                 throw new BusinessException("Feed date cannot be in the future.");
             }
@@ -141,7 +142,7 @@ namespace Nestly.Services.Repository
 
             if (patch.FeedDate is not null)
             {
-                if (patch.FeedDate.Value.Date > DateTime.UtcNow.Date)
+                if (DateValidation.IsFutureDate(patch.FeedDate.Value))
                 {
                     throw new BusinessException("Feed date cannot be in the future.");
                 }

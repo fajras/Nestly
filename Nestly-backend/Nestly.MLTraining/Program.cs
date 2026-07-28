@@ -75,6 +75,17 @@ TrainAndSave(mlContext, feverSamples,
     new[] { nameof(FeverSample.AgeMonths), nameof(FeverSample.MaxTempC), nameof(FeverSample.FeverEntryCount), nameof(FeverSample.IsYoungInfant) },
     Path.Combine(modelsDir, "fever-model.zip"), "Temperatura (Fever)", report);
 
+// --- Q&A urgency triage (text classification, not tabular features) ---
+const int QaSampleCount = 6000;
+var qaRaw = SyntheticQaUrgencyDatasetGenerator.Generate(QaSampleCount).ToList();
+var qaSamples = qaRaw.Select(s => new QuestionUrgencySample { QuestionText = s.QuestionText, Label = s.IsUrgent }).ToList();
+
+WriteCsv(Path.Combine(datasetsDir, "qa-urgency.csv"),
+    new[] { "QuestionText", "Label" },
+    qaRaw.Select(s => new object[] { $"\"{s.QuestionText.Replace("\"", "'")}\"", s.IsUrgent }));
+
+TrainAndSaveTextClassifier(mlContext, qaSamples, Path.Combine(modelsDir, "qa-urgency-model.zip"), "Trijaža pitanja (Q&A urgency)", report);
+
 File.WriteAllLines(Path.Combine(backendDir, "..", "ml-training-report.md"), report);
 Console.WriteLine();
 Console.WriteLine($"Datasets: {datasetsDir}");
@@ -106,6 +117,40 @@ VerifyModel(mlContext, Path.Combine(modelsDir, "diaper-model.zip"),
 VerifyModel(mlContext, Path.Combine(modelsDir, "fever-model.zip"),
     new FeverSample { AgeMonths = 1, MaxTempC = 39.5f, FeverEntryCount = 2, IsYoungInfant = 1 },
     (FeverPrediction p) => p.PredictedLabel);
+
+VerifyModel(mlContext, Path.Combine(modelsDir, "qa-urgency-model.zip"),
+    new QuestionUrgencySample { QuestionText = "Beba ima visoku temperaturu preko 39 stepeni i teško diše, šta da radim?" },
+    (QuestionUrgencyPrediction p) => p.IsUrgent ? "Hitno" : "Rutinski");
+
+static void TrainAndSaveTextClassifier(
+    MLContext mlContext,
+    List<QuestionUrgencySample> samples,
+    string modelPath,
+    string reportName,
+    List<string> report)
+{
+    var fullData = mlContext.Data.LoadFromEnumerable(samples);
+    var split = mlContext.Data.TrainTestSplit(fullData, testFraction: 0.2, seed: 42);
+
+    var pipeline = mlContext.Transforms.Text.FeaturizeText("Features", nameof(QuestionUrgencySample.QuestionText))
+        .Append(mlContext.BinaryClassification.Trainers.SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features"));
+
+    var model = pipeline.Fit(split.TrainSet);
+    var predictions = model.Transform(split.TestSet);
+    var metrics = mlContext.BinaryClassification.Evaluate(predictions, labelColumnName: "Label");
+
+    Console.WriteLine(
+        $"{reportName}: accuracy={metrics.Accuracy:P2} AUC={metrics.AreaUnderRocCurve:P2} F1={metrics.F1Score:P2}");
+
+    report.Add($"## {reportName}");
+    report.Add($"- Accuracy: {metrics.Accuracy:P2}");
+    report.Add($"- AUC: {metrics.AreaUnderRocCurve:P2}");
+    report.Add($"- F1 score: {metrics.F1Score:P2}");
+    report.Add("- Features: QuestionText (bag-of-n-grams preko FeaturizeText)");
+    report.Add("");
+
+    mlContext.Model.Save(model, split.TrainSet.Schema, modelPath);
+}
 
 static void VerifyModel<TSample, TPrediction>(
     MLContext mlContext, string modelPath, TSample clearlyAbnormalSample, Func<TPrediction, string> getLabel)

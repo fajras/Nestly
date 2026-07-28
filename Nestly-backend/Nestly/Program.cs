@@ -63,6 +63,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IHealthDeviationAlertService, HealthDeviationAlertService>();
 builder.Services.AddScoped<IBabyHealthMonitoringService, BabyHealthMonitoringService>();
 builder.Services.AddPediatricMLModels();
+builder.Services.AddQaTriageModel();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 
 builder.Services.AddSignalR();

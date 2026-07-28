@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -96,7 +97,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Entry date is required.");
             }
 
-            if (dto.EntryDate > DateTime.UtcNow)
+            if (DateValidation.IsFutureDateTime(dto.EntryDate))
             {
                 throw new BusinessException("Entry date cannot be in the future.");
             }
@@ -133,7 +134,7 @@ namespace Nestly.Services.Repository
 
             if (patch.EntryDate is not null)
             {
-                if (patch.EntryDate.Value > DateTime.UtcNow)
+                if (DateValidation.IsFutureDateTime(patch.EntryDate.Value))
                 {
                     throw new BusinessException("Entry date cannot be in the future.");
                 }

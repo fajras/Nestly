@@ -37,5 +37,21 @@ namespace Nestly.Services.MachineLearning
 
             return services;
         }
+
+        /// <summary>
+        /// Registers the Q&amp;A urgency-triage text classifier (see
+        /// Nestly.MLTraining) used by the doctor-facing question inbox.
+        /// </summary>
+        public static IServiceCollection AddQaTriageModel(this IServiceCollection services)
+        {
+            var modelsDir = Path.Combine(AppContext.BaseDirectory, "MachineLearning", "MLModels");
+
+            services.AddPredictionEnginePool<QuestionUrgencySample, QuestionUrgencyPrediction>()
+                .FromFile(modelName: "qa-urgency", filePath: Path.Combine(modelsDir, "qa-urgency-model.zip"), watchForChanges: false);
+
+            services.AddScoped<IQaTriageService, QaTriageService>();
+
+            return services;
+        }
     }
 }

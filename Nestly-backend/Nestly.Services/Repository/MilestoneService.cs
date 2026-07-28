@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 
 namespace Nestly.Services.Repository
 {
@@ -99,7 +100,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException($"Title cannot exceed {MaxTitleLength} characters.");
             }
 
-            if (dto.AchievedDate.Date > DateTime.UtcNow.Date)
+            if (DateValidation.IsFutureDate(dto.AchievedDate))
             {
                 throw new BusinessException("Achieved date cannot be in the future.");
             }
@@ -158,7 +159,7 @@ namespace Nestly.Services.Repository
 
             if (patch.AchievedDate is not null)
             {
-                if (patch.AchievedDate.Value.Date > DateTime.UtcNow.Date)
+                if (DateValidation.IsFutureDate(patch.AchievedDate.Value))
                 {
                     throw new BusinessException("Achieved date cannot be in the future.");
                 }

@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 
 public class DiaperLogService : IDiaperLogService
 {
@@ -95,7 +96,7 @@ public class DiaperLogService : IDiaperLogService
             throw new BusinessException("Change date is required.");
         }
 
-        if (dto.ChangeDate.Date > DateTime.UtcNow.Date)
+        if (DateValidation.IsFutureDate(dto.ChangeDate))
         {
             throw new BusinessException("Change date cannot be in the future.");
         }
@@ -138,7 +139,7 @@ public class DiaperLogService : IDiaperLogService
 
         if (patch.ChangeDate is not null)
         {
-            if (patch.ChangeDate.Value.Date > DateTime.UtcNow.Date)
+            if (DateValidation.IsFutureDate(patch.ChangeDate.Value))
             {
                 throw new BusinessException("Change date cannot be in the future.");
             }

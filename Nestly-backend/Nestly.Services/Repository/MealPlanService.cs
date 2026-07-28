@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -106,7 +107,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("Rating must be between 0 and 5.");
             }
 
-            if (dto.TriedAt is not null && dto.TriedAt.Value > DateTime.UtcNow)
+            if (dto.TriedAt is not null && DateValidation.IsFutureDateTime(dto.TriedAt.Value))
             {
                 throw new BusinessException("Tried date cannot be in the future.");
             }
@@ -151,7 +152,7 @@ namespace Nestly.Services.Repository
 
             if (patch.TriedAt is not null)
             {
-                if (patch.TriedAt.Value > DateTime.UtcNow)
+                if (DateValidation.IsFutureDateTime(patch.TriedAt.Value))
                 {
                     throw new BusinessException("Tried date cannot be in the future.");
                 }

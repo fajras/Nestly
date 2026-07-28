@@ -11,12 +11,16 @@ class QaQuestionRow {
   final String questionText;
   final DateTime createdAt;
   final bool isAnswered;
+  final bool isUrgent;
+  final double urgencyConfidence;
 
   QaQuestionRow({
     required this.id,
     required this.questionText,
     required this.createdAt,
     required this.isAnswered,
+    required this.isUrgent,
+    required this.urgencyConfidence,
   });
 
   factory QaQuestionRow.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,8 @@ class QaQuestionRow {
       questionText: json['questionText'],
       createdAt: DateTime.parse(json['createdAt']),
       isAnswered: json['isAnswered'],
+      isUrgent: json['isUrgent'] ?? false,
+      urgencyConfidence: (json['urgencyConfidence'] ?? 0).toDouble(),
     );
   }
 }
@@ -165,10 +171,25 @@ class _DoctorAdminQuestionsScreenState
 
         const SizedBox(height: AppSpacing.xl),
 
-        _StatCard(
-          title: 'Neodgovorena pitanja',
-          value: _questions.length.toString(),
-          icon: Icons.question_answer_outlined,
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                title: 'Neodgovorena pitanja',
+                value: _questions.length.toString(),
+                icon: Icons.question_answer_outlined,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _StatCard(
+                title: 'Hitna pitanja',
+                value: _questions.where((q) => q.isUrgent).length.toString(),
+                icon: Icons.priority_high_rounded,
+                accentColor: Colors.redAccent,
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(height: AppSpacing.xl),
@@ -292,11 +313,51 @@ class _QuestionCardState extends State<_QuestionCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: widget.question.isUrgent
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.redAccent, width: 1.5),
+            )
+          : null,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.question.isUrgent)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.priority_high_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'HITNO'
+                        ' · ${(widget.question.urgencyConfidence * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             Text(
               widget.question.questionText,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -356,15 +417,19 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
+  final Color? accentColor;
 
   const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = accentColor ?? AppColors.seed;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -372,8 +437,8 @@ class _StatCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.seed.withOpacity(.15),
-              child: Icon(icon, color: AppColors.seed),
+              backgroundColor: color.withOpacity(.15),
+              child: Icon(icon, color: color),
             ),
             const SizedBox(width: AppSpacing.md),
             Column(

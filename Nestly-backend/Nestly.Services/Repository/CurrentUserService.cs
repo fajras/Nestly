@@ -176,11 +176,18 @@ namespace Nestly.Services.Repository
             var currentParent =
                 await GetCurrentParentProfileAsync();
 
+            // Checked via the baby relationship rather than
+            // CalendarEvent.UserId - UserId is meant to reference
+            // ParentProfile.Id but was historically written with the raw
+            // AppUser.Id (a different id sequence), which made this check
+            // compare unrelated ids. BabyProfile.ParentProfileId is always
+            // correct because CalendarEventController verifies baby
+            // ownership on create.
             var ownsEvent =
                 await _db.CalendarEvents
                     .AnyAsync(x =>
                         x.Id == calendarEventId &&
-                        x.UserId ==
+                        x.BabyProfile.ParentProfileId ==
                         currentParent.Id);
 
             if (!ownsEvent)

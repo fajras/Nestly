@@ -69,7 +69,7 @@ public class CalendarEventService : ICalendarEventService
 
     public async Task<CalendarEventResponseDto> Create(
     CreateCalendarEventDto dto,
-    long currentUserId)
+    long parentProfileId)
     {
         if (dto.BabyId <= 0)
         {
@@ -99,7 +99,7 @@ public class CalendarEventService : ICalendarEventService
         var entity = new CalendarEvent
         {
             BabyId = dto.BabyId,
-            UserId = currentUserId,
+            UserId = parentProfileId,
             Title = dto.Title.Trim(),
             Description = string.IsNullOrWhiteSpace(dto.Description)
                 ? null

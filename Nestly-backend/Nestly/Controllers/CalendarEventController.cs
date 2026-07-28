@@ -73,14 +73,14 @@ namespace Nestly.WebAPI.Controllers
                 .EnsureBabyOwnershipAsync(
                     request.BabyId);
 
-            var userId =
-                _currentUserService
-                    .GetCurrentAppUserId();
+            var parent =
+                await _currentUserService
+                    .GetCurrentParentProfileAsync();
 
             var created =
                 await _service.Create(
                     request,
-                    userId);
+                    parent.Id);
 
             return CreatedAtAction(
                 nameof(GetById),

@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -82,7 +83,7 @@ namespace Nestly.Services.Repository
 
             var date = (dto.Date ?? DateTime.Today).Date;
 
-            if (date > DateTime.UtcNow.Date)
+            if (DateValidation.IsFutureDate(date))
             {
                 throw new BusinessException(
                     "Diary date cannot be in the future.");

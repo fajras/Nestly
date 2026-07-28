@@ -87,5 +87,9 @@ namespace Nestly.Model.DTOObjects
         public DateTime? LatestAnswerCreatedAt { get; set; }
 
         public string? AnsweredByName { get; set; }
+
+        public bool IsUrgent { get; set; }
+
+        public float UrgencyConfidence { get; set; }
     }
 }

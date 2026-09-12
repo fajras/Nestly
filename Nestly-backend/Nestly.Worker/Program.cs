@@ -26,6 +26,8 @@ builder.Services.AddHostedService<CalendarReminderService>();
 builder.Services.AddHostedService<DailyParentReminderService>();
 builder.Services.AddHostedService<MedicationReminderService>();
 builder.Services.AddHostedService<HealthDeviationMonitoringService>();
+builder.Services.AddHostedService<ModelRetrainingSchedulerService>();
+builder.Services.AddSingleton<IMlTrainingTrigger, MlTrainingProcessTrigger>();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 
 var host = builder.Build();

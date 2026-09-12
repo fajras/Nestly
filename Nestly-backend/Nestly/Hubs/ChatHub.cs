@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Nestly.Services.Interfaces;
+using Nestly.Services.Messaging;
 
 namespace Nestly.WebAPI.Hubs
 {
@@ -11,14 +12,17 @@ namespace Nestly.WebAPI.Hubs
         private readonly ICurrentUserService
             _currentUserService;
         private readonly ILogger<ChatHub> _logger;
+        private readonly IUserConnectionTracker _connectionTracker;
 
         public ChatHub(
             ICurrentUserService currentUserService,
-            ILogger<ChatHub> logger)
+            ILogger<ChatHub> logger,
+            IUserConnectionTracker connectionTracker)
         {
             _currentUserService =
                 currentUserService;
             _logger = logger;
+            _connectionTracker = connectionTracker;
         }
 
         public override async Task OnConnectedAsync()
@@ -33,9 +37,11 @@ namespace Nestly.WebAPI.Hubs
                     Context.ConnectionId,
                     GetUserGroup(userId));
 
+                _connectionTracker.AddConnection(userId, Context.ConnectionId);
+
                 _logger.LogInformation(
-                    "User {UserId} connected to ChatHub (connection {ConnectionId}).",
-                    userId, Context.ConnectionId);
+                    "User {UserId} connected to ChatHub (connection {ConnectionId}). Online users: {OnlineCount}.",
+                    userId, Context.ConnectionId, _connectionTracker.OnlineUserCount);
             }
             catch (Exception ex)
             {
@@ -62,9 +68,11 @@ namespace Nestly.WebAPI.Hubs
                     Context.ConnectionId,
                     GetUserGroup(userId));
 
+                _connectionTracker.RemoveConnection(userId, Context.ConnectionId);
+
                 _logger.LogInformation(
-                    "User {UserId} disconnected from ChatHub (connection {ConnectionId}).",
-                    userId, Context.ConnectionId);
+                    "User {UserId} disconnected from ChatHub (connection {ConnectionId}). Online users: {OnlineCount}.",
+                    userId, Context.ConnectionId, _connectionTracker.OnlineUserCount);
             }
             catch (Exception ex)
             {

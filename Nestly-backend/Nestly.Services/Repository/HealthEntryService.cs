@@ -180,7 +180,8 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Health entry not found.");
             }
 
-            _db.HealthEntries.Remove(entity);
+            entity.IsDeleted = true;
+            entity.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
 

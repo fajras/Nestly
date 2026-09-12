@@ -68,5 +68,29 @@ namespace Nestly.WebAPI.Controllers
 
             return Ok(created);
         }
+
+        // Doctor review queue: any doctor can browse generated alerts and
+        // confirm/dispute their accuracy, the same way any doctor can
+        // answer any parent's Q&A question elsewhere in this app.
+        [Authorize(Roles = "Doctor")]
+        [HttpGet("doctor")]
+        public async Task<ActionResult<PagedResult<HealthDeviationAlertResponseDto>>> GetForDoctorReview(
+            [FromQuery] HealthDeviationAlertSearchObject search)
+        {
+            return Ok(await _service.GetForDoctorReview(search));
+        }
+
+        // Human-in-the-loop feedback: records whether a doctor found this
+        // ML-generated alert clinically accurate, as a documented basis for
+        // future evaluation/retraining of the deviation-detection model.
+        [Authorize(Roles = "Doctor")]
+        [HttpPost("{id:long}/feedback")]
+        public async Task<ActionResult<HealthDeviationAlertResponseDto>> SubmitDoctorFeedback(
+            long id, [FromBody] HealthDeviationAlertFeedbackDto feedback)
+        {
+            var doctor = await _currentUserService.GetCurrentDoctorProfileAsync();
+
+            return Ok(await _service.SubmitDoctorFeedback(id, doctor.Id, feedback));
+        }
     }
 }

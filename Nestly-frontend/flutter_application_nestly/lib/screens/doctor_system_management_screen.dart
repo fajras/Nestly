@@ -419,7 +419,7 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                   itemCount: data.length,
                   itemBuilder: (_, i) {
                     final item = data[i];
-                    final systemItem = isSystemItem(path, item.id);
+                    final systemItem = item.isSystem;
 
                     return ListTile(
                       title: Text(item.name),
@@ -553,11 +553,22 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
 class CategoryRow {
   final int id;
   final String name;
+  // Generic model reused for roles, blog categories and food types. The
+  // backend now exposes an explicit system flag per entity type
+  // (isSystemRole / isSystemCategory) instead of us guessing from the id.
+  final bool isSystem;
 
-  CategoryRow({required this.id, required this.name});
+  CategoryRow({required this.id, required this.name, this.isSystem = false});
 
   factory CategoryRow.fromJson(Map<String, dynamic> json) {
-    return CategoryRow(id: json['id'], name: json['name']);
+    return CategoryRow(
+      id: json['id'],
+      name: json['name'],
+      isSystem:
+          (json['isSystemRole'] as bool?) ??
+          (json['isSystemCategory'] as bool?) ??
+          false,
+    );
   }
 }
 
@@ -600,18 +611,6 @@ Future<void> createRecommendation(int foodTypeId, int weekNumber) async {
       "An error occurred while creating the meal recommendation.",
     );
   }
-}
-
-bool isSystemItem(String path, int id) {
-  if (path == "/api/role") {
-    return id == 1 || id == 2;
-  }
-
-  if (path == "/api/blogcategory") {
-    return id <= 6;
-  }
-
-  return false;
 }
 
 class RecommendationRow {

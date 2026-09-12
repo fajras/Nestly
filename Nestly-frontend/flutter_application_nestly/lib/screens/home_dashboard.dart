@@ -182,81 +182,82 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_rounded),
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationsScreen(),
-                    ),
-                  );
-
-                  notificationState.loadUnreadCount();
-                },
+    final headerActions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.notifications_rounded,
+                color: Colors.white,
               ),
-              AnimatedBuilder(
-                animation: notificationState,
-                builder: (_, __) {
-                  final count = notificationState.unreadCount;
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
+                );
 
-                  if (count == 0) return const SizedBox();
+                notificationState.loadUnreadCount();
+              },
+            ),
+            AnimatedBuilder(
+              animation: notificationState,
+              builder: (_, __) {
+                final count = notificationState.unreadCount;
 
-                  return Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: count > 0
-                          ? const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            )
-                          : const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.roseDark,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      child: Center(
-                        child: Text(
-                          count > 9 ? '9+' : count.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                if (count == 0) return const SizedBox();
+
+                return Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: count > 0
+                        ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
+                        : const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Center(
+                      child: Text(
+                        count > 9 ? '9+' : count.toString(),
+                        style: const TextStyle(
+                          color: AppColors.roseDark,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.account_circle_rounded),
-            onPressed: () async {
-              final token = await AuthStorage.getToken();
-              if (token == null) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => EditProfileScreen()),
-              );
-            },
-          ),
-        ],
-      ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(Icons.account_circle_rounded, color: Colors.white),
+          onPressed: () async {
+            final token = await AuthStorage.getToken();
+            if (token == null) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => EditProfileScreen()),
+            );
+          },
+        ),
+      ],
+    );
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onHorizontalDragEnd: (details) {
@@ -269,7 +270,15 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              // No top padding at all - even a small gap here still read as
+              // an empty strip before the banner. It should start flush
+              // against the safe area with nothing above it.
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                0,
+                AppSpacing.xl,
+                AppSpacing.xl,
+              ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Column(
@@ -278,9 +287,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     _hasBaby
                         ? _HeaderSimple(
                             title: '${_babyName ?? 'Vaša beba'} je tu! 🎉',
-                            subtitle: 'Pratite rast, ishranu, san i još mnogo toga',
+                            subtitle:
+                                'Pratite rast, ishranu, san i još mnogo toga',
                             loading: _loading || _checkingBaby,
                             showProgress: false,
+                            trailing: headerActions,
                           )
                         : _HeaderSimple(
                             title: 'Sedmica $_week',
@@ -288,6 +299,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                             progress: _progress,
                             loading: _loading,
                             week: _week,
+                            trailing: headerActions,
                           ),
                     const SizedBox(height: AppSpacing.xl),
                     if (!_hasBaby)
@@ -390,7 +402,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       onPressed: () async {
         await _signalRService.disconnect();
         notificationState.reset();
-        await AuthStorage.clear();
+        // Revokes the refresh token (and the current access token) server-
+        // side before clearing local storage, instead of just forgetting
+        // the token locally and leaving it usable until it expires.
+        await ApiClient.logout();
 
         if (!context.mounted) return;
 
@@ -428,6 +443,7 @@ class _HeaderSimple extends StatelessWidget {
     this.progress = 0,
     this.week = 1,
     this.showProgress = true,
+    this.trailing,
   });
 
   final String title;
@@ -436,57 +452,71 @@ class _HeaderSimple extends StatelessWidget {
   final bool loading;
   final int week;
   final bool showProgress;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return NestlyHeroHeader(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
         AppSpacing.md,
-        AppSpacing.xl,
+        0,
+        AppSpacing.md,
         AppSpacing.xl,
       ),
       child: loading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            )
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                if (trailing != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [trailing!],
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(.9),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (showProgress) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: LinearProgressIndicator(
+                            value: progress.clamp(0, 1),
+                            minHeight: 10,
+                            color: Colors.white,
+                            backgroundColor: Colors.white.withOpacity(.25),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${week.clamp(1, 40)} / 40 sedmica • ${(progress * 100).round()}%',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.white.withOpacity(.9)),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withOpacity(.9),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (showProgress) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
-                      value: progress.clamp(0, 1),
-                      minHeight: 10,
-                      color: Colors.white,
-                      backgroundColor: Colors.white.withOpacity(.25),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${week.clamp(1, 40)} / 40 sedmica • ${(progress * 100).round()}%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withOpacity(.9),
-                    ),
-                  ),
-                ],
               ],
             ),
     );
@@ -503,26 +533,52 @@ class _BabyTimeNavRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = isGirl ? AppColors.roseDark : AppColors.seed;
 
-    return InkWell(
-      onTap: onTap,
+    return Material(
+      color: Colors.white,
       borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        child: Row(
-          children: [
-            Icon(Icons.child_friendly_rounded, color: accent, size: 20),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                'Idi na BabyTime',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: accent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.md,
+            horizontal: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: accent.withOpacity(.18)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent.withOpacity(.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.favorite_rounded, color: accent, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  'Vrijeme je za bebu',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: accent),
-          ],
+              Icon(Icons.chevron_right_rounded, color: accent),
+            ],
+          ),
         ),
       ),
     );

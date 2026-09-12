@@ -525,6 +525,12 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
   }
 
   Widget _buildChartCard() {
+    // fl_chart renders a title both for each interval step and again for the
+    // exact axis max, so when the max lands on an interval multiple (e.g.
+    // maxY=12 with interval=2) the same label gets drawn twice. Track what's
+    // already been rendered this build and skip repeats.
+    final renderedLeftTicks = <int>{};
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -578,13 +584,19 @@ class _SleepLogOverviewScreenState extends State<SleepLogOverviewScreen> {
                     showTitles: true,
                     interval: 2,
                     reservedSize: 36,
-                    getTitlesWidget: (v, _) => Text(
-                      '${v.toInt()}h',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+                    getTitlesWidget: (v, _) {
+                      final iv = v.toInt();
+                      if (!renderedLeftTicks.add(iv)) {
+                        return const SizedBox.shrink();
+                      }
+                      return Text(
+                        '${iv}h',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 bottomTitles: AxisTitles(

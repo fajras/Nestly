@@ -8,10 +8,6 @@ namespace Nestly.Services.Repository
 {
     public class BlogCategoryService : IBlogCategoryService
     {
-        // Categories seeded by BlogCategorySeeder (ids 1-6) are considered
-        // system categories and cannot be renamed or deleted.
-        private const int SystemCategoryMaxId = 6;
-
         private readonly NestlyDbContext _db;
 
         public BlogCategoryService(NestlyDbContext db)
@@ -24,7 +20,8 @@ namespace Nestly.Services.Repository
             return new BlogCategoryDto
             {
                 Id = entity.Id,
-                Name = entity.Name
+                Name = entity.Name,
+                IsSystemCategory = entity.IsSystemCategory
             };
         }
 
@@ -93,7 +90,8 @@ namespace Nestly.Services.Repository
 
             var entity = new BlogCategory
             {
-                Name = name
+                Name = name,
+                IsSystemCategory = false
             };
 
             _db.BlogCategories.Add(entity);
@@ -104,16 +102,16 @@ namespace Nestly.Services.Repository
 
         public async Task<BlogCategoryDto> Update(int id, BlogCategoryUpdateDto request)
         {
-            if (id <= SystemCategoryMaxId)
-            {
-                throw new BusinessException("System categories cannot be edited.");
-            }
-
             var entity = await _db.BlogCategories.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Category not found.");
+            }
+
+            if (entity.IsSystemCategory)
+            {
+                throw new BusinessException("System categories cannot be edited.");
             }
 
             if (!string.IsNullOrWhiteSpace(request.Name))
@@ -138,16 +136,16 @@ namespace Nestly.Services.Repository
 
         public async Task Delete(int id)
         {
-            if (id <= SystemCategoryMaxId)
-            {
-                throw new BusinessException("System categories cannot be deleted.");
-            }
-
             var entity = await _db.BlogCategories.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Category not found.");
+            }
+
+            if (entity.IsSystemCategory)
+            {
+                throw new BusinessException("System categories cannot be deleted.");
             }
 
             bool isUsed = await _db.BlogPostCategories.AnyAsync(x => x.CategoryId == id);

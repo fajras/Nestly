@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Nestly.Model.Entity;
 using Nestly.Services.Data.Seeders;
@@ -45,6 +46,9 @@ namespace Nestly.Services.Data
         public DbSet<RecommendationModelState> RecommendationModelStates { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<HealthDeviationAlert> HealthDeviationAlerts { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<RevokedAccessToken> RevokedAccessTokens { get; set; }
+        public DbSet<MlRetrainingWatermark> MlRetrainingWatermarks { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -60,6 +64,8 @@ namespace Nestly.Services.Data
             ConfigureMeals(modelBuilder);
             ConfigureSymptoms(modelBuilder);
             ConfigureHealthMonitoring(modelBuilder);
+            ConfigureAuthTokens(modelBuilder);
+            ConfigureSoftDeleteFilters(modelBuilder);
 
 
             modelBuilder.Entity<AppUser>().SeedData();
@@ -75,6 +81,77 @@ namespace Nestly.Services.Data
             modelBuilder.Entity<Pregnancy>().SeedData();
             modelBuilder.Entity<Role>().SeedData();
             modelBuilder.Entity<WeeklyAdvice>().SeedData();
+
+            modelBuilder.Entity<BabyGrowth>().SeedData();
+            modelBuilder.Entity<FeedingLog>().SeedData();
+            modelBuilder.Entity<SleepLog>().SeedData();
+            modelBuilder.Entity<DiaperLog>().SeedData();
+            modelBuilder.Entity<HealthEntry>().SeedData();
+            modelBuilder.Entity<Milestone>().SeedData();
+            modelBuilder.Entity<MealPlan>().SeedData();
+            modelBuilder.Entity<CalendarEvent>().SeedData();
+            modelBuilder.Entity<SymptomDiary>().SeedData();
+            modelBuilder.Entity<MedicationPlan>().SeedData();
+            modelBuilder.Entity<MedicationScheduleTime>().SeedData();
+            modelBuilder.Entity<MedicationIntakeLog>().SeedData();
+            modelBuilder.Entity<QaQuestion>().SeedData();
+            modelBuilder.Entity<QaAnswer>().SeedData();
+            modelBuilder.Entity<ChatConversation>().SeedData();
+            modelBuilder.Entity<ChatMessage>().SeedData();
+            modelBuilder.Entity<Notification>().SeedData();
+            modelBuilder.Entity<HealthDeviationAlert>().SeedData();
+        }
+
+        private static void ConfigureAuthTokens(ModelBuilder model)
+        {
+            model.Entity<RefreshToken>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.TokenHash).IsRequired().HasMaxLength(128);
+                e.HasIndex(x => x.TokenHash).IsUnique();
+                e.HasIndex(x => new { x.AppUserId, x.RevokedAt });
+
+                e.HasOne(x => x.AppUser)
+                 .WithMany()
+                 .HasForeignKey(x => x.AppUserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            model.Entity<RevokedAccessToken>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Jti).IsRequired().HasMaxLength(64);
+                e.HasIndex(x => x.Jti).IsUnique();
+            });
+
+            model.Entity<MlRetrainingWatermark>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.ModelGroup).IsRequired().HasMaxLength(100);
+                e.HasIndex(x => x.ModelGroup).IsUnique();
+            });
+        }
+
+        // Applies "WHERE IsDeleted = 0" to every entity implementing
+        // ISoftDeletable, once, generically - so Get/List/GetById queries
+        // across the codebase never see a soft-deleted row without each
+        // service needing its own filter. Use IgnoreQueryFilters() on a
+        // query if a "trashed items" view is ever needed.
+        private static void ConfigureSoftDeleteFilters(ModelBuilder model)
+        {
+            foreach (var entityType in model.Model.GetEntityTypes())
+            {
+                if (!typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                {
+                    continue;
+                }
+
+                var parameter = Expression.Parameter(entityType.ClrType, "e");
+                var property = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+                var notDeleted = Expression.Lambda(Expression.Not(property), parameter);
+
+                model.Entity(entityType.ClrType).HasQueryFilter(notDeleted);
+            }
         }
 
         private static void ConfigureHealthMonitoring(ModelBuilder model)
@@ -90,6 +167,18 @@ namespace Nestly.Services.Data
                  .WithMany(b => b.HealthDeviationAlerts)
                  .HasForeignKey(x => x.BabyId)
                  .OnDelete(DeleteBehavior.Cascade);
+
+                // SQL Server refuses SetNull here: HealthDeviationAlerts is
+                // already reachable from AppUser via one cascade path
+                // (AppUser -> ParentProfile -> BabyProfile -> cascade) and
+                // this would add a second one (AppUser -> DoctorProfile ->
+                // SetNull), which SQL Server rejects as a multi-path cascade.
+                // ClientSetNull still nulls the FK when EF tracks the
+                // delete, just without a DB-level ON DELETE action.
+                e.HasOne(x => x.FeedbackByDoctor)
+                 .WithMany()
+                 .HasForeignKey(x => x.DoctorFeedbackByDoctorId)
+                 .OnDelete(DeleteBehavior.ClientSetNull);
 
                 e.HasIndex(x => new { x.BabyId, x.ParameterType, x.IsResolved });
             });
@@ -107,7 +196,11 @@ namespace Nestly.Services.Data
 
             model.Entity<SymptomDiary>()
                 .HasIndex(s => new { s.ParentProfileId, s.Date })
-                .IsUnique();
+                .IsUnique()
+                // Without the filter, a soft-deleted entry would still
+                // occupy the unique slot for that date and block a new
+                // entry from ever being logged for it again.
+                .HasFilter("[IsDeleted] = 0");
         }
 
         private static void ConfigureUsersAndProfiles(ModelBuilder model)

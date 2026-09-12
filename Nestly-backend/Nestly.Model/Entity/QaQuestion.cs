@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
-    public class QaQuestion
+    public class QaQuestion : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -15,6 +15,8 @@ namespace Nestly.Model.Entity
         [ForeignKey(nameof(ParentProfile))]
         public long? AskedById { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
         [JsonIgnore]
         public ParentProfile AskedBy { get; set; }

@@ -18,6 +18,8 @@ namespace Nestly.Model.DTOObjects
     {
         public long Id { get; set; }
 
+        public long ParentProfileId { get; set; }
+
         public string BabyName { get; set; } = default!;
 
         public string Gender { get; set; } = default!;

@@ -173,7 +173,8 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Meal plan not found.");
             }
 
-            _db.MealPlans.Remove(entity);
+            entity.IsDeleted = true;
+            entity.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
         public async Task<PagedResult<MealRecommendationDto>> GetMealRecommendations(MealRecommendationSearchObject search)

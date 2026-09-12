@@ -21,6 +21,7 @@ namespace Nestly.Model.DTOObjects
         public UserPhase Phase { get; set; }
         public int? WeekFrom { get; set; }
         public int? WeekTo { get; set; }
+        public bool IsSystemPost { get; set; }
         public List<int> CategoryIds { get; set; } = new();
     }
 

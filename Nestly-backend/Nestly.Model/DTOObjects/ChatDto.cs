@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Nestly.Model.DTOObjects
@@ -60,5 +61,14 @@ namespace Nestly.Model.DTOObjects
         public long SenderId { get; set; }
         public string Content { get; set; } = default!;
         public DateTime CreatedAt { get; set; }
+    }
+
+    // Cursor-based page of messages, oldest-first within the page. Chat
+    // history no longer loads in a single fixed window - the client walks
+    // backwards through the conversation using BeforeId once HasMore is true.
+    public class ChatMessagePageResponse
+    {
+        public List<ChatMessageResponse> Items { get; set; } = new();
+        public bool HasMore { get; set; }
     }
 }

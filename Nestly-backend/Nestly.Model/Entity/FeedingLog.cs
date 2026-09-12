@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nestly.Model.Entity
 {
-    public class FeedingLog
+    public class FeedingLog : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -18,6 +18,8 @@ namespace Nestly.Model.Entity
         [ForeignKey(nameof(FoodType))]
         public int? FoodTypeId { get; set; }
         public string? Notes { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
         public BabyProfile Baby { get; set; }
         public FoodType FoodType { get; set; }

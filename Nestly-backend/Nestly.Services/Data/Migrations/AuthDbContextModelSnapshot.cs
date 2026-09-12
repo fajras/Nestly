@@ -17,7 +17,7 @@ namespace Nestly.Services.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.24")
+                .HasAnnotation("ProductVersion", "8.0.29")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -159,15 +159,15 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = "b5b77b5d-65b6-4f32-93f4-3f76b14e6f3c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c4ca6493-b0da-4241-a3d0-bc53439770de",
+                            ConcurrencyStamp = "66acc663-e31d-4ccb-92cf-855d0fb61076",
                             Email = "parent@nestly.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "PARENT@NESTLY.COM",
                             NormalizedUserName = "PARENT@NESTLY.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOdhAHVfifSq3iEPqoo8iNNXpItOIsGZzOcKxSl2Vj9K/IJHhb+i2JdcoEEkA7eedg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENpm1iDauSGTM6k6JE5/Jajv/cV78LWdKSr812CIm8L+eXE9lPecXQ1vcCwryAEmNg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "13164e58-823f-4bc9-85eb-efa09e00c24d",
+                            SecurityStamp = "e60cd8e4-2945-4002-8e4b-9264fcbd742a",
                             TwoFactorEnabled = false,
                             UserName = "parent@nestly.com"
                         },
@@ -175,17 +175,177 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = "work7b5d-65b6-4f32-93f4-126sko5e6f3c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6df972ea-a3cc-441a-9b4c-ea5743ee60a3",
+                            ConcurrencyStamp = "17fa4c61-f8e0-411f-880c-ffd6f1151831",
                             Email = "doctor@nestly.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "DOCTOR@NESTLY.COM",
                             NormalizedUserName = "DOCTOR@NESTLY.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPSQv0jMlTTXS5MH8/tyxuer/rzGtR8/iHAZ0NxzLH1JBNzbk3Vzxk7YApMu5gPpog==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFk7CNL0p1UDOYfDv/py+MiLSkimzo8nCiulflLKUxNSZqd2PbtY5W/ZqlzaxZLYcA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "dd1db4ca-763a-40ac-a7ef-9945094aba47",
+                            SecurityStamp = "630b9e10-6444-4956-b239-fd494001ff23",
                             TwoFactorEnabled = false,
                             UserName = "doctor@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "8339ef91-9659-4986-b918-af66726adf19",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bca54c02-895a-43c4-97ed-b11729f8303e",
+                            Email = "amina.hodzic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "AMINA.HODZIC@NESTLY.COM",
+                            NormalizedUserName = "AMINA.HODZIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBi5xmBog5ObhFYJEplpUZR82liv8OsCoiw6I8LWaQZynTVVGNXUm5coQFsuWh/b7g==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4c4ded28-4508-4b42-b5d5-6ff8b01504ab",
+                            TwoFactorEnabled = false,
+                            UserName = "amina.hodzic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "aa140327-579a-4a94-b635-b4d9a915d279",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "84a31bc3-17f4-41d2-857b-331da0e5bb19",
+                            Email = "lejla.kovacevic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "LEJLA.KOVACEVIC@NESTLY.COM",
+                            NormalizedUserName = "LEJLA.KOVACEVIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK0oQUnHsr7F/9urWKnNvsdYGM3dX4HxopBf/RG/ef9oP+0QhLX11KUygY3Zomfs/g==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "aed58ab1-ed0d-4061-8abf-6b6bc537c86d",
+                            TwoFactorEnabled = false,
+                            UserName = "lejla.kovacevic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "d771c068-ae58-4a8c-abc1-88ea3418bcc3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e726d280-ae22-4ae7-92bf-90735540531f",
+                            Email = "ajla.delic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "AJLA.DELIC@NESTLY.COM",
+                            NormalizedUserName = "AJLA.DELIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI+IJdkSd/A7p+0pvFGHOmpbRntKf6XBBy+ETEAkQtMGAv+yUyvCniYbzlqnev/1hA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "71e9f7ec-4923-4659-a843-4da4980941db",
+                            TwoFactorEnabled = false,
+                            UserName = "ajla.delic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "27cc0316-257a-442d-bbe5-46656ec343e0",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d8891b01-b898-4310-96b3-8ac706eea93c",
+                            Email = "emina.softic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "EMINA.SOFTIC@NESTLY.COM",
+                            NormalizedUserName = "EMINA.SOFTIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHM6QkIMAIxzz0ON+IgajsDzG6/cJuA7orsO6apY3nVJLxWl45RIulNlhCiiilrD5A==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d43f3430-4411-4c61-95bd-085214a1f7c1",
+                            TwoFactorEnabled = false,
+                            UserName = "emina.softic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "2d30b0f8-e94e-4a85-be12-bb2bb528b70b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f0b378aa-ff6e-46dc-a06e-c4a801bbc96d",
+                            Email = "selma.begic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SELMA.BEGIC@NESTLY.COM",
+                            NormalizedUserName = "SELMA.BEGIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIu4rT35uBmJ1uzKFEcJWzRUP/Njg5kS3r5A0B8sO/FkNej5znYsZH5u1aP41BkNRA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fafc0c4c-9555-471d-bccf-fb4aad3b921b",
+                            TwoFactorEnabled = false,
+                            UserName = "selma.begic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "d66502ad-89df-4de1-90ab-61c153a26d12",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "619dfd1e-5f3b-4d16-b6dc-177aac52e45c",
+                            Email = "amra.halilovic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "AMRA.HALILOVIC@NESTLY.COM",
+                            NormalizedUserName = "AMRA.HALILOVIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOorp5rJupHsB53k2QPtdi+L9CLfYMB3fh2wPon+5g2sXXnKYmzNLGuyAOIlwumQ+Q==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "115946c9-bfdc-42d4-a0ca-1838c63b8dad",
+                            TwoFactorEnabled = false,
+                            UserName = "amra.halilovic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "e02fd7d5-9498-4439-877b-1170b9ee6f4e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "7567be8d-529d-4897-85e9-feb340b86692",
+                            Email = "merisa.karic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MERISA.KARIC@NESTLY.COM",
+                            NormalizedUserName = "MERISA.KARIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN2+MEXEAXY3YEYv0zhvws3pgm6rNceqkbEJPd18TVKwpuoUlgkjKVoZ/FNSe7SFjw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7432ed3e-5443-472b-89be-5e1f213712c0",
+                            TwoFactorEnabled = false,
+                            UserName = "merisa.karic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "13edc40b-a767-49d0-a194-610e85ae84d0",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "022e5102-383e-4cd4-83e6-8e8e23289077",
+                            Email = "dzenita.mujic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "DZENITA.MUJIC@NESTLY.COM",
+                            NormalizedUserName = "DZENITA.MUJIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBJ+DBJjmjHtZm4BaKJqf3yMSWlVhQRXgSW69xmXS+HM80U2QhGe2eQkPxyVdxff2A==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4111f352-bae0-4f55-a40b-9d2d9e498b22",
+                            TwoFactorEnabled = false,
+                            UserName = "dzenita.mujic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "323c2855-426d-4726-9520-bdd2da76a5d5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fa20814a-a935-4f8b-9302-9e0bc1188254",
+                            Email = "amila.zukic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "AMILA.ZUKIC@NESTLY.COM",
+                            NormalizedUserName = "AMILA.ZUKIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC8PAzWbgQVxl+YNkULRfLe4IGMIyraK+6QUCc+uyttjULqGcsEJLib5hlJAmaYC+A==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "65621014-8b62-462a-a245-342a4b502c61",
+                            TwoFactorEnabled = false,
+                            UserName = "amila.zukic@nestly.com"
+                        },
+                        new
+                        {
+                            Id = "465ced2a-f9e9-4f23-acbb-5a11658737b2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5353f306-c464-4fe7-892b-0cab649996ca",
+                            Email = "nadira.sehic@nestly.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "NADIRA.SEHIC@NESTLY.COM",
+                            NormalizedUserName = "NADIRA.SEHIC@NESTLY.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKsrY4Zxsjh6typgaFQY8DpQONzQKZpmTVvE83A26l2GwsjScvrk6Z5AmGMjk1N0kQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "14fa20bf-6ebe-4cbe-b626-0830a83dc8dd",
+                            TwoFactorEnabled = false,
+                            UserName = "nadira.sehic@nestly.com"
                         });
                 });
 
@@ -260,6 +420,56 @@ namespace Nestly.Services.Data.Migrations
                         {
                             UserId = "work7b5d-65b6-4f32-93f4-126sko5e6f3c",
                             RoleId = "3d4e2bfa-3a12-4df8-9fc5-bd45e2102a3c"
+                        },
+                        new
+                        {
+                            UserId = "8339ef91-9659-4986-b918-af66726adf19",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "aa140327-579a-4a94-b635-b4d9a915d279",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "d771c068-ae58-4a8c-abc1-88ea3418bcc3",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "27cc0316-257a-442d-bbe5-46656ec343e0",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "2d30b0f8-e94e-4a85-be12-bb2bb528b70b",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "d66502ad-89df-4de1-90ab-61c153a26d12",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "e02fd7d5-9498-4439-877b-1170b9ee6f4e",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "13edc40b-a767-49d0-a194-610e85ae84d0",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "323c2855-426d-4726-9520-bdd2da76a5d5",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
+                        },
+                        new
+                        {
+                            UserId = "465ced2a-f9e9-4f23-acbb-5a11658737b2",
+                            RoleId = "2b3b5f31-c1d6-4a82-8e1e-2c318c5bc98e"
                         });
                 });
 

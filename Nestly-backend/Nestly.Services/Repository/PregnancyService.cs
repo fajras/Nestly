@@ -3,6 +3,7 @@ using Nestly.Model.DTOObjects;
 using Nestly.Model.Entity;
 using Nestly.Services.Data;
 using Nestly.Services.Exceptions;
+using Nestly.Services.Extensions;
 using Nestly.Services.Interfaces;
 
 namespace Nestly.Services.Repository
@@ -129,6 +130,12 @@ namespace Nestly.Services.Repository
                 dto.LmpDate,
                 dto.DueDate);
 
+            if (lmp.HasValue && DateValidation.IsFutureDate(lmp.Value))
+            {
+                throw new BusinessException(
+                    "Last menstrual period date cannot be in the future.");
+            }
+
             if (lmp.HasValue &&
                 due.HasValue &&
                 due < lmp)
@@ -196,6 +203,12 @@ namespace Nestly.Services.Repository
                 newLmp,
                 newDue);
 
+            if (newLmp.HasValue && DateValidation.IsFutureDate(newLmp.Value))
+            {
+                throw new BusinessException(
+                    "Last menstrual period date cannot be in the future.");
+            }
+
             if (newLmp.HasValue &&
                 newDue.HasValue &&
                 newDue < newLmp)
@@ -248,7 +261,8 @@ namespace Nestly.Services.Repository
                     "Pregnancy not found.");
             }
 
-            _db.Pregnancies.Remove(entity);
+            entity.IsDeleted = true;
+            entity.DeletedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
         }

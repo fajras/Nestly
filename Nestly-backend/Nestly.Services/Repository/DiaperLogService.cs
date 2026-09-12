@@ -209,7 +209,8 @@ public class DiaperLogService : IDiaperLogService
             throw new NotFoundException("Diaper log not found.");
         }
 
-        _db.DiaperLogs.Remove(entity);
+        entity.IsDeleted = true;
+        entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
     }
 

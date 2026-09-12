@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nestly.Model.Entity
 {
-    public class SymptomDiary
+    public class SymptomDiary : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -28,6 +28,9 @@ namespace Nestly.Model.Entity
 
         [Range(1, 5)]
         public int? LegSwelling { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
         public ParentProfile ParentProfile { get; set; } = default!;
     }

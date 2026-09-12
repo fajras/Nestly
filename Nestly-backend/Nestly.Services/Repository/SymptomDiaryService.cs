@@ -227,7 +227,8 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Symptom diary entry not found.");
             }
 
-            _db.SymptomDiaries.Remove(entity);
+            entity.IsDeleted = true;
+            entity.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
 

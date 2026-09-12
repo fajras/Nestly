@@ -54,8 +54,8 @@ namespace Nestly.Worker.Messaging
             var publisher = scope.ServiceProvider.GetRequiredService<RabbitMqPublisher>();
 
             var parents = await db.ParentProfiles
-               .Include(p => p.User)
-               .Where(p => p.User.RoleId == 1)
+               .Include(p => p.User).ThenInclude(u => u.Role)
+               .Where(p => p.User.Role.Name == "Parent")
                .AsNoTracking()
                .ToListAsync(ct);
 

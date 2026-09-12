@@ -8,7 +8,8 @@ namespace Nestly.Services.Interfaces
 
         Task<List<ChatConversationResponse>> GetUserChats(long userId);
 
-        Task<List<ChatMessageResponse>> GetMessages(long conversationId, long userId);
+        Task<ChatMessagePageResponse> GetMessages(
+            long conversationId, long userId, int take = 50, long? beforeId = null);
         Task<List<ChatUserDto>> GetAvailableUsers(long currentUserId);
     }
 

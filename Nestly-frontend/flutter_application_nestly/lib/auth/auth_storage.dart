@@ -5,15 +5,20 @@ class AuthStorage {
   static const _storage = FlutterSecureStorage();
 
   static const _tokenKey = 'auth_token';
+  static const _refreshTokenKey = 'auth_refresh_token';
   static const _roleKey = 'auth_role';
   static const _parentIdKey = 'parent_profile_id';
 
   static Future<void> saveLogin({
     String? token,
+    String? refreshToken,
     String? role,
     int? parentProfileId,
   }) async {
     await _storage.write(key: _tokenKey, value: token);
+    if (refreshToken != null) {
+      await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    }
     await _storage.write(key: _roleKey, value: role);
     if (parentProfileId != null) {
       await _storage.write(
@@ -23,8 +28,22 @@ class AuthStorage {
     }
   }
 
+  /// Persists a freshly rotated access/refresh token pair after a silent
+  /// refresh, without touching the rest of the session (role, parent id).
+  static Future<void> saveTokens({
+    required String token,
+    required String refreshToken,
+  }) async {
+    await _storage.write(key: _tokenKey, value: token);
+    await _storage.write(key: _refreshTokenKey, value: refreshToken);
+  }
+
   static Future<String?> getToken() async {
     return _storage.read(key: _tokenKey);
+  }
+
+  static Future<String?> getRefreshToken() async {
+    return _storage.read(key: _refreshTokenKey);
   }
 
   static Future<int?> getUserId() async {

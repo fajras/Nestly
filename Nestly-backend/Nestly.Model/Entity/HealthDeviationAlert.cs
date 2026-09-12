@@ -26,6 +26,20 @@ namespace Nestly.Model.Entity
         public bool IsResolved { get; set; }
         public DateTime? ResolvedAt { get; set; }
 
+        // Human-in-the-loop feedback: lets a doctor confirm or dispute the
+        // accuracy of a ML-generated alert. Collected explicitly rather than
+        // inferred, so it can later be used to evaluate/retrain the
+        // deviation-detection model against real clinical judgement.
+        public bool? DoctorFeedbackIsAccurate { get; set; }
+        [MaxLength(1000)]
+        public string? DoctorFeedbackComment { get; set; }
+        [ForeignKey(nameof(FeedbackByDoctor))]
+        public long? DoctorFeedbackByDoctorId { get; set; }
+        public DateTime? DoctorFeedbackAt { get; set; }
+
+        [JsonIgnore]
+        public DoctorProfile? FeedbackByDoctor { get; set; }
+
         [JsonIgnore]
         public BabyProfile Baby { get; set; }
     }

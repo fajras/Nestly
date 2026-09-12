@@ -9,10 +9,6 @@ namespace Nestly.Services.Repository
 {
     public class BlogPostService : IBlogPostService
     {
-        // Posts seeded by BlogPostSeeder (ids 1-12) are considered system
-        // posts and cannot be deleted.
-        private const int SystemPostMaxId = 12;
-
         private readonly NestlyDbContext _db;
         private readonly RabbitMqPublisher _publisher;
         public BlogPostService(NestlyDbContext db, RabbitMqPublisher publisher)
@@ -122,7 +118,8 @@ namespace Nestly.Services.Repository
                 CreatedAt = DateTime.UtcNow,
                 Phase = (UserPhase)dto.Phase,
                 WeekFrom = dto.WeekFrom,
-                WeekTo = dto.WeekTo
+                WeekTo = dto.WeekTo,
+                IsSystemPost = false
             };
 
             _db.BlogPosts.Add(post);
@@ -251,7 +248,7 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("You can only delete your own blog posts.");
             }
 
-            if (id <= SystemPostMaxId)
+            if (post.IsSystemPost)
             {
                 throw new BusinessException("System blog posts cannot be deleted.");
             }
@@ -295,6 +292,7 @@ namespace Nestly.Services.Repository
                 Phase = post.Phase,
                 WeekFrom = post.WeekFrom,
                 WeekTo = post.WeekTo,
+                IsSystemPost = post.IsSystemPost,
                 CategoryIds = post.BlogPostCategories
             .Select(c => c.CategoryId)
             .ToList()

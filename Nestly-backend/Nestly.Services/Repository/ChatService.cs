@@ -159,7 +159,8 @@ namespace Nestly.Services.Repository
             return result;
         }
 
-        public async Task<List<ChatMessageResponse>> GetMessages(long conversationId, long userId)
+        public async Task<ChatMessagePageResponse> GetMessages(
+            long conversationId, long userId, int take = 50, long? beforeId = null)
         {
             var conversation = await _chatRepository.GetConversationById(conversationId);
 
@@ -169,9 +170,9 @@ namespace Nestly.Services.Repository
                 throw new UnauthorizedAccessException();
             }
 
-            var messages = await _chatRepository.GetMessages(conversationId);
+            var (messages, hasMore) = await _chatRepository.GetMessages(conversationId, take, beforeId);
 
-            var result = messages.Select(m => new ChatMessageResponse
+            var items = messages.Select(m => new ChatMessageResponse
             {
                 Id = m.Id,
                 SenderId = m.SenderId,
@@ -179,7 +180,11 @@ namespace Nestly.Services.Repository
                 CreatedAt = m.CreatedAt
             }).ToList();
 
-            return result;
+            return new ChatMessagePageResponse
+            {
+                Items = items,
+                HasMore = hasMore
+            };
         }
 
         public async Task<List<ChatUserDto>> GetAvailableUsers(

@@ -11,12 +11,14 @@ namespace Nestly.Services.Database.Seeders
                 new Role
                 {
                     Id = 1,
-                    Name = "Parent"
+                    Name = "Parent",
+                    IsSystemRole = true
                 },
                 new Role
                 {
                     Id = 2,
-                    Name = "Doctor"
+                    Name = "Doctor",
+                    IsSystemRole = true
                 }
             );
         }

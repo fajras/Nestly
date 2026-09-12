@@ -6,6 +6,7 @@ namespace Nestly.Model.DTOObjects
     {
         public long Id { get; set; }
         public string Name { get; set; } = default!;
+        public bool IsSystemRole { get; set; }
     }
 
     public class RoleInsertDto

@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
-    public class CalendarEvent
+    public class CalendarEvent : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -18,6 +18,8 @@ namespace Nestly.Model.Entity
         public string? Description { get; set; }
         public DateTime StartAt { get; set; }
         public bool Reminder24hSent { get; set; } = false;
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
         [JsonIgnore]
         public BabyProfile BabyProfile { get; set; }
         [JsonIgnore]

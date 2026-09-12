@@ -336,7 +336,8 @@ namespace Nestly.Services.Repository
                 throw new BusinessException("This question has already been answered and can no longer be deleted.");
             }
 
-            _db.QaQuestions.Remove(q);
+            q.IsDeleted = true;
+            q.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
         }
 

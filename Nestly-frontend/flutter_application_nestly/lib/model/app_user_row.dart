@@ -1,5 +1,6 @@
 class AppUserRow {
   final int id;
+  final int? parentProfileId;
   final String email;
   final String firstName;
   final String lastName;
@@ -10,6 +11,7 @@ class AppUserRow {
 
   AppUserRow({
     required this.id,
+    this.parentProfileId,
     required this.email,
     required this.firstName,
     required this.lastName,
@@ -22,6 +24,7 @@ class AppUserRow {
   factory AppUserRow.fromJson(Map<String, dynamic> json) {
     return AppUserRow(
       id: (json['id'] as num?)?.toInt() ?? 0,
+      parentProfileId: (json['parentProfileId'] as num?)?.toInt(),
       email: json['email'] ?? '',
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',

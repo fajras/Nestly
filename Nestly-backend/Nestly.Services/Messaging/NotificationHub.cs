@@ -11,14 +11,17 @@ namespace Nestly.Services.Messaging
         private readonly ICurrentUserService
             _currentUserService;
         private readonly ILogger<NotificationHub> _logger;
+        private readonly IUserConnectionTracker _connectionTracker;
 
         public NotificationHub(
             ICurrentUserService currentUserService,
-            ILogger<NotificationHub> logger)
+            ILogger<NotificationHub> logger,
+            IUserConnectionTracker connectionTracker)
         {
             _currentUserService =
                 currentUserService;
             _logger = logger;
+            _connectionTracker = connectionTracker;
         }
 
         public override async Task OnConnectedAsync()
@@ -34,9 +37,11 @@ namespace Nestly.Services.Messaging
                     Context.ConnectionId,
                     $"user-{userId}");
 
+                _connectionTracker.AddConnection(userId, Context.ConnectionId);
+
                 _logger.LogInformation(
-                    "User {UserId} connected to NotificationHub (connection {ConnectionId}).",
-                    userId, Context.ConnectionId);
+                    "User {UserId} connected to NotificationHub (connection {ConnectionId}). Online users: {OnlineCount}.",
+                    userId, Context.ConnectionId, _connectionTracker.OnlineUserCount);
             }
             catch (Exception ex)
             {
@@ -63,9 +68,11 @@ namespace Nestly.Services.Messaging
                     Context.ConnectionId,
                     $"user-{userId}");
 
+                _connectionTracker.RemoveConnection(userId, Context.ConnectionId);
+
                 _logger.LogInformation(
-                    "User {UserId} disconnected from NotificationHub (connection {ConnectionId}).",
-                    userId, Context.ConnectionId);
+                    "User {UserId} disconnected from NotificationHub (connection {ConnectionId}). Online users: {OnlineCount}.",
+                    userId, Context.ConnectionId, _connectionTracker.OnlineUserCount);
             }
             catch (Exception ex)
             {

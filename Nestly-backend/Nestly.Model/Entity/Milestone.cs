@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nestly.Model.Entity
 {
-    public class Milestone
+    public class Milestone : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -15,6 +15,8 @@ namespace Nestly.Model.Entity
         public DateTime AchievedDate { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
         public BabyProfile Baby { get; set; }
     }

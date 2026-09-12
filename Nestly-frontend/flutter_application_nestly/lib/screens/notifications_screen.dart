@@ -20,18 +20,46 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  static const int _pageSize = 30;
+
   List<dynamic> _notifications = [];
   bool _loading = true;
+  bool _loadingMore = false;
+  bool _hasMore = true;
+  int _page = 1;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _load();
+    _scrollController.addListener(_onScroll);
   }
 
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_hasMore || _loadingMore || _loading) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  // Server-side pagination: notifications no longer all load at once.
+  // Each page is fetched from the backend (which already supports
+  // page/pageSize) and appended as the user scrolls.
   Future<void> _load() async {
     try {
-      final res = await ApiClient.get('/api/Notification');
+      final res = await ApiClient.get(
+        '/api/Notification?page=1&pageSize=$_pageSize',
+      );
 
       if (res.statusCode != 200) {
         final error = jsonDecode(res.body);
@@ -41,11 +69,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
 
       final all = ApiResponseHelper.extractList(res.body);
+      final totalCount = _extractTotalCount(res.body);
 
       if (!mounted) return;
 
       setState(() {
         _notifications = all;
+        _page = 1;
+        _hasMore = all.length < totalCount;
         _loading = false;
       });
     } catch (e) {
@@ -54,6 +85,47 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'Greška pri učitavanju notifikacija. Pokušajte ponovo.',
       );
     }
+  }
+
+  Future<void> _loadMore() async {
+    setState(() => _loadingMore = true);
+
+    try {
+      final nextPage = _page + 1;
+      final res = await ApiClient.get(
+        '/api/Notification?page=$nextPage&pageSize=$_pageSize',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Greška pri učitavanju notifikacija');
+      }
+
+      final more = ApiResponseHelper.extractList(res.body);
+      final totalCount = _extractTotalCount(res.body);
+
+      if (!mounted) return;
+
+      setState(() {
+        _notifications = [..._notifications, ...more];
+        _page = nextPage;
+        _hasMore = _notifications.length < totalCount;
+        _loadingMore = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+      NestlyToast.error(context, 'Greška pri učitavanju starijih notifikacija');
+    }
+  }
+
+  int _extractTotalCount(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        return (decoded['totalCount'] as num?)?.toInt() ?? 0;
+      }
+    } catch (_) {}
+    return 0;
   }
 
   Future<void> _markAsRead(int id) async {
@@ -159,9 +231,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               color: widget.accent,
               onRefresh: _load,
               child: ListView.builder(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: _notifications.length,
+                itemCount: _notifications.length + (_hasMore ? 1 : 0),
                 itemBuilder: (_, index) {
+                  if (index >= _notifications.length) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: widget.accent,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
                   final n = _notifications[index];
                   final isRead = n["isRead"] == true;
 

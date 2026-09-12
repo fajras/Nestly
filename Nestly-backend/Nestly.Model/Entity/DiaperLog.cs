@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nestly.Model.Entity
 {
-    public class DiaperLog
+    public class DiaperLog : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -15,6 +15,8 @@ namespace Nestly.Model.Entity
         [Required, MaxLength(30)]
         public string DiaperState { get; set; } = default!;
         public string? Notes { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
         public BabyProfile Baby { get; set; }
     }
 }

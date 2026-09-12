@@ -33,12 +33,17 @@ namespace Nestly.Model.DTOObjects
         public DateTime PeriodTo { get; set; }
         public bool IsResolved { get; set; }
         public DateTime? ResolvedAt { get; set; }
+        public bool? DoctorFeedbackIsAccurate { get; set; }
+        public string? DoctorFeedbackComment { get; set; }
+        public string? DoctorFeedbackByDoctorName { get; set; }
+        public DateTime? DoctorFeedbackAt { get; set; }
     }
 
     public class HealthDeviationAlertSearchObject
     {
         public long? BabyId { get; set; }
         public bool? IsResolved { get; set; }
+        public bool? HasDoctorFeedback { get; set; }
 
         public int Page { get; set; } = 1;
 
@@ -48,5 +53,12 @@ namespace Nestly.Model.DTOObjects
             get => _pageSize;
             set => _pageSize = value > 100 ? 100 : value;
         }
+    }
+
+    public class HealthDeviationAlertFeedbackDto
+    {
+        public bool IsAccurate { get; set; }
+        [System.ComponentModel.DataAnnotations.MaxLength(1000)]
+        public string? Comment { get; set; }
     }
 }

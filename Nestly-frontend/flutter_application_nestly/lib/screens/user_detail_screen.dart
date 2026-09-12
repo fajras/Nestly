@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart' show PdfColors;
 import 'package:flutter_application_nestly/network/api_client.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/main.dart';
@@ -96,8 +97,31 @@ class AdminDashboardService {
     return _fetchAllPages('/api/babygrowth?BabyId=$babyId');
   }
 
-  Future<List> getQuestions(int userId) async {
-    return _fetchAllPages('/api/qaquestion/user/$userId');
+  Future<List> getQuestions(int parentProfileId) async {
+    return _fetchAllPages('/api/qaquestion/user/$parentProfileId');
+  }
+
+  // The doctor-facing user list only carries the parent's AppUser/ParentProfile
+  // ids, not a baby id - and BabyProfile isn't filterable by parent server-side,
+  // so resolve it by pulling the (doctor-only) full baby list and matching
+  // ParentProfileId client-side. Returns the most recently born baby if the
+  // parent has more than one, or null if the parent has none yet.
+  Future<int?> getPrimaryBabyId(int parentProfileId) async {
+    final babies = await _fetchAllPages('/api/BabyProfile?PageSize=200');
+
+    final matches = babies
+        .where(
+          (b) => (b['parentProfileId'] as num?)?.toInt() == parentProfileId,
+        )
+        .toList();
+
+    if (matches.isEmpty) return null;
+
+    matches.sort(
+      (a, b) => (b['birthDate'] as String).compareTo(a['birthDate'] as String),
+    );
+
+    return (matches.first['id'] as num).toInt();
   }
 }
 
@@ -143,6 +167,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
   List<AppUserRow> _filtered = [];
   List<DetailItem> _details = [];
   bool _loadingDetails = false;
+  bool _reportBusy = false;
   final _pdfService = AdminPdfService();
   AppUserRow? _selectedUser;
   bool _loading = true;
@@ -240,6 +265,22 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
     }
   }
 
+  int _requireParentProfileId() {
+    final id = _selectedUser?.parentProfileId;
+    if (id == null) {
+      throw Exception('Korisnica nema profil roditelja');
+    }
+    return id;
+  }
+
+  Future<int> _requireBabyId() async {
+    final babyId = await _service.getPrimaryBabyId(_requireParentProfileId());
+    if (babyId == null) {
+      throw Exception('Korisnica još nema unesenu bebu');
+    }
+    return babyId;
+  }
+
   List<DetailItem> _mapMedication(List data) {
     return data.map<DetailItem>((e) {
       final start = e['startDate']?.toString().split('T').first ?? '-';
@@ -285,11 +326,24 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
     }).toList();
   }
 
+  String _formatDiaperState(dynamic raw) {
+    switch (raw?.toString().toLowerCase()) {
+      case 'mokra':
+        return 'Mokra';
+      case 'stolica':
+        return 'Stolica';
+      case 'kombinovano':
+        return 'Kombinovano';
+      default:
+        return 'Mokra';
+    }
+  }
+
   List<DetailItem> _mapDiapers(List data) {
     return data.map<DetailItem>((e) {
       return DetailItem(
         title: e['changeDate'].toString().split('T').first,
-        subtitle: e['diaperState'],
+        subtitle: _formatDiaperState(e['diaperState']),
         meta: e['notes'] ?? '',
       );
     }).toList();
@@ -446,8 +500,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Hrana',
-                                request: () =>
-                                    _service.getMeals(_selectedUser!.id),
+                                request: () async =>
+                                    _service.getMeals(await _requireBabyId()),
                                 mapper: _mapMeals,
                               ),
                       ),
@@ -458,8 +512,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Zdravlje',
-                                request: () =>
-                                    _service.getHealth(_selectedUser!.id),
+                                request: () async => _service.getHealth(
+                                  await _requireBabyId(),
+                                ),
                                 mapper: _mapHealth,
                               ),
                       ),
@@ -470,8 +525,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Pelene',
-                                request: () =>
-                                    _service.getDiapers(_selectedUser!.id),
+                                request: () async => _service.getDiapers(
+                                  await _requireBabyId(),
+                                ),
                                 mapper: _mapDiapers,
                               ),
                       ),
@@ -482,8 +538,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'San bebe',
-                                request: () =>
-                                    _service.getSleep(_selectedUser!.id),
+                                request: () async =>
+                                    _service.getSleep(await _requireBabyId()),
                                 mapper: _mapSleep,
                               ),
                       ),
@@ -494,8 +550,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Rast bebe',
-                                request: () =>
-                                    _service.getGrowth(_selectedUser!.id),
+                                request: () async => _service.getGrowth(
+                                  await _requireBabyId(),
+                                ),
                                 mapper: _mapGrowth,
                               ),
                       ),
@@ -507,8 +564,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Hranjenje',
-                                request: () =>
-                                    _service.getFeedingLogs(_selectedUser!.id),
+                                request: () async => _service.getFeedingLogs(
+                                  await _requireBabyId(),
+                                ),
                                 mapper: _mapFeeding,
                               ),
                       ),
@@ -520,8 +578,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Milestones',
-                                request: () =>
-                                    _service.getMilestones(_selectedUser!.id),
+                                request: () async => _service.getMilestones(
+                                  await _requireBabyId(),
+                                ),
                                 mapper: _mapMilestones,
                               ),
                       ),
@@ -533,8 +592,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Događaji',
-                                request: () => _service.getCalendarEvents(
-                                  _selectedUser!.id,
+                                request: () async => _service.getCalendarEvents(
+                                  await _requireBabyId(),
                                 ),
                                 mapper: _mapCalendar,
                               ),
@@ -546,8 +605,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Terapija',
-                                request: () =>
-                                    _service.getMedication(_selectedUser!.id),
+                                request: () => _service.getMedication(
+                                  _requireParentProfileId(),
+                                ),
                                 mapper: _mapMedication,
                               ),
                       ),
@@ -558,8 +618,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Simptomi',
-                                request: () =>
-                                    _service.getSymptoms(_selectedUser!.id),
+                                request: () => _service.getSymptoms(
+                                  _requireParentProfileId(),
+                                ),
                                 mapper: _mapSymptoms,
                               ),
                       ),
@@ -570,8 +631,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                             ? null
                             : () => _loadDetails(
                                 module: 'Pitanja',
-                                request: () =>
-                                    _service.getQuestions(_selectedUser!.id),
+                                request: () => _service.getQuestions(
+                                  _requireParentProfileId(),
+                                ),
                                 mapper: _mapQuestions,
                               ),
                       ),
@@ -588,56 +650,89 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                         subtitle: 'Terapija, simptomi i pitanja',
                         icon: Icons.pregnant_woman,
                         accentColor: AppColors.seed,
-                        enabled: _selectedUser != null,
+                        enabled: _selectedUser != null && !_reportBusy,
 
                         onDownload: () async {
-                          final therapy = await _service.getMedication(
-                            _selectedUser!.id,
-                          );
+                          if (_reportBusy) return;
+                          setState(() => _reportBusy = true);
 
-                          final symptoms = await _service.getSymptoms(
-                            _selectedUser!.id,
-                          );
+                          try {
+                            final parentProfileId = _requireParentProfileId();
 
-                          final questions = await _service.getQuestions(
-                            _selectedUser!.id,
-                          );
+                            final therapy = await _service.getMedication(
+                              parentProfileId,
+                            );
 
-                          await _pdfService.saveMotherPdf(
-                            userName: _selectedUser!.fullName,
-                            therapy: _mapMedication(therapy),
-                            symptoms: _mapSymptoms(symptoms),
-                            questions: _mapQuestions(questions),
-                          );
+                            final symptoms = await _service.getSymptoms(
+                              parentProfileId,
+                            );
 
-                          if (!mounted) return;
+                            final questions = await _service.getQuestions(
+                              parentProfileId,
+                            );
 
-                          NestlyToast.success(
-                            context,
-                            "PDF izvještaj je uspješno preuzet.",
-                            accentColor: AppColors.seed,
-                          );
+                            await _pdfService.saveReportPdf(
+                              reportTitle: 'Izvještaj o majci',
+                              fileNamePrefix: 'mother_report',
+                              userName: _selectedUser!.fullName,
+                              charts: _buildMotherCharts(symptoms),
+                              tables: _buildMotherTables(therapy, questions),
+                            );
+
+                            if (!mounted) return;
+
+                            NestlyToast.success(
+                              context,
+                              "PDF izvještaj je uspješno preuzet.",
+                              accentColor: AppColors.seed,
+                            );
+                          } catch (e) {
+                            debugPrint('MOTHER REPORT DOWNLOAD ERROR: $e');
+                            if (!mounted) return;
+                            NestlyToast.error(
+                              context,
+                              'Greška pri preuzimanju izvještaja: $e',
+                            );
+                          } finally {
+                            if (mounted) setState(() => _reportBusy = false);
+                          }
                         },
 
                         onPrint: () async {
-                          final therapy = await _service.getMedication(
-                            _selectedUser!.id,
-                          );
+                          if (_reportBusy) return;
+                          setState(() => _reportBusy = true);
 
-                          final symptoms = await _service.getSymptoms(
-                            _selectedUser!.id,
-                          );
+                          try {
+                            final parentProfileId = _requireParentProfileId();
 
-                          final questions = await _service.getQuestions(
-                            _selectedUser!.id,
-                          );
+                            final therapy = await _service.getMedication(
+                              parentProfileId,
+                            );
 
-                          await _pdfService.printMotherPdf(
-                            userName: _selectedUser!.fullName,
-                            therapy: _mapMedication(therapy),
-                            symptoms: _mapSymptoms(symptoms),
-                            questions: _mapQuestions(questions),
-                          );
+                            final symptoms = await _service.getSymptoms(
+                              parentProfileId,
+                            );
+
+                            final questions = await _service.getQuestions(
+                              parentProfileId,
+                            );
+
+                            await _pdfService.printReportPdf(
+                              reportTitle: 'Izvještaj o majci',
+                              userName: _selectedUser!.fullName,
+                              charts: _buildMotherCharts(symptoms),
+                              tables: _buildMotherTables(therapy, questions),
+                            );
+                          } catch (e) {
+                            debugPrint('MOTHER REPORT PRINT ERROR: $e');
+                            if (!mounted) return;
+                            NestlyToast.error(
+                              context,
+                              'Greška pri štampanju izvještaja: $e',
+                            );
+                          } finally {
+                            if (mounted) setState(() => _reportBusy = false);
+                          }
                         },
                       ),
 
@@ -645,106 +740,111 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> with RouteAware {
                         title: 'Izvještaj o bebi',
                         subtitle: 'Zdravlje, rast i aktivnosti',
                         icon: Icons.child_care,
-                        enabled: _selectedUser != null,
+                        enabled: _selectedUser != null && !_reportBusy,
 
                         onDownload: () async {
-                          final meals = await _service.getMeals(
-                            _selectedUser!.id,
-                          );
+                          if (_reportBusy) return;
+                          setState(() => _reportBusy = true);
 
-                          final health = await _service.getHealth(
-                            _selectedUser!.id,
-                          );
+                          try {
+                            final babyId = await _requireBabyId();
 
-                          final diapers = await _service.getDiapers(
-                            _selectedUser!.id,
-                          );
+                            final meals = await _service.getMeals(babyId);
+                            final health = await _service.getHealth(babyId);
+                            final diapers = await _service.getDiapers(babyId);
+                            final sleep = await _service.getSleep(babyId);
+                            final growth = await _service.getGrowth(babyId);
+                            final feeding = await _service.getFeedingLogs(
+                              babyId,
+                            );
+                            final milestones = await _service.getMilestones(
+                              babyId,
+                            );
+                            final calendar = await _service.getCalendarEvents(
+                              babyId,
+                            );
 
-                          final sleep = await _service.getSleep(
-                            _selectedUser!.id,
-                          );
+                            await _pdfService.saveReportPdf(
+                              reportTitle: 'Izvještaj o bebi',
+                              fileNamePrefix: 'baby_report',
+                              userName: _selectedUser!.fullName,
+                              charts: _buildBabyCharts(growth, sleep, health, feeding, diapers),
+                              tables: _buildBabyTables(
+                                meals,
+                                health,
+                                diapers,
+                                sleep,
+                                feeding,
+                                milestones,
+                                calendar,
+                              ),
+                            );
 
-                          final growth = await _service.getGrowth(
-                            _selectedUser!.id,
-                          );
+                            if (!mounted) return;
 
-                          final feeding = await _service.getFeedingLogs(
-                            _selectedUser!.id,
-                          );
-
-                          final milestones = await _service.getMilestones(
-                            _selectedUser!.id,
-                          );
-
-                          final calendar = await _service.getCalendarEvents(
-                            _selectedUser!.id,
-                          );
-
-                          await _pdfService.saveBabyPdf(
-                            userName: _selectedUser!.fullName,
-                            meals: _mapMeals(meals),
-                            health: _mapHealth(health),
-                            diapers: _mapDiapers(diapers),
-                            sleep: _mapSleep(sleep),
-                            growth: _mapGrowth(growth),
-                            feeding: _mapFeeding(feeding),
-                            milestones: _mapMilestones(milestones),
-                            calendar: _mapCalendar(calendar),
-                          );
-
-                          if (!mounted) return;
-
-                          NestlyToast.success(
-                            context,
-                            "PDF izvještaj je uspješno preuzet.",
-                            accentColor: AppColors.seed,
-                          );
+                            NestlyToast.success(
+                              context,
+                              "PDF izvještaj je uspješno preuzet.",
+                              accentColor: AppColors.seed,
+                            );
+                          } catch (e) {
+                            debugPrint('BABY REPORT DOWNLOAD ERROR: $e');
+                            if (!mounted) return;
+                            NestlyToast.error(
+                              context,
+                              'Greška pri preuzimanju izvještaja: $e',
+                            );
+                          } finally {
+                            if (mounted) setState(() => _reportBusy = false);
+                          }
                         },
 
                         onPrint: () async {
-                          final meals = await _service.getMeals(
-                            _selectedUser!.id,
-                          );
+                          if (_reportBusy) return;
+                          setState(() => _reportBusy = true);
 
-                          final health = await _service.getHealth(
-                            _selectedUser!.id,
-                          );
+                          try {
+                            final babyId = await _requireBabyId();
 
-                          final diapers = await _service.getDiapers(
-                            _selectedUser!.id,
-                          );
+                            final meals = await _service.getMeals(babyId);
+                            final health = await _service.getHealth(babyId);
+                            final diapers = await _service.getDiapers(babyId);
+                            final sleep = await _service.getSleep(babyId);
+                            final growth = await _service.getGrowth(babyId);
+                            final feeding = await _service.getFeedingLogs(
+                              babyId,
+                            );
+                            final milestones = await _service.getMilestones(
+                              babyId,
+                            );
+                            final calendar = await _service.getCalendarEvents(
+                              babyId,
+                            );
 
-                          final sleep = await _service.getSleep(
-                            _selectedUser!.id,
-                          );
-
-                          final growth = await _service.getGrowth(
-                            _selectedUser!.id,
-                          );
-
-                          final feeding = await _service.getFeedingLogs(
-                            _selectedUser!.id,
-                          );
-
-                          final milestones = await _service.getMilestones(
-                            _selectedUser!.id,
-                          );
-
-                          final calendar = await _service.getCalendarEvents(
-                            _selectedUser!.id,
-                          );
-
-                          await _pdfService.printBabyPdf(
-                            userName: _selectedUser!.fullName,
-                            meals: _mapMeals(meals),
-                            health: _mapHealth(health),
-                            diapers: _mapDiapers(diapers),
-                            sleep: _mapSleep(sleep),
-                            growth: _mapGrowth(growth),
-                            feeding: _mapFeeding(feeding),
-                            milestones: _mapMilestones(milestones),
-                            calendar: _mapCalendar(calendar),
-                          );
+                            await _pdfService.printReportPdf(
+                              reportTitle: 'Izvještaj o bebi',
+                              userName: _selectedUser!.fullName,
+                              charts: _buildBabyCharts(growth, sleep, health, feeding, diapers),
+                              tables: _buildBabyTables(
+                                meals,
+                                health,
+                                diapers,
+                                sleep,
+                                feeding,
+                                milestones,
+                                calendar,
+                              ),
+                            );
+                          } catch (e) {
+                            debugPrint('BABY REPORT PRINT ERROR: $e');
+                            if (!mounted) return;
+                            NestlyToast.error(
+                              context,
+                              'Greška pri štampanju izvještaja: $e',
+                            );
+                          } finally {
+                            if (mounted) setState(() => _reportBusy = false);
+                          }
                         },
                       ),
                     ],
@@ -1111,4 +1211,461 @@ class _ReportActionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// PDF report builders - convert raw API rows into ReportChart (measurable
+// parameters over time) and ReportTable (everything else) for a report
+// that's actually readable, instead of one card per row.
+// ---------------------------------------------------------------------------
+
+String _shortDate(dynamic iso) {
+  if (iso == null) return '-';
+  return iso.toString().split('T').first;
+}
+
+/// Compact dd.MM. label for chart X-axes - the full yyyy-MM-dd date used in
+/// tables is too wide and overlaps once a chart has more than a couple of
+/// points.
+String _chartDate(dynamic iso) {
+  final full = _shortDate(iso);
+  final parts = full.split('-');
+  if (parts.length != 3) return full;
+  return '${parts[2]}.${parts[1]}.';
+}
+
+List<ReportTable> _buildMotherTables(List therapy, List questions) {
+  return [
+    ReportTable(
+      title: 'Terapija',
+      headers: const ['Lijek', 'Doza', 'Period'],
+      rows: [
+        for (final e in therapy)
+          [
+            (e['medicineName'] ?? '-').toString(),
+            (e['dose'] ?? '-').toString(),
+            '${_shortDate(e['startDate'])} - ${_shortDate(e['endDate'])}',
+          ],
+      ],
+    ),
+    ReportTable(
+      title: 'Pitanja',
+      headers: const ['Datum', 'Pitanje', 'Odgovor'],
+      rows: [
+        for (final e in questions)
+          [
+            _shortDate(e['createdAt']),
+            (e['questionText'] ?? '-').toString(),
+            e['isAnswered'] == true
+                ? (e['latestAnswerText']?.toString() ?? '-')
+                : 'Na čekanju',
+          ],
+      ],
+    ),
+  ];
+}
+
+// Charts show at most this many most-recent date points - beyond that the
+// x-axis labels start overlapping regardless of font size/angle, and a
+// month is plenty to see a meaningful trend.
+const _maxChartPoints = 30;
+
+List<T> _lastN<T>(List<T> sortedAscending, int n) {
+  if (sortedAscending.length <= n) return sortedAscending;
+  return sortedAscending.sublist(sortedAscending.length - n);
+}
+
+List<ReportChart> _buildMotherCharts(List symptoms) {
+  final sorted = _lastN(
+    List.of(symptoms)
+      ..sort(
+        (a, b) => (a['date'] ?? '').toString().compareTo((b['date'] ?? '').toString()),
+      ),
+    _maxChartPoints,
+  );
+
+  ReportChartSeries? series(String key, String legend) {
+    final pts = <ChartPoint>[];
+    for (final e in sorted) {
+      final v = e[key];
+      if (v == null) continue;
+      pts.add(ChartPoint(_chartDate(e['date']), (v as num).toDouble()));
+    }
+    return pts.isEmpty ? null : ReportChartSeries(legend: legend, points: pts);
+  }
+
+  final allSeries = [
+    series('nausea', 'Mučnina'),
+    series('fatigue', 'Umor'),
+    series('headache', 'Glavobolja'),
+    series('heartburn', 'Žgaravica'),
+    series('legSwelling', 'Oticanje nogu'),
+  ].whereType<ReportChartSeries>().toList();
+
+  if (allSeries.isEmpty) return [];
+
+  return [
+    ReportChart(
+      title: 'Simptomi kroz vrijeme',
+      unit: 'skala 0-5',
+      series: allSeries,
+      yMin: 0,
+      yMax: 5,
+      integerTicks: true,
+    ),
+  ];
+}
+
+List<ReportChart> _buildBabyCharts(
+  List growth,
+  List sleep,
+  List health,
+  List feeding,
+  List diapers,
+) {
+  final sortedGrowth = List.of(growth)
+    ..sort(
+      (a, b) => ((a['weekNumber'] as num?) ?? 0)
+          .compareTo((b['weekNumber'] as num?) ?? 0),
+    );
+  final sortedSleep = List.of(sleep)
+    ..sort(
+      (a, b) => (a['sleepDate'] ?? '').toString().compareTo(
+            (b['sleepDate'] ?? '').toString(),
+          ),
+    );
+  final sortedHealth = List.of(health)
+    ..sort(
+      (a, b) => (a['entryDate'] ?? '').toString().compareTo(
+            (b['entryDate'] ?? '').toString(),
+          ),
+    );
+
+  final charts = <ReportChart>[];
+
+  final weight = [
+    for (final e in sortedGrowth)
+      if (e['weightKg'] != null)
+        ChartPoint('Sed. ${e['weekNumber']}', (e['weightKg'] as num).toDouble()),
+  ];
+  if (weight.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Težina',
+        unit: 'kg',
+        series: [ReportChartSeries(legend: 'Težina', points: weight)],
+      ),
+    );
+  }
+
+  final height = [
+    for (final e in sortedGrowth)
+      if (e['heightCm'] != null)
+        ChartPoint('Sed. ${e['weekNumber']}', (e['heightCm'] as num).toDouble()),
+  ];
+  if (height.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Visina',
+        unit: 'cm',
+        series: [
+          ReportChartSeries(
+            legend: 'Visina',
+            points: height,
+            color: PdfColors.orange,
+          ),
+        ],
+      ),
+    );
+  }
+
+  final head = [
+    for (final e in sortedGrowth)
+      if (e['headCircumferenceCm'] != null)
+        ChartPoint(
+          'Sed. ${e['weekNumber']}',
+          (e['headCircumferenceCm'] as num).toDouble(),
+        ),
+  ];
+  if (head.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Obim glave',
+        unit: 'cm',
+        series: [
+          ReportChartSeries(
+            legend: 'Obim glave',
+            points: head,
+            color: PdfColors.purple,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // One point per day per sleep type (total hours that day) rather than one
+  // point per individual sleep log entry - several naps/entries on the same
+  // day would otherwise plot as separate, hard-to-read points. Split into
+  // night sleep vs daytime naps (by start hour) so the breakdown reads
+  // directly off the axis as two lines, the same way symptoms do, instead
+  // of needing to eyeball a stacked/grouped bar.
+  final nightMinutesByDay = <String, double>{};
+  final napMinutesByDay = <String, double>{};
+  for (final e in sortedSleep) {
+    if (e['durationMinutes'] == null) continue;
+    final day = _shortDate(e['sleepDate']);
+    final startHour = int.tryParse(
+          (e['startTime'] ?? '').toString().split(':').first,
+        ) ??
+        0;
+    final isNight = startHour >= 18 || startHour < 6;
+    final minutes = (e['durationMinutes'] as num).toDouble();
+    if (isNight) {
+      nightMinutesByDay[day] = (nightMinutesByDay[day] ?? 0) + minutes;
+    } else {
+      napMinutesByDay[day] = (napMinutesByDay[day] ?? 0) + minutes;
+    }
+  }
+  final sleepDays = _lastN(
+    ({...nightMinutesByDay.keys, ...napMinutesByDay.keys}.toList()..sort()),
+    _maxChartPoints,
+  );
+  if (sleepDays.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Trajanje sna (po danu)',
+        unit: 'h',
+        yMin: 0,
+        integerTicks: true,
+        series: [
+          ReportChartSeries(
+            legend: 'San noću',
+            color: PdfColors.indigo,
+            points: [
+              for (final d in sleepDays)
+                ChartPoint(_chartDate(d), (nightMinutesByDay[d] ?? 0) / 60),
+            ],
+          ),
+          ReportChartSeries(
+            legend: 'Dnevni odmor',
+            color: PdfColors.amber,
+            points: [
+              for (final d in sleepDays)
+                ChartPoint(_chartDate(d), (napMinutesByDay[d] ?? 0) / 60),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  final tempPts = _lastN(
+    [
+      for (final e in sortedHealth)
+        if (e['temperatureC'] != null)
+          ChartPoint(_chartDate(e['entryDate']), (e['temperatureC'] as num).toDouble()),
+    ],
+    _maxChartPoints,
+  );
+  if (tempPts.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Temperatura',
+        unit: '°C',
+        series: [
+          ReportChartSeries(
+            legend: 'Temperatura',
+            points: tempPts,
+            color: PdfColors.red,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Feeding totalled per day, liquid (ml) vs solid food (g) as two lines -
+  // the two use different units so they can't be summed into one number,
+  // but plotted like the symptom chart the exact daily amount of each
+  // reads straight off the axis instead of needing to compare bar heights.
+  final mlByDay = <String, double>{};
+  final gByDay = <String, double>{};
+  for (final e in feeding) {
+    final amount = (e['amountMl'] as num?)?.toDouble();
+    if (amount == null || amount <= 0) continue;
+    final day = _shortDate(e['feedDate']);
+    if ((e['amountUnit'] ?? 'ml').toString().toLowerCase() == 'g') {
+      gByDay[day] = (gByDay[day] ?? 0) + amount;
+    } else {
+      mlByDay[day] = (mlByDay[day] ?? 0) + amount;
+    }
+  }
+  final feedingDays = _lastN(
+    ({...mlByDay.keys, ...gByDay.keys}.toList()..sort()),
+    _maxChartPoints,
+  );
+  if (feedingDays.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Hranjenje (po danu)',
+        unit: 'ml / g',
+        yMin: 0,
+        tickStep: 100,
+        series: [
+          ReportChartSeries(
+            legend: 'Tečna hrana (ml)',
+            color: PdfColors.blue,
+            points: [
+              for (final d in feedingDays) ChartPoint(_chartDate(d), mlByDay[d] ?? 0),
+            ],
+          ),
+          ReportChartSeries(
+            legend: 'Čvrsta hrana (g)',
+            color: PdfColors.pink,
+            points: [
+              for (final d in feedingDays) ChartPoint(_chartDate(d), gByDay[d] ?? 0),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // One line per state (Mokra/Stolica/Kombinovano), same style as the
+  // symptom chart - a stacked bar showed the total at a glance but made the
+  // per-state counts something you had to estimate visually; a line per
+  // state reads the exact daily count straight off the axis.
+  final diaperCountsByDay = <String, Map<String, int>>{};
+  for (final e in diapers) {
+    final day = _shortDate(e['changeDate']);
+    final state = (e['diaperState'] ?? '').toString().toLowerCase();
+    final counts = diaperCountsByDay.putIfAbsent(
+      day,
+      () => {'mokra': 0, 'stolica': 0, 'kombinovano': 0},
+    );
+    if (counts.containsKey(state)) counts[state] = counts[state]! + 1;
+  }
+  final diaperDays = _lastN(diaperCountsByDay.keys.toList()..sort(), _maxChartPoints);
+  if (diaperDays.isNotEmpty) {
+    charts.add(
+      ReportChart(
+        title: 'Pelene (po danu)',
+        unit: 'broj promjena',
+        yMin: 0,
+        integerTicks: true,
+        series: [
+          ReportChartSeries(
+            legend: 'Mokra',
+            color: PdfColors.blue,
+            points: [
+              for (final d in diaperDays)
+                ChartPoint(_chartDate(d), (diaperCountsByDay[d]!['mokra'] ?? 0).toDouble()),
+            ],
+          ),
+          ReportChartSeries(
+            legend: 'Stolica',
+            color: PdfColors.brown,
+            points: [
+              for (final d in diaperDays)
+                ChartPoint(_chartDate(d), (diaperCountsByDay[d]!['stolica'] ?? 0).toDouble()),
+            ],
+          ),
+          ReportChartSeries(
+            legend: 'Kombinovano',
+            color: PdfColors.orange,
+            points: [
+              for (final d in diaperDays)
+                ChartPoint(
+                  _chartDate(d),
+                  (diaperCountsByDay[d]!['kombinovano'] ?? 0).toDouble(),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  return charts;
+}
+
+// One row per food, not one row per time it was tried - a rating describes
+// the baby's current reaction to that food, so only the most recent try
+// counts, matching how the app itself treats a re-tried food (update the
+// same rating, not a new history entry).
+ReportTable _buildMealRatingsTable(List meals) {
+  final latestByFood = <String, dynamic>{};
+  for (final e in meals) {
+    final food = (e['foodName'] ?? '-').toString();
+    final triedAt = (e['triedAt'] ?? '').toString();
+    final existing = latestByFood[food];
+    if (existing == null || triedAt.compareTo((existing['triedAt'] ?? '').toString()) > 0) {
+      latestByFood[food] = e;
+    }
+  }
+  final entries = latestByFood.entries.toList()
+    ..sort((a, b) => a.key.compareTo(b.key));
+
+  return ReportTable(
+    title: 'Hrana (ocjene)',
+    headers: const ['Namirnica', 'Zadnja ocjena', 'Datum'],
+    rows: [
+      for (final e in entries)
+        [
+          e.key,
+          '${e.value['rating'] ?? '-'}/5',
+          _shortDate(e.value['triedAt']),
+        ],
+    ],
+  );
+}
+
+List<ReportTable> _buildBabyTables(
+  List meals,
+  List health,
+  List diapers,
+  List sleep,
+  List feeding,
+  List milestones,
+  List calendar,
+) {
+  return [
+    ReportTable(
+      title: 'Zdravlje',
+      headers: const ['Datum', 'Temperatura', 'Lijekovi', 'Posjeta doktoru'],
+      rows: [
+        for (final e in health)
+          [
+            _shortDate(e['entryDate']),
+            e['temperatureC'] != null ? '${e['temperatureC']} °C' : '-',
+            (e['medicines'] ?? '-').toString(),
+            (e['doctorVisit'] ?? '-').toString(),
+          ],
+      ],
+    ),
+    _buildMealRatingsTable(meals),
+    ReportTable(
+      title: 'Dostignuća',
+      headers: const ['Datum', 'Dostignuće', 'Napomena'],
+      rows: [
+        for (final e in milestones)
+          [
+            _shortDate(e['achievedDate']),
+            (e['title'] ?? '-').toString(),
+            (e['notes'] ?? '-').toString(),
+          ],
+      ],
+    ),
+    ReportTable(
+      title: 'Događaji',
+      headers: const ['Datum', 'Naslov', 'Opis'],
+      rows: [
+        for (final e in calendar)
+          [
+            _shortDate(e['startAt']),
+            (e['title'] ?? '-').toString(),
+            (e['description'] ?? '-').toString(),
+          ],
+      ],
+    ),
+  ];
 }

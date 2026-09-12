@@ -80,19 +80,39 @@ namespace Nestly.Services.Repository
                 .ToListAsync();
         }
 
-        public async Task<List<ChatMessage>> GetMessages(long conversationId, int maxCount = 200)
+        public async Task<(List<ChatMessage> Messages, bool HasMore)> GetMessages(
+            long conversationId, int take = 50, long? beforeId = null)
         {
-            // Keep only the most recent `maxCount` messages so a very long
-            // conversation doesn't load its entire history in one request.
-            var recentDescending = await _context.ChatMessages
-                .Where(m => m.ConversationId == conversationId)
-                .OrderByDescending(m => m.CreatedAt)
-                .Take(maxCount)
+            take = take < 1 ? 50 : take > 200 ? 200 : take;
+
+            // Cursor-based pagination: the client fetches the newest page
+            // first, then walks further back in history by passing the id
+            // of the oldest message it already has as `beforeId`. Fetching
+            // take+1 lets us tell whether there is another older page
+            // without a separate COUNT query.
+            var query = _context.ChatMessages
+                .Where(m => m.ConversationId == conversationId);
+
+            if (beforeId.HasValue)
+            {
+                query = query.Where(m => m.Id < beforeId.Value);
+            }
+
+            var descending = await query
+                .OrderByDescending(m => m.Id)
+                .Take(take + 1)
                 .ToListAsync();
 
-            recentDescending.Reverse();
+            var hasMore = descending.Count > take;
 
-            return recentDescending;
+            if (hasMore)
+            {
+                descending.RemoveAt(descending.Count - 1);
+            }
+
+            descending.Reverse();
+
+            return (descending, hasMore);
         }
 
         public async Task Save()

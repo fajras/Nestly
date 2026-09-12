@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nestly.Model.Entity
 {
-    public class HealthEntry
+    public class HealthEntry : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -14,6 +14,8 @@ namespace Nestly.Model.Entity
         public decimal? TemperatureC { get; set; }
         public string? Medicines { get; set; }
         public string? DoctorVisit { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
 
         public BabyProfile Baby { get; set; }

@@ -45,6 +45,18 @@ namespace Nestly.WebAPI.Controllers
         }
 
         [Authorize(Roles = "Parent")]
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<BabyProfileSummaryDto>> GetById(long id)
+        {
+            await _currentUserService
+                .EnsureBabyOwnershipAsync(id);
+
+            var result = await _service.GetById(id);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Parent")]
         [HttpPost]
         public async Task<ActionResult<BabyProfileSummaryDto>> Create(
             [FromBody] CreateBabyProfileDto request)

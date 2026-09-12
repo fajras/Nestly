@@ -76,7 +76,7 @@ public class BlogMediaController : ControllerBase
             return NotFound("Blog not found.");
         }
 
-        if (blogId <= 12)
+        if (post.IsSystemPost)
         {
             return BadRequest("System blog posts cannot be modified.");
         }

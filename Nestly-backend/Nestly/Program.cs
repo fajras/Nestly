@@ -65,6 +65,7 @@ builder.Services.AddScoped<IBabyHealthMonitoringService, BabyHealthMonitoringSer
 builder.Services.AddPediatricMLModels();
 builder.Services.AddQaTriageModel();
 builder.Services.AddSingleton<RabbitMqPublisher>();
+builder.Services.AddSingleton<IUserConnectionTracker, UserConnectionTracker>();
 
 builder.Services.AddSignalR();
 builder.Services.AddIdentityCore<IdentityUser>()
@@ -111,6 +112,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
             }
 
             return Task.CompletedTask;
+        },
+        // Manual revocation (e.g. logout) has to be enforced here: a JWT is
+        // otherwise self-contained and stays "valid" by signature/expiry
+        // alone until it expires, even after the user has explicitly
+        // logged out. Access tokens are short-lived, so this blacklist
+        // check only matters for the token's remaining few minutes.
+        OnTokenValidated = async context =>
+        {
+            var jti = context.Principal?.FindFirst(
+                System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+
+            if (string.IsNullOrEmpty(jti))
+            {
+                return;
+            }
+
+            var tokenRepository = context.HttpContext.RequestServices
+                .GetRequiredService<ITokenRepository>();
+
+            if (await tokenRepository.IsAccessTokenRevokedAsync(jti))
+            {
+                context.Fail("Token has been revoked.");
+            }
         }
     };
 });

@@ -12,6 +12,12 @@ class ApiClient {
 
   static bool _isRedirecting = false;
 
+  // Concurrent 401s (several requests in flight at once) must not each
+  // trigger their own refresh call - they'd race to rotate the same
+  // refresh token and all but the first would fail. Every caller awaits
+  // this same in-flight future instead.
+  static Future<bool>? _refreshInFlight;
+
   static String get baseUrl {
     if (_baseUrl.isEmpty) {
       throw Exception(
@@ -35,6 +41,45 @@ class ApiClient {
     );
 
     _isRedirecting = false;
+  }
+
+  /// Exchanges the stored refresh token for a new access/refresh token
+  /// pair. Returns false (without throwing) if there's no refresh token,
+  /// or the server rejects it (expired/revoked) - the caller then falls
+  /// back to a full logout.
+  static Future<bool> _refreshAccessToken() {
+    return _refreshInFlight ??= () async {
+      try {
+        final refreshToken = await AuthStorage.getRefreshToken();
+        if (refreshToken == null) return false;
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/auth/refresh'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode({'refreshToken': refreshToken}),
+        );
+
+        if (response.statusCode != 200) return false;
+
+        final data = jsonDecode(response.body);
+        final newToken = data['token'];
+        final newRefreshToken = data['refreshToken'];
+
+        if (newToken == null || newRefreshToken == null) return false;
+
+        await AuthStorage.saveTokens(
+          token: newToken,
+          refreshToken: newRefreshToken,
+        );
+
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }().whenComplete(() => _refreshInFlight = null);
   }
 
   static Future<http.Response> _checkResponse(
@@ -61,19 +106,37 @@ class ApiClient {
     return headers;
   }
 
-  static Future<http.Response> get(
-    String path, {
+  /// Runs [send] with the current access token; on a 401 it tries a
+  /// silent refresh once and retries [send] with the new token before
+  /// giving up and letting `_checkResponse` sign the user out.
+  static Future<http.Response> _sendWithRefresh(
+    Future<http.Response> Function(String? token) send, {
     bool skipUnauthorizedHandler = false,
   }) async {
     final token = await AuthStorage.getToken();
+    var response = await send(token);
 
-    final response = await http.get(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(token),
-    );
+    if (response.statusCode == 401 && !skipUnauthorizedHandler) {
+      final refreshed = await _refreshAccessToken();
+
+      if (refreshed) {
+        final newToken = await AuthStorage.getToken();
+        response = await send(newToken);
+      }
+    }
 
     return _checkResponse(
       response,
+      skipUnauthorizedHandler: skipUnauthorizedHandler,
+    );
+  }
+
+  static Future<http.Response> get(
+    String path, {
+    bool skipUnauthorizedHandler = false,
+  }) {
+    return _sendWithRefresh(
+      (token) => http.get(Uri.parse('$baseUrl$path'), headers: _headers(token)),
       skipUnauthorizedHandler: skipUnauthorizedHandler,
     );
   }
@@ -82,17 +145,13 @@ class ApiClient {
     String path, {
     Object? body,
     bool skipUnauthorizedHandler = false,
-  }) async {
-    final token = await AuthStorage.getToken();
-
-    final response = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(token),
-      body: body == null ? null : jsonEncode(body),
-    );
-
-    return _checkResponse(
-      response,
+  }) {
+    return _sendWithRefresh(
+      (token) => http.post(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers(token),
+        body: body == null ? null : jsonEncode(body),
+      ),
       skipUnauthorizedHandler: skipUnauthorizedHandler,
     );
   }
@@ -101,17 +160,13 @@ class ApiClient {
     String path, {
     Object? body,
     bool skipUnauthorizedHandler = false,
-  }) async {
-    final token = await AuthStorage.getToken();
-
-    final response = await http.patch(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(token),
-      body: body == null ? null : jsonEncode(body),
-    );
-
-    return _checkResponse(
-      response,
+  }) {
+    return _sendWithRefresh(
+      (token) => http.patch(
+        Uri.parse('$baseUrl$path'),
+        headers: _headers(token),
+        body: body == null ? null : jsonEncode(body),
+      ),
       skipUnauthorizedHandler: skipUnauthorizedHandler,
     );
   }
@@ -119,16 +174,9 @@ class ApiClient {
   static Future<http.Response> delete(
     String path, {
     bool skipUnauthorizedHandler = false,
-  }) async {
-    final token = await AuthStorage.getToken();
-
-    final response = await http.delete(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(token),
-    );
-
-    return _checkResponse(
-      response,
+  }) {
+    return _sendWithRefresh(
+      (token) => http.delete(Uri.parse('$baseUrl$path'), headers: _headers(token)),
       skipUnauthorizedHandler: skipUnauthorizedHandler,
     );
   }
@@ -138,32 +186,61 @@ class ApiClient {
     required File file,
     bool skipUnauthorizedHandler = false,
   }) async {
-    final token = await AuthStorage.getToken();
+    Future<http.Response> sendOnce(String? token) async {
+      final req = http.MultipartRequest('POST', Uri.parse('$baseUrl$path'));
 
-    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl$path'));
+      if (token != null) {
+        req.headers['Authorization'] = 'Bearer $token';
+      }
 
-    if (token != null) {
-      req.headers['Authorization'] = 'Bearer $token';
+      req.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          filename: file.path.split('/').last,
+        ),
+      );
+
+      final streamed = await req.send();
+      return http.Response.fromStream(streamed);
     }
 
-    req.files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        file.path,
-        filename: file.path.split('/').last,
-      ),
+    final res = await _sendWithRefresh(
+      sendOnce,
+      skipUnauthorizedHandler: skipUnauthorizedHandler,
     );
 
-    final res = await req.send();
-
-    if (res.statusCode == 401 && !skipUnauthorizedHandler) {
-      await _handleUnauthorized();
+    if (res.statusCode == 401) {
+      // Already handled (redirect to login) by _sendWithRefresh/_checkResponse.
       return;
     }
 
     if (res.statusCode != 200 && res.statusCode != 201) {
-      final body = await res.stream.bytesToString();
-      throw Exception(body);
+      throw Exception(res.body);
+    }
+  }
+
+  /// Best-effort server-side revocation of the current session's refresh
+  /// token (and the access token used to call it), then clears local
+  /// storage. Call this instead of `AuthStorage.clear()` directly whenever
+  /// the user explicitly signs out, so a manually-logged-out token can't
+  /// still be replayed until it naturally expires.
+  static Future<void> logout() async {
+    try {
+      final refreshToken = await AuthStorage.getRefreshToken();
+
+      if (refreshToken != null) {
+        await post(
+          '/api/auth/logout',
+          body: {'refreshToken': refreshToken},
+          skipUnauthorizedHandler: true,
+        );
+      }
+    } catch (_) {
+      // Best-effort: local sign-out must proceed even if the server call
+      // fails (offline, token already expired, etc).
+    } finally {
+      await AuthStorage.clear();
     }
   }
 }

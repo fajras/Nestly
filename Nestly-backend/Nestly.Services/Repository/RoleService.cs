@@ -8,11 +8,6 @@ namespace Nestly.Services.Repository
 {
     public class RoleService : IRoleService
     {
-        // Roles seeded by RoleSeeder: 1 = Parent, 2 = Doctor. These are
-        // system roles referenced throughout auth/authorization and cannot
-        // be renamed or removed.
-        private static readonly HashSet<long> SystemRoleIds = new() { 1, 2 };
-
         private readonly NestlyDbContext _db;
 
         public RoleService(NestlyDbContext db)
@@ -25,7 +20,8 @@ namespace Nestly.Services.Repository
             return new RoleDto
             {
                 Id = entity.Id,
-                Name = entity.Name
+                Name = entity.Name,
+                IsSystemRole = entity.IsSystemRole
             };
         }
 
@@ -94,7 +90,8 @@ namespace Nestly.Services.Repository
 
             var entity = new Role
             {
-                Name = name
+                Name = name,
+                IsSystemRole = false
             };
 
             _db.Roles.Add(entity);
@@ -105,16 +102,16 @@ namespace Nestly.Services.Repository
 
         public async Task<RoleDto> Update(long id, RoleUpdateDto request)
         {
-            if (SystemRoleIds.Contains(id))
-            {
-                throw new BusinessException("System roles cannot be edited.");
-            }
-
             var entity = await _db.Roles.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Role not found.");
+            }
+
+            if (entity.IsSystemRole)
+            {
+                throw new BusinessException("System roles cannot be edited.");
             }
 
             if (!string.IsNullOrWhiteSpace(request.Name))
@@ -139,16 +136,16 @@ namespace Nestly.Services.Repository
 
         public async Task Delete(long id)
         {
-            if (SystemRoleIds.Contains(id))
-            {
-                throw new BusinessException("System roles cannot be deleted.");
-            }
-
             var entity = await _db.Roles.FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
             {
                 throw new NotFoundException("Role not found.");
+            }
+
+            if (entity.IsSystemRole)
+            {
+                throw new BusinessException("System roles cannot be deleted.");
             }
 
             _db.Roles.Remove(entity);

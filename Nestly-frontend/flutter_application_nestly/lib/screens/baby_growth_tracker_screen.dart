@@ -5,6 +5,7 @@ import 'package:flutter_application_nestly/layouts/nestly_toast.dart'
     show NestlyToast;
 import 'package:flutter_application_nestly/network/api_client.dart'
     show ApiClient;
+import 'package:flutter_application_nestly/network/local_json_cache.dart';
 import 'package:flutter_application_nestly/main.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_nestly/providers/api_response_helper.dart';
@@ -36,6 +37,15 @@ class BabyGrowthEntry {
       headCircumferenceCm: (json['headCircumferenceCm'] as num?)?.toDouble(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'babyId': babyId,
+    'weekNumber': weekNumber,
+    'weightKg': weightKg,
+    'heightCm': heightCm,
+    'headCircumferenceCm': headCircumferenceCm,
+  };
 }
 
 class CreateBabyGrowthRequest {
@@ -85,41 +95,75 @@ class BabyGrowthApiService {
 
   static final Map<int, List<BabyGrowthEntry>> _cache = {};
 
+  static String _diskCacheKey(int babyId) => 'baby_growth_$babyId';
+
+  /// Clears both the in-memory and the persisted cache for a baby, so the
+  /// next `getForBaby` call re-fetches instead of serving stale data after
+  /// a create/patch.
+  static void invalidate(int babyId) {
+    _cache.remove(babyId);
+    LocalJsonCache.putRaw(_diskCacheKey(babyId), '');
+  }
+
   Future<List<BabyGrowthEntry>> getForBaby({required int babyId}) async {
     if (_cache.containsKey(babyId)) {
       return _cache[babyId]!;
     }
 
-    List<BabyGrowthEntry> all = [];
-    int page = 1;
-    bool hasMore = true;
+    final cacheKey = _diskCacheKey(babyId);
 
-    while (hasMore) {
-      final resp = await ApiClient.get(
-        '$_basePath/my?BabyId=$babyId&Page=$page&PageSize=100',
-      );
+    try {
+      List<BabyGrowthEntry> all = [];
+      int page = 1;
+      bool hasMore = true;
 
-      if (resp.statusCode != 200) {
-        throw Exception('Failed to load baby growth data');
+      while (hasMore) {
+        final resp = await ApiClient.get(
+          '$_basePath/my?BabyId=$babyId&Page=$page&PageSize=100',
+        );
+
+        if (resp.statusCode != 200) {
+          throw Exception('Failed to load baby growth data');
+        }
+
+        final decoded = jsonDecode(resp.body);
+
+        final List<dynamic> items = ApiResponseHelper.extractList(resp.body);
+        final totalCount = decoded['totalCount'] ?? 0;
+
+        final list = items.map((e) => BabyGrowthEntry.fromJson(e)).toList();
+
+        all.addAll(list);
+
+        hasMore = all.length < totalCount;
+        page++;
       }
 
-      final decoded = jsonDecode(resp.body);
+      all.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
 
-      final List<dynamic> items = ApiResponseHelper.extractList(resp.body);
-      final totalCount = decoded['totalCount'] ?? 0;
+      _cache[babyId] = all;
 
-      final list = items.map((e) => BabyGrowthEntry.fromJson(e)).toList();
+      // Persisted so the chart still has something to show right after
+      // opening the app, and as a fallback if a later fetch fails offline.
+      await LocalJsonCache.putRaw(
+        cacheKey,
+        jsonEncode(all.map((e) => e.toJson()).toList()),
+      );
 
-      all.addAll(list);
+      return all;
+    } catch (e) {
+      final cached = await LocalJsonCache.getRaw(cacheKey);
 
-      hasMore = all.length < totalCount;
-      page++;
+      if (cached != null && cached.isNotEmpty) {
+        final list = (jsonDecode(cached) as List)
+            .map((e) => BabyGrowthEntry.fromJson(e as Map<String, dynamic>))
+            .toList();
+        _cache[babyId] = list;
+        return list;
+      }
+
+      rethrow;
     }
-
-    all.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
-
-    _cache[babyId] = all;
-    return all;
   }
 
   Future<BabyGrowthEntry> create({
@@ -362,7 +406,7 @@ class _BabyGrowthTrackerScreenState extends State<BabyGrowthTrackerScreen> {
         _touchedWeek = updated.weekNumber;
       }
 
-      BabyGrowthApiService._cache.remove(widget.babyId);
+      BabyGrowthApiService.invalidate(widget.babyId);
 
       NestlyToast.success(
         context,

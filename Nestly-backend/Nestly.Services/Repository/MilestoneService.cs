@@ -187,7 +187,8 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Milestone not found.");
             }
 
-            _db.Milestones.Remove(dbEntity);
+            dbEntity.IsDeleted = true;
+            dbEntity.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
 

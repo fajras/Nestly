@@ -13,7 +13,8 @@ namespace Nestly.Services.Interfaces
 
         Task<List<ChatConversation>> GetUserConversations(long userId);
 
-        Task<List<ChatMessage>> GetMessages(long conversationId, int maxCount = 200);
+        Task<(List<ChatMessage> Messages, bool HasMore)> GetMessages(
+            long conversationId, int take = 50, long? beforeId = null);
 
         Task Save();
     }

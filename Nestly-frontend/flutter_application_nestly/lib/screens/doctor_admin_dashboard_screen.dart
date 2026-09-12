@@ -11,6 +11,7 @@ import 'package:flutter_application_nestly/screens/admin_blog_screen.dart';
 import 'package:flutter_application_nestly/screens/admin_fetal_week_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_questions_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_admin_weekly_advice.dart';
+import 'package:flutter_application_nestly/screens/doctor_health_alert_review_screen.dart';
 import 'package:flutter_application_nestly/screens/doctor_system_management_screen.dart';
 import 'package:flutter_application_nestly/screens/edit_doctor_profile_screen.dart';
 import 'package:flutter_application_nestly/screens/notifications_screen.dart';
@@ -102,69 +103,6 @@ class _DoctorAdminDashboardScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        iconTheme: const IconThemeData(color: AppColors.seed),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_rounded),
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationsScreen(
-                        accent: AppColors.seed,
-                        soft: AppColors.babyBlue,
-                      ),
-                    ),
-                  );
-
-                  notificationState.loadUnreadCount();
-                },
-              ),
-
-              AnimatedBuilder(
-                animation: notificationState,
-                builder: (_, __) {
-                  final count = notificationState.unreadCount;
-
-                  if (count == 0) return const SizedBox();
-
-                  return Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.seed,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      child: Center(
-                        child: Text(
-                          count > 9 ? '9+' : count.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
       body: Row(
         children: [
           _Sidebar(
@@ -176,7 +114,77 @@ class _DoctorAdminDashboardScreenState
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
-              child: _buildContent(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.notifications_rounded,
+                            color: AppColors.seed,
+                          ),
+                          onPressed: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const NotificationsScreen(
+                                  accent: AppColors.seed,
+                                  soft: AppColors.babyBlue,
+                                ),
+                              ),
+                            );
+
+                            notificationState.loadUnreadCount();
+                          },
+                        ),
+
+                        AnimatedBuilder(
+                          animation: notificationState,
+                          builder: (_, __) {
+                            final count = notificationState.unreadCount;
+
+                            if (count == 0) return const SizedBox();
+
+                            return Positioned(
+                              right: 4,
+                              top: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.seed,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    count > 9 ? '9+' : count.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Expanded(child: _buildContent()),
+                ],
+              ),
             ),
           ),
         ],
@@ -187,7 +195,10 @@ class _DoctorAdminDashboardScreenState
   Future<void> _handleLogout() async {
     await _signalRService.disconnect();
     notificationState.reset();
-    await AuthStorage.clear();
+    // Revokes the refresh token (and the current access token) server-side
+    // before clearing local storage, instead of just forgetting the token
+    // locally and leaving it usable until it naturally expires.
+    await ApiClient.logout();
 
     if (!mounted) return;
 
@@ -223,6 +234,8 @@ class _DoctorAdminDashboardScreenState
         );
       case 7:
         return AdminFetalDevelopmentScreen();
+      case 8:
+        return const DoctorHealthAlertReviewScreen();
       default:
         return const SizedBox();
     }
@@ -330,6 +343,13 @@ class _Sidebar extends StatelessWidget {
                     icon: Icons.manage_accounts,
                     label: 'Upravljanje računom',
                     index: 6,
+                    selectedIndex: selectedIndex,
+                    onTap: onSelect,
+                  ),
+                  _SidebarItem(
+                    icon: Icons.health_and_safety_rounded,
+                    label: 'Zdravstvena upozorenja',
+                    index: 8,
                     selectedIndex: selectedIndex,
                     onTap: onSelect,
                   ),

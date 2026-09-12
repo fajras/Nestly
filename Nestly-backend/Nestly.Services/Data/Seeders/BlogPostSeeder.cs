@@ -30,7 +30,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-25),
                     Phase = UserPhase.BellyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -41,7 +42,7 @@ namespace Nestly.Services.Data.Seeders
                         "Prije pregleda zapišite datum posljednje menstruacije jer će ljekar na osnovu toga procijeniti gestacijsku dob. " +
                         "Sastavite listu lijekova, suplemenata i hroničnih stanja koja imate kako bi ljekar procijenio sigurnost terapije. " +
                         "Pripremite pitanja o prehrani, dozvoljenoj fizičkoj aktivnosti, putovanjima i simptomima koji vas brinu. " +
-                        "Na pregledu se obično rade laboratorijske analize krvi i urina kako bi se provjerilo opće stanje organizma i vrijednosti važnih parametara. " +
+                        "Na pregledu se obično rade laboratorijske analize krvi i urina kako bi se provjerilo opšte stanje organizma i vrijednosti važnih parametara. " +
                         "Ljekar može uraditi i ultrazvuk kako bi provjerio razvoj ploda i prisustvo otkucaja srca. " +
                         "Nemojte se ustručavati pričati o mučnini, umoru, strahovima ili emocionalnim promjenama, jer sve to spada u važan dio anamneze. " +
                         "Preporučuje se da sa sobom povedete partnera ili blisku osobu koja vam pruža podršku i može zapamtiti informacije umjesto vas. " +
@@ -53,7 +54,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-22),
                     Phase = UserPhase.BellyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -76,7 +78,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-20),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 1,
-                    WeekTo = 16
+                    WeekTo = 16,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -99,7 +102,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-19),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -122,7 +126,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-17),
                     Phase = UserPhase.BellyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -145,7 +150,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-15),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -168,7 +174,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-13),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -190,7 +197,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-10),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -213,7 +221,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-8),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 1,
-                    WeekTo = 12
+                    WeekTo = 12,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -236,7 +245,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-6),
                     Phase = UserPhase.BellyTime,
                     WeekFrom = 13,
-                    WeekTo = 27
+                    WeekTo = 27,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -259,7 +269,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-4),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 13,
-                    WeekTo = 24
+                    WeekTo = 24,
+                    IsSystemPost = true
                 },
                 new BlogPost
                 {
@@ -282,7 +293,8 @@ namespace Nestly.Services.Data.Seeders
                     CreatedAt = DateTime.UtcNow.AddDays(-2),
                     Phase = UserPhase.BabyTime,
                     WeekFrom = 13,
-                    WeekTo = 24
+                    WeekTo = 24,
+                    IsSystemPost = true
                 }
             );
         }

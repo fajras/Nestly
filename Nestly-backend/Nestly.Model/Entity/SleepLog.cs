@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace Nestly.Model.Entity
 {
-    public class SleepLog
+    public class SleepLog : ISoftDeletable
     {
         [Key]
         public long Id { get; set; }
@@ -32,6 +32,9 @@ namespace Nestly.Model.Entity
                 return (int)((TimeSpan.FromHours(24) - StartTime + EndTime).TotalMinutes);
             }
         }
+
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
 
         [JsonIgnore]
         public BabyProfile Baby { get; set; }

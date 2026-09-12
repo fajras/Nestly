@@ -54,7 +54,9 @@ namespace Nestly.WebAPI.Controllers
 
         [HttpGet("messages/{conversationId}")]
         public async Task<IActionResult> GetMessages(
-            long conversationId)
+            long conversationId,
+            [FromQuery] int take = 50,
+            [FromQuery] long? beforeId = null)
         {
             var userId =
                 _currentUserService
@@ -68,7 +70,9 @@ namespace Nestly.WebAPI.Controllers
                 await _chatService
                     .GetMessages(
                         conversationId,
-                        userId));
+                        userId,
+                        take,
+                        beforeId));
         }
 
         [HttpGet("available-users")]

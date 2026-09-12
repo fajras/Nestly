@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/layouts/nestly_toast.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/network/local_json_cache.dart';
 import 'package:flutter_application_nestly/main.dart';
 
 String snippet(String text, {int max = 200}) {
@@ -31,18 +32,35 @@ class WeeklyAdviceDto {
 }
 
 class WeeklyAdviceApi {
+  // Persisted to disk (not just kept in memory) so advice already seen once
+  // survives an app restart and remains available as a fallback if a later
+  // request fails while offline - the screen used to hit the API fresh on
+  // every open with nothing to fall back on.
   Future<WeeklyAdviceDto> getByWeek(int week) async {
-    final res = await ApiClient.get(
-      '/api/WeeklyAdvice/week/$week',
-    ).timeout(const Duration(seconds: 10));
+    final cacheKey = 'weekly_advice_week_$week';
 
-    if (res.statusCode != 200) {
-      final error = jsonDecode(res.body);
-      throw Exception(error["message"] ?? "Greška pri učitavanju.");
+    try {
+      final res = await ApiClient.get(
+        '/api/WeeklyAdvice/week/$week',
+      ).timeout(const Duration(seconds: 10));
+
+      if (res.statusCode != 200) {
+        final error = jsonDecode(res.body);
+        throw Exception(error["message"] ?? "Greška pri učitavanju.");
+      }
+
+      await LocalJsonCache.putRaw(cacheKey, res.body);
+
+      return WeeklyAdviceDto.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+    } catch (e) {
+      final cached = await LocalJsonCache.getRaw(cacheKey);
+
+      if (cached != null) {
+        return WeeklyAdviceDto.fromJson(jsonDecode(cached) as Map<String, dynamic>);
+      }
+
+      rethrow;
     }
-
-    final map = jsonDecode(res.body) as Map<String, dynamic>;
-    return WeeklyAdviceDto.fromJson(map);
   }
 }
 

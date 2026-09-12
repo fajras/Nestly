@@ -54,17 +54,45 @@ class ChatRealtimeMessage {
   }
 }
 
+class ChatMessagePage {
+  final List<ChatMessage> items;
+  final bool hasMore;
+
+  ChatMessagePage({required this.items, required this.hasMore});
+}
+
 class ChatApiService {
-  Future<List<ChatMessage>> getMessages(int conversationId) async {
-    final res = await ApiClient.get('/api/chat/messages/$conversationId');
+  /// Cursor-based history: without [beforeId] this returns the most recent
+  /// page (oldest-first within the page); passing the id of the oldest
+  /// message already loaded walks one page further back in history. The
+  /// backend caps `take` and reports [ChatMessagePage.hasMore] so the UI
+  /// knows whether to keep offering "load older messages".
+  Future<ChatMessagePage> getMessages(
+    int conversationId, {
+    int take = 40,
+    int? beforeId,
+  }) async {
+    final query = StringBuffer('take=$take');
+    if (beforeId != null) query.write('&beforeId=$beforeId');
+
+    final res = await ApiClient.get(
+      '/api/chat/messages/$conversationId?$query',
+    );
 
     if (res.statusCode != 200) {
       throw Exception('Failed to load messages');
     }
 
+    final decoded = jsonDecode(res.body);
     final List data = ApiResponseHelper.extractList(res.body);
+    final hasMore = decoded is Map<String, dynamic>
+        ? (decoded['hasMore'] as bool? ?? false)
+        : false;
 
-    return data.map((e) => ChatMessage.fromJson(e)).toList();
+    return ChatMessagePage(
+      items: data.map((e) => ChatMessage.fromJson(e)).toList(),
+      hasMore: hasMore,
+    );
   }
 
   /// Sends a message and returns the conversation id the backend
@@ -132,6 +160,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   HubConnection? _hub;
   bool _loading = true;
+  bool _loadingOlder = false;
+  bool _hasMoreOlder = false;
 
   // Mirrors widget.conversationId but can be updated once a brand-new
   // conversation (id 0) gets its real id from the first sent/received
@@ -144,19 +174,32 @@ class _ChatScreenState extends State<ChatScreen> {
     _conversationId = widget.conversationId;
     _loadMessages();
     _connectRealtime();
+    _scrollCtrl.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    // Message list is not reversed, so "near the top" means close to
+    // minScrollExtent - that's where older history should load.
+    if (!_hasMoreOlder || _loadingOlder || _loading) return;
+
+    if (_scrollCtrl.position.pixels <=
+        _scrollCtrl.position.minScrollExtent + 80) {
+      _loadOlderMessages();
+    }
   }
 
   Future<void> _loadMessages() async {
     try {
       if (_conversationId != 0) {
-        final list = await _api.getMessages(_conversationId);
+        final page = await _api.getMessages(_conversationId);
 
         if (!mounted) return;
 
         setState(() {
           _messages
             ..clear()
-            ..addAll(list);
+            ..addAll(page.items);
+          _hasMoreOlder = page.hasMore;
         });
       }
     } catch (_) {
@@ -167,6 +210,45 @@ class _ChatScreenState extends State<ChatScreen> {
 
       setState(() => _loading = false);
       _scrollToBottom();
+    }
+  }
+
+  Future<void> _loadOlderMessages() async {
+    if (_messages.isEmpty) return;
+
+    setState(() => _loadingOlder = true);
+
+    try {
+      final oldestId = _messages.first.id;
+      final page = await _api.getMessages(
+        _conversationId,
+        beforeId: oldestId == 0 ? null : oldestId,
+      );
+
+      if (!mounted) return;
+
+      // Preserve the user's scroll position relative to the content they
+      // were already looking at, instead of jumping to the top after the
+      // older page is prepended.
+      final previousMaxExtent = _scrollCtrl.position.maxScrollExtent;
+
+      setState(() {
+        _messages.insertAll(0, page.items);
+        _hasMoreOlder = page.hasMore;
+        _loadingOlder = false;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollCtrl.hasClients) return;
+        final newMaxExtent = _scrollCtrl.position.maxScrollExtent;
+        _scrollCtrl.jumpTo(
+          _scrollCtrl.position.pixels + (newMaxExtent - previousMaxExtent),
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingOlder = false);
+      NestlyToast.error(context, 'Greška pri učitavanju starijih poruka');
     }
   }
 
@@ -273,6 +355,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _msgCtrl.dispose();
+    _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.dispose();
     _hub?.stop();
     super.dispose();
@@ -318,12 +401,27 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _messageList() {
+    final showLoader = _loadingOlder;
+
     return ListView.builder(
       controller: _scrollCtrl,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      itemCount: _messages.length,
+      itemCount: _messages.length + (showLoader ? 1 : 0),
       itemBuilder: (_, i) {
-        final m = _messages[i];
+        if (showLoader && i == 0) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+
+        final m = _messages[showLoader ? i - 1 : i];
         final mine = m.senderId == widget.currentUserId;
 
         final timeText =

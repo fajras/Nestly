@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_nestly/network/api_client.dart';
+import 'package:flutter_application_nestly/network/local_json_cache.dart';
 import 'package:flutter_application_nestly/main.dart';
 
 class FetalWeekDto {
@@ -55,22 +56,34 @@ class FetalApi {
   }
 
   Future<FetalWeekDto> _fetch(int week) async {
-    final res = await ApiClient.get(
-      '/api/FetalDevelopmentWeek/week/$week',
-    ).timeout(const Duration(seconds: 10));
+    final cacheKey = 'fetal_week_$week';
 
-    if (res.statusCode != 200) {
-      final error = jsonDecode(res.body);
-      throw Exception(
-        error["message"] ?? "Greška pri učitavanju podataka za sedmicu",
-      );
+    try {
+      final res = await ApiClient.get(
+        '/api/FetalDevelopmentWeek/week/$week',
+      ).timeout(const Duration(seconds: 10));
+
+      if (res.statusCode != 200) {
+        final error = jsonDecode(res.body);
+        throw Exception(
+          error["message"] ?? "Greška pri učitavanju podataka za sedmicu",
+        );
+      }
+
+      // Best-effort: persisted so this week's content survives an app
+      // restart and can be served if a later request fails while offline.
+      await LocalJsonCache.putRaw(cacheKey, res.body);
+
+      return kIsWeb ? _parseWeek(res.body) : await compute(_parseWeek, res.body);
+    } catch (e) {
+      final cached = await LocalJsonCache.getRaw(cacheKey);
+
+      if (cached != null) {
+        return kIsWeb ? _parseWeek(cached) : await compute(_parseWeek, cached);
+      }
+
+      rethrow;
     }
-
-    if (kIsWeb) {
-      return _parseWeek(res.body);
-    }
-
-    return compute(_parseWeek, res.body);
   }
 
   void prefetchAround(int week) {

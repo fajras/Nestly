@@ -84,10 +84,10 @@ namespace Nestly.Services.Data.Migrations
                             Id = 1L,
                             DateOfBirth = new DateTime(1998, 5, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "parent@nestly.com",
-                            FirstName = "TestParent",
+                            FirstName = "Amela",
                             Gender = "Female",
                             IdentityUserId = "b5b77b5d-65b6-4f32-93f4-3f76b14e6f3c",
-                            LastName = "User",
+                            LastName = "Hasić",
                             PhoneNumber = "+38761000000",
                             RoleId = 1L
                         },
@@ -96,12 +96,132 @@ namespace Nestly.Services.Data.Migrations
                             Id = 2L,
                             DateOfBirth = new DateTime(1990, 3, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "doctor@nestly.com",
-                            FirstName = "TestDoctor",
+                            FirstName = "Naida",
                             Gender = "Female",
                             IdentityUserId = "work7b5d-65b6-4f32-93f4-126sko5e6f3c",
-                            LastName = "User",
+                            LastName = "Bećirović",
                             PhoneNumber = "+38762000000",
                             RoleId = 2L
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            DateOfBirth = new DateTime(1996, 4, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "amina.hodzic@nestly.com",
+                            FirstName = "Amina",
+                            Gender = "Female",
+                            IdentityUserId = "8339ef91-9659-4986-b918-af66726adf19",
+                            LastName = "Hodžić",
+                            PhoneNumber = "+3876100001",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            DateOfBirth = new DateTime(1993, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "lejla.kovacevic@nestly.com",
+                            FirstName = "Lejla",
+                            Gender = "Female",
+                            IdentityUserId = "aa140327-579a-4a94-b635-b4d9a915d279",
+                            LastName = "Kovačević",
+                            PhoneNumber = "+3876100002",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            DateOfBirth = new DateTime(1991, 7, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "ajla.delic@nestly.com",
+                            FirstName = "Ajla",
+                            Gender = "Female",
+                            IdentityUserId = "d771c068-ae58-4a8c-abc1-88ea3418bcc3",
+                            LastName = "Delić",
+                            PhoneNumber = "+3876100003",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            DateOfBirth = new DateTime(1994, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "emina.softic@nestly.com",
+                            FirstName = "Emina",
+                            Gender = "Female",
+                            IdentityUserId = "27cc0316-257a-442d-bbe5-46656ec343e0",
+                            LastName = "Softić",
+                            PhoneNumber = "+3876100004",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            DateOfBirth = new DateTime(1995, 9, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "selma.begic@nestly.com",
+                            FirstName = "Selma",
+                            Gender = "Female",
+                            IdentityUserId = "2d30b0f8-e94e-4a85-be12-bb2bb528b70b",
+                            LastName = "Begić",
+                            PhoneNumber = "+3876100005",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            DateOfBirth = new DateTime(1992, 1, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "amra.halilovic@nestly.com",
+                            FirstName = "Amra",
+                            Gender = "Female",
+                            IdentityUserId = "d66502ad-89df-4de1-90ab-61c153a26d12",
+                            LastName = "Halilović",
+                            PhoneNumber = "+3876100006",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 9L,
+                            DateOfBirth = new DateTime(1990, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "merisa.karic@nestly.com",
+                            FirstName = "Merisa",
+                            Gender = "Female",
+                            IdentityUserId = "e02fd7d5-9498-4439-877b-1170b9ee6f4e",
+                            LastName = "Karić",
+                            PhoneNumber = "+3876100007",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 10L,
+                            DateOfBirth = new DateTime(1989, 12, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "dzenita.mujic@nestly.com",
+                            FirstName = "Dženita",
+                            Gender = "Female",
+                            IdentityUserId = "13edc40b-a767-49d0-a194-610e85ae84d0",
+                            LastName = "Mujić",
+                            PhoneNumber = "+3876100008",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 11L,
+                            DateOfBirth = new DateTime(1988, 3, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "amila.zukic@nestly.com",
+                            FirstName = "Amila",
+                            Gender = "Female",
+                            IdentityUserId = "323c2855-426d-4726-9520-bdd2da76a5d5",
+                            LastName = "Zukić",
+                            PhoneNumber = "+3876100009",
+                            RoleId = 1L
+                        },
+                        new
+                        {
+                            Id = 12L,
+                            DateOfBirth = new DateTime(1987, 10, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "nadira.sehic@nestly.com",
+                            FirstName = "Nadira",
+                            Gender = "Female",
+                            IdentityUserId = "465ced2a-f9e9-4f23-acbb-5a11658737b2",
+                            LastName = "Šehić",
+                            PhoneNumber = "+3876100010",
+                            RoleId = 1L
                         });
                 });
 
@@ -137,6 +257,260 @@ namespace Nestly.Services.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("BabyGrowths");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 34.5m,
+                            HeightCm = 50.0m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.4m
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 35.0m,
+                            HeightCm = 51.5m,
+                            WeekNumber = (short)2,
+                            WeightKg = 3.7m
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 36.2m,
+                            HeightCm = 54.5m,
+                            WeekNumber = (short)4,
+                            WeightKg = 4.4m
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 37.2m,
+                            HeightCm = 57.0m,
+                            WeekNumber = (short)6,
+                            WeightKg = 5.0m
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 38.0m,
+                            HeightCm = 59.0m,
+                            WeekNumber = (short)8,
+                            WeightKg = 5.5m
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 38.7m,
+                            HeightCm = 60.5m,
+                            WeekNumber = (short)10,
+                            WeightKg = 6.0m
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 39.5m,
+                            HeightCm = 62.5m,
+                            WeekNumber = (short)13,
+                            WeightKg = 6.6m
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 40.5m,
+                            HeightCm = 65.0m,
+                            WeekNumber = (short)17,
+                            WeightKg = 7.3m
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 41.3m,
+                            HeightCm = 67.0m,
+                            WeekNumber = (short)21,
+                            WeightKg = 7.9m
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            BabyId = 1L,
+                            HeadCircumferenceCm = 42.0m,
+                            HeightCm = 68.5m,
+                            WeekNumber = (short)26,
+                            WeightKg = 8.4m
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            BabyId = 2L,
+                            HeadCircumferenceCm = 34.62m,
+                            HeightCm = 50.55m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.58m
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            BabyId = 2L,
+                            HeadCircumferenceCm = 34.74m,
+                            HeightCm = 51.1m,
+                            WeekNumber = (short)2,
+                            WeightKg = 3.76m
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            BabyId = 2L,
+                            HeadCircumferenceCm = 34.98m,
+                            HeightCm = 52.2m,
+                            WeekNumber = (short)4,
+                            WeightKg = 4.12m
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            BabyId = 3L,
+                            HeadCircumferenceCm = 34.62m,
+                            HeightCm = 50.55m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.58m
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            BabyId = 3L,
+                            HeadCircumferenceCm = 35.46m,
+                            HeightCm = 54.4m,
+                            WeekNumber = (short)8,
+                            WeightKg = 4.84m
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            BabyId = 3L,
+                            HeadCircumferenceCm = 36.54m,
+                            HeightCm = 59.35m,
+                            WeekNumber = (short)17,
+                            WeightKg = 6.46m
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            BabyId = 4L,
+                            HeadCircumferenceCm = 34.62m,
+                            HeightCm = 50.55m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.58m
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            BabyId = 4L,
+                            HeadCircumferenceCm = 36.54m,
+                            HeightCm = 59.35m,
+                            WeekNumber = (short)17,
+                            WeightKg = 6.46m
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            BabyId = 4L,
+                            HeadCircumferenceCm = 38.7m,
+                            HeightCm = 69.25m,
+                            WeekNumber = (short)35,
+                            WeightKg = 9.7m
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            BabyId = 5L,
+                            HeadCircumferenceCm = 34.62m,
+                            HeightCm = 50.55m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.58m
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            BabyId = 5L,
+                            HeadCircumferenceCm = 37.86m,
+                            HeightCm = 65.4m,
+                            WeekNumber = (short)28,
+                            WeightKg = 8.44m
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            BabyId = 5L,
+                            HeadCircumferenceCm = 41.34m,
+                            HeightCm = 81.35m,
+                            WeekNumber = (short)57,
+                            WeightKg = 13.66m
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            BabyId = 6L,
+                            HeadCircumferenceCm = 34.62m,
+                            HeightCm = 50.55m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.58m
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            BabyId = 6L,
+                            HeadCircumferenceCm = 39.42m,
+                            HeightCm = 72.55m,
+                            WeekNumber = (short)41,
+                            WeightKg = 10.78m
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            BabyId = 6L,
+                            HeadCircumferenceCm = 44.34m,
+                            HeightCm = 95.1m,
+                            WeekNumber = (short)82,
+                            WeightKg = 18.16m
+                        },
+                        new
+                        {
+                            Id = 5016L,
+                            BabyId = 7L,
+                            HeadCircumferenceCm = 34.62m,
+                            HeightCm = 50.55m,
+                            WeekNumber = (short)1,
+                            WeightKg = 3.58m
+                        },
+                        new
+                        {
+                            Id = 5017L,
+                            BabyId = 7L,
+                            HeadCircumferenceCm = 42.3m,
+                            HeightCm = 85.75m,
+                            WeekNumber = (short)65,
+                            WeightKg = 15.1m
+                        },
+                        new
+                        {
+                            Id = 5018L,
+                            BabyId = 7L,
+                            HeadCircumferenceCm = 50.1m,
+                            HeightCm = 121.5m,
+                            WeekNumber = (short)130,
+                            WeightKg = 26.8m
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.BabyProfile", b =>
@@ -179,10 +553,58 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = 1L,
                             BabyName = "Emma",
-                            BirthDate = new DateTime(2024, 12, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BirthDate = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Gender = "Female",
                             ParentProfileId = 1L,
                             PregnancyId = 1L
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            BabyName = "Faris",
+                            BirthDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Gender = "Male",
+                            ParentProfileId = 6L
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            BabyName = "Amar",
+                            BirthDate = new DateTime(2026, 5, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Gender = "Male",
+                            ParentProfileId = 7L
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            BabyName = "Lamija",
+                            BirthDate = new DateTime(2026, 1, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Gender = "Female",
+                            ParentProfileId = 8L
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            BabyName = "Hana",
+                            BirthDate = new DateTime(2025, 8, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Gender = "Female",
+                            ParentProfileId = 9L
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            BabyName = "Adnan",
+                            BirthDate = new DateTime(2025, 2, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Gender = "Male",
+                            ParentProfileId = 10L
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            BabyName = "Tarik",
+                            BirthDate = new DateTime(2024, 3, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Gender = "Male",
+                            ParentProfileId = 11L
                         });
                 });
 
@@ -193,6 +615,9 @@ namespace Nestly.Services.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsSystemCategory")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -210,31 +635,37 @@ namespace Nestly.Services.Data.Migrations
                         new
                         {
                             Id = 1,
+                            IsSystemCategory = true,
                             Name = "Trudnoća i zdravlje"
                         },
                         new
                         {
                             Id = 2,
+                            IsSystemCategory = true,
                             Name = "Njega bebe"
                         },
                         new
                         {
                             Id = 3,
+                            IsSystemCategory = true,
                             Name = "Ishrana i recepti"
                         },
                         new
                         {
                             Id = 4,
+                            IsSystemCategory = true,
                             Name = "Savjeti roditelja"
                         },
                         new
                         {
                             Id = 5,
+                            IsSystemCategory = true,
                             Name = "Psihološko zdravlje"
                         },
                         new
                         {
                             Id = 6,
+                            IsSystemCategory = true,
                             Name = "Razvoj djeteta"
                         });
                 });
@@ -261,6 +692,9 @@ namespace Nestly.Services.Data.Migrations
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsSystemPost")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Phase")
                         .HasColumnType("int");
@@ -293,8 +727,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 1L,
                             AuthorId = 1L,
                             Content = "Umor i izražena pospanost često su prvi znak trudnoće, čak i prije izostanka menstruacije. Mnoge žene primijete pojačanu osjetljivost ili bol u grudima, što je posljedica hormonalnih promjena. Rani hormonski disbalans može uzrokovati promjene raspoloženja, razdražljivost ili neočekivane emotivne reakcije. Kod nekih se javlja pojačan ili potpuno promijenjen apetit, kao i iznenadna odbojnost prema mirisu ili ukusu hrane koju su ranije voljele. Metalni ukus u ustima je još jedan čest, ali manje poznat simptom ranih sedmica trudnoće. Blage grčeve u donjem dijelu stomaka žene često pogrešno povežu s dolaskom menstruacije, iako mogu biti znak implantacije. Osjetljivost na mirise može biti toliko izražena da parfemi, hrana ili miris kuće postaju neugodni. Mučnina se ne javlja uvijek samo ujutro, već može trajati tokom cijelog dana ili u talasima. Pojačana potreba za mokrenjem može se pojaviti rano zbog promjena u cirkulaciji i hormona. Važno je osluškivati svoje tijelo i, uz kombinaciju više simptoma, uraditi test na trudnoću i javiti se ljekaru radi potvrde. Rano prepoznavanje simptoma omogućava pravovremenu brigu o ishrani, suplementima i zdravlju mame i bebe.",
-                            CreatedAt = new DateTime(2026, 7, 3, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6921),
+                            CreatedAt = new DateTime(2026, 8, 14, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7683),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage1.png",
+                            IsSystemPost = true,
                             Phase = 1,
                             Title = "Prvi simptomi trudnoće koje možda niste očekivali",
                             WeekFrom = 1,
@@ -304,9 +739,10 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = 2L,
                             AuthorId = 1L,
-                            Content = "Prvi prenatalni pregled je ključan korak u praćenju trudnoće i obično se zakazuje između 8. i 10. sedmice. Prije pregleda zapišite datum posljednje menstruacije jer će ljekar na osnovu toga procijeniti gestacijsku dob. Sastavite listu lijekova, suplemenata i hroničnih stanja koja imate kako bi ljekar procijenio sigurnost terapije. Pripremite pitanja o prehrani, dozvoljenoj fizičkoj aktivnosti, putovanjima i simptomima koji vas brinu. Na pregledu se obično rade laboratorijske analize krvi i urina kako bi se provjerilo opće stanje organizma i vrijednosti važnih parametara. Ljekar može uraditi i ultrazvuk kako bi provjerio razvoj ploda i prisustvo otkucaja srca. Nemojte se ustručavati pričati o mučnini, umoru, strahovima ili emocionalnim promjenama, jer sve to spada u važan dio anamneze. Preporučuje se da sa sobom povedete partnera ili blisku osobu koja vam pruža podršku i može zapamtiti informacije umjesto vas. Zapišite preporuke koje dobijete, poput folne kiseline, unosa tečnosti i izbjegavanja određenih namirnica. Redovni prenatalni pregledi kasnije će pomoći da se potencijalni problemi otkriju na vrijeme i trudnoća prati sigurno. Ovaj prvi korak postavlja temelje povjerenja između vas i vašeg doktora, što je od velikog značaja za cijeli period trudnoće.",
-                            CreatedAt = new DateTime(2026, 7, 6, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6932),
+                            Content = "Prvi prenatalni pregled je ključan korak u praćenju trudnoće i obično se zakazuje između 8. i 10. sedmice. Prije pregleda zapišite datum posljednje menstruacije jer će ljekar na osnovu toga procijeniti gestacijsku dob. Sastavite listu lijekova, suplemenata i hroničnih stanja koja imate kako bi ljekar procijenio sigurnost terapije. Pripremite pitanja o prehrani, dozvoljenoj fizičkoj aktivnosti, putovanjima i simptomima koji vas brinu. Na pregledu se obično rade laboratorijske analize krvi i urina kako bi se provjerilo opšte stanje organizma i vrijednosti važnih parametara. Ljekar može uraditi i ultrazvuk kako bi provjerio razvoj ploda i prisustvo otkucaja srca. Nemojte se ustručavati pričati o mučnini, umoru, strahovima ili emocionalnim promjenama, jer sve to spada u važan dio anamneze. Preporučuje se da sa sobom povedete partnera ili blisku osobu koja vam pruža podršku i može zapamtiti informacije umjesto vas. Zapišite preporuke koje dobijete, poput folne kiseline, unosa tečnosti i izbjegavanja određenih namirnica. Redovni prenatalni pregledi kasnije će pomoći da se potencijalni problemi otkriju na vrijeme i trudnoća prati sigurno. Ovaj prvi korak postavlja temelje povjerenja između vas i vašeg doktora, što je od velikog značaja za cijeli period trudnoće.",
+                            CreatedAt = new DateTime(2026, 8, 17, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7693),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage2.png",
+                            IsSystemPost = true,
                             Phase = 1,
                             Title = "Kako se pripremiti za prvi prenatalni pregled",
                             WeekFrom = 1,
@@ -317,8 +753,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 3L,
                             AuthorId = 1L,
                             Content = "Koža novorođenčeta je tanka, osjetljiva i još uvijek prilagođava vanjskom okruženju. Kupanje bebe 2 do 3 puta sedmično u mlakoj vodi sasvim je dovoljno, dok je svakodnevno umivanje lica i pregiba blago vodom preporučljivo. Birajte blage, bezmirisne preparate bez agresivnih hemikalija, parabena i jakih mirisa. Nakon kupanja kožu samo lagano tapkajte mekanim peškirom umjesto trljanja kako biste izbjegli iritaciju. Posebnu pažnju obratite na pregibe vrata, pazuha, iza ušiju i pelensku regiju, gdje se znoj i vlaga zadržavaju. Za pelensku regiju koristite zaštitne kreme koje stvaraju barijeru, naročito ako primijetite crvenilo. Izbjegavajte pretjeranu upotrebu pudera ili parfemisanih proizvoda jer mogu začepiti pore i nadražiti kožu. Ako se pojave suhe mrlje ili blagi osip, često je dovoljno blago hidratantno ulje ili krema preporučena od pedijatra. Uvijek oblačite bebu u pamučnu odjeću koja diše i ne grebe kožu. Ako primijetite jače crvenilo, mjehuriće, žutilo ili bebu koja je izrazito nemirna na dodir, obavezno se javite pedijatru. Njega kože novorođenčeta je jednostavna kada se vodi računa o čistoći, blagim preparatima i izbjegavanju nepotrebnih proizvoda.",
-                            CreatedAt = new DateTime(2026, 7, 8, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6935),
+                            CreatedAt = new DateTime(2026, 8, 19, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7696),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage3.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Kako njegovati kožu novorođenčeta",
                             WeekFrom = 1,
@@ -329,8 +766,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 4L,
                             AuthorId = 1L,
                             Content = "Kolike su čest razlog zabrinutosti roditelja u prvim mjesecima života bebe. Tipično se javljaju kao epizode intenzivnog plača koje traju više od tri sata dnevno, najmanje tri dana u sedmici. Beba često privlači nožice prema stomaku, stišće šačice i izgleda kao da je u grču. Plač se najčešće pojačava u popodnevnim ili večernjim satima, i teško ga je smiriti uobičajenim metodama. Uzrok kolika nije u potpunosti razjašnjen, ali se povezuje s nezrelim probavnim sistemom i osjetljivošću na stimulaciju. Pomažu blago nošenje bebe uspravno, kontakt koža na kožu i nježno ljuljanje. Masaža stomaka kružnim pokretima u smjeru kazaljke na satu može olakšati otpuštanje gasova. Provjerite odgovara li bebi mlijeko, položaj pri hranjenju i tempo hranjenja. Ako beba slabo napreduje, povraća, ima temperaturu ili promjene u stolici, odmah potražite ljekarsku pomoć jer to nije tipično za obične kolike. Iako su iscrpljujuće, kolike obično prolaze spontano do trećeg ili četvrtog mjeseca života. Roditeljima je važno znati da kolike nisu odraz njihove greške niti loše brige o bebi.",
-                            CreatedAt = new DateTime(2026, 7, 9, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6936),
+                            CreatedAt = new DateTime(2026, 8, 20, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7698),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage4.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Kako prepoznati kolike kod beba",
                             WeekFrom = 1,
@@ -341,8 +779,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 5L,
                             AuthorId = 1L,
                             Content = "Prvo tromjesečje je period intenzivnog razvoja embriona, pa kvalitet ishrane ima veliku važnost. Folna kiselina je ključna za razvoj nervnog sistema bebe, pa u ishranu uvrstite zeleno lisnato povrće, citrusno voće i integralne žitarice. Namirnice bogate željezom, poput crvenog mesa u umjerenim količinama, jaja, leće i špinata, pomažu u sprječavanju anemije. Proteini iz jaja, piletine, ribe s niskim udjelom žive i mliječnih proizvoda važni su za rast tkiva. Ako imate mučnine, birajte manje, ali češće obroke, suhe krekere, banane i blage juhe. Hidratacija je jednako važna – pijte vodu, biljne čajeve koji su dozvoljeni u trudnoći i izbjegavajte zaslađene napitke. Smanjite unos kofeina i izbjegavajte alkohol potpuno. Neoprano povrće, sirova jaja, nepasterizirani sirevi i nedovoljno termički obrađeno meso mogu biti izvor infekcija koje su rizične u trudnoći. Ako ne možete unijeti dovoljno nutrijenata hranom, sa ginekologom dogovorite adekvatan prenatalni suplement. Slušajte svoje tijelo, ali pokušajte svaku žudnju uklopiti u što zdraviji izbor. Male promjene u prehrani već u prvom tromjesečju dugoročno doprinose zdravlju i mame i bebe.",
-                            CreatedAt = new DateTime(2026, 7, 11, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6938),
+                            CreatedAt = new DateTime(2026, 8, 22, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7700),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage5.png",
+                            IsSystemPost = true,
                             Phase = 1,
                             Title = "Namirnice koje pomažu u prvom tromjesečju",
                             WeekFrom = 1,
@@ -353,8 +792,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 6L,
                             AuthorId = 1L,
                             Content = "Period dojenja zahtijeva dodatnu energiju i nutrijente kako bi se podržala proizvodnja mlijeka i oporavak tijela. Preporučuje se raznovrsna ishrana koja uključuje svježe voće, povrće, integralne žitarice i kvalitetne proteine. Ribe bogate omega-3 masnim kiselinama, poput lososa i sardine, doprinose razvoju bebinog mozga i nervnog sistema. Mlijeko, jogurt, sir i druge namirnice bogate kalcijem pomažu očuvanju zdravlja kostiju majke. Važno je unositi dovoljno tečnosti – voda, blagi čajevi i supice su dobar izbor. Neke bebe mogu reagovati na određene namirnice (npr. vrlo začinjenu hranu ili velike količine kofeina), pa pratite kako se beba ponaša nakon podoja. Umjesto striktnih dijeta, fokus stavite na balansirane obroke raspoređene tokom dana. Užine poput orašastih plodova, svježeg voća, integralnih krekera i humusa mogu pomoći da zadržite energiju. Preskakanje obroka može utjecati na nivo energije i raspoloženje, pa planirajte jednostavne, ali nutritivno bogate kombinacije. Ako imate dileme o određenim namirnicama ili ste vegan/vegetarijanac, konsultujte nutricionistu ili ljekara. Briga o vlastitoj ishrani je ujedno i briga o kvalitetu vremena koje provodite sa svojom bebom.",
-                            CreatedAt = new DateTime(2026, 7, 13, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6940),
+                            CreatedAt = new DateTime(2026, 8, 24, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7703),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage6.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Zdravi obroci za dojilje",
                             WeekFrom = 1,
@@ -365,8 +805,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 7L,
                             AuthorId = 1L,
                             Content = "Prvi dani s bebom donose mješavinu sreće, umora, straha i ogromne odgovornosti. Normalno je osjećati nesigurnost, posebno ako vam je ovo prvo dijete. Pokušajte spavati kad god i koliko god beba spava, čak i ako to znači kraće drijemke tokom dana. Prihvatite pomoć porodice i prijatelja za kućne obaveze, kuhanje ili nabavku. Ne ustručavajte se govoriti partneru kako se osjećate i šta vam treba. Postepeno upoznajete ritam svoje bebe – način plača, signale gladi, umora ili nelagode. Nemojte se porediti s idealiziranim prikazima majčinstva na društvenim mrežama. Ako osjećate izraženu tugu, bezvoljnost ili se teško povezujete s bebom, razgovarajte s patronažnom sestrom ili ljekarom. Male svakodnevne rutine, poput kupanja, maženja i kontakta koža na kožu, jačaju vašu povezanost. Zapamtite da ne postoji savršena mama; postoji dovoljno dobra mama koja voli, brine se i uči iz dana u dan. Dajte sebi vremena da se prilagodite novoj ulozi i budite nježni prema sebi.",
-                            CreatedAt = new DateTime(2026, 7, 15, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6942),
+                            CreatedAt = new DateTime(2026, 8, 26, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7705),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage7.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Kako se prilagoditi prvim danima s bebom",
                             WeekFrom = 1,
@@ -377,8 +818,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 8L,
                             AuthorId = 1L,
                             Content = "Nakon poroda, partner ima ključnu ulogu u pružanju emocionalne i praktične podrške. Preuzimanje dijela kućnih obaveza pomaže majci da se odmori i oporavi fizički. Partner može učestvovati u kupanju bebe, presvlačenju i uspavljivanju, čime gradi snažnu povezanost s djetetom. Otvorena komunikacija o umoru, strahovima i očekivanjima sprečava nagomilavanje tenzija. Važno je priznati da su promjene intenzivne i za partnera, ali da zajednički pristup olakšava period prilagodbe. Podrška u dojenju može biti jednostavna kao donošenje vode, jastuka ili stvaranje mirne atmosfere. Partner treba prepoznati znakove iscrpljenosti ili postporođajne depresije i ohrabriti majku da potraži pomoć. Vrijeme jedan-na-jedan s bebom osnažuje samopouzdanje partnera u brizi za dijete. Zajedničke odluke o rutini spavanja, posjetama i obavezama smanjuju nesporazume. Uloga partnera nije samo pomoć, već ravnopravan dio roditeljskog tima koji čuva dobrobit cijele porodice.",
-                            CreatedAt = new DateTime(2026, 7, 18, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6943),
+                            CreatedAt = new DateTime(2026, 8, 29, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7707),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage8.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Uloga partnera nakon poroda",
                             WeekFrom = 1,
@@ -389,8 +831,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 9L,
                             AuthorId = 1L,
                             Content = "Baby blues je česta pojava u prvim danima nakon poroda i pogađa veliki broj majki. Manifestuje se kao plačljivost, nagle promjene raspoloženja, osjetljivost i osjećaj preopterećenosti. Ovi simptomi obično počinju nekoliko dana nakon poroda i prolaze unutar dvije sedmice. Postporođajna depresija je ozbiljnije stanje koje traje duže i može uključivati osjećaj bezvrijednosti, beznađa ili gubitak interesa za svakodnevne aktivnosti. Majka može imati poteškoće u povezivanju s bebom, osjećaj krivnje ili strah da nije dovoljno dobra. Ponekad su prisutne smetnje sna i apetita koje nisu samo posljedica zahtjeva oko bebe. Ako ovi osjećaji traju duže od dvije sedmice ili se pojačavaju, važno je potražiti stručnu pomoć. Razgovor s partnerom, porodicom i medicinskim osobljem prvi je korak ka podršci. Postoji efikasan tretman kroz psihoterapiju, podršku i, po potrebi, medikamentoznu terapiju. Traženje pomoći nije znak slabosti, nego hrabrosti i brige za sebe i svoju porodicu. Svaka majka zaslužuje podršku u ovom osjetljivom periodu, bez osude.",
-                            CreatedAt = new DateTime(2026, 7, 20, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6945),
+                            CreatedAt = new DateTime(2026, 8, 31, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7709),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage9.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Baby blues ili postporođajna depresija?",
                             WeekFrom = 1,
@@ -401,8 +844,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 10L,
                             AuthorId = 1L,
                             Content = "Trudnoća je predivan, ali često i stresan period zbog fizičkih promjena i briga o zdravlju bebe. Jednostavne vježbe dubokog disanja pomažu u smanjenju napetosti i smirivanju nervnog sistema. Kratke vođene meditacije ili molitva mogu pružiti osjećaj sigurnosti i fokusa. Prenatalna joga, prilagođena trudnicama, jača tijelo i poboljšava fleksibilnost bez pretjeranog opterećenja. Šetnje na svježem zraku doprinose boljoj cirkulaciji, snu i raspoloženju. Topla kupka (ne prevruća) može ublažiti bol u leđima i opustiti mišiće. Važno je smanjiti izloženost negativnim vijestima i komentarima koji pojačavaju strah. Razgovor s partnerom ili bliskom osobom o brigama često donosi olakšanje. Organizacija dana s malim ritualima opuštanja pomaže u stvaranju osjećaja kontrole. Ako se anksioznost pojačava, ometa san ili svakodnevno funkcionisanje, razgovarajte s ljekarom ili psihologom. Briga o mentalnom zdravlju u trudnoći jednako je važna kao i briga o fizičkom zdravlju.",
-                            CreatedAt = new DateTime(2026, 7, 22, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6947),
+                            CreatedAt = new DateTime(2026, 9, 2, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7711),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage10.png",
+                            IsSystemPost = true,
                             Phase = 1,
                             Title = "Tehnike opuštanja u trudnoći",
                             WeekFrom = 13,
@@ -413,8 +857,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 11L,
                             AuthorId = 1L,
                             Content = "Većina beba počinje samostalno sjediti između šestog i osmog mjeseca života. Prije toga prolaze kroz faze jačanja mišića vrata, leđa i core-a, posebno kroz igru na stomaku. Ponudite bebi siguran prostor na podu, umjesto da je predugo držite u ljuljama ili ležaljkama. Možete je blago poduprijeti jastucima sa strane dok uči balansirati. Nemojte forsirati sjedenje stavljanjem bebe u položaj za koji još nema snage. Svaka beba ima svoj ritam razvoja i poređenje s drugima može stvoriti nepotreban stres. Ako beba ne pokazuje pokušaje podizanja gornjeg dijela tijela ili kontrole glave nakon nekoliko mjeseci, konsultujte pedijatra. Podstičite igru s igračkama ispred bebe kako bi se prirodno naginjala naprijed i aktivirala mišiće. Pohvalite svaki mali napredak jer pozitivna interakcija jača bebino samopouzdanje. Sjedanje je važna prekretnica koja otvara nove mogućnosti istraživanja svijeta oko sebe. Uz strpljenje i sigurnu okolinu, beba će do ovog koraka doći u svoje vrijeme.",
-                            CreatedAt = new DateTime(2026, 7, 24, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6948),
+                            CreatedAt = new DateTime(2026, 9, 4, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7713),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage11.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Kada beba počinje sjediti?",
                             WeekFrom = 13,
@@ -425,8 +870,9 @@ namespace Nestly.Services.Data.Migrations
                             Id = 12L,
                             AuthorId = 1L,
                             Content = "Razvoj govora počinje mnogo prije nego što dijete izgovori prve riječi. Već od rođenja, pričajte s bebom, imenujte predmete i opisujte šta radite tokom dana. Čitanje slikovnica, čak i vrlo jednostavnih, pomaže razvoju rječnika i pažnje. Pjevanje pjesmica i brojalica uči dijete ritmu, ponavljanju i novim riječima. Reagujte na bebine glasove, osmijeh i gestove kao da vodite pravi razgovor. Izbjegavajte prekomjernu upotrebu ekrana, posebno u najranijoj dobi, jer utiče na kvalitet interakcije. Postavljajte jednostavna pitanja poput 'Gdje je lopta?' i ohrabrite dijete da pokaže ili izgovori. Ne ispravljajte grubo pogrešan izgovor, već ponovite riječ ispravno i prirodno u rečenici. Ako dijete do 18 mjeseci ne izgovara nijednu riječ ili vrlo malo razumije, posavjetujte se s pedijatrom ili logopedom. Svako dijete napreduje svojim tempom, ali bogata, topla komunikacija uvijek je najbolji podsticaj. Roditeljska blizina, strpljenje i igra ključni su saveznici u razvoju govora.",
-                            CreatedAt = new DateTime(2026, 7, 26, 14, 13, 49, 277, DateTimeKind.Utc).AddTicks(6950),
+                            CreatedAt = new DateTime(2026, 9, 6, 12, 58, 7, 755, DateTimeKind.Utc).AddTicks(7715),
                             ImageUrl = "https://nestlystorage.blob.core.windows.net/blogpost/blogPostImage12.png",
+                            IsSystemPost = true,
                             Phase = 2,
                             Title = "Podsticanje govora kod mališana",
                             WeekFrom = 13,
@@ -552,9 +998,15 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<long>("BabyId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("Reminder24hSent")
                         .HasColumnType("bit");
@@ -577,6 +1029,140 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("BabyId", "StartAt");
 
                     b.ToTable("CalendarEvents");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            BabyId = 1L,
+                            Description = "Sistematski pregled novorođenčeta.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 3, 17, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Prvi sistematski pregled",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            BabyId = 1L,
+                            Description = "Redovna kontrola rasta i razvoja.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 4, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola u 1. mjesecu",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            BabyId = 1L,
+                            Description = "Redovna vakcinacija prema kalendaru.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 5, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Vakcinacija - 2. mjesec",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            BabyId = 1L,
+                            Description = "Redovna kontrola kod pedijatra.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 7, 8, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola u 4. mjesecu",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            BabyId = 1L,
+                            Description = "Redovna vakcinacija prema kalendaru.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 13, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Vakcinacija - 6. mjesec",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            BabyId = 1L,
+                            Description = "Sistematski pregled za 6 mjeseci.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 22, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola rasta i razvoja",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            BabyId = 2L,
+                            Description = "Redovni sistematski pregled za bebu Faris.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 12, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola kod pedijatra",
+                            UserId = 6L
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            BabyId = 3L,
+                            Description = "Redovni sistematski pregled za bebu Amar.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 13, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola kod pedijatra",
+                            UserId = 7L
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            BabyId = 4L,
+                            Description = "Redovni sistematski pregled za bebu Lamija.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 14, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola kod pedijatra",
+                            UserId = 8L
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            BabyId = 5L,
+                            Description = "Redovni sistematski pregled za bebu Hana.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 10, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola kod pedijatra",
+                            UserId = 9L
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            BabyId = 6L,
+                            Description = "Redovni sistematski pregled za bebu Adnan.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 11, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola kod pedijatra",
+                            UserId = 10L
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            BabyId = 7L,
+                            Description = "Redovni sistematski pregled za bebu Tarik.",
+                            IsDeleted = false,
+                            Reminder24hSent = false,
+                            StartAt = new DateTime(2026, 9, 12, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Kontrola kod pedijatra",
+                            UserId = 11L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.ChatConversation", b =>
@@ -611,6 +1197,29 @@ namespace Nestly.Services.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ChatConversations");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            User1Id = 1L,
+                            User2Id = 3L
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            User1Id = 1L,
+                            User2Id = 6L
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            CreatedAt = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            User1Id = 1L,
+                            User2Id = 9L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.ChatMessage", b =>
@@ -644,6 +1253,160 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("SenderId");
 
                     b.ToTable("ChatMessages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            Content = "Zdravo Amina! Vidjela sam da je i tvoja beba rođena otprilike u isto vrijeme kad i Emma.",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 2, 11, 15, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            Content = "Zdravo! Da, razlika je par sedmica. Kako vama ide sa uvođenjem čvrste hrane?",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 2, 11, 20, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 3L
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            Content = "Polako, Emma najviše voli povrće, malo je izbirljivija sa voćem.",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 2, 11, 25, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            Content = "Isto i moja! Probaj joj miksati voće sa jogurtom, meni je to upalilo.",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 2, 11, 30, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 3L
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            Content = "Hvala na ideji, probat ću sutra.",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 2, 11, 32, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            Content = "Javi mi kako je prošlo. Kako spava noću kod vas?",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 4, 20, 10, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 3L
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            Content = "Prilično dobro, budi se jednom oko 3h ujutro pa opet zaspi.",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 4, 20, 15, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            Content = "To je super u ovom uzrastu! Mi se još budimo dva-tri puta.",
+                            ConversationId = 5001L,
+                            CreatedAt = new DateTime(2026, 9, 4, 20, 18, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 3L
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            Content = "Emina, jesi li ti već bila na vakcinaciji ovaj mjesec?",
+                            ConversationId = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            Content = "Jesam, prošle sedmice. Prošlo je bez problema, samo malo temperature uveče.",
+                            ConversationId = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 5, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 6L
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            Content = "Dobro je znati, mi imamo zakazano za par dana pa sam malo nervozna.",
+                            ConversationId = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 8, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            Content = "Nema razloga za brigu, samo ponesi sirup za temperaturu za svaki slučaj.",
+                            ConversationId = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 10, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 6L
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            Content = "Hoću, hvala ti puno!",
+                            ConversationId = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 12, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            Content = "Nema na čemu, javi kako je prošlo.",
+                            ConversationId = 5002L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 13, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 6L
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            Content = "Bok Amela, kako vam ide sa spavanjem po danu? Moja je totalno preokrenula raspored.",
+                            ConversationId = 5003L,
+                            CreatedAt = new DateTime(2026, 9, 6, 15, 0, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 9L
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            Content = "Haha, i mi smo prošli kroz tu fazu prije mjesec dana. Pomoglo je da uvedemo isto vrijeme spavanja svaki dan.",
+                            ConversationId = 5003L,
+                            CreatedAt = new DateTime(2026, 9, 6, 15, 10, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            Content = "Probat ću to. A kako vam ide sa zubićima, je li već počela nicati?",
+                            ConversationId = 5003L,
+                            CreatedAt = new DateTime(2026, 9, 6, 15, 15, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 9L
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            Content = "Da, prvi zubić se pojavio prije nedjelju dana. Malo je bila nemirna par dana.",
+                            ConversationId = 5003L,
+                            CreatedAt = new DateTime(2026, 9, 6, 15, 18, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 1L
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            Content = "Hvala na savjetu, javit ću se ako bude trebalo još pitanja!",
+                            ConversationId = 5003L,
+                            CreatedAt = new DateTime(2026, 9, 6, 15, 20, 0, 0, DateTimeKind.Unspecified),
+                            SenderId = 9L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.DiaperLog", b =>
@@ -663,10 +1426,16 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<TimeSpan>("ChangeTime")
                         .HasColumnType("time");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("DiaperState")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
@@ -677,6 +1446,1403 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("BabyId", "ChangeDate");
 
                     b.ToTable("DiaperLogs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9020L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9021L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9022L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9023L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9024L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9025L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9026L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9027L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9028L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9029L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9030L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9031L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9032L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9033L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9034L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9035L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9036L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9037L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9038L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9039L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9040L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9041L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9042L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9043L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9044L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9045L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9046L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9047L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9048L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9049L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9050L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9051L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9052L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9053L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9054L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9055L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9056L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9057L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9058L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9059L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9060L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9061L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9062L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9063L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9064L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9065L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9066L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9067L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9068L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9069L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9070L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9071L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9072L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9073L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9074L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9075L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9076L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9077L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9078L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9079L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9080L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9081L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9082L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9083L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9084L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9085L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9086L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9087L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9088L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9089L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9090L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9091L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9092L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9093L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9094L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9095L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9096L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9097L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9098L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9099L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9100L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9101L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9102L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9103L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9104L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9105L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9106L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9107L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9108L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9109L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9110L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9111L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9112L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9113L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9114L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9115L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9116L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9117L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9118L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 11, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9119L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 15, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9120L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 19, 30, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9121L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 8, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9122L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 7, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9123L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 7, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9124L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 6, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9125L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9126L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9127L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9128L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 5, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9129L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 4, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9130L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9131L,
+                            BabyId = 1L,
+                            ChangeDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 10, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            BabyId = 2L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            BabyId = 2L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 12, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            BabyId = 2L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 9, 0, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            BabyId = 2L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 18, 30, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            BabyId = 3L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            BabyId = 3L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 12, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            BabyId = 3L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 9, 0, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            BabyId = 3L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 18, 30, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            BabyId = 4L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            BabyId = 4L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 12, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            BabyId = 4L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 9, 0, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5016L,
+                            BabyId = 4L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 18, 30, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5017L,
+                            BabyId = 5L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5018L,
+                            BabyId = 5L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 12, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5019L,
+                            BabyId = 5L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 9, 0, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5020L,
+                            BabyId = 5L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 18, 30, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5021L,
+                            BabyId = 6L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5022L,
+                            BabyId = 6L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 12, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5023L,
+                            BabyId = 6L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 9, 0, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5024L,
+                            BabyId = 6L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 18, 30, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5025L,
+                            BabyId = 7L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 7, 0, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5026L,
+                            BabyId = 7L,
+                            ChangeDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 12, 0, 0, 0),
+                            DiaperState = "stolica",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5027L,
+                            BabyId = 7L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 9, 0, 0, 0),
+                            DiaperState = "kombinovano",
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5028L,
+                            BabyId = 7L,
+                            ChangeDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ChangeTime = new TimeSpan(0, 18, 30, 0, 0),
+                            DiaperState = "mokra",
+                            IsDeleted = false
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.DoctorProfile", b =>
@@ -725,6 +2891,9 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<long>("BabyId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("FeedDate")
                         .HasColumnType("datetime2");
 
@@ -733,6 +2902,9 @@ namespace Nestly.Services.Data.Migrations
 
                     b.Property<int?>("FoodTypeId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
@@ -745,6 +2917,1694 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("FoodTypeId");
 
                     b.ToTable("FeedingLogs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            AmountMl = 67m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            AmountMl = 74m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            AmountMl = 81m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            AmountMl = 88m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            AmountMl = 95m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            AmountMl = 102m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            AmountMl = 109m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            AmountMl = 116m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            AmountMl = 63m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            AmountMl = 70m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            AmountMl = 77m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            AmountMl = 84m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            AmountMl = 91m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            AmountMl = 98m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            AmountMl = 105m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            AmountMl = 112m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            AmountMl = 119m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            AmountMl = 66m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            AmountMl = 73m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9020L,
+                            AmountMl = 80m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9021L,
+                            AmountMl = 87m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9022L,
+                            AmountMl = 94m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9023L,
+                            AmountMl = 101m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9024L,
+                            AmountMl = 108m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9025L,
+                            AmountMl = 115m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9026L,
+                            AmountMl = 62m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9027L,
+                            AmountMl = 69m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9028L,
+                            AmountMl = 76m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9029L,
+                            AmountMl = 83m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9030L,
+                            AmountMl = 90m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9031L,
+                            AmountMl = 97m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9032L,
+                            AmountMl = 104m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9033L,
+                            AmountMl = 111m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9034L,
+                            AmountMl = 118m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9035L,
+                            AmountMl = 65m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9036L,
+                            AmountMl = 72m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9037L,
+                            AmountMl = 79m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9038L,
+                            AmountMl = 86m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9039L,
+                            AmountMl = 93m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9040L,
+                            AmountMl = 100m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9041L,
+                            AmountMl = 107m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9042L,
+                            AmountMl = 114m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9043L,
+                            AmountMl = 61m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9044L,
+                            AmountMl = 68m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9045L,
+                            AmountMl = 75m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9046L,
+                            AmountMl = 82m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9047L,
+                            AmountMl = 89m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9048L,
+                            AmountMl = 96m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9049L,
+                            AmountMl = 103m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9050L,
+                            AmountMl = 110m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9051L,
+                            AmountMl = 117m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9052L,
+                            AmountMl = 64m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9053L,
+                            AmountMl = 71m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9054L,
+                            AmountMl = 78m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9055L,
+                            AmountMl = 85m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9056L,
+                            AmountMl = 92m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9057L,
+                            AmountMl = 99m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9058L,
+                            AmountMl = 106m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9059L,
+                            AmountMl = 113m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9060L,
+                            AmountMl = 60m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9061L,
+                            AmountMl = 67m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9062L,
+                            AmountMl = 74m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9063L,
+                            AmountMl = 81m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9064L,
+                            AmountMl = 88m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9065L,
+                            AmountMl = 95m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9066L,
+                            AmountMl = 102m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9067L,
+                            AmountMl = 109m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9068L,
+                            AmountMl = 116m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9069L,
+                            AmountMl = 63m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9070L,
+                            AmountMl = 70m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9071L,
+                            AmountMl = 77m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9072L,
+                            AmountMl = 84m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9073L,
+                            AmountMl = 91m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9074L,
+                            AmountMl = 98m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9075L,
+                            AmountMl = 105m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9076L,
+                            AmountMl = 112m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9077L,
+                            AmountMl = 119m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9078L,
+                            AmountMl = 66m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9079L,
+                            AmountMl = 73m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9080L,
+                            AmountMl = 80m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9081L,
+                            AmountMl = 87m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9082L,
+                            AmountMl = 94m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9083L,
+                            AmountMl = 101m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9084L,
+                            AmountMl = 108m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9085L,
+                            AmountMl = 115m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9086L,
+                            AmountMl = 62m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9087L,
+                            AmountMl = 69m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9088L,
+                            AmountMl = 76m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9089L,
+                            AmountMl = 83m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9090L,
+                            AmountMl = 90m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9091L,
+                            AmountMl = 97m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9092L,
+                            AmountMl = 104m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9093L,
+                            AmountMl = 111m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9094L,
+                            AmountMl = 118m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9095L,
+                            AmountMl = 65m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9096L,
+                            AmountMl = 72m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9097L,
+                            AmountMl = 79m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9098L,
+                            AmountMl = 86m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9099L,
+                            AmountMl = 93m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9100L,
+                            AmountMl = 100m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9101L,
+                            AmountMl = 107m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9102L,
+                            AmountMl = 114m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9103L,
+                            AmountMl = 61m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9104L,
+                            AmountMl = 68m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9105L,
+                            AmountMl = 75m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9106L,
+                            AmountMl = 82m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9107L,
+                            AmountMl = 89m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9108L,
+                            AmountMl = 96m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9109L,
+                            AmountMl = 103m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9110L,
+                            AmountMl = 110m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 40,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9111L,
+                            AmountMl = 117m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9112L,
+                            AmountMl = 64m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9113L,
+                            AmountMl = 71m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 62,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9114L,
+                            AmountMl = 78m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9115L,
+                            AmountMl = 85m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9116L,
+                            AmountMl = 92m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9117L,
+                            AmountMl = 99m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 7, 0, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9118L,
+                            AmountMl = 106m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 11, 30, 0, 0),
+                            FoodTypeId = 21,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9119L,
+                            AmountMl = 113m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 15, 0, 0, 0),
+                            FoodTypeId = 23,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9120L,
+                            AmountMl = 60m,
+                            AmountUnit = "g",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 33,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9121L,
+                            AmountMl = 131m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 8, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9122L,
+                            AmountMl = 142m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 7, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9123L,
+                            AmountMl = 153m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 7, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9124L,
+                            AmountMl = 164m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 6, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9125L,
+                            AmountMl = 175m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9126L,
+                            AmountMl = 126m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9127L,
+                            AmountMl = 137m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9128L,
+                            AmountMl = 148m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 5, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9129L,
+                            AmountMl = 159m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 4, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9130L,
+                            AmountMl = 170m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 9131L,
+                            AmountMl = 121m,
+                            AmountUnit = "ml",
+                            BabyId = 1L,
+                            FeedDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 12, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            AmountMl = 130m,
+                            AmountUnit = "ml",
+                            BabyId = 2L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            AmountMl = 140m,
+                            AmountUnit = "ml",
+                            BabyId = 2L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 13, 30, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            AmountMl = 150m,
+                            AmountUnit = "ml",
+                            BabyId = 2L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 15, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            AmountMl = 120m,
+                            AmountUnit = "ml",
+                            BabyId = 2L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            AmountMl = 130m,
+                            AmountUnit = "ml",
+                            BabyId = 3L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            AmountMl = 140m,
+                            AmountUnit = "ml",
+                            BabyId = 3L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 13, 30, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            AmountMl = 150m,
+                            AmountUnit = "ml",
+                            BabyId = 3L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 15, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            AmountMl = 120m,
+                            AmountUnit = "ml",
+                            BabyId = 3L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            AmountMl = 75m,
+                            AmountUnit = "g",
+                            BabyId = 4L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            AmountMl = 82m,
+                            AmountUnit = "g",
+                            BabyId = 4L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 13, 30, 0, 0),
+                            FoodTypeId = 22,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            AmountMl = 89m,
+                            AmountUnit = "g",
+                            BabyId = 4L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 15, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5016L,
+                            AmountMl = 46m,
+                            AmountUnit = "g",
+                            BabyId = 4L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 20,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5017L,
+                            AmountMl = 53m,
+                            AmountUnit = "g",
+                            BabyId = 5L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5018L,
+                            AmountMl = 60m,
+                            AmountUnit = "g",
+                            BabyId = 5L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 13, 30, 0, 0),
+                            FoodTypeId = 22,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5019L,
+                            AmountMl = 67m,
+                            AmountUnit = "g",
+                            BabyId = 5L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 15, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5020L,
+                            AmountMl = 74m,
+                            AmountUnit = "g",
+                            BabyId = 5L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 20,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5021L,
+                            AmountMl = 81m,
+                            AmountUnit = "g",
+                            BabyId = 6L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5022L,
+                            AmountMl = 88m,
+                            AmountUnit = "g",
+                            BabyId = 6L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 13, 30, 0, 0),
+                            FoodTypeId = 22,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5023L,
+                            AmountMl = 45m,
+                            AmountUnit = "g",
+                            BabyId = 6L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 15, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5024L,
+                            AmountMl = 52m,
+                            AmountUnit = "g",
+                            BabyId = 6L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 20,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5025L,
+                            AmountMl = 59m,
+                            AmountUnit = "g",
+                            BabyId = 7L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 0, 0, 0),
+                            FoodTypeId = 11,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5026L,
+                            AmountMl = 66m,
+                            AmountUnit = "g",
+                            BabyId = 7L,
+                            FeedDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 13, 30, 0, 0),
+                            FoodTypeId = 22,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5027L,
+                            AmountMl = 73m,
+                            AmountUnit = "g",
+                            BabyId = 7L,
+                            FeedDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 8, 15, 0, 0),
+                            FoodTypeId = 16,
+                            IsDeleted = false
+                        },
+                        new
+                        {
+                            Id = 5028L,
+                            AmountMl = 80m,
+                            AmountUnit = "g",
+                            BabyId = 7L,
+                            FeedDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FeedTime = new TimeSpan(0, 19, 0, 0, 0),
+                            FoodTypeId = 20,
+                            IsDeleted = false
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.FetalDevelopmentWeek", b =>
@@ -1370,6 +5230,19 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<DateTime>("DetectedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DoctorFeedbackAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DoctorFeedbackByDoctorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DoctorFeedbackComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool?>("DoctorFeedbackIsAccurate")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsResolved")
                         .HasColumnType("bit");
 
@@ -1405,9 +5278,46 @@ namespace Nestly.Services.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DoctorFeedbackByDoctorId");
+
                     b.HasIndex("BabyId", "ParameterType", "IsResolved");
 
                     b.ToTable("HealthDeviationAlerts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 5001L,
+                            BabyId = 3L,
+                            DetectedAt = new DateTime(2026, 9, 2, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorFeedbackAt = new DateTime(2026, 9, 4, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorFeedbackByDoctorId = 1L,
+                            DoctorFeedbackComment = "Potvrđeno na pregledu, preporučena prilagodba ishrane.",
+                            DoctorFeedbackIsAccurate = true,
+                            IsResolved = true,
+                            Message = "Prirast težine bebe Amar u zadnje dvije sedmice je ispod očekivane krivulje rasta za uzrast.",
+                            ParameterType = 1,
+                            PeriodFrom = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            PeriodTo = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Recommendation = "Preporučuje se kontrola kod pedijatra i praćenje unosa hrane u narednih 7 dana.",
+                            ResolvedAt = new DateTime(2026, 9, 4, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            Severity = 2,
+                            Title = "Usporen rast težine"
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            BabyId = 5L,
+                            DetectedAt = new DateTime(2026, 9, 6, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsResolved = false,
+                            Message = "Beba Hana bilježi kraće noćno spavanje u odnosu na prosjek za njen uzrast tokom zadnjih 5 dana.",
+                            ParameterType = 3,
+                            PeriodFrom = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            PeriodTo = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Recommendation = "Pratite rutinu prije spavanja i javite se doktoru ako se obrazac ne popravi u narednih sedmicu dana.",
+                            Severity = 1,
+                            Title = "Promjena obrasca spavanja"
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.HealthEntry", b =>
@@ -1421,12 +5331,18 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<long>("BabyId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("DoctorVisit")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("EntryDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Medicines")
                         .HasMaxLength(1000)
@@ -1441,6 +5357,213 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("BabyId", "EntryDate");
 
                     b.ToTable("HealthEntries");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            BabyId = 1L,
+                            EntryDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.5m
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            BabyId = 1L,
+                            EntryDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.65m
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            BabyId = 1L,
+                            EntryDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            BabyId = 1L,
+                            EntryDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.5m
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            BabyId = 1L,
+                            EntryDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.65m
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            BabyId = 1L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            BabyId = 1L,
+                            DoctorVisit = "Mjesečna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 7, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.7m
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            BabyId = 1L,
+                            DoctorVisit = "Mjesečna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.7m
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            BabyId = 1L,
+                            DoctorVisit = "Mjesečna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.7m
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            BabyId = 1L,
+                            DoctorVisit = "Mjesečna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 4, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.7m
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            BabyId = 1L,
+                            DoctorVisit = "Mjesečna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.7m
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            BabyId = 2L,
+                            EntryDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.6m
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            BabyId = 2L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            BabyId = 3L,
+                            EntryDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.6m
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            BabyId = 3L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            BabyId = 4L,
+                            EntryDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.6m
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            BabyId = 4L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            BabyId = 5L,
+                            EntryDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.6m
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            BabyId = 5L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            BabyId = 6L,
+                            EntryDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.6m
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            BabyId = 6L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            BabyId = 7L,
+                            EntryDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            TemperatureC = 36.6m
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            BabyId = 7L,
+                            DoctorVisit = "Redovna kontrola kod pedijatra",
+                            EntryDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Medicines = "Vitamin D kapi",
+                            TemperatureC = 36.8m
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.MealPlan", b =>
@@ -1454,8 +5577,14 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<long>("BabyId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("FoodTypeId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<short?>("Rating")
                         .HasColumnType("smallint");
@@ -1472,6 +5601,656 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("BabyId", "FoodTypeId", "TriedAt");
 
                     b.ToTable("MealPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            BabyId = 1L,
+                            FoodTypeId = 11,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 10, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            BabyId = 1L,
+                            FoodTypeId = 16,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 10, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            BabyId = 1L,
+                            FoodTypeId = 16,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 11, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            BabyId = 1L,
+                            FoodTypeId = 21,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 11, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            BabyId = 1L,
+                            FoodTypeId = 21,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 12, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            BabyId = 1L,
+                            FoodTypeId = 23,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 12, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            BabyId = 1L,
+                            FoodTypeId = 23,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 13, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            BabyId = 1L,
+                            FoodTypeId = 33,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 13, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            BabyId = 1L,
+                            FoodTypeId = 33,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 14, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            BabyId = 1L,
+                            FoodTypeId = 40,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 14, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            BabyId = 1L,
+                            FoodTypeId = 40,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 15, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            BabyId = 1L,
+                            FoodTypeId = 62,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 15, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            BabyId = 1L,
+                            FoodTypeId = 62,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 16, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            BabyId = 1L,
+                            FoodTypeId = 10,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 16, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            BabyId = 1L,
+                            FoodTypeId = 10,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 17, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            BabyId = 1L,
+                            FoodTypeId = 13,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 17, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            BabyId = 1L,
+                            FoodTypeId = 13,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 18, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            BabyId = 1L,
+                            FoodTypeId = 20,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 18, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            BabyId = 1L,
+                            FoodTypeId = 20,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 19, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9020L,
+                            BabyId = 1L,
+                            FoodTypeId = 22,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 19, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9021L,
+                            BabyId = 1L,
+                            FoodTypeId = 22,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 20, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9022L,
+                            BabyId = 1L,
+                            FoodTypeId = 30,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 20, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9023L,
+                            BabyId = 1L,
+                            FoodTypeId = 30,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 21, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9024L,
+                            BabyId = 1L,
+                            FoodTypeId = 34,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 21, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9025L,
+                            BabyId = 1L,
+                            FoodTypeId = 34,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 22, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9026L,
+                            BabyId = 1L,
+                            FoodTypeId = 60,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 22, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9027L,
+                            BabyId = 1L,
+                            FoodTypeId = 60,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 23, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9028L,
+                            BabyId = 1L,
+                            FoodTypeId = 70,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 23, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9029L,
+                            BabyId = 1L,
+                            FoodTypeId = 70,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 24, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9030L,
+                            BabyId = 1L,
+                            FoodTypeId = 11,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 24, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9031L,
+                            BabyId = 1L,
+                            FoodTypeId = 11,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 25, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9032L,
+                            BabyId = 1L,
+                            FoodTypeId = 16,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 25, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9033L,
+                            BabyId = 1L,
+                            FoodTypeId = 16,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 26, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9034L,
+                            BabyId = 1L,
+                            FoodTypeId = 21,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 26, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9035L,
+                            BabyId = 1L,
+                            FoodTypeId = 21,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 27, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9036L,
+                            BabyId = 1L,
+                            FoodTypeId = 23,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 27, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9037L,
+                            BabyId = 1L,
+                            FoodTypeId = 23,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 28, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9038L,
+                            BabyId = 1L,
+                            FoodTypeId = 33,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 28, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9039L,
+                            BabyId = 1L,
+                            FoodTypeId = 33,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 29, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9040L,
+                            BabyId = 1L,
+                            FoodTypeId = 40,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 29, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9041L,
+                            BabyId = 1L,
+                            FoodTypeId = 40,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 30, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9042L,
+                            BabyId = 1L,
+                            FoodTypeId = 62,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 30, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9043L,
+                            BabyId = 1L,
+                            FoodTypeId = 62,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 31, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9044L,
+                            BabyId = 1L,
+                            FoodTypeId = 10,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 31, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9045L,
+                            BabyId = 1L,
+                            FoodTypeId = 10,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 1, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9046L,
+                            BabyId = 1L,
+                            FoodTypeId = 13,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 1, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9047L,
+                            BabyId = 1L,
+                            FoodTypeId = 13,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 2, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9048L,
+                            BabyId = 1L,
+                            FoodTypeId = 20,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 2, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9049L,
+                            BabyId = 1L,
+                            FoodTypeId = 20,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 3, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9050L,
+                            BabyId = 1L,
+                            FoodTypeId = 22,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 3, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9051L,
+                            BabyId = 1L,
+                            FoodTypeId = 22,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 4, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9052L,
+                            BabyId = 1L,
+                            FoodTypeId = 30,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 4, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9053L,
+                            BabyId = 1L,
+                            FoodTypeId = 30,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 5, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9054L,
+                            BabyId = 1L,
+                            FoodTypeId = 34,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 5, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9055L,
+                            BabyId = 1L,
+                            FoodTypeId = 34,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 6, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9056L,
+                            BabyId = 1L,
+                            FoodTypeId = 60,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 6, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9057L,
+                            BabyId = 1L,
+                            FoodTypeId = 60,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 7, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9058L,
+                            BabyId = 1L,
+                            FoodTypeId = 70,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 7, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9059L,
+                            BabyId = 1L,
+                            FoodTypeId = 70,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 8, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9060L,
+                            BabyId = 1L,
+                            FoodTypeId = 11,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 8, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            BabyId = 4L,
+                            FoodTypeId = 20,
+                            IsDeleted = false,
+                            Rating = (short)2,
+                            TriedAt = new DateTime(2026, 9, 4, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            BabyId = 4L,
+                            FoodTypeId = 22,
+                            IsDeleted = false,
+                            Rating = (short)4,
+                            TriedAt = new DateTime(2026, 8, 31, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            BabyId = 4L,
+                            FoodTypeId = 34,
+                            IsDeleted = false,
+                            Rating = (short)2,
+                            TriedAt = new DateTime(2026, 8, 27, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            BabyId = 5L,
+                            FoodTypeId = 30,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 9, 4, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            BabyId = 5L,
+                            FoodTypeId = 40,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 31, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            BabyId = 5L,
+                            FoodTypeId = 11,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 27, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            BabyId = 6L,
+                            FoodTypeId = 10,
+                            IsDeleted = false,
+                            Rating = (short)4,
+                            TriedAt = new DateTime(2026, 9, 4, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            BabyId = 6L,
+                            FoodTypeId = 13,
+                            IsDeleted = false,
+                            Rating = (short)2,
+                            TriedAt = new DateTime(2026, 8, 31, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            BabyId = 6L,
+                            FoodTypeId = 20,
+                            IsDeleted = false,
+                            Rating = (short)4,
+                            TriedAt = new DateTime(2026, 8, 27, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            BabyId = 7L,
+                            FoodTypeId = 16,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 9, 4, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            BabyId = 7L,
+                            FoodTypeId = 21,
+                            IsDeleted = false,
+                            Rating = (short)5,
+                            TriedAt = new DateTime(2026, 8, 31, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            BabyId = 7L,
+                            FoodTypeId = 30,
+                            IsDeleted = false,
+                            Rating = (short)3,
+                            TriedAt = new DateTime(2026, 8, 27, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.MealRecommendation", b =>
@@ -1789,6 +6568,1081 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("PlanId");
 
                     b.ToTable("MedicationIntakeLogs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 25, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 25, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 26, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 26, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 27, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 27, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 28, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 28, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 29, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 30, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 31, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 1, 31, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 1, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 1, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 2, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9020L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 2, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9021L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 3, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9022L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9023L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 4, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9024L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 4, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9025L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9026L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 5, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9027L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9028L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 6, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9029L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 7, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9030L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 7, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9031L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 8, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9032L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9033L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 9, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9034L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 9, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9035L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 10, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9036L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 10, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9037L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9038L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 11, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9039L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 12, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9040L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 12, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9041L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 13, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9042L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9043L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 14, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9044L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 14, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9045L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 15, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9046L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 15, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9047L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 16, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9048L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 16, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9049L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9050L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 17, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9051L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 18, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9052L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9053L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 19, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9054L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 19, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9055L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 20, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9056L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 20, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9057L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 21, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9058L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 21, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9059L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 22, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9060L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 22, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9061L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9062L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9063L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 24, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9064L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 24, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9065L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 25, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9066L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 25, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9067L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 26, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9068L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 26, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9069L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 27, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9070L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 27, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9071L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 2, 28, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9072L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9073L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9074L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 1, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9075L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 2, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9076L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 2, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9077L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 3, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9078L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 3, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9079L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 4, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9080L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 4, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9081L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 5, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9082L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9083L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9084L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 6, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9085L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 9086L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 7, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9087L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 8, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9088L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 8, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9089L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 9, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9090L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 3, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 3, 9, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 5, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5001L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 5, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5002L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5003L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5003L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5003L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 5, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5003L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5004L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5004L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5004L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 5, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5016L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5004L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5017L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5005L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        },
+                        new
+                        {
+                            Id = 5018L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5005L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 6, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5019L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5005L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = true,
+                            TakenAt = new DateTime(2026, 9, 5, 8, 5, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5020L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5005L,
+                            ReminderSent = true,
+                            ScheduledDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Taken = false
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.MedicationPlan", b =>
@@ -1823,6 +7677,71 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("ParentProfileId", "MedicineName");
 
                     b.ToTable("MedicationPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Prenatalni vitamini (Vitamin D + Folna kiselina)",
+                            ParentProfileId = 1L,
+                            StartDate = new DateTime(2025, 6, 3, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Željezo (Fe) dodatak",
+                            ParentProfileId = 1L,
+                            StartDate = new DateTime(2025, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Prenatalni vitamini (Vitamin D + Folna kiselina)",
+                            ParentProfileId = 2L,
+                            StartDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Prenatalni vitamini (Vitamin D + Folna kiselina)",
+                            ParentProfileId = 3L,
+                            StartDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Prenatalni vitamini (Vitamin D + Folna kiselina)",
+                            ParentProfileId = 4L,
+                            StartDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Prenatalni vitamini (Vitamin D + Folna kiselina)",
+                            ParentProfileId = 5L,
+                            StartDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            Dose = "1 tableta",
+                            EndDate = new DateTime(2026, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicineName = "Prenatalni vitamini (Vitamin D + Folna kiselina)",
+                            ParentProfileId = 11L,
+                            StartDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.MedicationScheduleTime", b =>
@@ -1844,6 +7763,50 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("PlanId");
 
                     b.ToTable("MedicationScheduleTimes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 9001L
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            IntakeTime = new TimeSpan(0, 20, 0, 0, 0),
+                            PlanId = 9002L
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5001L
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5002L
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5003L
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5004L
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            IntakeTime = new TimeSpan(0, 8, 0, 0, 0),
+                            PlanId = 5005L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.Milestone", b =>
@@ -1863,6 +7826,12 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -1875,6 +7844,197 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("BabyId");
 
                     b.ToTable("Milestones");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            AchievedDate = new DateTime(2026, 4, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 4, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prvi osmijeh"
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            AchievedDate = new DateTime(2026, 5, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 5, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prati predmete pogledom"
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            AchievedDate = new DateTime(2026, 6, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 6, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Podiže glavu dok leži na stomaku"
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            AchievedDate = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Guguče i smije se naglas"
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            AchievedDate = new DateTime(2026, 7, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 7, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prevrće se sa stomaka na leđa"
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            AchievedDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Počinje sjedati uz pridržavanje"
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            AchievedDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 1L,
+                            CreatedAt = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Pokazuje interes za hranu"
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            AchievedDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 2L,
+                            CreatedAt = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prvi osmijeh"
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            AchievedDate = new DateTime(2026, 6, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 3L,
+                            CreatedAt = new DateTime(2026, 6, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Podiže glavu dok leži na stomaku"
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            AchievedDate = new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 3L,
+                            CreatedAt = new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prati predmete pogledom"
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            AchievedDate = new DateTime(2026, 3, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 4L,
+                            CreatedAt = new DateTime(2026, 3, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Samostalno sjedi"
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            AchievedDate = new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 4L,
+                            CreatedAt = new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Počinje puzati"
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            AchievedDate = new DateTime(2025, 11, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 5L,
+                            CreatedAt = new DateTime(2025, 11, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prve samostalne riječi (mama, tata)"
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            AchievedDate = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 5L,
+                            CreatedAt = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Stoji uz pridržavanje"
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            AchievedDate = new DateTime(2025, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 6L,
+                            CreatedAt = new DateTime(2025, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Prvi samostalni koraci"
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            AchievedDate = new DateTime(2025, 9, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 6L,
+                            CreatedAt = new DateTime(2025, 9, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Jede kašikom uz pomoć"
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            AchievedDate = new DateTime(2024, 10, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 7L,
+                            CreatedAt = new DateTime(2024, 10, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Trči i penje se po namještaju"
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            AchievedDate = new DateTime(2025, 4, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            BabyId = 7L,
+                            CreatedAt = new DateTime(2025, 4, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            Title = "Govori kratke rečenice"
+                        });
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.MlRetrainingWatermark", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LastTrainedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModelGroup")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<long>("RecordCountAtLastTraining")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelGroup")
+                        .IsUnique();
+
+                    b.ToTable("MlRetrainingWatermarks");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.Notification", b =>
@@ -1905,6 +8065,71 @@ namespace Nestly.Services.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Notifications");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001,
+                            CreatedAt = new DateTime(2026, 9, 6, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = true,
+                            Message = "Doktor je odgovorio na vaše pitanje.",
+                            Title = "Odgovoreno pitanje",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9002,
+                            CreatedAt = new DateTime(2026, 9, 8, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = false,
+                            Message = "Vakcinacija je zakazana za 5 dana.",
+                            Title = "Podsjetnik za termin",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 9004,
+                            CreatedAt = new DateTime(2026, 8, 27, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = true,
+                            Message = "Novo dostignuće je dodano za bebu Emma.",
+                            Title = "Dostignuće zabilježeno",
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 5001,
+                            CreatedAt = new DateTime(2026, 9, 1, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = false,
+                            Message = "Doktor je odgovorio na vaše pitanje.",
+                            Title = "Odgovoreno pitanje",
+                            UserId = 3L
+                        },
+                        new
+                        {
+                            Id = 5002,
+                            CreatedAt = new DateTime(2026, 9, 7, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = false,
+                            Message = "Vaš termin pregleda je za 2 dana.",
+                            Title = "Podsjetnik za termin",
+                            UserId = 6L
+                        },
+                        new
+                        {
+                            Id = 5004,
+                            CreatedAt = new DateTime(2026, 9, 5, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = false,
+                            Message = "Doktor je odgovorio na vaše pitanje.",
+                            Title = "Odgovoreno pitanje",
+                            UserId = 10L
+                        },
+                        new
+                        {
+                            Id = 5005,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            IsRead = true,
+                            Message = "Dostupan je novi savjet za trenutnu sedmicu trudnoće.",
+                            Title = "Novi savjet dostupan",
+                            UserId = 1L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.ParentProfile", b =>
@@ -1930,6 +8155,56 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = 1L,
                             UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            UserId = 3L
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            UserId = 4L
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            UserId = 5L
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            UserId = 6L
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            UserId = 7L
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            UserId = 8L
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            UserId = 9L
+                        },
+                        new
+                        {
+                            Id = 9L,
+                            UserId = 10L
+                        },
+                        new
+                        {
+                            Id = 10L,
+                            UserId = 11L
+                        },
+                        new
+                        {
+                            Id = 11L,
+                            UserId = 12L
                         });
                 });
 
@@ -1944,8 +8219,14 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<int?>("CycleLengthDays")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LmpDate")
                         .HasColumnType("datetime2");
@@ -1964,9 +8245,55 @@ namespace Nestly.Services.Data.Migrations
                         {
                             Id = 1L,
                             CycleLengthDays = 28,
-                            DueDate = new DateTime(2026, 5, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LmpDate = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DueDate = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            LmpDate = new DateTime(2025, 6, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            CycleLengthDays = 28,
+                            DueDate = new DateTime(2027, 4, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            LmpDate = new DateTime(2026, 6, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ParentProfileId = 2L
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            CycleLengthDays = 28,
+                            DueDate = new DateTime(2027, 1, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            LmpDate = new DateTime(2026, 4, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ParentProfileId = 3L
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            CycleLengthDays = 28,
+                            DueDate = new DateTime(2026, 10, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            LmpDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ParentProfileId = 4L
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            CycleLengthDays = 28,
+                            DueDate = new DateTime(2026, 9, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            LmpDate = new DateTime(2025, 12, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ParentProfileId = 5L
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            CycleLengthDays = 28,
+                            DueDate = new DateTime(2027, 3, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            LmpDate = new DateTime(2026, 5, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ParentProfileId = 11L
                         });
                 });
 
@@ -2000,6 +8327,80 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("QuestionId");
 
                     b.ToTable("QaAnswers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            AnswerText = "Noćna buđenja su i dalje česta u ovom uzrastu, posebno tokom rasta zuba. Ako beba brzo zaspi nakon utjehe, nema razloga za brigu.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 6, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 9001L
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            AnswerText = "Da, jutarnja mučnina je vrlo česta u prvom trimestru i obično prolazi do 12-14. sedmice. Pijte dosta tečnosti i jedite manje, češće obroke.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 2, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5001L
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            AnswerText = "Preporučuje se oko 2 do 2.5 litre tečnosti dnevno, ovisno o aktivnosti i tjelesnoj masi.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 4, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5002L
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            AnswerText = "Kada kontrakcije postanu redovne (svakih 5 minuta, traju oko 60 sekundi) u trajanju od sat vremena, ili ako pukne vodenjak, vrijeme je za bolnicu.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 5, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5004L
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            AnswerText = "Da, novorođenčad spava 16-18 sati dnevno u kratkim intervalima, to je potpuno normalno.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 3, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5005L
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            AnswerText = "Obično 3 glavna obroka plus 1-2 manje užine, uz nastavak dojenja/formule po potrebi.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 1, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5007L
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            AnswerText = "Raspon je širok, mnoga djeca prohodaju između 12. i 18. mjeseca. Ako postoji napredak (stajanje, hodanje uz pridržavanje), nema razloga za brigu.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 6, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5008L
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            AnswerText = "Uključite ga u pripreme, govorite pozitivno o bebi i zadržite što više uobičajenu rutinu kako bi se osjećalo sigurno.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 8, 31, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5010L
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            AnswerText = "Preporuka je oko 6. mjeseca života, kada beba pokazuje znakove spremnosti poput samostalnog sjedenja i interesa za hranu.",
+                            AnsweredById = 1L,
+                            CreatedAt = new DateTime(2026, 8, 29, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            QuestionId = 5012L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.QaQuestion", b =>
@@ -2018,6 +8419,12 @@ namespace Nestly.Services.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("QuestionText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -2027,6 +8434,120 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("AskedById");
 
                     b.ToTable("QaQuestions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            AskedById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 5, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Beba od 6 mjeseci se budi nekoliko puta tokom noći, da li je to normalno?"
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            AskedById = 1L,
+                            CreatedAt = new DateTime(2026, 9, 8, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Koliko obroka čvrste hrane dnevno je preporučeno za bebu od 6 mjeseci?"
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            AskedById = 2L,
+                            CreatedAt = new DateTime(2026, 9, 1, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Da li je normalno imati jutarnju mučninu u 10. sedmici trudnoće?"
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            AskedById = 3L,
+                            CreatedAt = new DateTime(2026, 9, 3, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Koliko je vode potrebno piti dnevno u drugom trimestru?"
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            AskedById = 4L,
+                            CreatedAt = new DateTime(2026, 9, 5, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Osjećam bolove u leđima u 36. sedmici, je li to normalno?"
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            AskedById = 5L,
+                            CreatedAt = new DateTime(2026, 9, 4, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Kada tačno trebam ići u bolnicu kada počnu trudovi?"
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            AskedById = 6L,
+                            CreatedAt = new DateTime(2026, 9, 2, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Beba puno spava, da li je to normalno u prvom mjesecu?"
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            AskedById = 7L,
+                            CreatedAt = new DateTime(2026, 9, 6, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Kada mogu početi uvoditi kašice bebi?"
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            AskedById = 8L,
+                            CreatedAt = new DateTime(2026, 8, 31, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Koliko obroka dnevno je preporučeno za bebu od 8 mjeseci?"
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            AskedById = 9L,
+                            CreatedAt = new DateTime(2026, 9, 5, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Beba od 13 mjeseci još ne hoda sama, da li da se zabrinem?"
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            AskedById = 10L,
+                            CreatedAt = new DateTime(2026, 9, 6, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Koliko sati sna je normalno za dijete od 19 mjeseci?"
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            AskedById = 11L,
+                            CreatedAt = new DateTime(2026, 8, 30, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Kako pripremiti starije dijete na dolazak bebe?"
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            AskedById = 2L,
+                            CreatedAt = new DateTime(2026, 9, 7, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Koje namirnice je najbolje izbjegavati tokom trudnoće?"
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            AskedById = 1L,
+                            CreatedAt = new DateTime(2026, 8, 28, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsDeleted = false,
+                            QuestionText = "Kada uvesti čvrstu hranu bebi?"
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.RecommendationModelState", b =>
@@ -2049,6 +8570,71 @@ namespace Nestly.Services.Data.Migrations
                     b.ToTable("RecommendationModelStates");
                 });
 
+            modelBuilder.Entity("Nestly.Model.Entity.RefreshToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AppUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReplacedByTokenHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("AppUserId", "RevokedAt");
+
+                    b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.RevokedAccessToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Jti")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Jti")
+                        .IsUnique();
+
+                    b.ToTable("RevokedAccessTokens");
+                });
+
             modelBuilder.Entity("Nestly.Model.Entity.Role", b =>
                 {
                     b.Property<long>("Id")
@@ -2056,6 +8642,9 @@ namespace Nestly.Services.Data.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("IsSystemRole")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2073,11 +8662,13 @@ namespace Nestly.Services.Data.Migrations
                         new
                         {
                             Id = 1L,
+                            IsSystemRole = true,
                             Name = "Parent"
                         },
                         new
                         {
                             Id = 2L,
+                            IsSystemRole = true,
                             Name = "Doctor"
                         });
                 });
@@ -2093,8 +8684,14 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<long>("BabyId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("SleepDate")
                         .HasColumnType("date");
@@ -2107,6 +8704,809 @@ namespace Nestly.Services.Data.Migrations
                     b.HasIndex("BabyId", "SleepDate");
 
                     b.ToTable("SleepLogs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9020L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9021L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9022L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9023L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9024L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9025L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9026L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9027L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9028L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9029L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9030L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9031L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9032L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9033L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9034L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9035L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9036L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9037L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9038L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9039L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9040L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9041L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9042L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9043L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9044L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9045L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9046L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9047L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9048L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9049L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9050L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9051L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9052L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9053L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9054L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9055L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 20, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9056L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9057L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 35, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 15, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9058L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9059L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 25, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9060L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 14, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 13, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9061L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 8, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9062L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 7, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9063L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 7, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9064L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 6, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9065L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9066L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9067L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9068L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 5, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9069L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 4, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9070L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 9071L,
+                            BabyId = 1L,
+                            EndTime = new TimeSpan(0, 6, 30, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 3, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            BabyId = 2L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            BabyId = 2L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            BabyId = 2L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            BabyId = 3L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            BabyId = 3L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            BabyId = 3L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            BabyId = 4L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            BabyId = 4L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            BabyId = 4L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            BabyId = 5L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            BabyId = 5L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            BabyId = 5L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5016L,
+                            BabyId = 6L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5017L,
+                            BabyId = 6L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5018L,
+                            BabyId = 6L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5019L,
+                            BabyId = 7L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5020L,
+                            BabyId = 7L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        },
+                        new
+                        {
+                            Id = 5021L,
+                            BabyId = 7L,
+                            EndTime = new TimeSpan(0, 6, 45, 0, 0),
+                            IsDeleted = false,
+                            SleepDate = new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartTime = new TimeSpan(0, 20, 30, 0, 0)
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.SymptomDiary", b =>
@@ -2120,6 +9520,9 @@ namespace Nestly.Services.Data.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("Fatigue")
                         .HasColumnType("int");
 
@@ -2128,6 +9531,9 @@ namespace Nestly.Services.Data.Migrations
 
                     b.Property<int?>("Heartburn")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("LegSwelling")
                         .HasColumnType("int");
@@ -2141,9 +9547,2775 @@ namespace Nestly.Services.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ParentProfileId", "Date")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("SymptomDiaries");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9001L,
+                            Date = new DateTime(2025, 6, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9002L,
+                            Date = new DateTime(2025, 6, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9003L,
+                            Date = new DateTime(2025, 6, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9004L,
+                            Date = new DateTime(2025, 6, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9005L,
+                            Date = new DateTime(2025, 6, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9006L,
+                            Date = new DateTime(2025, 6, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9007L,
+                            Date = new DateTime(2025, 6, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9008L,
+                            Date = new DateTime(2025, 6, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9009L,
+                            Date = new DateTime(2025, 6, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9010L,
+                            Date = new DateTime(2025, 6, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9011L,
+                            Date = new DateTime(2025, 6, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9012L,
+                            Date = new DateTime(2025, 6, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9013L,
+                            Date = new DateTime(2025, 6, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9014L,
+                            Date = new DateTime(2025, 6, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9015L,
+                            Date = new DateTime(2025, 6, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9016L,
+                            Date = new DateTime(2025, 6, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9017L,
+                            Date = new DateTime(2025, 6, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9018L,
+                            Date = new DateTime(2025, 6, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9019L,
+                            Date = new DateTime(2025, 6, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9020L,
+                            Date = new DateTime(2025, 6, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9021L,
+                            Date = new DateTime(2025, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9022L,
+                            Date = new DateTime(2025, 6, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9023L,
+                            Date = new DateTime(2025, 6, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9024L,
+                            Date = new DateTime(2025, 6, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9025L,
+                            Date = new DateTime(2025, 6, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9026L,
+                            Date = new DateTime(2025, 6, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9027L,
+                            Date = new DateTime(2025, 6, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9028L,
+                            Date = new DateTime(2025, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9029L,
+                            Date = new DateTime(2025, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9030L,
+                            Date = new DateTime(2025, 7, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9031L,
+                            Date = new DateTime(2025, 7, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9032L,
+                            Date = new DateTime(2025, 7, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9033L,
+                            Date = new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9034L,
+                            Date = new DateTime(2025, 7, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9035L,
+                            Date = new DateTime(2025, 7, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9036L,
+                            Date = new DateTime(2025, 7, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9037L,
+                            Date = new DateTime(2025, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9038L,
+                            Date = new DateTime(2025, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9039L,
+                            Date = new DateTime(2025, 7, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9040L,
+                            Date = new DateTime(2025, 7, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9041L,
+                            Date = new DateTime(2025, 7, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9042L,
+                            Date = new DateTime(2025, 7, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9043L,
+                            Date = new DateTime(2025, 7, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9044L,
+                            Date = new DateTime(2025, 7, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9045L,
+                            Date = new DateTime(2025, 7, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9046L,
+                            Date = new DateTime(2025, 7, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9047L,
+                            Date = new DateTime(2025, 7, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9048L,
+                            Date = new DateTime(2025, 7, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9049L,
+                            Date = new DateTime(2025, 7, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9050L,
+                            Date = new DateTime(2025, 7, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9051L,
+                            Date = new DateTime(2025, 7, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9052L,
+                            Date = new DateTime(2025, 7, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9053L,
+                            Date = new DateTime(2025, 7, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9054L,
+                            Date = new DateTime(2025, 7, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9055L,
+                            Date = new DateTime(2025, 7, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9056L,
+                            Date = new DateTime(2025, 7, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9057L,
+                            Date = new DateTime(2025, 7, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9058L,
+                            Date = new DateTime(2025, 7, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9059L,
+                            Date = new DateTime(2025, 7, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9060L,
+                            Date = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9061L,
+                            Date = new DateTime(2025, 8, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9062L,
+                            Date = new DateTime(2025, 8, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9063L,
+                            Date = new DateTime(2025, 8, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9064L,
+                            Date = new DateTime(2025, 8, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9065L,
+                            Date = new DateTime(2025, 8, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9066L,
+                            Date = new DateTime(2025, 8, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9067L,
+                            Date = new DateTime(2025, 8, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9068L,
+                            Date = new DateTime(2025, 8, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9069L,
+                            Date = new DateTime(2025, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9070L,
+                            Date = new DateTime(2025, 8, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9071L,
+                            Date = new DateTime(2025, 8, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9072L,
+                            Date = new DateTime(2025, 8, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9073L,
+                            Date = new DateTime(2025, 8, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9074L,
+                            Date = new DateTime(2025, 8, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9075L,
+                            Date = new DateTime(2025, 8, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9076L,
+                            Date = new DateTime(2025, 8, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9077L,
+                            Date = new DateTime(2025, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9078L,
+                            Date = new DateTime(2025, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9079L,
+                            Date = new DateTime(2025, 8, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9080L,
+                            Date = new DateTime(2025, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9081L,
+                            Date = new DateTime(2025, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9082L,
+                            Date = new DateTime(2025, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9083L,
+                            Date = new DateTime(2025, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9084L,
+                            Date = new DateTime(2025, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9085L,
+                            Date = new DateTime(2025, 8, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9086L,
+                            Date = new DateTime(2025, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9087L,
+                            Date = new DateTime(2025, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9088L,
+                            Date = new DateTime(2025, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9089L,
+                            Date = new DateTime(2025, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9090L,
+                            Date = new DateTime(2025, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9091L,
+                            Date = new DateTime(2025, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 1,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9092L,
+                            Date = new DateTime(2025, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9093L,
+                            Date = new DateTime(2025, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9094L,
+                            Date = new DateTime(2025, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9095L,
+                            Date = new DateTime(2025, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9096L,
+                            Date = new DateTime(2025, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9097L,
+                            Date = new DateTime(2025, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9098L,
+                            Date = new DateTime(2025, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9099L,
+                            Date = new DateTime(2025, 9, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9100L,
+                            Date = new DateTime(2025, 9, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9101L,
+                            Date = new DateTime(2025, 9, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9102L,
+                            Date = new DateTime(2025, 9, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9103L,
+                            Date = new DateTime(2025, 9, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9104L,
+                            Date = new DateTime(2025, 9, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9105L,
+                            Date = new DateTime(2025, 9, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9106L,
+                            Date = new DateTime(2025, 9, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9107L,
+                            Date = new DateTime(2025, 9, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9108L,
+                            Date = new DateTime(2025, 9, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9109L,
+                            Date = new DateTime(2025, 9, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9110L,
+                            Date = new DateTime(2025, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9111L,
+                            Date = new DateTime(2025, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9112L,
+                            Date = new DateTime(2025, 9, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9113L,
+                            Date = new DateTime(2025, 9, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9114L,
+                            Date = new DateTime(2025, 9, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9115L,
+                            Date = new DateTime(2025, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9116L,
+                            Date = new DateTime(2025, 9, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9117L,
+                            Date = new DateTime(2025, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9118L,
+                            Date = new DateTime(2025, 9, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9119L,
+                            Date = new DateTime(2025, 9, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9120L,
+                            Date = new DateTime(2025, 9, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9121L,
+                            Date = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9122L,
+                            Date = new DateTime(2025, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9123L,
+                            Date = new DateTime(2025, 10, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9124L,
+                            Date = new DateTime(2025, 10, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9125L,
+                            Date = new DateTime(2025, 10, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9126L,
+                            Date = new DateTime(2025, 10, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9127L,
+                            Date = new DateTime(2025, 10, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9128L,
+                            Date = new DateTime(2025, 10, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9129L,
+                            Date = new DateTime(2025, 10, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9130L,
+                            Date = new DateTime(2025, 10, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9131L,
+                            Date = new DateTime(2025, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9132L,
+                            Date = new DateTime(2025, 10, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9133L,
+                            Date = new DateTime(2025, 10, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9134L,
+                            Date = new DateTime(2025, 10, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9135L,
+                            Date = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9136L,
+                            Date = new DateTime(2025, 10, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9137L,
+                            Date = new DateTime(2025, 10, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9138L,
+                            Date = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9139L,
+                            Date = new DateTime(2025, 10, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9140L,
+                            Date = new DateTime(2025, 10, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9141L,
+                            Date = new DateTime(2025, 10, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9142L,
+                            Date = new DateTime(2025, 10, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9143L,
+                            Date = new DateTime(2025, 10, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9144L,
+                            Date = new DateTime(2025, 10, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9145L,
+                            Date = new DateTime(2025, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9146L,
+                            Date = new DateTime(2025, 10, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9147L,
+                            Date = new DateTime(2025, 10, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9148L,
+                            Date = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9149L,
+                            Date = new DateTime(2025, 10, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9150L,
+                            Date = new DateTime(2025, 10, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9151L,
+                            Date = new DateTime(2025, 10, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9152L,
+                            Date = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9153L,
+                            Date = new DateTime(2025, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9154L,
+                            Date = new DateTime(2025, 11, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9155L,
+                            Date = new DateTime(2025, 11, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9156L,
+                            Date = new DateTime(2025, 11, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9157L,
+                            Date = new DateTime(2025, 11, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9158L,
+                            Date = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9159L,
+                            Date = new DateTime(2025, 11, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9160L,
+                            Date = new DateTime(2025, 11, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9161L,
+                            Date = new DateTime(2025, 11, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9162L,
+                            Date = new DateTime(2025, 11, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9163L,
+                            Date = new DateTime(2025, 11, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9164L,
+                            Date = new DateTime(2025, 11, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9165L,
+                            Date = new DateTime(2025, 11, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9166L,
+                            Date = new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9167L,
+                            Date = new DateTime(2025, 11, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9168L,
+                            Date = new DateTime(2025, 11, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9169L,
+                            Date = new DateTime(2025, 11, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9170L,
+                            Date = new DateTime(2025, 11, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9171L,
+                            Date = new DateTime(2025, 11, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9172L,
+                            Date = new DateTime(2025, 11, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9173L,
+                            Date = new DateTime(2025, 11, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9174L,
+                            Date = new DateTime(2025, 11, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9175L,
+                            Date = new DateTime(2025, 11, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9176L,
+                            Date = new DateTime(2025, 11, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9177L,
+                            Date = new DateTime(2025, 11, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9178L,
+                            Date = new DateTime(2025, 11, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9179L,
+                            Date = new DateTime(2025, 11, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9180L,
+                            Date = new DateTime(2025, 11, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9181L,
+                            Date = new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9182L,
+                            Date = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9183L,
+                            Date = new DateTime(2025, 12, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9184L,
+                            Date = new DateTime(2025, 12, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9185L,
+                            Date = new DateTime(2025, 12, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Heartburn = 1,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9186L,
+                            Date = new DateTime(2025, 12, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9187L,
+                            Date = new DateTime(2025, 12, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9188L,
+                            Date = new DateTime(2025, 12, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            Headache = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9189L,
+                            Date = new DateTime(2025, 12, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9190L,
+                            Date = new DateTime(2025, 12, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9191L,
+                            Date = new DateTime(2025, 12, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9192L,
+                            Date = new DateTime(2025, 12, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9193L,
+                            Date = new DateTime(2025, 12, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9194L,
+                            Date = new DateTime(2025, 12, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9195L,
+                            Date = new DateTime(2025, 12, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9196L,
+                            Date = new DateTime(2025, 12, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9197L,
+                            Date = new DateTime(2025, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9198L,
+                            Date = new DateTime(2025, 12, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9199L,
+                            Date = new DateTime(2025, 12, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9200L,
+                            Date = new DateTime(2025, 12, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9201L,
+                            Date = new DateTime(2025, 12, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9202L,
+                            Date = new DateTime(2025, 12, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9203L,
+                            Date = new DateTime(2025, 12, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9204L,
+                            Date = new DateTime(2025, 12, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9205L,
+                            Date = new DateTime(2025, 12, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9206L,
+                            Date = new DateTime(2025, 12, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9207L,
+                            Date = new DateTime(2025, 12, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9208L,
+                            Date = new DateTime(2025, 12, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9209L,
+                            Date = new DateTime(2025, 12, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9210L,
+                            Date = new DateTime(2025, 12, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9211L,
+                            Date = new DateTime(2025, 12, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9212L,
+                            Date = new DateTime(2025, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9213L,
+                            Date = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9214L,
+                            Date = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9215L,
+                            Date = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9216L,
+                            Date = new DateTime(2026, 1, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9217L,
+                            Date = new DateTime(2026, 1, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9218L,
+                            Date = new DateTime(2026, 1, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9219L,
+                            Date = new DateTime(2026, 1, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9220L,
+                            Date = new DateTime(2026, 1, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9221L,
+                            Date = new DateTime(2026, 1, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9222L,
+                            Date = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9223L,
+                            Date = new DateTime(2026, 1, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9224L,
+                            Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9225L,
+                            Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9226L,
+                            Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9227L,
+                            Date = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9228L,
+                            Date = new DateTime(2026, 1, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9229L,
+                            Date = new DateTime(2026, 1, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9230L,
+                            Date = new DateTime(2026, 1, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9231L,
+                            Date = new DateTime(2026, 1, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9232L,
+                            Date = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9233L,
+                            Date = new DateTime(2026, 1, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9234L,
+                            Date = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9235L,
+                            Date = new DateTime(2026, 1, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9236L,
+                            Date = new DateTime(2026, 1, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9237L,
+                            Date = new DateTime(2026, 1, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9238L,
+                            Date = new DateTime(2026, 1, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9239L,
+                            Date = new DateTime(2026, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9240L,
+                            Date = new DateTime(2026, 1, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9241L,
+                            Date = new DateTime(2026, 1, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9242L,
+                            Date = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9243L,
+                            Date = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9244L,
+                            Date = new DateTime(2026, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9245L,
+                            Date = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9246L,
+                            Date = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9247L,
+                            Date = new DateTime(2026, 2, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9248L,
+                            Date = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9249L,
+                            Date = new DateTime(2026, 2, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9250L,
+                            Date = new DateTime(2026, 2, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9251L,
+                            Date = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9252L,
+                            Date = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9253L,
+                            Date = new DateTime(2026, 2, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9254L,
+                            Date = new DateTime(2026, 2, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9255L,
+                            Date = new DateTime(2026, 2, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9256L,
+                            Date = new DateTime(2026, 2, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9257L,
+                            Date = new DateTime(2026, 2, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9258L,
+                            Date = new DateTime(2026, 2, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9259L,
+                            Date = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9260L,
+                            Date = new DateTime(2026, 2, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9261L,
+                            Date = new DateTime(2026, 2, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9262L,
+                            Date = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9263L,
+                            Date = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9264L,
+                            Date = new DateTime(2026, 2, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9265L,
+                            Date = new DateTime(2026, 2, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9266L,
+                            Date = new DateTime(2026, 2, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9267L,
+                            Date = new DateTime(2026, 2, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9268L,
+                            Date = new DateTime(2026, 2, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9269L,
+                            Date = new DateTime(2026, 2, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9270L,
+                            Date = new DateTime(2026, 2, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9271L,
+                            Date = new DateTime(2026, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9272L,
+                            Date = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9273L,
+                            Date = new DateTime(2026, 3, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9274L,
+                            Date = new DateTime(2026, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9275L,
+                            Date = new DateTime(2026, 3, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9276L,
+                            Date = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9277L,
+                            Date = new DateTime(2026, 3, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Headache = 2,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9278L,
+                            Date = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            Heartburn = 4,
+                            IsDeleted = false,
+                            LegSwelling = 4,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9279L,
+                            Date = new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            Heartburn = 2,
+                            IsDeleted = false,
+                            LegSwelling = 2,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 9280L,
+                            Date = new DateTime(2026, 3, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            Heartburn = 3,
+                            IsDeleted = false,
+                            LegSwelling = 3,
+                            ParentProfileId = 1L
+                        },
+                        new
+                        {
+                            Id = 5001L,
+                            Date = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 2L
+                        },
+                        new
+                        {
+                            Id = 5002L,
+                            Date = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 2L
+                        },
+                        new
+                        {
+                            Id = 5003L,
+                            Date = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 2L
+                        },
+                        new
+                        {
+                            Id = 5004L,
+                            Date = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 1,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 3L
+                        },
+                        new
+                        {
+                            Id = 5005L,
+                            Date = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 3L
+                        },
+                        new
+                        {
+                            Id = 5006L,
+                            Date = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 3L
+                        },
+                        new
+                        {
+                            Id = 5007L,
+                            Date = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 4L
+                        },
+                        new
+                        {
+                            Id = 5008L,
+                            Date = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 4L
+                        },
+                        new
+                        {
+                            Id = 5009L,
+                            Date = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 1,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 4L
+                        },
+                        new
+                        {
+                            Id = 5010L,
+                            Date = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 5L
+                        },
+                        new
+                        {
+                            Id = 5011L,
+                            Date = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 3,
+                            IsDeleted = false,
+                            Nausea = 2,
+                            ParentProfileId = 5L
+                        },
+                        new
+                        {
+                            Id = 5012L,
+                            Date = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 4,
+                            IsDeleted = false,
+                            Nausea = 3,
+                            ParentProfileId = 5L
+                        },
+                        new
+                        {
+                            Id = 5013L,
+                            Date = new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 5,
+                            IsDeleted = false,
+                            Nausea = 4,
+                            ParentProfileId = 11L
+                        },
+                        new
+                        {
+                            Id = 5014L,
+                            Date = new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 1,
+                            IsDeleted = false,
+                            Nausea = 5,
+                            ParentProfileId = 11L
+                        },
+                        new
+                        {
+                            Id = 5015L,
+                            Date = new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Fatigue = 2,
+                            IsDeleted = false,
+                            Nausea = 1,
+                            ParentProfileId = 11L
+                        });
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.WeeklyAdvice", b =>
@@ -2589,7 +12761,13 @@ namespace Nestly.Services.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Nestly.Model.Entity.DoctorProfile", "FeedbackByDoctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorFeedbackByDoctorId");
+
                     b.Navigation("Baby");
+
+                    b.Navigation("FeedbackByDoctor");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.HealthEntry", b =>
@@ -2725,6 +12903,17 @@ namespace Nestly.Services.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("AskedBy");
+                });
+
+            modelBuilder.Entity("Nestly.Model.Entity.RefreshToken", b =>
+                {
+                    b.HasOne("Nestly.Model.Entity.AppUser", "AppUser")
+                        .WithMany()
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
                 });
 
             modelBuilder.Entity("Nestly.Model.Entity.SleepLog", b =>

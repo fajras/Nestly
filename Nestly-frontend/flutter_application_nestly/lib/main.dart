@@ -254,6 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final data = jsonDecode(response.body);
 
         final token = data['token'];
+        final refreshToken = data['refreshToken'];
         final role = data['role'];
         final parentProfileId = data['parentProfileId'];
 
@@ -264,6 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         await AuthStorage.saveLogin(
           token: token,
+          refreshToken: refreshToken,
           role: role,
           parentProfileId: parentProfileId,
         );

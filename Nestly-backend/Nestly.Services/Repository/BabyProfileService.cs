@@ -261,6 +261,7 @@ namespace Nestly.Services.Repository
             return new BabyProfileSummaryDto
             {
                 Id = entity.Id,
+                ParentProfileId = entity.ParentProfileId,
                 BabyName = entity.BabyName,
                 Gender = entity.Gender,
                 BirthDate = entity.BirthDate

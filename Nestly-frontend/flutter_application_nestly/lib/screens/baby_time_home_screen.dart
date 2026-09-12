@@ -41,6 +41,7 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
   final NotificationSignalRService _signalRService =
       NotificationSignalRService();
   String? _babyName;
+  DateTime? _babyBirthDate;
   bool get _isGirl {
     final g = widget.gender.toLowerCase();
     return g == 'female' || g == 'f';
@@ -48,12 +49,32 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
 
   Color get _accent => _isGirl ? AppColors.roseDark : AppColors.seed;
 
+  String get _ageLabel {
+    final birth = _babyBirthDate;
+    if (birth == null) return 'Praćenje bebe';
+
+    final now = DateTime.now();
+    var months = (now.year - birth.year) * 12 + now.month - birth.month;
+    if (now.day < birth.day) months -= 1;
+
+    if (months < 1) {
+      final days = now.difference(birth).inDays;
+      return '$days ${days == 1 ? 'dan' : 'dana'}';
+    }
+    if (months < 24) {
+      return '$months ${months == 1 ? 'mjesec' : (months < 5 ? 'mjeseca' : 'mjeseci')}';
+    }
+    final years = months ~/ 12;
+    return '$years ${years == 1 ? 'godina' : 'godine'}';
+  }
+
   @override
   void initState() {
     super.initState();
     notificationState.loadUnreadCount();
     _babyName = widget.babyName;
     _initSignalR();
+    _reloadBaby();
   }
 
   @override
@@ -83,6 +104,9 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
 
     setState(() {
       _babyName = data['babyName'];
+      if (data['birthDate'] != null) {
+        _babyBirthDate = DateTime.tryParse(data['birthDate']);
+      }
     });
   }
 
@@ -93,17 +117,17 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: IconThemeData(color: _accent),
-        actions: [
+    // Grouped into one compact unit and rendered inside the header card
+    // itself (same placement as the BellyTime home screen), instead of two
+    // icons floating in a separate strip above everything else.
+    final headerActions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
           Stack(
+            clipBehavior: Clip.none,
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_rounded),
+                icon: Icon(Icons.notifications_rounded, color: _accent),
                 onPressed: () async {
                   await Navigator.push(
                     context,
@@ -127,8 +151,8 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
                   if (count == 0) return const SizedBox();
 
                   return Positioned(
-                    right: 8,
-                    top: 8,
+                    right: 4,
+                    top: 4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -157,9 +181,9 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
               ),
             ],
           ),
-
+          Container(width: 1, height: 22, color: Colors.black.withOpacity(.08)),
           IconButton(
-            icon: const Icon(Icons.account_circle_rounded),
+            icon: Icon(Icons.account_circle_rounded, color: _accent),
             onPressed: () async {
               final result = await Navigator.push(
                 context,
@@ -173,19 +197,28 @@ class _BabyTimeHomeScreenState extends State<BabyTimeHomeScreen> {
               }
             },
           ),
-        ],
-      ),
+      ],
+    );
 
+    return Scaffold(
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.sm,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _HeaderCard(
                 babyName: _babyName ?? '',
+                ageLabel: _ageLabel,
                 accent: _accent,
                 soft: _isGirl ? AppColors.babyPink : AppColors.babyBlue,
+                trailing: headerActions,
               ),
               const SizedBox(height: AppSpacing.xl),
               const NestlySectionHeader(title: 'Aktivnosti bebe'),
@@ -345,11 +378,15 @@ class _HeaderCard extends StatelessWidget {
   final String babyName;
   final Color accent;
   final Color soft;
+  final Widget? trailing;
+  final String ageLabel;
 
   const _HeaderCard({
     required this.babyName,
+    required this.ageLabel,
     required this.accent,
     required this.soft,
+    this.trailing,
   });
 
   @override
@@ -371,17 +408,9 @@ class _HeaderCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
-                child: const Icon(
-                  Icons.child_care_rounded,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
+              NestlyAvatar(name: babyName, radius: 32, color: accent),
               const SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
@@ -394,16 +423,28 @@ class _HeaderCard extends StatelessWidget {
                         color: accent,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Sve važne stvari o vašoj bebi na jednom mjestu',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent.withOpacity(.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        ageLabel,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+              if (trailing != null) trailing!,
             ],
           ),
         ),

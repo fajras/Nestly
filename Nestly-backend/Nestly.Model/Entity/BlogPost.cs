@@ -21,6 +21,9 @@ namespace Nestly.Model.Entity
         public int? WeekFrom { get; set; }
         public int? WeekTo { get; set; }
         public DoctorProfile Author { get; set; }
+        // Explicit flag for posts seeded by BlogPostSeeder, replacing the
+        // previous "id <= 12" magic-number check.
+        public bool IsSystemPost { get; set; }
         public ICollection<BlogPostCategory> BlogPostCategories { get; set; } = new List<BlogPostCategory>();
     }
 }

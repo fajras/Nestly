@@ -157,7 +157,8 @@ public class CalendarEventService : ICalendarEventService
             throw new NotFoundException("Calendar event not found.");
         }
 
-        _db.CalendarEvents.Remove(ev);
+        ev.IsDeleted = true;
+        ev.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
     }
 

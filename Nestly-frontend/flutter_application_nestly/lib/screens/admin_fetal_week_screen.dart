@@ -142,7 +142,15 @@ class _AdminFetalDevelopmentScreenState
               return Card(
                 child: ListTile(
                   title: Text('Sedmica ${w.id}'),
-                  subtitle: Text(w.babyDevelopment),
+                  subtitle: Text(
+                    w.babyDevelopment,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.seed,
+                  ),
                   onTap: () => _openEdit(w),
                 ),
               );

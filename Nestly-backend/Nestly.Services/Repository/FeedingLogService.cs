@@ -204,7 +204,8 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Feeding log not found.");
             }
 
-            _db.FeedingLogs.Remove(dbEntity);
+            dbEntity.IsDeleted = true;
+            dbEntity.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
 

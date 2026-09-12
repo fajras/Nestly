@@ -236,7 +236,8 @@ namespace Nestly.Services.Repository
                 throw new NotFoundException("Sleep log not found.");
             }
 
-            _db.SleepLogs.Remove(entity);
+            entity.IsDeleted = true;
+            entity.DeletedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
 

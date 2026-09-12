@@ -14,12 +14,14 @@ class BlogPostRow {
   final String content;
   final String imageUrl;
   final List<int> categoryIds;
+  final bool isSystemPost;
   BlogPostRow({
     required this.id,
     required this.title,
     required this.content,
     required this.imageUrl,
     required this.categoryIds,
+    this.isSystemPost = false,
   });
 
   factory BlogPostRow.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,9 @@ class BlogPostRow {
           : '',
       categoryIds:
           (json['categoryIds'] as List?)?.map((e) => e as int).toList() ?? [],
+      // Backend now returns an explicit flag instead of us inferring
+      // "is a seeded/system post" from the numeric id.
+      isSystemPost: json['isSystemPost'] as bool? ?? false,
     );
   }
 }
@@ -40,47 +45,56 @@ class BlogPostRow {
 class BlogCategoryRow {
   final int id;
   final String name;
+  final bool isSystemCategory;
 
-  BlogCategoryRow({required this.id, required this.name});
+  BlogCategoryRow({
+    required this.id,
+    required this.name,
+    this.isSystemCategory = false,
+  });
 
   factory BlogCategoryRow.fromJson(Map<String, dynamic> json) {
-    return BlogCategoryRow(id: json['id'], name: json['name']);
+    return BlogCategoryRow(
+      id: json['id'],
+      name: json['name'],
+      isSystemCategory: json['isSystemCategory'] as bool? ?? false,
+    );
   }
 }
 
+class BlogPostPage {
+  final List<BlogPostRow> items;
+  final int totalCount;
+
+  BlogPostPage({required this.items, required this.totalCount});
+}
+
 class BlogAdminService {
-  Future<List<BlogPostRow>> getBlogs() async {
-    int page = 1;
-    const pageSize = 100;
+  // Server-side pagination: the admin list used to eagerly loop through
+  // every page (100 at a time) before showing anything, which doesn't
+  // scale as the number of blog posts grows. One page is fetched at a
+  // time now; the screen requests more as the doctor scrolls down.
+  Future<BlogPostPage> getBlogsPage({int page = 1, int pageSize = 20}) async {
+    final res = await ApiClient.get(
+      '/api/blogpost?page=$page&pageSize=$pageSize',
+    );
 
-    List<BlogPostRow> result = [];
-
-    while (true) {
-      final res = await ApiClient.get(
-        '/api/blogpost?page=$page&pageSize=$pageSize',
-      );
-
-      if (res.statusCode != 200) {
-        throw Exception("Failed to load blogs.");
-      }
-
-      final List items = ApiResponseHelper.extractList(res.body);
-
-      if (items.isEmpty) break;
-
-      final parsed = items
-          .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
-          .map(BlogPostRow.fromJson)
-          .toList();
-
-      result.addAll(parsed);
-
-      if (items.length < pageSize) break;
-
-      page++;
+    if (res.statusCode != 200) {
+      throw Exception("Failed to load blogs.");
     }
 
-    return result;
+    final List items = ApiResponseHelper.extractList(res.body);
+    final decoded = jsonDecode(res.body);
+    final totalCount = decoded is Map<String, dynamic>
+        ? (decoded['totalCount'] as num?)?.toInt() ?? items.length
+        : items.length;
+
+    final parsed = items
+        .map<Map<String, dynamic>>((e) => e as Map<String, dynamic>)
+        .map(BlogPostRow.fromJson)
+        .toList();
+
+    return BlogPostPage(items: parsed, totalCount: totalCount);
   }
 
   Future<List<BlogCategoryRow>> getCategories() async {
@@ -172,29 +186,82 @@ class DoctorAdminBlogScreen extends StatefulWidget {
 }
 
 class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
+  static const int _pageSize = 20;
+
   final _service = BlogAdminService();
+  final _scrollController = ScrollController();
+
   List<BlogPostRow> _blogs = [];
   bool _loading = true;
+  bool _loadingMore = false;
+  bool _hasMore = true;
+  int _page = 1;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_hasMore || _loadingMore || _loading) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
   }
 
   Future<void> _load() async {
     setState(() => _loading = true);
 
     try {
-      final data = await _service.getBlogs();
+      final result = await _service.getBlogsPage(page: 1, pageSize: _pageSize);
       if (!mounted) return;
-      setState(() => _blogs = data);
+      setState(() {
+        _blogs = result.items;
+        _page = 1;
+        _hasMore = _blogs.length < result.totalCount;
+      });
     } catch (_) {
       if (!mounted) return;
       NestlyToast.error(context, 'Greška pri učitavanju blogova');
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadMore() async {
+    setState(() => _loadingMore = true);
+
+    try {
+      final nextPage = _page + 1;
+      final result = await _service.getBlogsPage(
+        page: nextPage,
+        pageSize: _pageSize,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _blogs = [..._blogs, ...result.items];
+        _page = nextPage;
+        _hasMore = _blogs.length < result.totalCount;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+      NestlyToast.error(context, 'Greška pri učitavanju dodatnih blogova');
     }
   }
 
@@ -236,9 +303,23 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
         const SizedBox(height: AppSpacing.lg),
         Expanded(
           child: ListView.separated(
-            itemCount: _blogs.length,
+            controller: _scrollController,
+            itemCount: _blogs.length + (_hasMore ? 1 : 0),
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (_, i) {
+              if (i >= _blogs.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+
               final b = _blogs[i];
               return Card(
                 child: ListTile(
@@ -277,7 +358,7 @@ class _DoctorAdminBlogScreenState extends State<DoctorAdminBlogScreen> {
                         },
                       ),
 
-                      if (b.id > 12)
+                      if (!b.isSystemPost)
                         IconButton(
                           icon: const Icon(Icons.delete),
                           onPressed: () async {

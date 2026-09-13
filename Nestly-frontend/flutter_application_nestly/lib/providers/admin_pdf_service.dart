@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -201,12 +202,18 @@ class AdminPdfService {
       tables: tables,
     );
 
+    final fileName =
+        '${fileNamePrefix}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+
+    // path_provider has no real filesystem on web - trigger a browser
+    // download of the bytes instead of writing to a (nonexistent) disk.
+    if (kIsWeb) {
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
+      return File(fileName);
+    }
+
     final dir = await getApplicationDocumentsDirectory();
-
-    final file = File(
-      '${dir.path}/${fileNamePrefix}_${DateTime.now().millisecondsSinceEpoch}.pdf',
-    );
-
+    final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(bytes);
 
     return file;
